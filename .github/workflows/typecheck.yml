@@ -12,7 +12,7 @@ jobs:
   typecheck:
     name: TypeScript Type Check
     # Self-hosted only — no GitHub-hosted minutes (operator rule).
-    runs-on: [self-hosted, linux, x64, ci-linux]
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code

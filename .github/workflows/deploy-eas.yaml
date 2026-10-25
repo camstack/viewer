@@ -13,7 +13,7 @@ jobs:
   deploy-eas:
     name: EAS Update
     # Self-hosted only — no GitHub-hosted minutes (operator rule).
-    runs-on: [self-hosted, linux, x64, ci-linux]
+    runs-on: ubuntu-latest
     env:
       APP_VARIANT: production
 
