@@ -1,0 +1,41 @@
+name: Deploy to EAS (OTA Update)
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-eas:
+    name: EAS Update
+    # Self-hosted only — no GitHub-hosted minutes (operator rule).
+    runs-on: [self-hosted, linux, x64, ci-linux]
+    env:
+      APP_VARIANT: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: package-lock.json
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create EAS update
+        run: eas update --environment production --channel production --auto --non-interactive

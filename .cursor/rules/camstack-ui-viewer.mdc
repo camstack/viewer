@@ -1,0 +1,15 @@
+---
+description: CamStack viewer UI rules — the kit, tokens.ts, SheetModal, i18n en+it; layout changes need the operator
+globs: src/**, app/**, embed/src/**, locales/**
+alwaysApply: false
+---
+<!-- Written by `node scripts/ui/cli.mjs pointers` — a pointer, not a copy. -->
+
+**UI work here** (a screen, sheet, row, the embed player): follow the `camstack-ui` then `camstack-ui-viewer` skills. They live in the server repository — `../.claude/skills/camstack-ui/SKILL.md` and `../.claude/skills/camstack-ui-viewer/SKILL.md` when this repo is its `camstack/` submodule, else https://github.com/camstack/server/blob/main/.claude/skills/camstack-ui-viewer/SKILL.md — with the rules in `docs/ui/viewer.md` there.
+
+- **Layout changes are co-designed with the operator: ask before restructuring a screen.**
+- Search before building: `npm run ui:find -- "<need>"`, `npm run ui:show -- <Name>`, `npm run ui:tokens`.
+- Colours only from `src/theme/tokens.ts` via `useTheme().colors`; no hex or named colours, no raw `Modal` (→ `SheetModal`), no `Alert.alert` (→ `useConfirm`).
+- Every user-facing string is `t(…)` with a key in `locales/en.json` AND `locales/it.json`.
+- Done = `npm run ui:check -- <files>` with 0 new findings, **`npm run verify:push` GREEN** (same gates as TypeScript Check: ts-check + test:v2 + embed when touched), and the screen seen on a simulator and the web build (≈390 px and desktop), dark and light.
+- **Before every commit (and before push) — `npm run verify:push` GREEN.** It grades the changed set against `origin/main` (working tree included). A single green vitest file is NOT the CI gate.

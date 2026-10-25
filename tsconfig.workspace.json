@@ -1,0 +1,33 @@
+{
+  // CROSS-REPO DEVELOPMENT ONLY — resolves `@camstack/*` to the workspace
+  // SOURCE next door, so a type added in camstack-server is visible here with
+  // no publish in between.
+  //
+  // It is the right tool for exactly one job: writing a server-side type and
+  // its viewer consumer in the same sitting. It is the WRONG tool for deciding
+  // whether the viewer is shippable — green here means nothing about the app,
+  // which loads the published package from node_modules, like CI and vitest.
+  //
+  // So: iterate with this, and before committing run the plain `npm run
+  // ts-check`. If that goes red on a symbol you just wrote, the answer is to
+  // publish the server package, never to re-point this alias.
+  //
+  // The paths carry two candidates each because this checkout lives inside
+  // camstack-server in the usual layout and beside it in some others.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    // Redefined WHOLE — `paths` does not merge, so the in-repo alias is
+    // repeated here rather than inherited.
+    "paths": {
+      "@/*": ["./src/*"],
+      "@camstack/types": [
+        "../camstack-server/packages/types/src/index.ts",
+        "../packages/types/src/index.ts"
+      ],
+      "@camstack/sdk": [
+        "../camstack-server/packages/sdk/src/index.ts",
+        "../packages/sdk/src/index.ts"
+      ]
+    }
+  }
+}

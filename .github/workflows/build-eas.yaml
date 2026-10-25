@@ -1,0 +1,57 @@
+name: Build with EAS
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: "Platform to build"
+        required: true
+        type: choice
+        options:
+          - ios
+          - android
+          - all
+        default: ios
+      profile:
+        description: "EAS build profile"
+        required: true
+        type: choice
+        options:
+          - development
+          - preview
+          - production
+        default: production
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: EAS Build (${{ github.event.inputs.platform || 'ios' }})
+    # Self-hosted only — no GitHub-hosted minutes (operator rule).
+    runs-on: [self-hosted, linux, x64, ci-linux]
+    env:
+      APP_VARIANT: ${{ github.event.inputs.profile || 'production' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: package-lock.json
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run EAS build
+        run: eas build --platform ${{ github.event.inputs.platform || 'ios' }} --profile ${{ github.event.inputs.profile || 'production' }} --non-interactive

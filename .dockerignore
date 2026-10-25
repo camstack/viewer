@@ -1,0 +1,16 @@
+node_modules
+npm-debug.log
+Dockerfile*
+.dockerignore
+.git
+.gitignore
+.expo
+.expo-shared
+android
+ios
+web-build
+dist
+*.md
+.env
+.env.*
+!.env.example

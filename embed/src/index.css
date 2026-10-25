@@ -1,0 +1,197 @@
+@import "tailwindcss";
+@import "@camstack/ui-library/tailwind/camstack-theme.css";
+
+/* Shared ui-library composites emit Tailwind classes from their installed
+   distribution, outside this source tree. Scan it explicitly so video sizing
+   and player controls are present in the standalone Viewer build. */
+@source "../../node_modules/@camstack/ui-library/dist";
+@source ".";
+
+/* Dark by default — the embed is a chrome-less video surface on a black page. */
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: #000;
+}
+
+/*
+ * The reel strip has NO vertical slack, so it must have no classic scrollbar.
+ *
+ * The host reserves exactly `cardEdge + 6 + 14 + 8` px for the row
+ * (`reel-layout.ts` in the viewer, `reelRowHeightPx` here) and the card is
+ * exactly `cardEdge + 6 + 14` of it — a deliberate zero-slack contract, because
+ * the strip is a fixed-height slot above the camera grid.
+ *
+ * A horizontally-scrolling `overflow-x: auto` box renders its scrollbar INSIDE
+ * that box wherever scrollbars are classic rather than overlay: every desktop
+ * browser on Windows and Linux, and macOS the moment a mouse is connected
+ * ("Show scroll bars: automatically"). Fifteen-ish pixels came off the content
+ * height and took the footer's single time line with them — the operator's
+ * screenshot of 2026-08-20, timestamps sliced in half by the bottom edge of the
+ * strip. Invisible on iOS/Android, which is why the native app never showed it.
+ *
+ * Hidden, not merely thinned: the reel is a swipe/drag/wheel surface (the native
+ * one has never shown a scrollbar either), and the alternative — reserving 15 px
+ * the other platforms would waste — breaks the one contract the embed and the
+ * host both compute from.
+ */
+.events-reel-scroller {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.events-reel-scroller::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes events-skeleton-sweep {
+  from {
+    background-position: 150% 0;
+  }
+  to {
+    background-position: -50% 0;
+  }
+}
+
+.events-skeleton {
+  background-image: linear-gradient(
+    105deg,
+    transparent 30%,
+    rgb(255 255 255 / 12%) 45%,
+    transparent 60%
+  ) !important;
+  background-size: 250% 100% !important;
+  animation: events-skeleton-sweep 1.25s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .events-skeleton {
+    animation: none;
+  }
+}
+
+/*
+ * Glass chrome — the app's glass (src/components/ui/GlassSurface.tsx) in CSS.
+ *
+ * The numbers are the viewer's tokens (src/theme/tokens.ts, `GLASS`): the wash
+ * is `backgroundElevated` at `tintAlpha`, the edge is `foreground` at
+ * `hairlineAlpha`, the blur is intensity 60 (~24px). Dark is the embed's page;
+ * a light OS gets the light palette. Where `backdrop-filter` is missing, or the
+ * OS asks for Reduce Transparency, the wash becomes the solid (`solidAlpha` /
+ * opaque + border), exactly like the app's `blur` -> `solid` fallback.
+ */
+:root {
+  --cs-glass-tint: rgb(28 25 23 / 45%);
+  --cs-glass-solid: rgb(28 25 23 / 80%);
+  --cs-glass-opaque: rgb(28 25 23);
+  --cs-glass-hairline: rgb(250 250 249 / 15%);
+  --cs-glass-fg: #fafaf9;
+  --cs-glass-active: rgb(245 158 66 / 30%);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --cs-glass-tint: rgb(255 255 255 / 55%);
+    --cs-glass-solid: rgb(255 255 255 / 80%);
+    --cs-glass-opaque: rgb(255 255 255);
+    --cs-glass-hairline: rgb(28 25 23 / 12%);
+    --cs-glass-fg: #1c1917;
+    --cs-glass-active: rgb(230 126 34 / 30%);
+  }
+}
+
+.cs-glass,
+.cs-chip {
+  background: var(--cs-glass-tint);
+  color: var(--cs-glass-fg);
+  border: 1px solid var(--cs-glass-hairline);
+}
+
+.cs-glass {
+  -webkit-backdrop-filter: blur(24px) saturate(1.6);
+  backdrop-filter: blur(24px) saturate(1.6);
+}
+
+/* A chip is tiny and there can be dozens on a wall: the wash without the blur. */
+.cs-chip {
+  background: var(--cs-glass-solid);
+  border-width: 0;
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .cs-glass {
+    background: var(--cs-glass-solid);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .cs-glass,
+  .cs-chip {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: var(--cs-glass-opaque);
+  }
+}
+
+.cs-glass-btn[data-active="true"] {
+  background: var(--cs-glass-active);
+}
+
+.cs-grip {
+  border-radius: 7px;
+}
+
+/*
+ * Motion presets (src/theme/motion.ts) as CSS.
+ *  press   scale 0.92 + opacity 0.85, a spring back (overshooting bezier ~ damping 18)
+ *  appear  scale 0.8 -> 1 + fade (`pop`)
+ *  controls auto-hide: fade in 180ms, out 220ms
+ */
+.cs-glass-btn {
+  transition:
+    transform 260ms cubic-bezier(0.3, 1.5, 0.5, 1),
+    opacity 260ms cubic-bezier(0.3, 1.5, 0.5, 1),
+    background-color 140ms ease;
+  animation: cs-pop-in 260ms cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+
+.cs-glass-btn:active {
+  transform: scale(0.92);
+  opacity: 0.85;
+}
+
+.cs-fade {
+  transition: opacity 180ms ease;
+}
+
+.cs-fade[data-on="false"] {
+  transition-duration: 220ms;
+}
+
+@keyframes cs-pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cs-glass-btn,
+  .cs-fade {
+    transition: none;
+    animation: none;
+  }
+}

@@ -1,0 +1,62 @@
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
+# dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+embed-dist/
+embed-ota-dist/
+expo-env.d.ts
+
+# Native
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# local env files (keep .env.example)
+.env
+.env*.local
+
+# typescript
+*.tsbuildinfo
+
+app-example
+
+# generated native folders
+/ios
+/android
+
+# ML model files (use HuggingFace for distribution)
+*.onnx
+*.pt
+*.npy
+*.tflite
+*.mlpackage
+*.mlmodel
+
+# Visual brainstorming companion
+.superpowers/
+
+# Accidental local IDE trees (literal `~/…` under the project root) and sockets —
+# EAS archive fails with EINVAL if a .sock is included.
+~/
+*.sock

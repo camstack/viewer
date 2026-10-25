@@ -1,0 +1,1398 @@
+{
+  "deviceId": 107,
+  "capturedAt": "2026-09-20T21:25:26.033Z",
+  "elapsedMs": 20612,
+  "totalRequests": 103,
+  "tiles": [
+    {
+      "outcome": "ready",
+      "requests": 1,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 1,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 1,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 1,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 1,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 1,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 1,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 1,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 1,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 1,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 1,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 1,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 1,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 1,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 1,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 1,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 1,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 2,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 204,
+          "headers": {
+            "x-camstack-disposition": "deferred",
+            "x-camstack-reason-code": "queue-full",
+            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "retry-after": "16"
+          }
+        },
+        {
+          "attempt": 1,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 2,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 204,
+          "headers": {
+            "x-camstack-disposition": "deferred",
+            "x-camstack-reason-code": "queue-full",
+            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "retry-after": "16"
+          }
+        },
+        {
+          "attempt": 1,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 2,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 204,
+          "headers": {
+            "x-camstack-disposition": "deferred",
+            "x-camstack-reason-code": "queue-full",
+            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "retry-after": "16"
+          }
+        },
+        {
+          "attempt": 1,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 2,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 204,
+          "headers": {
+            "x-camstack-disposition": "deferred",
+            "x-camstack-reason-code": "queue-full",
+            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "retry-after": "16"
+          }
+        },
+        {
+          "attempt": 1,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 2,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 204,
+          "headers": {
+            "x-camstack-disposition": "deferred",
+            "x-camstack-reason-code": "queue-full",
+            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "retry-after": "16"
+          }
+        },
+        {
+          "attempt": 1,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 2,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 204,
+          "headers": {
+            "x-camstack-disposition": "deferred",
+            "x-camstack-reason-code": "queue-full",
+            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "retry-after": "16"
+          }
+        },
+        {
+          "attempt": 1,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 2,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 204,
+          "headers": {
+            "x-camstack-disposition": "deferred",
+            "x-camstack-reason-code": "queue-full",
+            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "retry-after": "16"
+          }
+        },
+        {
+          "attempt": 1,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 2,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 204,
+          "headers": {
+            "x-camstack-disposition": "deferred",
+            "x-camstack-reason-code": "queue-full",
+            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "retry-after": "16"
+          }
+        },
+        {
+          "attempt": 1,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 2,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 204,
+          "headers": {
+            "x-camstack-disposition": "deferred",
+            "x-camstack-reason-code": "queue-full",
+            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "retry-after": "16"
+          }
+        },
+        {
+          "attempt": 1,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 2,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 204,
+          "headers": {
+            "x-camstack-disposition": "deferred",
+            "x-camstack-reason-code": "queue-full",
+            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "retry-after": "16"
+          }
+        },
+        {
+          "attempt": 1,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 2,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 204,
+          "headers": {
+            "x-camstack-disposition": "deferred",
+            "x-camstack-reason-code": "queue-full",
+            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "retry-after": "16"
+          }
+        },
+        {
+          "attempt": 1,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 2,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 204,
+          "headers": {
+            "x-camstack-disposition": "deferred",
+            "x-camstack-reason-code": "queue-full",
+            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "retry-after": "16"
+          }
+        },
+        {
+          "attempt": 1,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 2,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 204,
+          "headers": {
+            "x-camstack-disposition": "deferred",
+            "x-camstack-reason-code": "queue-full",
+            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "retry-after": "16"
+          }
+        },
+        {
+          "attempt": 1,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 2,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 204,
+          "headers": {
+            "x-camstack-disposition": "deferred",
+            "x-camstack-reason-code": "queue-full",
+            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "retry-after": "16"
+          }
+        },
+        {
+          "attempt": 1,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 2,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 204,
+          "headers": {
+            "x-camstack-disposition": "deferred",
+            "x-camstack-reason-code": "queue-full",
+            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "retry-after": "16"
+          }
+        },
+        {
+          "attempt": 1,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 2,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 204,
+          "headers": {
+            "x-camstack-disposition": "deferred",
+            "x-camstack-reason-code": "queue-full",
+            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "retry-after": "16"
+          }
+        },
+        {
+          "attempt": 1,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 2,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 204,
+          "headers": {
+            "x-camstack-disposition": "deferred",
+            "x-camstack-reason-code": "queue-full",
+            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "retry-after": "16"
+          }
+        },
+        {
+          "attempt": 1,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 2,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 204,
+          "headers": {
+            "x-camstack-disposition": "deferred",
+            "x-camstack-reason-code": "queue-full",
+            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "retry-after": "16"
+          }
+        },
+        {
+          "attempt": 1,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 2,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 204,
+          "headers": {
+            "x-camstack-disposition": "deferred",
+            "x-camstack-reason-code": "queue-full",
+            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "retry-after": "16"
+          }
+        },
+        {
+          "attempt": 1,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 2,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 204,
+          "headers": {
+            "x-camstack-disposition": "deferred",
+            "x-camstack-reason-code": "queue-full",
+            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "retry-after": "16"
+          }
+        },
+        {
+          "attempt": 1,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 2,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 204,
+          "headers": {
+            "x-camstack-disposition": "deferred",
+            "x-camstack-reason-code": "queue-full",
+            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "retry-after": "16"
+          }
+        },
+        {
+          "attempt": 1,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 2,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 204,
+          "headers": {
+            "x-camstack-disposition": "deferred",
+            "x-camstack-reason-code": "queue-full",
+            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "retry-after": "16"
+          }
+        },
+        {
+          "attempt": 1,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 2,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 204,
+          "headers": {
+            "x-camstack-disposition": "deferred",
+            "x-camstack-reason-code": "queue-full",
+            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "retry-after": "16"
+          }
+        },
+        {
+          "attempt": 1,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 2,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 204,
+          "headers": {
+            "x-camstack-disposition": "deferred",
+            "x-camstack-reason-code": "queue-full",
+            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "retry-after": "16"
+          }
+        },
+        {
+          "attempt": 1,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 2,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 204,
+          "headers": {
+            "x-camstack-disposition": "deferred",
+            "x-camstack-reason-code": "queue-full",
+            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "retry-after": "16"
+          }
+        },
+        {
+          "attempt": 1,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 2,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 204,
+          "headers": {
+            "x-camstack-disposition": "deferred",
+            "x-camstack-reason-code": "queue-full",
+            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "retry-after": "16"
+          }
+        },
+        {
+          "attempt": 1,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 2,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 204,
+          "headers": {
+            "x-camstack-disposition": "deferred",
+            "x-camstack-reason-code": "queue-full",
+            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "retry-after": "16"
+          }
+        },
+        {
+          "attempt": 1,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 2,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 204,
+          "headers": {
+            "x-camstack-disposition": "deferred",
+            "x-camstack-reason-code": "queue-full",
+            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "retry-after": "16"
+          }
+        },
+        {
+          "attempt": 1,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 2,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 204,
+          "headers": {
+            "x-camstack-disposition": "deferred",
+            "x-camstack-reason-code": "queue-full",
+            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "retry-after": "16"
+          }
+        },
+        {
+          "attempt": 1,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 2,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 204,
+          "headers": {
+            "x-camstack-disposition": "deferred",
+            "x-camstack-reason-code": "queue-full",
+            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "retry-after": "16"
+          }
+        },
+        {
+          "attempt": 1,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 2,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 204,
+          "headers": {
+            "x-camstack-disposition": "deferred",
+            "x-camstack-reason-code": "queue-full",
+            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "retry-after": "16"
+          }
+        },
+        {
+          "attempt": 1,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 2,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 204,
+          "headers": {
+            "x-camstack-disposition": "deferred",
+            "x-camstack-reason-code": "queue-full",
+            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "retry-after": "16"
+          }
+        },
+        {
+          "attempt": 1,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 2,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 204,
+          "headers": {
+            "x-camstack-disposition": "deferred",
+            "x-camstack-reason-code": "queue-full",
+            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "retry-after": "16"
+          }
+        },
+        {
+          "attempt": 1,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 2,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 204,
+          "headers": {
+            "x-camstack-disposition": "deferred",
+            "x-camstack-reason-code": "queue-full",
+            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "retry-after": "16"
+          }
+        },
+        {
+          "attempt": 1,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 2,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 204,
+          "headers": {
+            "x-camstack-disposition": "deferred",
+            "x-camstack-reason-code": "queue-full",
+            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "retry-after": "16"
+          }
+        },
+        {
+          "attempt": 1,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 2,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 204,
+          "headers": {
+            "x-camstack-disposition": "deferred",
+            "x-camstack-reason-code": "queue-full",
+            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "retry-after": "16"
+          }
+        },
+        {
+          "attempt": 1,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 2,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 204,
+          "headers": {
+            "x-camstack-disposition": "deferred",
+            "x-camstack-reason-code": "queue-full",
+            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "retry-after": "16"
+          }
+        },
+        {
+          "attempt": 1,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 2,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 204,
+          "headers": {
+            "x-camstack-disposition": "deferred",
+            "x-camstack-reason-code": "queue-full",
+            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "retry-after": "16"
+          }
+        },
+        {
+          "attempt": 1,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 2,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 204,
+          "headers": {
+            "x-camstack-disposition": "deferred",
+            "x-camstack-reason-code": "queue-full",
+            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "retry-after": "16"
+          }
+        },
+        {
+          "attempt": 1,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 2,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 204,
+          "headers": {
+            "x-camstack-disposition": "deferred",
+            "x-camstack-reason-code": "queue-full",
+            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "retry-after": "16"
+          }
+        },
+        {
+          "attempt": 1,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 2,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 204,
+          "headers": {
+            "x-camstack-disposition": "deferred",
+            "x-camstack-reason-code": "queue-full",
+            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "retry-after": "16"
+          }
+        },
+        {
+          "attempt": 1,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 2,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 204,
+          "headers": {
+            "x-camstack-disposition": "deferred",
+            "x-camstack-reason-code": "queue-full",
+            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "retry-after": "16"
+          }
+        },
+        {
+          "attempt": 1,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    },
+    {
+      "outcome": "ready",
+      "requests": 2,
+      "answers": [
+        {
+          "attempt": 0,
+          "status": 204,
+          "headers": {
+            "x-camstack-disposition": "deferred",
+            "x-camstack-reason-code": "queue-full",
+            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "retry-after": "16"
+          }
+        },
+        {
+          "attempt": 1,
+          "status": 200,
+          "headers": {
+            "x-camstack-disposition": null,
+            "x-camstack-reason-code": null,
+            "x-camstack-reason": null,
+            "retry-after": null
+          }
+        }
+      ]
+    }
+  ]
+}

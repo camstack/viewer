@@ -1,0 +1,54 @@
+[
+  {
+    "id": "native:reolink:onboard:0:L21udC9zZGEvVTEwOTUyNzAwMEhYT0hKMTQyRy1WaWRlb2NhbWVyYSBsYXZhbmRlcmlhL01wNFJlY29yZC8yMDI2LTA5LTIwL1JlY1MwNF9EU1QyMDI2MDkyMF8xNzIzMzFfMTcyMzUzXzBfMjgwXzE2OF8wMzNDODAwMDAwMDAwMF9GMTEwNy5tcDQ",
+    "source": "native:reolink:onboard",
+    "kind": "native",
+    "timeRange": {
+      "startMs": 1789917811000,
+      "endMs": 1789917833000
+    },
+    "labels": [
+      "person"
+    ],
+    "nativeTypes": [
+      "people"
+    ],
+    "thumbnailMint": "/addon/provider-reolink/clip-thumb/3628/a6ffc0b6e2da3cfbc2e391ccf89c4b4f1f8280ed",
+    "catalogAsOf": 1789935677456,
+    "supportSub": true,
+    "streams": {
+      "sub": {
+        "id": "native:reolink:onboard:0:L21udC9zZGEvVTEwOTUyNzAwMEhYT0hKMTQyRy1WaWRlb2NhbWVyYSBsYXZhbmRlcmlhL01wNFJlY29yZC8yMDI2LTA5LTIwL1JlY1MwNF9EU1QyMDI2MDkyMF8xNzIzMzFfMTcyMzUzXzBfMjgwXzE2OF8wMzNDODAwMDAwMDAwMF9GMTEwNy5tcDQ",
+        "bytes": 987399
+      }
+    }
+  },
+  {
+    "id": "native:reolink:onboard:0:L21udC9zZGEvVTEwOTUyNzAwMEhYT0hKMTQyRy1WaWRlb2NhbWVyYSBsYXZhbmRlcmlhL01wNFJlY29yZC8yMDI2LTA5LTIwL1JlY1MwNF9EU1QyMDI2MDkyMF8xNzIyMzVfMTcyMjUxXzBfMjgwXzE2OF8wMzNDODAwMDAwMDAwMF9DREZGQi5tcDQ",
+    "source": "native:reolink:onboard",
+    "kind": "native",
+    "timeRange": {
+      "startMs": 1789917755000,
+      "endMs": 1789917771000
+    },
+    "labels": [
+      "person"
+    ],
+    "nativeTypes": [
+      "people"
+    ],
+    "thumbnailMint": "/addon/provider-reolink/clip-thumb/3628/c9d66af7d1445236f4c351a98cebf90e8633b0c9",
+    "catalogAsOf": 1789935677456,
+    "supportSub": true,
+    "streams": {
+      "sub": {
+        "id": "native:reolink:onboard:0:L21udC9zZGEvVTEwOTUyNzAwMEhYT0hKMTQyRy1WaWRlb2NhbWVyYSBsYXZhbmRlcmlhL01wNFJlY29yZC8yMDI2LTA5LTIwL1JlY1MwNF9EU1QyMDI2MDkyMF8xNzIyMzVfMTcyMjUxXzBfMjgwXzE2OF8wMzNDODAwMDAwMDAwMF9DREZGQi5tcDQ",
+        "bytes": 843771
+      },
+      "main": {
+        "id": "native:reolink:onboard:0:L21udC9zZGEvVTEwOTUyNzAwMEhYT0hKMTQyRy1WaWRlb2NhbWVyYSBsYXZhbmRlcmlhL01wNFJlY29yZC8yMDI2LTA5LTIwL1JlY00wNF9EU1QyMDI2MDkyMF8xNzIyMzVfMTcyMzE4XzBfOTAwXzUxMF8wMzNDODIwMDAwMDAwMF9CNUVCMTcubXA0",
+        "bytes": 11922199
+      }
+    }
+  }
+]

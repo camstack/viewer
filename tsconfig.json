@@ -1,0 +1,39 @@
+{
+  // RESOLVES @camstack/* THE WAY THE APP DOES — from node_modules, the
+  // PUBLISHED packages. This is the default on purpose.
+  //
+  // The mapping to the workspace SOURCE used to live here, and it is a trap
+  // that sprang three times. Two resolutions of one specifier exist:
+  //
+  //   tsc (with source paths)  → ../camstack-server/packages/types/src
+  //   metro, vitest, CI        → node_modules/@camstack/types  (published)
+  //
+  // Anything that exists in the source and not yet in the published package
+  // type-checks GREEN and then throws the moment the app or a test evaluates
+  // it. `MediaOwnerType` went red on four consecutive CI pushes that way
+  // (2026-09-15); `locationIconKey` produced four failing specs on a function
+  // that plainly exists in the repo (2026-09-16).
+  //
+  // The mechanism to catch it existed — it was opt-in, and the PERMISSIVE
+  // resolution was what `tsc --noEmit` did by default. So the default is now
+  // the strict one: what a person, an agent, an editor or CI reaches for gives
+  // the same answer, and that answer is the one the running app will give.
+  //
+  // To develop a server-side type and its viewer consumer together, BEFORE
+  // publishing, use `tsconfig.workspace.json` — deliberately, by name.
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "skipLibCheck": true,
+    "preserveSymlinks": true,
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "resolveJsonModule": true
+  },
+  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"],
+  "comment": "src is the live app (formerly srcV2; the legacy app was deleted 2026-07-17). scripts/ are untyped build/ops helpers.",
+  "exclude": ["app-example", "node_modules", "scripts", "src/testing"]
+}

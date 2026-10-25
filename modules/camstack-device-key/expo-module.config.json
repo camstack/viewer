@@ -1,0 +1,17 @@
+{
+  "platforms": [
+    "apple",
+    "android"
+  ],
+  "apple": {
+    "podspecPath": "camstack-device-key.podspec",
+    "modules": [
+      "CamstackDeviceKeyModule"
+    ]
+  },
+  "android": {
+    "modules": [
+      "expo.modules.camstackdevicekey.CamstackDeviceKeyModule"
+    ]
+  }
+}

@@ -1,0 +1,9 @@
+# Local PWA testing — the same image Railway runs (build + web-server/server.ts).
+# Usage: docker compose up --build   → http://localhost:3000
+services:
+  pwa:
+    build: .
+    ports:
+      - "3000:8080"
+    environment:
+      - CAMSTACK_ANDROID_CERT_SHA256=${CAMSTACK_ANDROID_CERT_SHA256:-}

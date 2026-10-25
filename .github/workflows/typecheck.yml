@@ -1,0 +1,45 @@
+name: TypeScript Check
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  typecheck:
+    name: TypeScript Type Check
+    # Self-hosted only — no GitHub-hosted minutes (operator rule).
+    runs-on: [self-hosted, linux, x64, ci-linux]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Native dependencies aligned
+        # 1.0.607 crashed at launch: two expo-modules-core copies, the app
+        # linked the older one. JS checks cannot see it; this can.
+        run: npx expo install --check && node scripts/check-native-deps.mjs
+
+      - name: Run TypeScript type check
+        run: npm run ts-check
+      - name: Unit tests
+        # The kind × filter sweep and the wiring guards are regression nets,
+        # not suggestions — without this step they never ran in CI at all.
+        run: npm run test:v2
+      - name: Embed build
+        # The vite embed (web + OTA) is otherwise built only by the Railway
+        # image: a stale @camstack/ui-library broke it there, after the push.
+        run: npm run build:embed:web && npm run build:embed:ota

@@ -1,0 +1,13 @@
+---
+description: CamStack viewer release — OTA update, update:patch, native iOS/Android release, ship, publish, version bump, build:orchestrator, submodule pin, what's new notes, EAS
+globs:
+alwaysApply: false
+---
+<!-- A pointer, not a copy: the content lives in the skill below. -->
+
+**Shipping a release** (OTA `update:*`, `release:ios:*` / `release:android:*`, a version bump, `build:orchestrator`, the camstack-server submodule pin): read `.claude/skills/camstack-viewer-release/SKILL.md` first and follow it.
+
+- **Write the `src/app/whats-new.ts` entry FIRST** — one short line per change, en + it, under 90 characters. The ship scripts run `node scripts/lib/check-whats-new.js` and refuse to bump without it.
+- Check viewer CI before shipping (`gh run list --repo camstack/viewer`); a red CI does not stop an OTA.
+- `runtimeVersion` stays fixed on an OTA and moves only on a native release.
+- Never persist `EXPO_TOKEN`; pass it inline.

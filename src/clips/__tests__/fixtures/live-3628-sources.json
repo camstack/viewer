@@ -1,0 +1,19 @@
+[
+  {
+    "source": "analytics",
+    "addonId": "recorder",
+    "label": "CamStack recordings",
+    "availability": {
+      "state": "ok"
+    }
+  },
+  {
+    "source": "native:reolink:onboard",
+    "addonId": "provider-reolink",
+    "label": "Camera storage",
+    "availability": {
+      "state": "ok",
+      "catalogAsOf": 1789935424707
+    }
+  }
+]
