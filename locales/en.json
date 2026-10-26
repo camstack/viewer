@@ -1154,7 +1154,9 @@
             "alert-error": "Error alert raised",
             "alert-critical-resolved": "Critical alert resolved",
             "rule-broken": "Notification rule broken",
-            "rule-repaired": "Notification rule repaired"
+            "rule-repaired": "Notification rule repaired",
+            "package-llm-silent": "Package confirm not answering",
+            "package-llm-answered": "Package confirm answering again"
           },
           "systemClasses": {
             "device-connectivity": "Device connectivity (offline / back online)",
@@ -1169,7 +1171,8 @@
             "critical-alerts": "Critical alerts (raised / resolved)",
             "rule-health": "Rule health (broken / repaired)",
             "motion-noise": "Motion without a subject",
-            "device-attention": "Device needs attention (raised / resolved)"
+            "device-attention": "Device needs attention (raised / resolved)",
+            "package-llm-confirm": "Package confirm"
           },
           "systemClassSnapshots": {
             "device-connectivity": "Devices offline now",
@@ -1184,7 +1187,8 @@
             "critical-alerts": "Critical alerts open now",
             "rule-health": "Notification rules broken now",
             "motion-noise": "Cameras with motion and no subject now",
-            "device-attention": "Devices needing attention now"
+            "device-attention": "Devices needing attention now",
+            "package-llm-confirm": "Cameras whose package confirm is not answering now"
           },
           "systemGroups": {
             "device-state": "Device state",
@@ -1204,7 +1208,8 @@
             "alerts": "Alerts",
             "rule-health": "Notification rules",
             "motion-noise": "Motion without a subject",
-            "device-attention": "Needs attention"
+            "device-attention": "Needs attention",
+            "package-llm": "Package confirm"
           },
           "systemFilters": {
             "summaryClassHint": "At the scheduled time you get the list of what is in the bad state, not each change.",

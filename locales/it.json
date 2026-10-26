@@ -1151,7 +1151,9 @@
             "alert-error": "Avviso di errore aperto",
             "alert-critical-resolved": "Avviso critico risolto",
             "rule-broken": "Regola di notifica rotta",
-            "rule-repaired": "Regola di notifica riparata"
+            "rule-repaired": "Regola di notifica riparata",
+            "package-llm-silent": "Conferma pacchi senza risposta",
+            "package-llm-answered": "Conferma pacchi di nuovo attiva"
           },
           "systemClasses": {
             "device-connectivity": "Connessione dispositivo (offline / di nuovo online)",
@@ -1166,7 +1168,8 @@
             "critical-alerts": "Avvisi critici (aperti / risolti)",
             "rule-health": "Stato regole (rotta / riparata)",
             "motion-noise": "Movimento senza soggetto",
-            "device-attention": "Dispositivo richiede intervento (richiesto / risolto)"
+            "device-attention": "Dispositivo richiede intervento (richiesto / risolto)",
+            "package-llm-confirm": "Conferma pacchi"
           },
           "systemClassSnapshots": {
             "device-connectivity": "Dispositivi offline ora",
@@ -1181,7 +1184,8 @@
             "critical-alerts": "Avvisi critici aperti ora",
             "rule-health": "Regole di notifica rotte ora",
             "motion-noise": "Telecamere con movimento senza soggetto ora",
-            "device-attention": "Dispositivi che richiedono intervento ora"
+            "device-attention": "Dispositivi che richiedono intervento ora",
+            "package-llm-confirm": "Telecamere con la conferma pacchi senza risposta ora"
           },
           "systemGroups": {
             "device-state": "Stato dei dispositivi",
@@ -1201,7 +1205,8 @@
             "alerts": "Avvisi",
             "rule-health": "Regole di notifica",
             "motion-noise": "Movimento senza soggetto",
-            "device-attention": "Richiede intervento"
+            "device-attention": "Richiede intervento",
+            "package-llm": "Conferma pacchi"
           },
           "systemFilters": {
             "summaryClassHint": "All'ora programmata ricevi l'elenco di ciò che è nello stato di errore, non ogni cambiamento.",
