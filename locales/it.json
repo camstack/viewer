@@ -433,6 +433,9 @@
       "retry": "Riprova",
       "restored": "Di nuovo online"
     },
+    "palette": {
+      "unknown": "Tavolozza illeggibile ({{reason}}). Uso il preset CamStack."
+    },
     "common": {
       "connecting": "Connessione…",
       "online": "Online",

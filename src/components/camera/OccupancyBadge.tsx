@@ -22,6 +22,7 @@ import { SPACING, RADIUS } from '../../theme/tokens.js'
 import { useCurrentOccupancy } from '../../data/use-occupancy.js'
 import { occupancyClassCounts } from '../../data/occupancy.js'
 import { useEventKindResolver } from '../../data/use-event-kind-resolver.js'
+import { useKindPaint } from '../../../shared/palette.js'
 import { type OverlayAnchor } from './overlay/overlay-position.js'
 import { useScaledPx, useStyleScaler } from './overlay/OverlayFrame.js'
 
@@ -46,6 +47,7 @@ export function OccupancyBadge({ deviceId, enabled, corner = 'bottom-left' }: Oc
   const sx = useStyleScaler()
   const px = useScaledPx()
   const resolver = useEventKindResolver([deviceId])
+  const paint = useKindPaint()
   const { data: snapshot = null } = useCurrentOccupancy(deviceId, enabled)
   const counts = occupancyClassCounts(snapshot)
   const parked = snapshot?.stationaryCount ?? 0
@@ -58,7 +60,7 @@ export function OccupancyBadge({ deviceId, enabled, corner = 'bottom-left' }: Oc
     <View style={[sx(styles.row), CORNER[corner]]} pointerEvents="none">
       {chips.map(({ className, count }) => {
         const Glyph = resolver.resolveIcon(className)
-        const color = resolver.descriptorFor(className)?.color ?? colors.foreground
+        const color = paint(className)
         return (
           <View key={className} style={[sx(styles.chip), { backgroundColor: `${colors.background}CC` }]}>
             <Glyph size={px(13)} color={color} />

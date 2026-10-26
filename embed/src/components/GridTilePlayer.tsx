@@ -22,7 +22,8 @@ import { fitInside, VIDEO_ASPECT } from '../embed/cell-fit'
 import { DEFAULT_OVERLAY_SIZE, overlayScale, scaleVarStyle } from '../embed/overlay-size'
 import type { CellSpan } from '../embed/grid-layout'
 import { DEFAULT_TILE_LABELS, type TileLabels } from '../embed/tile-labels'
-import { HIGHLIGHT_COLORS, useTileHighlight } from '../embed/use-tile-highlight'
+import { highlightFallback, useTileHighlight } from '../embed/use-tile-highlight'
+import { usePaletteView } from '../../../shared/palette'
 import { TileBoxesOverlay } from './TileBoxesOverlay'
 import { ZoomPan } from './ZoomPan'
 import { posterUrlFromLinkRows, type SnapshotLinkRow } from './grid-tile-poster'
@@ -139,6 +140,7 @@ export function GridTilePlayer({
   onResize,
   probeAuthToken,
 }: GridTilePlayerProps) {
+  const kindPalette = usePaletteView()
   const {
     handleOffer,
     getIceServers,
@@ -383,10 +385,10 @@ export function GridTilePlayer({
           const ap = highlight?.appearance
           const color =
             highlightType === 'motion'
-              ? (ap?.motionColor ?? HIGHLIGHT_COLORS.motion)
+              ? (ap?.motionColor ?? highlightFallback('motion', kindPalette))
               : highlightType === 'audio'
-                ? (ap?.audioColor ?? HIGHLIGHT_COLORS.audio)
-                : (ap?.detectionColor ?? HIGHLIGHT_COLORS.detection)
+                ? (ap?.audioColor ?? highlightFallback('audio', kindPalette))
+                : (ap?.detectionColor ?? highlightFallback('detection', kindPalette))
           const width = ap?.thickness ?? 3
           return (
             <div

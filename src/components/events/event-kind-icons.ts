@@ -5,8 +5,8 @@
  * Mirrors the server ui-library `composites/event-kind-visuals.tsx` (which uses
  * `lucide-react` for web). Every viewer surface that renders an event kind
  * resolves its glyph + translated label here — no per-component hardcoded icon.
- * Colors come inline from the descriptor's `color`; see `detection-colors.ts`
- * for the fallback color table.
+ * Kind colours come from the hub display palette (`shared/palette.ts`), not
+ * from a table beside the glyph.
  */
 import {
   Activity,

@@ -16,7 +16,8 @@ import { useTranslation } from 'react-i18next'
 
 import { Move, Video, Volume2, type LucideIcon } from '../../../lib/icons.js'
 import { useTheme } from '../../../theme/theme-provider.js'
-import { RADIUS, SPACING, type ColorTokens } from '../../../theme/tokens.js'
+import { RADIUS, SPACING } from '../../../theme/tokens.js'
+import { paintKind, usePaletteView, type PaletteView } from '../../../../shared/palette.js'
 import {
   LANE_ORDER,
   LANE_RIGHT_INSET_PX,
@@ -36,16 +37,11 @@ const LANE_ICON: Readonly<Record<LaneKey, LucideIcon>> = {
   motion: Move,
 }
 
-/** The colour of a lane's mark and its icon — a theme token each. */
-export function laneColor(lane: LaneKey, colors: ColorTokens): string {
-  switch (lane) {
-    case 'audio':
-      return colors.laneAudio
-    case 'recording':
-      return colors.danger
-    case 'motion':
-      return colors.laneMotion
-  }
+/** The colour of a lane's mark and its icon — one palette entry, both themes. */
+export function laneColor(lane: LaneKey, view: PaletteView): string {
+  if (lane === 'audio') return paintKind(view, 'audio')
+  if (lane === 'recording') return paintKind(view, 'recording')
+  return paintKind(view, 'motion')
 }
 
 /** The lanes that are drawn, left to right. Recording always is. */
@@ -66,6 +62,7 @@ export const TimelineLaneHeader = memo(function TimelineLaneHeader({
 }: TimelineLaneHeaderProps): React.JSX.Element {
   const { colors } = useTheme()
   const { t } = useTranslation()
+  const palette = usePaletteView()
   return (
     <View
       testID={LANE_HEADER_TEST_ID}
@@ -82,7 +79,7 @@ export const TimelineLaneHeader = memo(function TimelineLaneHeader({
                 accessibilityLabel={t(`v2.theater.lane.${lane}`)}
                 style={[styles.slot, { left: laneSlotLeft(lane) }]}
               >
-                <Icon size={ICON_PX} color={laneColor(lane, colors)} />
+                <Icon size={ICON_PX} color={laneColor(lane, palette)} />
               </View>
             )
           })}

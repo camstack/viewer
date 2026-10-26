@@ -12,7 +12,7 @@
 
 import React, { memo } from 'react'
 import { View, Text, StyleSheet } from 'react-native'
-import { colorForEventType } from '../event-highlights.js'
+import { useKindPaint } from '../../../../../shared/palette.js'
 import { RADIUS } from '../../../../theme/tokens.js'
 import { useEventKindResolver } from '../../../../data/use-event-kind-resolver.js'
 import { containRect, bboxToScreen, type DetailDetection } from './cluster-detail.js'
@@ -32,6 +32,7 @@ export const BoundingBoxOverlay = memo(function BoundingBoxOverlay({
   // TAXONOMY, not an identity — `DetailDetection` carries no tier-2 field —
   // so both go through the resolver, same as `DetectionMetaList`.
   const resolver = useEventKindResolver()
+  const paint = useKindPaint()
   // All detections on a frame share the inference-frame dimensions; take them
   // from the first detection that carries both a bbox and frame size.
   const sized = detections.find(
@@ -47,7 +48,7 @@ export const BoundingBoxOverlay = memo(function BoundingBoxOverlay({
         if (!d.bbox || !d.frameWidth || !d.frameHeight) return null
         const r = bboxToScreen(d.bbox, d.frameWidth, d.frameHeight, image)
         if (r.width <= 0 || r.height <= 0) return null
-        const color = colorForEventType(d.className)
+        const color = paint(d.className)
         const pct = typeof d.confidence === 'number' ? ` ${Math.round(d.confidence * 100)}%` : ''
         // Class/label + score only (matches the live-view overlay). Prefer the
         // tier-1 sub-class over the raw class when present — both resolved.

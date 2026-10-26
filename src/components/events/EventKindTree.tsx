@@ -35,6 +35,7 @@ import {
 } from '../../data/event-kinds.js'
 import { macroCheckState, selectedMacroKinds } from '../../store/track-filter.js'
 import { resolveEventKindIcon, eventKindLabel } from './event-kind-icons.js'
+import { useKindPaint } from '../../../shared/palette.js'
 import { SectionLabel } from '../ui/SectionLabel.js'
 
 interface EventKindTreeSectionProps {
@@ -66,6 +67,7 @@ export const EventKindTreeSection = memo(function EventKindTreeSection({
 }: EventKindTreeSectionProps) {
   const { colors } = useTheme()
   const { t } = useTranslation()
+  const paint = useKindPaint()
   const [query, setQuery] = useState('')
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set())
 
@@ -206,7 +208,7 @@ export const EventKindTreeSection = memo(function EventKindTreeSection({
                   <CheckRow
                     label={eventKindLabel(node.macro, t)}
                     icon={MacroIcon}
-                    iconColor={node.macro.color}
+                    iconColor={paint(node.macro.kind)}
                     selected={selectedSet.has(node.macro.kind)}
                     // A macro whose SUBS are ticked but whose own id is not
                     // used to draw as fully empty, so a selection made of subs
@@ -232,7 +234,7 @@ export const EventKindTreeSection = memo(function EventKindTreeSection({
                           <CheckRow
                             label={eventKindLabel(sub, t)}
                             icon={SubIcon}
-                            iconColor={sub.color}
+                            iconColor={paint(sub.kind)}
                             selected={selectedSet.has(sub.kind)}
                             onPress={() => onToggleClass(sub.kind)}
                           />

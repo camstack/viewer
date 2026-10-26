@@ -32,16 +32,10 @@ export interface ColorTokens {
   primaryOn: string
   neutralFill: string
   neutralOn: string
-  /** LIVE-edge accent — distinct from `danger` (which doubles as recording-red). */
+  /** LIVE-edge accent — distinct from `danger` (which doubles as recording-red).
+   *  Kind paint (the live cursor, the heatmap handle, recording) reads the hub
+   *  palette, not this token. */
   live: string
-  /**
-   * Timeline lane identities (viewer only — the admin UI has no activity lanes).
-   * The motion lane and its header icon; the audio lane, its icon and the
-   * heatmap's audio peaks (`audioPeakColor`: this cyan at rising opacity).
-   * Recording is `danger`.
-   */
-  laneMotion: string
-  laneAudio: string
 }
 
 const dark: ColorTokens = {
@@ -74,8 +68,6 @@ const dark: ColorTokens = {
   neutralFill: '#44403c',
   neutralOn: '#fafaf9',
   live: '#22d3ee',
-  laneMotion: '#22c55e',
-  laneAudio: '#06b6d4',
 }
 
 const light: ColorTokens = {
@@ -108,8 +100,6 @@ const light: ColorTokens = {
   neutralFill: '#57534e',
   neutralOn: '#ffffff',
   live: '#0891b2',
-  laneMotion: '#16a34a',
-  laneAudio: '#0891b2',
 }
 
 /** `pill` is a full-round end cap (any box shorter than 2 * 999). */
@@ -197,13 +187,4 @@ export const TYPOGRAPHY = {
  */
 export const TABULAR: Pick<TextStyle, 'fontVariant'> = { fontVariant: ['tabular-nums'] }
 
-/** Activity-band colors (semantic). Same hues as the 24h tape / filter chips. */
-export const BAND = {
-  recording: dark.danger,
-  cursor: dark.primary, // amber scrub cursor
-} as const
-
 export const THEME: Record<ThemeMode, ColorTokens> = { dark, light }
-
-/** When the hub omits `color` on an event-kind descriptor (server taxonomy default). */
-export const EVENT_KIND_FALLBACK_COLOR = '#64748b'

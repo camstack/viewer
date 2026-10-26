@@ -8,6 +8,7 @@
  * same reason the other pages use inline styles: no utility class emitted only
  * from this file can be dropped by a content scan that never sees it.
  */
+import { getPaletteView, paintKind, type PaletteView } from '../../../shared/palette'
 
 export interface EventsPalette {
   readonly background: string
@@ -56,31 +57,14 @@ export function resolvePalette(
   return prefersDark ? DARK_PALETTE : LIGHT_PALETTE
 }
 
-/** The one AUDIO accent — the audio-label chips, and the class chip of a track
- *  the hub materialised from an audio episode. */
-export const AUDIO_ACCENT = '#f472b6'
-
-/**
- * Accent colour per macro class — the tint behind a card with no crop, and the
- * class chip. Unknown classes fall back to a neutral.
- *
- * `isAudioClass` (a `source: 'audio'` episode) short-circuits the name matching:
- * its `className` is a bare AUDIO macro, and `animal` / `siren` / `water` read
- * as video classes here. An audio episode tinted amber like a video animal is
- * saying the wrong thing about what happened.
- */
-export function accentForClass(className: string, isAudioClass = false): string {
-  if (isAudioClass) return AUDIO_ACCENT
-  const c = className.toLowerCase()
-  if (c.includes('person') || c.includes('face')) return '#38bdf8'
-  if (c.includes('vehicle') || c.includes('car') || c.includes('truck') || c.includes('plate'))
-    return '#a78bfa'
-  if (c.includes('animal') || c.includes('dog') || c.includes('cat') || c.includes('bird'))
-    return '#fbbf24'
-  if (c.includes('package') || c.includes('parcel')) return '#34d399'
-  if (c.includes('audio') || c.includes('sound')) return AUDIO_ACCENT
-  if (c.includes('motion')) return '#94a3b8'
-  return '#71717a'
+/** Accent colour per class, from the hub palette. An audio episode is the audio entry even when its name is a video class. */
+export function accentForClass(
+  className: string,
+  isAudioClass = false,
+  view: PaletteView = getPaletteView(),
+): string {
+  if (isAudioClass) return paintKind(view, 'audio')
+  return paintKind(view, className)
 }
 
 /**

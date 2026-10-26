@@ -3,20 +3,13 @@
  * returned by the hub's `pipelineAnalytics.listEventKinds`.
  *
  * The server owns the unified taxonomy (`@camstack/types` `EVENT_TAXONOMY`) and
- * ships every UI-relevant field INLINE on each descriptor (color / iconId /
- * labelKey / label / parentKind / level / category), so the viewer never needs
- * a divergent hardcoded taxonomy — it resolves colors from `color`, glyphs from
- * `iconId` (see `event-kind-icons`), and labels from `labelKey`.
- *
- * NOTE: cross-repo import of `@camstack/types`'s taxonomy catalog is not yet
- * feasible — the installed `@camstack/types` only exports its main entry (no
- * `./catalogs/event-taxonomy` subpath), so the descriptor-driven approach here
- * is the shared source at runtime. See `detection-colors.ts` for the aligned
- * fallback color table.
+ * ships every UI-relevant field INLINE on each descriptor. Glyphs come from
+ * `iconId` (see `event-kind-icons`) and labels from `labelKey`. The taxonomy
+ * `color` is not the cluster palette (D939), so the stored `color` is always
+ * the current palette entry for that kind.
  */
 import { isRecord } from './cap-query.js'
-import { getClassColor } from '../components/camera/detection-colors.js'
-import { EVENT_KIND_FALLBACK_COLOR } from '../theme/tokens.js'
+import { paintCurrentKind } from '../../shared/palette.js'
 
 /** Two levels only (v1): macro (timeline lane) → sub (events-page leaf). */
 export type EventKindLevel = 'macro' | 'sub'
@@ -51,7 +44,7 @@ export function toEventKindDescriptor(raw: unknown): EventKindDescriptor | null 
     kind,
     labelKey: typeof raw.labelKey === 'string' ? raw.labelKey : `eventKind.${kind}`,
     label: typeof raw.label === 'string' ? raw.label : kind,
-    color: typeof raw.color === 'string' ? raw.color : EVENT_KIND_FALLBACK_COLOR,
+    color: paintCurrentKind(kind),
     iconId: typeof raw.iconId === 'string' ? raw.iconId : 'generic',
     category: typeof raw.category === 'string' ? raw.category : 'custom',
     parentKind,
@@ -126,7 +119,7 @@ export function buildEventKindTree(
         kind: parent,
         labelKey: `eventKind.${parent}`,
         label: parent,
-        color: subs[0]?.color ?? EVENT_KIND_FALLBACK_COLOR,
+        color: paintCurrentKind(parent),
         iconId: parent,
         category: subs[0]?.category ?? 'custom',
         parentKind: null,
@@ -186,7 +179,7 @@ function withObservedClasses(
       kind,
       labelKey: `eventKind.${kind}`,
       label: kind,
-      color: getClassColor(kind),
+      color: paintCurrentKind(kind),
       iconId: kind,
       category: 'detection',
       parentKind: null,

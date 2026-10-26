@@ -24,7 +24,7 @@ import React, { useState } from 'react'
 import { View, Text, StyleSheet, type LayoutChangeEvent } from 'react-native'
 import { useDetections } from '../../data/use-detections.js'
 import { RADIUS } from '../../theme/tokens.js'
-import { getClassColor } from './detection-colors.js'
+import { useKindPaint } from '../../../shared/palette.js'
 import { useEventKindResolver } from '../../data/use-event-kind-resolver.js'
 
 export interface MotionBoxesOverlayProps {
@@ -44,6 +44,7 @@ export function MotionBoxesOverlay({ deviceId, enabled }: MotionBoxesOverlayProp
   // `box.name`, when present, is the enrichment identity/plate and is already
   // shown VERBATIM; it must never go through the resolver.
   const resolver = useEventKindResolver([deviceId])
+  const paint = useKindPaint()
   const [size, setSize] = useState<Size>({ width: 0, height: 0 })
 
   const onLayout = (e: LayoutChangeEvent): void => {
@@ -62,7 +63,7 @@ export function MotionBoxesOverlay({ deviceId, enabled }: MotionBoxesOverlayProp
             const height = (box.y2 - box.y1) * size.height
             if (width <= 0 || height <= 0) return null
 
-            const color = getClassColor(box.label)
+            const color = paint(box.label)
             const pct = Math.round(box.score * 100)
             const text =
               box.name !== undefined

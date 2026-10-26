@@ -134,7 +134,7 @@ describe('the strip actually draws that marker', () => {
     expect(src).not.toContain('HEATMAP_LANES')
     expect(src).toContain('styles.tape')
     expect(src).toContain('styles.recordingHairline')
-    expect(src).toContain('BAND.recording')
+    expect(src).toContain("paint('recording')")
     expect(src).toContain('styles.bottomFill')
     expect(src).toContain('styles.audioPeak')
     expect(src).toContain('boxShadow')

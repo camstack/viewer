@@ -36,7 +36,7 @@ import { User, Car, Dog, Bird, HelpCircle } from '../../../lib/icons.js'
 import { useServer } from '../../../app/ServerProvider.js'
 import { useConnection } from '../../../connection/ConnectionProvider.js'
 import { useEventMedia } from '../../../data/use-event-media.js'
-import { colorForEventType } from './event-highlights.js'
+import { useKindPaint } from '../../../../shared/palette.js'
 import { thumbMediaAddress } from './thumb-address.js'
 import { clipStillSource } from '../../../clips/clip-still-source.js'
 import { noteClipStill } from '../../../clips/clip-telemetry.js'
@@ -103,6 +103,7 @@ export const EventThumb = memo(function EventThumb({
   contentFit = 'cover',
 }: EventThumbProps) {
   const { token } = useServer()
+  const paint = useKindPaint()
   const { t } = useTranslation()
   const { controller, state } = useConnection()
   const serverUrl = state === 'connected' ? (controller.getSystem()?.serverUrl ?? null) : null
@@ -185,7 +186,7 @@ export const EventThumb = memo(function EventThumb({
     },
   )
 
-  const accentColor = colorForEventType(event.className)
+  const accentColor = paint(event.className)
   const Icon = iconForClass(event.className)
   const sizeStyle = { width, height }
 

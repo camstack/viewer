@@ -29,7 +29,7 @@
 import React from 'react'
 import { StyleSheet, View } from 'react-native'
 
-import { useTheme } from '../../../theme/theme-provider.js'
+import { paintKind, usePaletteView } from '../../../../shared/palette.js'
 import type { TimelineCursor } from './timeline-cursor.js'
 import { laneColor, visibleLanes } from './TimelineLaneHeader.js'
 import {
@@ -60,9 +60,8 @@ export interface TimelineCursorLineProps {
 }
 
 export function TimelineCursorLine({ cursor }: TimelineCursorLineProps): React.JSX.Element {
-  const { colors } = useTheme()
-  // `live` is the only accent that is not the recorded red.
-  const color = cursor.kind === 'live' ? colors.live : colors.danger
+  const palette = usePaletteView()
+  const color = cursor.kind === 'live' ? paintKind(palette, 'live') : paintKind(palette, 'recording')
   return (
     <>
       <View testID={CURSOR_LINE_TEST_ID} style={[styles.line, { backgroundColor: color }]} />
@@ -90,7 +89,7 @@ export function TimelineCursorLaneDots({
   showMotion,
   hits,
 }: TimelineCursorLaneDotsProps): React.JSX.Element {
-  const { colors } = useTheme()
+  const palette = usePaletteView()
   return (
     <>
       {visibleLanes(showAudio, showMotion)
@@ -104,7 +103,7 @@ export function TimelineCursorLaneDots({
             styles.laneDot,
             {
               right: laneCentreFromRight(lane) - CROSSING_DOT_PX / 2,
-              backgroundColor: laneColor(lane, colors),
+              backgroundColor: laneColor(lane, palette),
               opacity: CROSSING_DOT_OPACITY,
             },
           ]}

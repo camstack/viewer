@@ -41,7 +41,9 @@ import {
   type SetDeviceCommand,
 } from '../embed/set-device-command'
 import { gridHighlightSchema, type GridHighlightConfig } from '../embed/embed-grid-config'
-import { useTileHighlight, HIGHLIGHT_COLORS } from '../embed/use-tile-highlight'
+import { PaletteBridge } from '../embed/PaletteBridge'
+import { highlightFallback, useTileHighlight } from '../embed/use-tile-highlight'
+import { usePaletteView } from '../../../shared/palette'
 import {
   emitHost,
   onHostCommand,
@@ -371,6 +373,7 @@ function EmbedPlayer({
   probeAuthToken,
 }: EmbedPlayerProps) {
   const [target, setTarget] = useState<EmbedTarget>(initialTarget)
+  const kindPalette = usePaletteView()
   // Stamp the camera onto every outgoing log message (→ tags.deviceId on the hub).
   useEffect(() => setLogDeviceTag(deviceId), [deviceId])
   // The live profile selector's decision, read fresh inside the mount-once
@@ -1200,10 +1203,10 @@ function EmbedPlayer({
           const ap = highlight?.appearance
           const color =
             highlightType === 'motion'
-              ? (ap?.motionColor ?? HIGHLIGHT_COLORS.motion)
+              ? (ap?.motionColor ?? highlightFallback('motion', kindPalette))
               : highlightType === 'audio'
-                ? (ap?.audioColor ?? HIGHLIGHT_COLORS.audio)
-                : (ap?.detectionColor ?? HIGHLIGHT_COLORS.detection)
+                ? (ap?.audioColor ?? highlightFallback('audio', kindPalette))
+                : (ap?.detectionColor ?? highlightFallback('detection', kindPalette))
           const width = ap?.thickness ?? 3
           return (
             <div
@@ -1333,6 +1336,7 @@ export function EmbedPlayerPage() {
     <SystemProvider system={built.system}>
       <QueryClientProvider client={built.queryClient}>
         <trpc.Provider client={built.system.trpcClient} queryClient={built.queryClient}>
+          <PaletteBridge system={built.system} />
           <EmbedPlayer
             // The swap contract: a deviceId change REMOUNTS the player (fresh
             // video element — no stale frame) while everything above this line

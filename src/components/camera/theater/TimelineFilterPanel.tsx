@@ -19,17 +19,11 @@ import { Activity, Volume2, ListFilter } from '../../../lib/icons.js'
 
 import { useTheme } from '../../../theme/theme-provider.js'
 import { RADIUS, SPACING } from '../../../theme/tokens.js'
-import { MOTION_COLOR, AUDIO_COLOR } from './event-highlights.js'
+import { useKindPaint } from '../../../../shared/palette.js'
 import type { EventKindDescriptor } from '../../../data/event-kinds.js'
 import { TimelinePanelHost } from './TimelinePanelHost.js'
 import { EventKindTreeSection } from '../../events/EventKindTree.js'
 import { ALL_BAR_KINDS, isFilterAll, type ActivityFilter, type TimelineBarKind } from './mock-data.js'
-
-/** Motion → green, audio → cyan (the shared activity accents). */
-const KIND_COLOR: Readonly<Record<TimelineBarKind, string>> = {
-  motion: MOTION_COLOR,
-  audio: AUDIO_COLOR,
-}
 
 export interface TimelineFilterPanelProps {
   readonly filter: ActivityFilter
@@ -65,6 +59,7 @@ export const TimelineFilterPanel = memo(function TimelineFilterPanel({
 }: TimelineFilterPanelProps) {
   const { t } = useTranslation()
   const { colors } = useTheme()
+  const paint = useKindPaint()
   const kindsAll = isFilterAll(filter)
   const allActive = kindsAll && classFilter.size === 0
 
@@ -97,7 +92,7 @@ export const TimelineFilterPanel = memo(function TimelineFilterPanel({
         {ALL_BAR_KINDS.map((kind) => {
           const on = !kindsAll && filter.has(kind)
           const Icon = kind === 'audio' ? Volume2 : Activity
-          const accent = KIND_COLOR[kind]
+          const accent = paint(kind)
           return (
             <Pressable
               key={kind}

@@ -70,9 +70,10 @@ describe('normalizeFrameBoxes', () => {
 })
 
 describe('tileBoxColor', () => {
-  it('maps known classes to distinct colors and unknowns to the fallback', () => {
+  it('maps known classes to distinct colours and keeps one unknown stable', () => {
     expect(tileBoxColor('person')).not.toBe(tileBoxColor('vehicle'))
-    expect(tileBoxColor('mystery')).toBe(tileBoxColor('other-mystery'))
+    expect(tileBoxColor('mystery')).toBe(tileBoxColor('mystery'))
+    expect(tileBoxColor('mystery')).not.toBe(tileBoxColor('other-mystery'))
   })
 })
 

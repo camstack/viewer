@@ -15,6 +15,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useLiveEvent } from '@camstack/ui-library'
 import { EventCategory } from '@camstack/types/enums'
 import type { DetectionResultPayload } from '@camstack/types'
+import { usePaletteView } from '../../../shared/palette'
 import {
   normalizeFrameBoxes,
   tileBoxColor,
@@ -27,6 +28,7 @@ interface TileBoxesOverlayProps {
 }
 
 export function TileBoxesOverlay({ deviceId }: TileBoxesOverlayProps) {
+  const kindPalette = usePaletteView()
   const [boxes, setBoxes] = useState<readonly TileBox[]>([])
   const fadeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
@@ -51,7 +53,7 @@ export function TileBoxesOverlay({ deviceId }: TileBoxesOverlayProps) {
   return (
     <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
       {boxes.map((box, i) => {
-        const color = tileBoxColor(box.label)
+        const color = tileBoxColor(box.label, kindPalette)
         const pct = Math.round(box.score * 100)
         return (
           <div

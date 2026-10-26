@@ -14,7 +14,7 @@ import { User, Car, Dog, Bird, HelpCircle } from '../../../../lib/icons.js'
 
 import { useServer } from '../../../../app/ServerProvider.js'
 import { useEventMedia, type MediaAddress } from '../../../../data/use-event-media.js'
-import { colorForEventType } from '../event-highlights.js'
+import { useKindPaint } from '../../../../../shared/palette.js'
 import { RADIUS } from '../../../../theme/tokens.js'
 
 type IconComponent = React.ComponentType<{ size: number; color: string }>
@@ -56,7 +56,8 @@ export const CropTile = memo(function CropTile({
     eventId.length > 0 ? { kind: 'owner', ownerType: 'track', ownerId: eventId } : null
   const { uri, isData, failed, onError } = useEventMedia(address, mediaUrl, 'crop', { deviceId })
 
-  const accent = colorForEventType(className)
+  const paint = useKindPaint()
+  const accent = paint(className)
   const Icon = iconForClass(className)
   const headers: Record<string, string> | undefined =
     token && uri && !isData ? { Authorization: `Bearer ${token}` } : undefined

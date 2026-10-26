@@ -29,7 +29,7 @@ import { useTranslation } from 'react-i18next'
 import { ImageOff, ScanFace, Star } from '../../../lib/icons.js'
 import { useTheme } from '../../../theme/theme-provider.js'
 import { GLASS, RADIUS, SPACING, TABULAR, TYPOGRAPHY, withAlpha } from '../../../theme/tokens.js'
-import { colorForEventType } from '../../camera/theater/event-highlights.js'
+import { useKindPaint } from '../../../../shared/palette.js'
 import { resolveEventKindIcon } from '../event-kind-icons.js'
 import type { EventsTrackRow } from '../../../../shared/events/events-track-row.js'
 import type { TileChips } from './tile-model.js'
@@ -56,10 +56,11 @@ export const TileHero = memo(function TileHero({
 }: TileHeroProps) {
   const { t } = useTranslation()
   const { colors } = useTheme()
+  const paint = useKindPaint()
   // The URI that failed, not a boolean: the list recycles this component for
   // another track, and a flag would leave every later picture on the fallback.
   const [failedUri, setFailedUri] = useState<string | null>(null)
-  const accent = colorForEventType(row.className)
+  const accent = paint(row.className)
   const source = useMemo(
     () =>
       imageUri === null
@@ -133,7 +134,8 @@ export interface TileLabelsProps {
 export const TileLabels = memo(function TileLabels({ row, chips, edge, onAssignFace, showCapsule = true }: TileLabelsProps) {
   const { t } = useTranslation()
   const { colors } = useTheme()
-  const accent = colorForEventType(row.className)
+  const paint = useKindPaint()
+  const accent = paint(row.className)
   return (
     <View pointerEvents="box-none" style={[styles.labelsLayer, { width: edge, height: edge }]}>
       <View style={styles.bottomRow}>

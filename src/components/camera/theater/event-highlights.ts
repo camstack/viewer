@@ -1,9 +1,9 @@
 /**
  * Pure helpers painting the theater timeline's surfaces: the 24h heatmap strip
  * (bins + positioned highlights, by day-fraction) and the activity/class
- * filters the timeline applies to its track-shaped detection rows. Colors come
- * from the shared detection palette, with motion/audio mapped to the heatmap's
- * existing green/cyan so the highlight layer reads consistently.
+ * filters the timeline applies to its track-shaped detection rows. Kind colours
+ * come from the hub display palette (`shared/palette.ts`); motion and audio are
+ * entries of that palette, not a second table.
  *
  * Everything here is fed by the SAME object-detection rows the vertical
  * timeline clusters. The `EventItem`-shaped variants (`filterEvents`,
@@ -13,7 +13,7 @@
  *
  * Pure & deterministic given their inputs — no fetching, no Date.now.
  */
-import { getClassColor } from '../detection-colors.js'
+import { audioPaint, audioScaleColors, getPaletteView, paintKind } from '../../../../shared/palette.js'
 import { AUDIO_LEVEL_STEPS } from '../audio-level.js'
 import type { ActivityFilter, HeatmapBin } from './mock-data.js'
 import { HEATMAP_BINS, isFilterAll } from './mock-data.js'
@@ -33,14 +33,6 @@ export interface DetectionLike {
   readonly timestamp: number
   readonly className: string
 }
-
-/** Heatmap motion band — green, distinct from the person macro `#22c55e`.
- *  Audio intensity is the theme's audio cyan at six opacities
- *  ({@link audioPeakColor}), matching the lane's header icon. */
-// ui-check-ok: heatmap band colours are theme-independent by design; moving them to the per-theme lane tokens changes the dark rendering (pre-existing)
-export const MOTION_COLOR = '#16a34a'
-// ui-check-ok: same band palette as MOTION_COLOR (pre-existing)
-export const AUDIO_COLOR = '#06b6d4'
 
 /** Known detection subs → the three theater macros, so a heatmap slot without
  *  a live taxonomy map still paints person / vehicle / animal. */
@@ -75,16 +67,12 @@ export function classPaintColor(
   toMacro?: ReadonlyMap<string, string>,
 ): string {
   const macro = toMacro?.get(className) ?? FALLBACK_MACRO[className] ?? className
-  return getClassColor(macro)
+  return paintKind(getPaletteView(), macro)
 }
 
-/** Color an event by its `type`: motion/audio → activity bands, object
- *  classes (person/car/…) → the shared detection palette. */
+/** Colour an event by its kind. Motion, audio and every class are palette entries. */
 export function colorForEventType(type: string): string {
-  const lower = type.toLowerCase()
-  if (lower === 'motion') return MOTION_COLOR
-  if (lower === 'audio') return AUDIO_COLOR
-  return getClassColor(type)
+  return paintKind(getPaletteView(), type)
 }
 
 /** Minimal item shape the activity-kind filter needs (structural — the
@@ -248,7 +236,7 @@ export function objectEventsToHeatmapHighlights(
   for (const e of events) {
     const frac = (e.timestamp - dayStartMs) / span
     if (frac < 0 || frac > 1) continue
-    out.push({ id: e.id, fraction: frac, color: getClassColor(e.className) })
+    out.push({ id: e.id, fraction: frac, color: paintKind(getPaletteView(), e.className) })
   }
   return out
 }
@@ -286,7 +274,7 @@ export function objectEventsToHeatmapBins(
     return {
       motion: 0,
       detection: max > 0 ? c / max : 0,
-      ...(dominant !== undefined ? { detectionColor: getClassColor(dominant) } : {}),
+      ...(dominant !== undefined ? { detectionColor: paintKind(getPaletteView(), dominant) } : {}),
       audio: 0,
       recorded: false,
     }
@@ -356,24 +344,14 @@ export function audioIntensityToRung(intensity: number): number {
   return Math.min(AUDIO_LEVEL_STEPS - 1, Math.ceil(t * AUDIO_LEVEL_STEPS) - 1)
 }
 
-/** Opacity of each of the six rungs, quiet → loud: pale cyan up to saturated. */
-const AUDIO_RUNG_ALPHA: readonly number[] = [0.3, 0.42, 0.55, 0.7, 0.85, 1]
-
 /**
- * The six audio-lane colours for a base (`#rrggbb`, the theme's `laneAudio`):
- * the SAME hue at rising opacity, so the lane matches its header icon and never
- * borrows a yellow or green that a detection class already owns. (The live
- * meter keeps its own green → red rungs — `audio-level.ts`.)
+ * Colour an audio peak by intensity (0..1): the palette's audio hex, paler
+ * when quiet. The six alphas are the gradient on that entry. The live meter
+ * keeps its own green → red rungs (`audio-level.ts`).
  */
-export function audioScaleColors(base: string): readonly string[] {
-  return AUDIO_RUNG_ALPHA.map(
-    (alpha) => `${base}${Math.round(alpha * 255).toString(16).padStart(2, '0')}`,
-  )
-}
-
-/** Colour an audio peak by intensity (0..1): the base hue, paler when quiet. */
-export function audioPeakColor(intensity: number, base: string): string {
-  return audioScaleColors(base)[audioIntensityToRung(intensity)] ?? base
+export function audioPeakColor(intensity: number): string {
+  const audio = audioPaint(getPaletteView())
+  return audioScaleColors()[audioIntensityToRung(intensity)] ?? audio.hex
 }
 
 export interface HeatmapBinLayer {
@@ -391,25 +369,26 @@ const BOTTOM_FILL_MAX_PCT = 70
 const AUDIO_PEAK_MAX_PCT = 70
 
 /**
- * Paint plan for one heatmap column: bottom is motion green, or the prominent
+ * Paint plan for one heatmap column: bottom is motion, or the prominent
  * detection class when any object is in the slot; audio hangs from the top.
  */
-export function heatmapBinLayers(bin: HeatmapBin, audioBase: string): HeatmapBinLayers {
+export function heatmapBinLayers(bin: HeatmapBin): HeatmapBinLayers {
+  const motion = paintKind(getPaletteView(), 'motion')
   const bottom =
     bin.detection > 0
       ? {
-          color: bin.detectionColor ?? MOTION_COLOR,
+          color: bin.detectionColor ?? motion,
           heightPct: Math.max(12, bin.detection * BOTTOM_FILL_MAX_PCT),
         }
       : bin.motion > 0
         ? {
-            color: MOTION_COLOR,
+            color: motion,
             heightPct: Math.max(12, bin.motion * BOTTOM_FILL_MAX_PCT),
           }
         : null
   const audio =
     bin.audio > 0
-      ? { color: audioPeakColor(bin.audio, audioBase), heightPct: Math.max(10, bin.audio * AUDIO_PEAK_MAX_PCT) }
+      ? { color: audioPeakColor(bin.audio), heightPct: Math.max(10, bin.audio * AUDIO_PEAK_MAX_PCT) }
       : null
   return { bottom, audio }
 }

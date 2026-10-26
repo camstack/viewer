@@ -132,6 +132,7 @@ import {
 import { log } from '../../../lib/logger.js'
 import { isSettledDayChange, nextLookbackDaysAfterDayChange } from './lookback-walk.js'
 import { composeHeatmapBins, filterDetectionsByKind } from './event-highlights.js'
+import { usePaletteView } from '../../../../shared/palette.js'
 import { filterEventsByZone, resolveFrameSize, zonePillAction } from './zone-filter.js'
 import { collapseToMacro, expandSelectionToServerClasses } from '../../../data/event-kinds.js'
 import { monthBoundsForMs } from '../../ui/calendar-grid.js'
@@ -644,6 +645,7 @@ export const TheaterTimeline = memo(function TheaterTimeline(props: TheaterTimel
   const { t } = useTranslation()
   const dateLocale = useDateLocale()
   const { colors } = useTheme()
+  const palette = usePaletteView()
   // Live edge = real wall-clock now, ADVANCING every second — the SINGLE time
   // reference for the whole surface (live-edge tick, day window, heatmap bins +
   // cursor, indicator, go-live decision), so nothing freezes at mount and drifts
@@ -2466,7 +2468,7 @@ export const TheaterTimeline = memo(function TheaterTimeline(props: TheaterTimel
         audio: showAudioActivity ? activity.audio : [],
         classToMacro,
       }),
-    [dayDetections, dayFrom, showDetections, showAudioActivity, activity.audio, activity.motion, classToMacro],
+    [dayDetections, dayFrom, showDetections, showAudioActivity, activity.audio, activity.motion, classToMacro, palette],
   )
 
   // The lanes the cursor actually meets at its time: only those get a dot.

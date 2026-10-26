@@ -8,9 +8,8 @@ import { View, Text, StyleSheet } from 'react-native'
 import { useTranslation } from 'react-i18next'
 
 import { useTheme } from '../../../theme/theme-provider.js'
-import { BAND, RADIUS, SPACING } from '../../../theme/tokens.js'
-import { MOTION_COLOR, audioScaleColors } from './event-highlights.js'
-import { getClassColor } from '../detection-colors.js'
+import { RADIUS, SPACING } from '../../../theme/tokens.js'
+import { audioScaleColors, useKindPaint } from '../../../../shared/palette.js'
 import { TimelinePanelHost } from './TimelinePanelHost.js'
 
 export interface TimelineLegendPanelProps {
@@ -82,14 +81,15 @@ function SwatchRow({ color, scale, shape, title }: SwatchRowProps): React.JSX.El
 export function TimelineLegendPanel({ onClose }: TimelineLegendPanelProps): React.JSX.Element {
   const { t } = useTranslation()
   const { colors } = useTheme()
-  const audioScale = audioScaleColors(colors.laneAudio)
+  const paint = useKindPaint()
+  const audioScale = audioScaleColors()
   return (
     <TimelinePanelHost title={t('v2.theater.legend.title')} onClose={onClose}>
       <Text style={[styles.section, { color: colors.foregroundMuted }]}>
         {t('v2.theater.legend.heatmapTitle')}
       </Text>
       <SwatchRow
-        color={BAND.recording}
+        color={paint('recording')}
         shape="lineH"
         title={t('v2.theater.legend.heatmapRecordingTitle')}
       />
@@ -99,7 +99,7 @@ export function TimelineLegendPanel({ onClose }: TimelineLegendPanelProps): Reac
         title={t('v2.theater.legend.heatmapAudioTitle')}
       />
       <SwatchRow
-        color={MOTION_COLOR}
+        color={paint('motion')}
         shape="fill"
         title={t('v2.theater.legend.heatmapBottomTitle')}
       />
@@ -108,17 +108,17 @@ export function TimelineLegendPanel({ onClose }: TimelineLegendPanelProps): Reac
         {t('v2.theater.legend.timelineTitle')}
       </Text>
       <SwatchRow
-        color={BAND.recording}
+        color={paint('recording')}
         shape="lineV"
         title={t('v2.theater.legend.timelineRecordingTitle')}
       />
       <SwatchRow
-        color={MOTION_COLOR}
+        color={paint('motion')}
         shape="lineV"
         title={t('v2.theater.legend.timelineMotionTitle')}
       />
       <SwatchRow
-        color={getClassColor('person')}
+        color={paint('person')}
         shape="dot"
         title={t('v2.theater.legend.timelineDetectionTitle')}
       />
@@ -132,17 +132,17 @@ export function TimelineLegendPanel({ onClose }: TimelineLegendPanelProps): Reac
         {t('v2.theater.legend.classesTitle')}
       </Text>
       <SwatchRow
-        color={getClassColor('person')}
+        color={paint('person')}
         shape="dot"
         title={t('v2.theater.legend.classPerson')}
       />
       <SwatchRow
-        color={getClassColor('vehicle')}
+        color={paint('vehicle')}
         shape="dot"
         title={t('v2.theater.legend.classVehicle')}
       />
       <SwatchRow
-        color={getClassColor('animal')}
+        color={paint('animal')}
         shape="dot"
         title={t('v2.theater.legend.classAnimal')}
       />

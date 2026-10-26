@@ -59,6 +59,7 @@ import {
 import { useTimelineScale } from './TimelineScaleProvider.js'
 import { hapticTap } from '../../../lib/haptics.js'
 import { useTheme } from '../../../theme/theme-provider.js'
+import { useKindPaint } from '../../../../shared/palette.js'
 import { RADIUS, TABULAR } from '../../../theme/tokens.js'
 import { GlassSurface } from '../../ui/GlassSurface.js'
 import { playbackBarLayout } from './timeline-layout.js'
@@ -297,6 +298,7 @@ export function TimelinePlaybackBar({
   const dock = useDockTransitions()
   const { colors } = useTheme()
   const ui = useTimelineScale()
+  const paint = useKindPaint()
   const [openMenu, setOpenMenu] = useState<OpenMenu>('none')
   const rateAnchorRef = useRef<View>(null)
   const overflowAnchorRef = useRef<View>(null)
@@ -665,7 +667,7 @@ export function TimelinePlaybackBar({
            (The guard reads this branch for the opposite word, and it is
            right to — a comment cannot be told from a prop.) */
         <View
-          style={[styles.chip, chip, { backgroundColor: colors.live }]}
+          style={[styles.chip, chip, { backgroundColor: paint('live') }]}
           accessibilityRole="text"
         >
           <Text
@@ -687,7 +689,7 @@ export function TimelinePlaybackBar({
             chip,
             locked
               ? { backgroundColor: colors.primary }
-              : { backgroundColor: colors.live },
+              : { backgroundColor: paint('live') },
           ]}
           hitSlop={4}
           accessibilityRole="button"

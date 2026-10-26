@@ -1,13 +1,11 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { MOTION_COLOR, AUDIO_COLOR } from '../event-highlights.js'
 
 /**
- * The right-edge activity column must speak the same language as the 24h tape.
- * It used to paint motion as BAND.motion (info/blue) and audio as
- * BAND.audioGradient[1] (warning/amber) — swapped vs the tape and vs the
- * filter chips, which already use these two constants.
+ * The right-edge activity column must speak the same language as the 24h tape:
+ * both read the hub display palette. It used to paint motion as BAND.motion
+ * and audio as BAND.audioGradient[1] — swapped vs the tape.
  */
 
 const THEATER = join(process.cwd(), 'src', 'components', 'camera', 'theater')
@@ -17,22 +15,21 @@ describe('ActivityLanes shares the tape palette', () => {
   const src = read('ActivityLanes.tsx')
   const tape = read('HeatmapBar.tsx')
 
-  it('paints audio in the theme cyan (opacity by level) and motion with the theme token', () => {
-    expect(src).toContain("from './event-highlights.js'")
-    expect(src).toContain('colors.laneMotion')
-    expect(src).toContain('audioPeakColor(b.intensity, colors.laneAudio)')
-    expect(tape).toContain("from './event-highlights.js'")
-    expect(MOTION_COLOR).toBe('#16a34a')
-    expect(AUDIO_COLOR).toBe('#06b6d4')
+  it('paints motion, recording and audio from the palette', () => {
+    expect(src).toContain("from '../../../../shared/palette.js'")
+    expect(src).toContain("paint('motion')")
+    expect(src).toContain("paint('recording')")
+    expect(src).toContain('audioPeakColor(b.intensity)')
+    expect(src).not.toContain('colors.laneMotion')
+    expect(src).not.toContain('colors.laneAudio')
+    expect(tape).toContain("paint('recording')")
+    expect(tape).toContain('heatmapBinLayers(bin)')
   })
 
   it('does not keep the swapped BAND.motion / audioGradient hues', () => {
     expect(src).not.toContain('BAND.motion')
     expect(src).not.toContain('audioGradient')
-  })
-
-  it('keeps recording on the danger/red token the tape uses', () => {
-    expect(src).toContain('BAND.recording')
+    expect(src).not.toContain('BAND.recording')
   })
 
   it('paints the audio column without a border that would eat the 2px fill', () => {
@@ -55,9 +52,9 @@ describe('ActivityLanes shares the tape palette', () => {
 })
 
 describe('the timeline legend shows the live-meter audio scale', () => {
-  it('shows the cyan level scale (the lane\'s hue, rising opacity) for heatmap and timeline audio', () => {
+  it('shows the palette audio scale (rising opacity) for heatmap and timeline audio', () => {
     const legend = read('TimelineLegendPanel.tsx')
-    expect(legend).toContain('audioScaleColors(colors.laneAudio)')
+    expect(legend).toContain('audioScaleColors()')
     expect(legend).not.toContain('AUDIO_LEVEL_COLORS')
     expect(legend).toContain('shape="scale"')
     expect(legend).not.toContain('AUDIO_COLOR')

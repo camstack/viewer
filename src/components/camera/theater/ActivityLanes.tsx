@@ -14,14 +14,11 @@ import React, { memo } from 'react'
 import { View, StyleSheet } from 'react-native'
 
 import { epochToOffset } from './timeline-geometry.js'
-import { BAND } from '../../../theme/tokens.js'
 import { useTheme } from '../../../theme/theme-provider.js'
 import { audioPeakColor } from './event-highlights.js'
+import { useKindPaint } from '../../../../shared/palette.js'
 import type { ActivityRendererProps, LaneSelection } from './activity-view-types.js'
 import { LANE_DOT_PX, LANE_LINE_PX, laneMarkLeft } from './timeline-lanes-layout.js'
-
-/** Recording line — same danger/red as the heatmap hairline. */
-const RECORDING_COLOR = BAND.recording
 
 const LINE_PX = LANE_LINE_PX
 const DOT_PX = LANE_DOT_PX
@@ -77,6 +74,7 @@ export const ActivityLanes = memo(function ActivityLanes({
   selection = null,
 }: ActivityLanesProps): React.ReactElement {
   const { colors } = useTheme()
+  const paint = useKindPaint()
   const place = (startMs: number, endMs: number) =>
     rangeToSegment(startMs, endMs, topMs, zoomIndex, scrollOffsetY, height)
   const audioLeft = laneMarkLeft('audio', LINE_PX)
@@ -99,7 +97,7 @@ export const ActivityLanes = memo(function ActivityLanes({
                 top: seg.top,
                 height: seg.height,
                 left: recordingLeft,
-                backgroundColor: RECORDING_COLOR,
+                backgroundColor: paint('recording'),
               },
             ]}
           />
@@ -119,7 +117,7 @@ export const ActivityLanes = memo(function ActivityLanes({
                     top: seg.top,
                     height: seg.height,
                     left: motionLeft,
-                    backgroundColor: colors.laneMotion,
+                    backgroundColor: paint('motion'),
                     opacity: Math.max(0.35, b.intensity),
                   },
                 ]}
@@ -161,7 +159,7 @@ export const ActivityLanes = memo(function ActivityLanes({
                     top: seg.top,
                     height: seg.height,
                     left: audioLeft,
-                    backgroundColor: audioPeakColor(b.intensity, colors.laneAudio),
+                    backgroundColor: audioPeakColor(b.intensity),
                   },
                 ]}
               />

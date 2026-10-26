@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { getPaletteView, paintKind } from '../../../../../shared/palette.js'
 import {
   colorForEventType,
   filterDetectionsByKind,
@@ -28,18 +29,17 @@ function det(className: string, atMs: number, id = `${className}-${atMs}`): Dete
 }
 
 describe('colorForEventType', () => {
-  it('maps motion/audio to the activity-band colors', () => {
-    // Aligned to the server taxonomy (TAXONOMY_COLORS.motion / .audio).
-    expect(colorForEventType('motion')).toBe('#16a34a')
-    expect(colorForEventType('audio')).toBe('#06b6d4')
-    expect(colorForEventType('MOTION')).toBe('#16a34a')
+  const view = getPaletteView()
+
+  it('maps motion and audio onto the palette entries, including a different case', () => {
+    expect(colorForEventType('motion')).toBe(paintKind(view, 'motion'))
+    expect(colorForEventType('audio')).toBe(paintKind(view, 'audio'))
+    expect(colorForEventType('MOTION')).toBe(paintKind(view, 'motion'))
   })
 
-  it('maps object classes via the detection palette deterministically', () => {
-    // Aligned to the server taxonomy (person=green, car=amber).
-    expect(colorForEventType('person')).toBe('#22c55e')
-    expect(colorForEventType('car')).toBe('#f59e0b')
-    // Unknown class still yields a stable, non-empty color.
+  it('maps object classes through the same palette, and keeps an unknown stable', () => {
+    expect(colorForEventType('person')).toBe(paintKind(view, 'person'))
+    expect(colorForEventType('car')).toBe(paintKind(view, 'car'))
     const a = colorForEventType('unicorn')
     expect(a).toBe(colorForEventType('unicorn'))
     expect(a).toMatch(/^#[0-9a-f]{6}$/i)

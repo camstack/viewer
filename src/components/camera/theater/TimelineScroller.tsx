@@ -59,6 +59,7 @@ import {
   TICK_LABEL_WIDTH,
 } from './timeline-lanes-layout.js'
 import { classPaintColor } from './event-highlights.js'
+import { paintKind, usePaletteView } from '../../../../shared/palette.js'
 import type { ClusterExpansionMap } from './cluster-proximity.js'
 import type { ObjectEvent, PositionedCluster } from './event-cluster.js'
 import type { ActivityModel } from './activity-view-types.js'
@@ -299,6 +300,7 @@ export const TimelineScroller = memo(
     ref,
   ): React.ReactElement {
     const { colors } = useTheme()
+    const palette = usePaletteView()
     // Origin at the playhead: grow/shrink around the moment under the indicator
     // (zoom range transition), then apply the cursor's translate shift. Both
     // values are transforms driven from the UI thread — layout never animates.
@@ -457,7 +459,7 @@ export const TimelineScroller = memo(
           timestampMs: c.anchorMs,
           color: classPaintColor(c.importantEvent.className),
         })),
-      [visibleClusters],
+      [visibleClusters, palette],
     )
     const visibleGaps = useMemo(
       () => itemsInBand(gapMarkers ?? NO_GAPS, band),
@@ -551,15 +553,15 @@ export const TimelineScroller = memo(
               (above) from recorded history (below) and, while scrubbed into the
               past, tells the operator where live actually is — "you're N behind".
               Rendered ONLY in playback: in live the fixed readhead already sits on
-              the edge, so this would duplicate it. Cyan `colors.live` keeps it
+              the edge, so this would duplicate it. The palette `live` entry keeps it
               clearly distinct from the RED readhead (the current-position line) and
               from the amber primary, and the cap sits opposite the left readhead
               pill so the two never collide. Pointer-transparent. */}
         {!isLive ? (
           <View pointerEvents="none" style={[styles.liveEdge, { top: layoutOriginPx }]}>
-            <View style={[styles.liveEdgeLine, { backgroundColor: colors.live }]} />
-            <View style={[styles.liveEdgeDot, styles.liveEdgeOrigin, { backgroundColor: colors.live }]} />
-            <View style={[styles.liveEdgeCap, { backgroundColor: colors.live }]}>
+            <View style={[styles.liveEdgeLine, { backgroundColor: paintKind(palette, 'live') }]} />
+            <View style={[styles.liveEdgeDot, styles.liveEdgeOrigin, { backgroundColor: paintKind(palette, 'live') }]} />
+            <View style={[styles.liveEdgeCap, { backgroundColor: paintKind(palette, 'live') }]}>
               <View style={[styles.liveEdgeDot, { backgroundColor: colors.primaryForeground }]} />
               <Text style={[styles.liveEdgeLabel, { color: colors.primaryForeground }]}>
                 {t('v2.theater.live')}

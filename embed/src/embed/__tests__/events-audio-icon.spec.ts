@@ -16,7 +16,8 @@
 import { EVENT_KIND_ICONS, resolveEventKindIcon } from '@camstack/ui-library'
 import { describe, expect, it } from 'vitest'
 import { audioKindId, buildKindIconIds, iconIdForClass } from '../../../../shared/events/events-taxonomy'
-import { AUDIO_ACCENT, accentForClass } from '../events-theme'
+import { accentForClass } from '../events-theme'
+import { getPaletteView, paintKind } from '../../../../shared/palette'
 import { isAudioSourceRow, toEventsTrackRow } from '../../../../shared/events/events-track-row'
 
 const NAMES = new Map<number, string>([[1438, 'Camera dispensa']])
@@ -123,16 +124,17 @@ describe('iconIdForClass namespaces an audio class', () => {
 })
 
 describe('accentForClass tints an audio episode as audio', () => {
+  const view = getPaletteView()
+  const audio = paintKind(view, 'audio')
+
   it('tints by the SOURCE, not by a class name that reads as video', () => {
-    expect(accentForClass('speech', true)).toBe(AUDIO_ACCENT)
-    // `animal` is a real audio macro too; as an episode it must not borrow the
-    // video animal tint.
-    expect(accentForClass('animal', true)).toBe(AUDIO_ACCENT)
-    expect(accentForClass('animal', false)).not.toBe(AUDIO_ACCENT)
+    expect(accentForClass('speech', true)).toBe(audio)
+    expect(accentForClass('animal', true)).toBe(audio)
+    expect(accentForClass('animal', false)).toBe(paintKind(view, 'animal'))
   })
 
-  it('leaves the detection tints untouched', () => {
-    expect(accentForClass('person')).toBe('#38bdf8')
-    expect(accentForClass('audio')).toBe(AUDIO_ACCENT)
+  it('leaves detection classes on their own palette entries', () => {
+    expect(accentForClass('person')).toBe(paintKind(view, 'person'))
+    expect(accentForClass('audio')).toBe(audio)
   })
 })

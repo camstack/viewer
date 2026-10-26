@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { BAND, THEME } from '../tokens.js'
+import { THEME } from '../tokens.js'
 
 describe('camstack theme tokens', () => {
   it('exposes dark and light modes with the camstack Warm Amber/Stone palette', () => {
@@ -15,16 +15,12 @@ describe('camstack theme tokens', () => {
     expect(lightKeys).toEqual(darkKeys)
   })
 
-  it('exposes semantic activity-band colors used by the timeline', () => {
-    expect(BAND.recording).toBe('#f87171')
-  })
-
-  it('motion and audio are THEME tokens now, in both modes — not raw hex in BAND', () => {
-    expect(THEME.dark.laneMotion).toMatch(/^#[0-9a-f]{6}$/)
-    expect(THEME.light.laneMotion).toMatch(/^#[0-9a-f]{6}$/)
-    expect(THEME.dark.laneAudio).toMatch(/^#[0-9a-f]{6}$/)
-    expect(THEME.light.laneAudio).toMatch(/^#[0-9a-f]{6}$/)
-    expect('motion' in BAND).toBe(false)
-    expect('audio' in BAND).toBe(false)
+  it('keeps the live-edge accent as a theme token, and kind lanes on the hub palette', () => {
+    expect(THEME.dark.live).toMatch(/^#[0-9a-f]{6}$/)
+    expect(THEME.light.live).toMatch(/^#[0-9a-f]{6}$/)
+    expect('laneMotion' in THEME.dark).toBe(false)
+    expect('laneAudio' in THEME.dark).toBe(false)
+    expect('laneMotion' in THEME.light).toBe(false)
+    expect('laneAudio' in THEME.light).toBe(false)
   })
 })

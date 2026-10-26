@@ -19,6 +19,7 @@ import type { System } from '@camstack/sdk'
 import { EventCategory } from '@camstack/types/enums'
 import type { PipelineAudioInferenceResultPayload } from '@camstack/types'
 import type { GridHighlightConfig } from './embed-grid-config'
+import { paintKind, type PaletteView } from '../../../shared/palette'
 
 export type HighlightType = 'motion' | 'audio' | 'detection' | null
 
@@ -140,9 +141,10 @@ export function useTileHighlight(
   return null
 }
 
-/** Border color per highlight type (fixed defaults; matches V1's palette). */
-export const HIGHLIGHT_COLORS: Record<Exclude<HighlightType, null>, string> = {
-  motion: '#DC2626',
-  audio: '#3B82F6',
-  detection: '#22C55E',
+/** Border colour when the share URL does not carry an operator override. */
+export function highlightFallback(
+  type: Exclude<HighlightType, null>,
+  view: PaletteView,
+): string {
+  return paintKind(view, type)
 }

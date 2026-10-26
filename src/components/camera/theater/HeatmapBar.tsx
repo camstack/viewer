@@ -13,7 +13,7 @@ import React, { memo, useMemo, useRef } from 'react'
 import { View, Text, StyleSheet, type LayoutChangeEvent, type GestureResponderEvent } from 'react-native'
 
 import { useTheme } from '../../../theme/theme-provider.js'
-import { BAND } from '../../../theme/tokens.js'
+import { useKindPaint } from '../../../../shared/palette.js'
 import type { HeatmapBin } from './mock-data.js'
 import { pointerFraction } from './heatmap-scrub.js'
 import {
@@ -166,6 +166,7 @@ export const HeatmapBar = memo(function HeatmapBar({
   onScrubEnd,
 }: HeatmapBarProps) {
   const { colors } = useTheme()
+  const paint = useKindPaint()
   const widthRef = useRef(0)
   const startXRef = useRef(0)
   const movedRef = useRef(false)
@@ -300,7 +301,7 @@ export const HeatmapBar = memo(function HeatmapBar({
               {
                 left: `${band.leftPct}%`,
                 width: `${band.widthPct}%`,
-                backgroundColor: BAND.recording,
+                backgroundColor: paint('recording'),
               },
             ]}
           />
@@ -319,7 +320,7 @@ export const HeatmapBar = memo(function HeatmapBar({
         ]}
       >
         {bins.map((bin, i) => {
-          const layers = heatmapBinLayers(bin, colors.laneAudio)
+          const layers = heatmapBinLayers(bin)
           return (
             <View key={i} style={styles.bin}>
               {layers.bottom ? (
@@ -401,9 +402,9 @@ export const HeatmapBar = memo(function HeatmapBar({
         {/* Legibility outline: separates the stem from whatever it crosses in a
             dense region, and stays out of the way in an empty one. */}
         <View style={[styles.cursorHalo, { backgroundColor: colors.background }]} />
-        <View style={[styles.cursorStem, { backgroundColor: colors.primary }]} />
-        <View style={[styles.cursorCapTop, { backgroundColor: colors.primary }]} />
-        <View style={[styles.cursorCapBottom, { backgroundColor: colors.primary }]} />
+        <View style={[styles.cursorStem, { backgroundColor: paint('heatmapScrub') }]} />
+        <View style={[styles.cursorCapTop, { backgroundColor: paint('heatmapScrub') }]} />
+        <View style={[styles.cursorCapBottom, { backgroundColor: paint('heatmapScrub') }]} />
       </View>
     </View>
   )

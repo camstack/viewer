@@ -13,7 +13,7 @@ import { Image } from 'expo-image'
 import { useServer } from '../../../app/ServerProvider.js'
 import { useEventMedia, type MediaAddress } from '../../../data/use-event-media.js'
 import { SkeletonBox } from '../../ui/SkeletonBox.js'
-import { colorForEventType } from '../../camera/theater/event-highlights.js'
+import { useKindPaint } from '../../../../shared/palette.js'
 import { iconForClass } from './track-icons.js'
 
 export interface TrackCropImageProps {
@@ -60,7 +60,8 @@ export const TrackCropImage = memo(function TrackCropImage({
     directDefaultKind: true,
     deviceId,
   })
-  const accent = colorForEventType(className)
+  const paint = useKindPaint()
+  const accent = paint(className)
   const Icon = iconForClass(className)
   const headers: Record<string, string> | undefined =
     token && uri && !isData ? { Authorization: `Bearer ${token}` } : undefined

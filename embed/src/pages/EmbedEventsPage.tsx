@@ -33,6 +33,7 @@
 import { createSystem } from '@camstack/sdk'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { EventsCard } from '../components/EventsCard'
+import { PaletteBridge } from '../embed/PaletteBridge'
 import {
   createEventsDataClient,
   type EventsDataClient,
@@ -1499,5 +1500,10 @@ export function EmbedEventsPage() {
   if (!built)
     return <FatalError message="Failed to initialise the events embed" palette={palette} />
 
-  return <Events client={built.client} initialConfig={merged.config} />
+  return (
+    <>
+      <PaletteBridge system={built.system} />
+      <Events client={built.client} initialConfig={merged.config} />
+    </>
+  )
 }

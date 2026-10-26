@@ -32,7 +32,7 @@ import { useTranslation } from 'react-i18next'
 import { useTheme } from '../../../theme/theme-provider.js'
 import { RADIUS, SPACING, mediaScrim } from '../../../theme/tokens.js'
 import { MediaBadge } from '../../ui/MediaBadge.js'
-import { colorForEventType } from '../../camera/theater/event-highlights.js'
+import { useKindPaint } from '../../../../shared/palette.js'
 import { ZoomableImage } from '../../camera/theater/detail/ZoomableImage.js'
 import { EventThumb } from '../../camera/theater/EventThumb.js'
 import { FaceAssignSheet } from './FaceAssignSheet.js'
@@ -219,6 +219,7 @@ export const TrackDetailView = memo(function TrackDetailView({
   track, onSeek, onClose, bottomInset, navigation, openIntent,
 }: TrackDetailViewProps) {
   const { colors } = useTheme()
+  const paint = useKindPaint()
   const { t } = useTranslation()
   const insets = useSafeAreaInsets()
   // The hub base a URL-backed media tile resolves against. Track media arrives
@@ -234,7 +235,7 @@ export const TrackDetailView = memo(function TrackDetailView({
     () => (token ? { Authorization: `Bearer ${token}` } : undefined),
     [token],
   )
-  const accent = colorForEventType(track.className)
+  const accent = paint(track.className)
   // The tier-2 identity (`track.subLabel`) is a proper noun and stays
   // verbatim; the tier-1 sub-class (`track.label`) and the detection class are
   // TAXONOMY and go through the resolver. A SYNTHETIC (sensor-linked) track

@@ -12,6 +12,7 @@
  * Pure + unit-tested; the React glue lives in `components/TileBoxesOverlay`.
  */
 import type { FrameResult } from '@camstack/types'
+import { getPaletteView, paintKind, type PaletteView } from '../../../shared/palette'
 
 /** One detection box, normalized 0..1 to the source frame (x1<=x2, y1<=y2). */
 export interface TileBox {
@@ -28,20 +29,9 @@ export interface TileBox {
  *  (mirrors the viewer's camera-detail overlay). */
 export const TILE_BOXES_FADE_MS = 2_500
 
-/** Per-class box color (first-level + detail macro classes). */
-const CLASS_COLORS: Readonly<Record<string, string>> = {
-  person: '#f59e0b',
-  vehicle: '#3b82f6',
-  animal: '#22c55e',
-  face: '#a855f7',
-  plate: '#ec4899',
-}
-
-const DEFAULT_CLASS_COLOR = '#ef4444'
-
-/** Box/label color for a detection class (stable fallback for unknown classes). */
-export function tileBoxColor(label: string): string {
-  return CLASS_COLORS[label] ?? DEFAULT_CLASS_COLOR
+/** Box/label color for a detection class, from the hub palette. */
+export function tileBoxColor(label: string, view: PaletteView = getPaletteView()): string {
+  return paintKind(view, label)
 }
 
 function clamp01(v: number): number {

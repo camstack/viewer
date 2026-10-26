@@ -29,7 +29,7 @@ import { useTranslation } from 'react-i18next'
 import { useTheme } from '../../../theme/theme-provider.js'
 import { useSettings } from '../../../data/use-settings.js'
 import { RADIUS, SPACING, TABULAR } from '../../../theme/tokens.js'
-import { colorForEventType } from './event-highlights.js'
+import { useKindPaint } from '../../../../shared/palette.js'
 import { EventThumb } from './EventThumb.js'
 import { ClipRowProgress } from './ClipRowProgress.js'
 import type { ClipRowPlayback } from '../../../clips/clip-row-playback.js'
@@ -280,6 +280,7 @@ export const ClusterCard = memo(function ClusterCard({
   clipPlayback,
 }: ClusterCardProps) {
   const { colors } = useTheme()
+  const paint = useKindPaint()
   const { t } = useTranslation()
   const resolver = useEventKindResolver()
   const { settings } = useSettings()
@@ -313,7 +314,7 @@ export const ClusterCard = memo(function ClusterCard({
 
   const renderThumb = (event: ObjectEvent, index: number, active: boolean): React.JSX.Element => {
     const rotation = index % 3 === 0 ? '-2deg' : index % 3 === 2 ? '2deg' : '0deg'
-    const accent = colorForEventType(event.className)
+    const accent = paint(event.className)
     const caption = thumbCaptionLabel(event, resolver)
     return (
       <Pressable

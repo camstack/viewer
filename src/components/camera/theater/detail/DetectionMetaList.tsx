@@ -9,7 +9,7 @@ import { View, Text, StyleSheet, ScrollView } from 'react-native'
 import { User, Car, Dog, Bird, HelpCircle } from '../../../../lib/icons.js'
 import { useTheme } from '../../../../theme/theme-provider.js'
 import { RADIUS, SPACING } from '../../../../theme/tokens.js'
-import { colorForEventType } from '../event-highlights.js'
+import { useKindPaint } from '../../../../../shared/palette.js'
 import { useEventKindResolver } from '../../../../data/use-event-kind-resolver.js'
 import type { DetailDetection } from './cluster-detail.js'
 
@@ -32,6 +32,7 @@ export const DetectionMetaList = memo(function DetectionMetaList({
   detections,
 }: DetectionMetaListProps) {
   const { colors } = useTheme()
+  const paint = useKindPaint()
   // `d.className` and the tier-1 `d.label` (a sub-class like `van` — see
   // `ObjectEventSchema`'s tiered-label model on the server) are TAXONOMY and go
   // through the resolver. `DetailDetection` carries no tier-2 identity field at
@@ -41,7 +42,7 @@ export const DetectionMetaList = memo(function DetectionMetaList({
   return (
     <ScrollView style={styles.list} contentContainerStyle={styles.listContent}>
       {detections.map((d) => {
-        const color = colorForEventType(d.className)
+        const color = paint(d.className)
         const Icon = iconForClass(d.className)
         const pct = typeof d.confidence === 'number' ? `${Math.round(d.confidence * 100)}%` : null
         return (

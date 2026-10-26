@@ -433,6 +433,9 @@
       "retry": "Retry",
       "restored": "Back online"
     },
+    "palette": {
+      "unknown": "Palette unreadable ({{reason}}). Using the CamStack preset."
+    },
     "common": {
       "connecting": "Connecting…",
       "online": "Online",

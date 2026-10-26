@@ -41,11 +41,11 @@ import {
 } from '../../../shared/events/events-taxonomy'
 import {
   accentForClass,
-  AUDIO_ACCENT,
   type EventsPalette,
   formatEventTime,
   hhmm,
 } from '../embed/events-theme'
+import { usePaletteView } from '../../../shared/palette'
 import {
   type EventsTrackRow,
   isAudioSourceRow,
@@ -139,6 +139,7 @@ export const EventsCard = memo(function EventsCard({
   onClick,
   onAssignFace,
 }: EventsCardProps) {
+  const kindPalette = usePaletteView()
   const themeColors = THEME[palette.colorScheme]
   const imageScrim = mediaScrim({ background: palette.background })
   const onImageText = palette.text
@@ -162,7 +163,7 @@ export const EventsCard = memo(function EventsCard({
   const image = useAuthedImage(url, token)
   // The class chip of an AUDIO episode is tinted as AUDIO, not by a class name
   // that reads as video (`animal`, `water`) — see `accentForClass`.
-  const accent = accentForClass(row.className, isAudioSourceRow(row))
+  const accent = accentForClass(row.className, isAudioSourceRow(row), kindPalette)
   const isReel = variant === 'reel'
   const reelCardHeight = heroPx
   /**
@@ -403,7 +404,7 @@ export const EventsCard = memo(function EventsCard({
                       display: 'inline-flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      background: `${AUDIO_ACCENT}E6`,
+                      background: `${accentForClass('audio', true, kindPalette)}E6`,
                       color: onAccentFill,
                       borderRadius: 4,
                       padding: '2px 4px',
@@ -472,7 +473,7 @@ export const EventsCard = memo(function EventsCard({
             width: 8,
             height: 8,
             borderRadius: 999,
-            background: themeColors.laneMotion,
+            background: themeColors.success,
             boxShadow: `0 0 0 2px ${withAlpha(palette.background, 0.35)}`,
           }}
         />

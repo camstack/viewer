@@ -59,6 +59,7 @@ import {
   type TileRect,
 } from '../embed/grid-messages'
 import { GridTilePlayer } from '../components/GridTilePlayer'
+import { PaletteBridge } from '../embed/PaletteBridge'
 import { GridWallSurface } from '../components/GridWallSurface'
 import type { TileOverlayConfig } from '../embed/embed-grid-config'
 import { useHostBox } from '../embed/use-host-box.js'
@@ -497,6 +498,7 @@ export function EmbedGridPage() {
     <SystemProvider system={built.system}>
       <QueryClientProvider client={built.queryClient}>
         <trpc.Provider client={built.system.trpcClient} queryClient={built.queryClient}>
+          <PaletteBridge system={built.system} />
           <Grid system={built.system} config={configResult.config} />
         </trpc.Provider>
       </QueryClientProvider>
