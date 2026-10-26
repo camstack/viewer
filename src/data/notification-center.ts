@@ -129,6 +129,10 @@ export const NcSystemEventKindSchema = z.enum([
   // own paired class, never reported as `detection-blind`.
   'motion-noisy',
   'motion-calm',
+  // D931: a packages rule's LLM confirm failed closed three times, then
+  // answered again. One open notice per camera.
+  'package-llm-silent',
+  'package-llm-answered',
   // D911: a critical alert whose source is a DEVICE (a camera without its
   // PIN) — raised and resolved, in the devices family.
   'device-attention-required',
