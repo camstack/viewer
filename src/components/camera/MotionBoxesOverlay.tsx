@@ -23,6 +23,7 @@
 import React, { useState } from 'react'
 import { View, Text, StyleSheet, type LayoutChangeEvent } from 'react-native'
 import { useDetections } from '../../data/use-detections.js'
+import { useTheme } from '../../theme/theme-provider.js'
 import { RADIUS } from '../../theme/tokens.js'
 import { useKindPaint } from '../../../shared/palette.js'
 import { useEventKindResolver } from '../../data/use-event-kind-resolver.js'
@@ -39,6 +40,7 @@ interface Size {
 }
 
 export function MotionBoxesOverlay({ deviceId, enabled }: MotionBoxesOverlayProps) {
+  const { colors } = useTheme()
   const { boxes } = useDetections(deviceId, enabled)
   // `box.label` is the raw detection class (taxonomy) — resolved below.
   // `box.name`, when present, is the enrichment identity/plate and is already
@@ -95,7 +97,7 @@ export function MotionBoxesOverlay({ deviceId, enabled }: MotionBoxesOverlayProp
                   ]}
                 >
                   <Text
-                    style={styles.labelText}
+                    style={[styles.labelText, { color: colors.onPicture }]}
                     numberOfLines={1}
                     adjustsFontSizeToFit
                     minimumFontScale={0.6}
@@ -125,5 +127,5 @@ const styles = StyleSheet.create({
     paddingVertical: 1,
     borderRadius: RADIUS.sm,
   },
-  labelText: { fontSize: 10, fontWeight: '700', color: '#ffffff' },
+  labelText: { fontSize: 10, fontWeight: '700' },
 })

@@ -16,6 +16,7 @@ import { useLiveEvent } from '@camstack/ui-library'
 import { EventCategory } from '@camstack/types/enums'
 import type { DetectionResultPayload } from '@camstack/types'
 import { usePaletteView } from '../../../shared/palette'
+import { THEME } from '../../../src/theme/tokens'
 import {
   normalizeFrameBoxes,
   tileBoxColor,
@@ -75,7 +76,7 @@ export function TileBoxesOverlay({ deviceId }: TileBoxesOverlayProps) {
                 left: -2,
                 bottom: '100%',
                 background: color,
-                color: '#fff',
+                color: THEME.dark.onPicture,
                 fontSize: 10,
                 fontWeight: 700,
                 fontFamily: 'system-ui, sans-serif',

@@ -26,12 +26,12 @@ import React, { useState } from 'react'
 import { View, Text, StyleSheet, type LayoutChangeEvent } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useCurrentOccupancy } from '../../data/use-occupancy.js'
-import { RADIUS } from '../../theme/tokens.js'
+import { useTheme } from '../../theme/theme-provider.js'
+import { RADIUS, withAlpha } from '../../theme/tokens.js'
 import { useEventKindResolver } from '../../data/use-event-kind-resolver.js'
 
-/** Muted steel accent for parked objects — deliberately OUTSIDE the class-color
- *  palette so a parked car never reads as a live detection. */
-const STATIONARY_COLOR = '#8b98a5'
+/** Wash of the parked box. The steel itself is `colors.stationary`. */
+const STATIONARY_WASH_ALPHA = 0.08
 
 export interface StationaryBoxesOverlayProps {
   readonly deviceId: number
@@ -46,6 +46,7 @@ interface Size {
 
 export function StationaryBoxesOverlay({ deviceId, enabled }: StationaryBoxesOverlayProps) {
   const { t } = useTranslation()
+  const { colors } = useTheme()
   const { data: occupancy, dataUpdatedAt } = useCurrentOccupancy(deviceId, enabled)
   // `obj.label` is NOT tier-1 taxonomy here: the server stamps it from
   // `displayLabel(track)` — `subLabel ?? label` — before promotion, so by the
@@ -88,15 +89,32 @@ export function StationaryBoxesOverlay({ deviceId, enabled }: StationaryBoxesOve
             const text = `${obj.label ?? resolver.resolveLabel(obj.className)} · ${t('v2.cameras.stationaryFor', { min: minutes })}`
             return (
               <React.Fragment key={`stationary-${obj.id}`}>
-                <View style={[styles.box, { left, top, width, height }]} />
+                <View
+                  style={[
+                    styles.box,
+                    {
+                      left,
+                      top,
+                      width,
+                      height,
+                      borderColor: colors.stationary,
+                      backgroundColor: withAlpha(colors.stationary, STATIONARY_WASH_ALPHA),
+                    },
+                  ]}
+                />
                 <View
                   style={[
                     styles.label,
-                    { left, top: Math.max(0, top - 18), maxWidth: Math.max(24, size.width - left) },
+                    {
+                      left,
+                      top: Math.max(0, top - 18),
+                      maxWidth: Math.max(24, size.width - left),
+                      backgroundColor: colors.stationary,
+                    },
                   ]}
                 >
                   <Text
-                    style={styles.labelText}
+                    style={[styles.labelText, { color: colors.onPicture }]}
                     numberOfLines={1}
                     adjustsFontSizeToFit
                     minimumFontScale={0.6}
@@ -119,8 +137,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderStyle: 'dashed',
     borderRadius: RADIUS.sm,
-    borderColor: STATIONARY_COLOR,
-    backgroundColor: 'rgba(139,152,165,0.08)',
   },
   label: {
     position: 'absolute',
@@ -128,7 +144,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
     paddingVertical: 1,
     borderRadius: RADIUS.sm,
-    backgroundColor: STATIONARY_COLOR,
   },
-  labelText: { fontSize: 10, fontWeight: '700', color: '#ffffff' },
+  labelText: { fontSize: 10, fontWeight: '700' },
 })

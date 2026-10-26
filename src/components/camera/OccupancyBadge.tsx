@@ -26,10 +26,6 @@ import { useKindPaint } from '../../../shared/palette.js'
 import { type OverlayAnchor } from './overlay/overlay-position.js'
 import { useScaledPx, useStyleScaler } from './overlay/OverlayFrame.js'
 
-/** The parked accent — the same muted steel `StationaryBoxesOverlay` draws with,
- *  deliberately outside the class-color palette. */
-const STATIONARY_COLOR = '#8b98a5'
-
 /** Cap the number of class chips so a busy scene stays a compact strip. */
 const MAX_CHIPS = 4
 
@@ -78,8 +74,8 @@ export function OccupancyBadge({ deviceId, enabled, corner = 'bottom-left' }: Oc
           the boxes read as one thing. */}
       {parked > 0 ? (
         <View style={[sx(styles.chip), { backgroundColor: `${colors.background}CC` }]}>
-          <CircleParking size={px(13)} color={STATIONARY_COLOR} />
-          <Text style={[sx(styles.count), { color: STATIONARY_COLOR }]}>{parked}</Text>
+          <CircleParking size={px(13)} color={colors.stationary} />
+          <Text style={[sx(styles.count), { color: colors.stationary }]}>{parked}</Text>
         </View>
       ) : null}
     </View>

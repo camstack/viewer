@@ -8,7 +8,10 @@ import { View, Text, StyleSheet } from 'react-native'
 import { useTranslation } from 'react-i18next'
 
 import { useTheme } from '../../../theme/theme-provider.js'
-import { RADIUS, SPACING } from '../../../theme/tokens.js'
+import { RADIUS, SPACING, withAlpha } from '../../../theme/tokens.js'
+
+/** Faint well behind a legend swatch. White in both themes, so a dark swatch still separates. */
+const SWATCH_WELL_ALPHA = 0.04
 import { audioScaleColors, useKindPaint } from '../../../../shared/palette.js'
 import { TimelinePanelHost } from './TimelinePanelHost.js'
 
@@ -28,9 +31,11 @@ function Swatch({
   scale,
   shape,
 }: Pick<SwatchRowProps, 'color' | 'scale' | 'shape'>): React.JSX.Element {
+  const { colors } = useTheme()
+  const well = [styles.swatchBox, { backgroundColor: withAlpha(colors.onPicture, SWATCH_WELL_ALPHA) }]
   if (shape === 'scale') {
     return (
-      <View style={[styles.swatchBox, styles.scaleBox]}>
+      <View style={[well, styles.scaleBox]}>
         {(scale ?? []).map((c) => (
           <View key={c} style={[styles.scaleBar, { backgroundColor: c }]} />
         ))}
@@ -40,20 +45,20 @@ function Swatch({
   if (shape === 'dot') {
     return (
       <View style={[styles.swatchBox, { backgroundColor: 'transparent' }]}>
-        <View style={[styles.dot, { backgroundColor: color }]} />
+        <View style={[styles.dot, { backgroundColor: color, borderColor: colors.mediaBlack }]} />
       </View>
     )
   }
   if (shape === 'lineV') {
     return (
-      <View style={styles.swatchBox}>
+      <View style={well}>
         <View style={[styles.lineV, { backgroundColor: color }]} />
       </View>
     )
   }
   if (shape === 'peak') {
     return (
-      <View style={styles.swatchBox}>
+      <View style={well}>
         <View style={[styles.peak, { backgroundColor: color }]} />
       </View>
     )
@@ -62,7 +67,7 @@ function Swatch({
     return <View style={[styles.swatchBox, { backgroundColor: color }]} />
   }
   return (
-    <View style={styles.swatchBox}>
+    <View style={well}>
       <View style={[styles.lineH, { backgroundColor: color }]} />
     </View>
   )
@@ -172,7 +177,6 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.sm,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.04)',
   },
   scaleBox: {
     flexDirection: 'row',
@@ -206,7 +210,6 @@ const styles = StyleSheet.create({
     height: 10,
     borderRadius: 5,
     borderWidth: 1,
-    borderColor: '#000000',
   },
   title: {
     flex: 1,

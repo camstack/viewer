@@ -8,6 +8,7 @@
  * same reason the other pages use inline styles: no utility class emitted only
  * from this file can be dropped by a content scan that never sees it.
  */
+import { THEME } from '../../../src/theme/tokens'
 import { getPaletteView, paintKind, type PaletteView } from '../../../shared/palette'
 
 export interface EventsPalette {
@@ -23,26 +24,26 @@ export interface EventsPalette {
 }
 
 export const DARK_PALETTE: EventsPalette = {
-  background: '#09090b',
-  card: '#18181b',
-  cardHover: '#27272a',
-  border: '#27272a',
-  text: '#fafafa',
-  textMuted: '#a1a1aa',
-  skeleton: '#27272a',
-  chip: '#3f3f46',
+  background: THEME.dark.eventsBackground,
+  card: THEME.dark.eventsCard,
+  cardHover: THEME.dark.eventsRaised,
+  border: THEME.dark.eventsRaised,
+  text: THEME.dark.eventsText,
+  textMuted: THEME.dark.eventsMuted,
+  skeleton: THEME.dark.eventsRaised,
+  chip: THEME.dark.eventsChip,
   colorScheme: 'dark',
 }
 
 export const LIGHT_PALETTE: EventsPalette = {
-  background: '#ffffff',
-  card: '#f4f4f5',
-  cardHover: '#e4e4e7',
-  border: '#e4e4e7',
-  text: '#18181b',
-  textMuted: '#71717a',
-  skeleton: '#e4e4e7',
-  chip: '#d4d4d8',
+  background: THEME.light.eventsBackground,
+  card: THEME.light.eventsCard,
+  cardHover: THEME.light.eventsRaised,
+  border: THEME.light.eventsRaised,
+  text: THEME.light.eventsText,
+  textMuted: THEME.light.eventsMuted,
+  skeleton: THEME.light.eventsRaised,
+  chip: THEME.light.eventsChip,
   colorScheme: 'light',
 }
 

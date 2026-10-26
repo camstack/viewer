@@ -13,6 +13,7 @@ import React, { memo, useMemo, useRef } from 'react'
 import { View, Text, StyleSheet, type LayoutChangeEvent, type GestureResponderEvent } from 'react-native'
 
 import { useTheme } from '../../../theme/theme-provider.js'
+import { withAlpha } from '../../../theme/tokens.js'
 import { useKindPaint } from '../../../../shared/palette.js'
 import type { HeatmapBin } from './mock-data.js'
 import { pointerFraction } from './heatmap-scrub.js'
@@ -29,6 +30,8 @@ import { HEATMAP_SCRUB_EMIT_MS, shouldEmitScrubSample } from '../../../lib/scrub
 
 /** Finger travel (px) below which a touch is a tap (seek), not a drag (scrub). */
 const TAP_SLOP_PX = 8
+/** Drop shadow under an audio peak. Black in both themes; the tape has no shadow token of its own. */
+const AUDIO_PEAK_SHADOW_ALPHA = 0.35
 
 /** Every dimension of the strip and its marker, from the one module that owns
  *  their relationship. Constant — resolved once, not per render. */
@@ -341,6 +344,7 @@ export const HeatmapBar = memo(function HeatmapBar({
                     {
                       height: `${layers.audio.heightPct}%`,
                       backgroundColor: layers.audio.color,
+                      boxShadow: `0 1px 3px ${withAlpha(colors.mediaBlack, AUDIO_PEAK_SHADOW_ALPHA)}`,
                     },
                   ]}
                 />
@@ -468,7 +472,6 @@ const styles = StyleSheet.create({
     top: 0,
     left: 1,
     right: 1,
-    boxShadow: '0 1px 3px rgba(0,0,0,0.35)',
   },
   hours: {
     position: 'absolute',

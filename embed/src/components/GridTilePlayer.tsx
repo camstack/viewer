@@ -24,6 +24,7 @@ import type { CellSpan } from '../embed/grid-layout'
 import { DEFAULT_TILE_LABELS, type TileLabels } from '../embed/tile-labels'
 import { highlightFallback, useTileHighlight } from '../embed/use-tile-highlight'
 import { usePaletteView } from '../../../shared/palette'
+import { THEME } from '../../../src/theme/tokens'
 import { TileBoxesOverlay } from './TileBoxesOverlay'
 import { ZoomPan } from './ZoomPan'
 import { posterUrlFromLinkRows, type SnapshotLinkRow } from './grid-tile-poster'
@@ -287,7 +288,7 @@ export function GridTilePlayer({
     <div
       ref={tileRef}
       data-stall-recovering={watchdog.recovering ? 'true' : undefined}
-      style={{ position: 'relative', width: '100%', height: '100%', background: '#000' }}
+      style={{ position: 'relative', width: '100%', height: '100%', background: THEME.dark.mediaBlack }}
     >
       <div style={pictureStyle}>
       <ZoomPan onTap={onBackgroundTap}>
@@ -299,7 +300,7 @@ export function GridTilePlayer({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#fafaf9',
+              color: THEME.dark.onMedia,
             }}
           >
             <PlayIcon size={28} />
@@ -432,7 +433,7 @@ export function GridTilePlayer({
               width: 8,
               height: 8,
               borderRadius: 4,
-              background: online ? '#34d399' : '#71717a',
+              background: online ? THEME.dark.presence : THEME.dark.presenceOff,
             }}
           />
           <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

@@ -36,6 +36,26 @@ export interface ColorTokens {
    *  Kind paint (the live cursor, the heatmap handle, recording) reads the hub
    *  palette, not this token. */
   live: string
+  /** Ink on a picture or a kind fill. White in both themes — it does not flip. */
+  onPicture: string
+  /** Glyph drawn on the video. The dark foreground, kept when the page is light. */
+  onMedia: string
+  /** Video letterbox, a swatch keyline, a drop shadow. Black in both themes. */
+  mediaBlack: string
+  /** Tile presence dot: the camera is reachable. Same emerald in both themes. */
+  presence: string
+  /** Tile presence dot: the camera is not reachable. Same zinc in both themes. */
+  presenceOff: string
+  /** Parked objects. Outside the class palette; the same steel in both themes. */
+  stationary: string
+  /** Events embed page. Zinc, not the app's stone — this page sits on a light host. */
+  eventsBackground: string
+  eventsCard: string
+  /** Card hover, border, and skeleton. One colour in each theme. */
+  eventsRaised: string
+  eventsText: string
+  eventsMuted: string
+  eventsChip: string
 }
 
 const dark: ColorTokens = {
@@ -68,6 +88,18 @@ const dark: ColorTokens = {
   neutralFill: '#44403c',
   neutralOn: '#fafaf9',
   live: '#22d3ee',
+  onPicture: '#ffffff',
+  onMedia: '#fafaf9',
+  mediaBlack: '#000000',
+  presence: '#34d399',
+  presenceOff: '#71717a',
+  stationary: '#8b98a5',
+  eventsBackground: '#09090b',
+  eventsCard: '#18181b',
+  eventsRaised: '#27272a',
+  eventsText: '#fafafa',
+  eventsMuted: '#a1a1aa',
+  eventsChip: '#3f3f46',
 }
 
 const light: ColorTokens = {
@@ -100,6 +132,18 @@ const light: ColorTokens = {
   neutralFill: '#57534e',
   neutralOn: '#ffffff',
   live: '#0891b2',
+  onPicture: '#ffffff',
+  onMedia: '#fafaf9',
+  mediaBlack: '#000000',
+  presence: '#34d399',
+  presenceOff: '#71717a',
+  stationary: '#8b98a5',
+  eventsBackground: '#ffffff',
+  eventsCard: '#f4f4f5',
+  eventsRaised: '#e4e4e7',
+  eventsText: '#18181b',
+  eventsMuted: '#71717a',
+  eventsChip: '#d4d4d8',
 }
 
 /** `pill` is a full-round end cap (any box shorter than 2 * 999). */

@@ -58,6 +58,7 @@ import {
   tileResizeMsg,
   type TileRect,
 } from '../embed/grid-messages'
+import { THEME } from '../../../src/theme/tokens'
 import { GridTilePlayer } from '../components/GridTilePlayer'
 import { PaletteBridge } from '../embed/PaletteBridge'
 import { GridWallSurface } from '../components/GridWallSurface'
@@ -118,8 +119,8 @@ function FatalError({ message }: { message: string }) {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: '#000',
-        color: '#f87171',
+        background: THEME.dark.mediaBlack,
+        color: THEME.dark.danger,
         fontFamily: 'system-ui, sans-serif',
         fontSize: 13,
         padding: 16,
@@ -381,7 +382,7 @@ function Grid({ system, config }: GridProps) {
       style={{
         position: 'fixed',
         inset: 0,
-        background: '#000',
+        background: THEME.dark.mediaBlack,
         display: 'flex',
         // The ONE place leftover space lives: this centres the block below, so
         // the black is a border. Deliberately NOT `flex-wrap` — a wrap container
@@ -394,7 +395,7 @@ function Grid({ system, config }: GridProps) {
       {activeOnly && visibleDevices.length === 0 && (
         <div
           style={{
-            color: '#a1a1aa',
+            color: THEME.dark.eventsMuted,
             fontFamily: 'system-ui, sans-serif',
             fontSize: 14,
             padding: 24,

@@ -44,6 +44,7 @@ import { gridHighlightSchema, type GridHighlightConfig } from '../embed/embed-gr
 import { PaletteBridge } from '../embed/PaletteBridge'
 import { highlightFallback, useTileHighlight } from '../embed/use-tile-highlight'
 import { usePaletteView } from '../../../shared/palette'
+import { THEME } from '../../../src/theme/tokens'
 import {
   emitHost,
   onHostCommand,
@@ -323,8 +324,8 @@ function EmbedError({ message }: { message: string }) {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: '#000',
-        color: '#f87171',
+        background: THEME.dark.mediaBlack,
+        color: THEME.dark.danger,
         fontFamily: 'system-ui, sans-serif',
         fontSize: 13,
         padding: 16,
@@ -984,7 +985,7 @@ function EmbedPlayer({
         top: 0,
         width: box.w,
         height: box.h,
-        background: '#000',
+        background: THEME.dark.mediaBlack,
       }}
     >
       <CameraStreamPlayer

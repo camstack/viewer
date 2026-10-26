@@ -13,6 +13,7 @@
 import React, { memo } from 'react'
 import { View, Text, StyleSheet } from 'react-native'
 import { useKindPaint } from '../../../../../shared/palette.js'
+import { useTheme } from '../../../../theme/theme-provider.js'
 import { RADIUS } from '../../../../theme/tokens.js'
 import { useEventKindResolver } from '../../../../data/use-event-kind-resolver.js'
 import { containRect, bboxToScreen, type DetailDetection } from './cluster-detail.js'
@@ -31,6 +32,7 @@ export const BoundingBoxOverlay = memo(function BoundingBoxOverlay({
   // `d.className` and the tier-1 `d.label` (a sub-class like `van`) are
   // TAXONOMY, not an identity — `DetailDetection` carries no tier-2 field —
   // so both go through the resolver, same as `DetectionMetaList`.
+  const { colors } = useTheme()
   const resolver = useEventKindResolver()
   const paint = useKindPaint()
   // All detections on a frame share the inference-frame dimensions; take them
@@ -60,7 +62,7 @@ export const BoundingBoxOverlay = memo(function BoundingBoxOverlay({
           >
             <View style={[styles.tag, { backgroundColor: color }]}>
               <Text
-                style={styles.tagText}
+                style={[styles.tagText, { color: colors.onPicture }]}
                 numberOfLines={1}
                 adjustsFontSizeToFit
                 minimumFontScale={0.7}
@@ -91,7 +93,6 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.sm,
   },
   tagText: {
-    color: '#fff',
     fontSize: 10,
     fontWeight: '700',
   },

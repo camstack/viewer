@@ -15,7 +15,13 @@ import { User, Car, Dog, Bird, HelpCircle } from '../../../../lib/icons.js'
 import { useServer } from '../../../../app/ServerProvider.js'
 import { useEventMedia, type MediaAddress } from '../../../../data/use-event-media.js'
 import { useKindPaint } from '../../../../../shared/palette.js'
-import { RADIUS } from '../../../../theme/tokens.js'
+import { useTheme } from '../../../../theme/theme-provider.js'
+import { RADIUS, withAlpha } from '../../../../theme/tokens.js'
+
+/** Unselected crop edge: white at this alpha, on the picture in both themes. */
+const CROP_REST_BORDER_ALPHA = 0.15
+/** Empty crop well. The picture's black, washed so a missing frame still reads as media. */
+const CROP_WELL_ALPHA = 0.3
 
 type IconComponent = React.ComponentType<{ size: number; color: string }>
 
@@ -49,6 +55,7 @@ export const CropTile = memo(function CropTile({
   onPress,
 }: CropTileProps) {
   const { token } = useServer()
+  const { colors } = useTheme()
   // No importer reaches this component (see `TrackMediaGallery.tsx`'s
   // docblock). Kept type-correct for a green build: `eventId` is treated as a
   // track owner id, the same address every live crop tile resolves against.
@@ -67,7 +74,7 @@ export const CropTile = memo(function CropTile({
     height: size,
     borderRadius: RADIUS.sm,
     borderWidth: selected ? 2 : StyleSheet.hairlineWidth,
-    borderColor: selected ? accent : 'rgba(255,255,255,0.15)',
+    borderColor: selected ? accent : withAlpha(colors.onPicture, CROP_REST_BORDER_ALPHA),
   }
 
   const body =
@@ -76,7 +83,7 @@ export const CropTile = memo(function CropTile({
         <Icon size={size * 0.42} color={accent} />
       </View>
     ) : (
-      <View style={[styles.tile, frame]}>
+      <View style={[styles.tile, frame, { backgroundColor: withAlpha(colors.mediaBlack, CROP_WELL_ALPHA) }]}>
         <Image
           source={headers ? { uri, headers } : { uri }}
           style={StyleSheet.absoluteFill}
@@ -96,6 +103,6 @@ export const CropTile = memo(function CropTile({
 })
 
 const styles = StyleSheet.create({
-  tile: { overflow: 'hidden', backgroundColor: 'rgba(0,0,0,0.3)' },
+  tile: { overflow: 'hidden' },
   center: { alignItems: 'center', justifyContent: 'center' },
 })
