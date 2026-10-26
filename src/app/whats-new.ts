@@ -30,6 +30,18 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.661',
+    date: '2026-10-26',
+    notes: {
+      en: [
+        'Detection colours follow the palette chosen on your hub',
+      ],
+      it: [
+        "I colori dei rilevamenti seguono la palette scelta sull'hub",
+      ],
+    },
+  },
+  {
     version: '1.0.660',
     date: '2026-10-25',
     notes: {
