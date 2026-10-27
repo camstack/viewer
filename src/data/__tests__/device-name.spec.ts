@@ -29,42 +29,42 @@ function device(partial: DeviceNameFields): DeviceNameFields {
 describe('viewer device-name copy', () => {
   it('names the only motion child as its container', () => {
     const parent = device({
-      id: 3297,
-      name: 'Sensore movimento veranda',
+      id: 201,
+      name: 'Porch motion sensor',
       type: 'container',
       stableId: 'p',
       parentDeviceId: null,
     })
     const motion = device({
-      id: 3299,
+      id: 202,
       name: 'Motion',
       type: 'sensor',
       role: 'motion-sensor',
       stableId: 'm',
-      parentDeviceId: 3297,
+      parentDeviceId: 201,
     })
     expect(
       formatDeviceName(motion, 'compact', { parent, siblings: [motion] }, NOUNS),
-    ).toBe('Sensore movimento veranda')
+    ).toBe('Porch motion sensor')
   })
 
   it('keeps a siren under a camera as camera · noun', () => {
     const camera = device({
-      id: 584,
-      name: 'Videocamera veranda',
+      id: 101,
+      name: 'Porch camera',
       type: 'camera',
       stableId: 'c',
       parentDeviceId: null,
     })
     const siren = device({
       id: 585,
-      name: 'Videocamera veranda Siren',
+      name: 'Porch camera Siren',
       type: 'siren',
       stableId: 's',
-      parentDeviceId: 584,
+      parentDeviceId: 101,
     })
     expect(formatDeviceName(siren, 'compact', { parent: camera, siblings: [siren] }, NOUNS)).toBe(
-      'Videocamera veranda · Sirena',
+      'Porch camera · Sirena',
     )
   })
 })
