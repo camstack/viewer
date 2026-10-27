@@ -2244,7 +2244,9 @@
         "container": "Container",
         "image": "Image",
         "pet-feeder": "Pet feeder",
-        "dishwasher": "Dishwasher"
+        "dishwasher": "Dishwasher",
+        "washer": "Washing machine",
+        "dryer": "Dryer"
       },
       "prune": {
         "device": "Disabled on {{date}}: its last device (#{{id}}) was deleted.",

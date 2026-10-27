@@ -878,6 +878,8 @@ export const NcRuleInputSchema = z.object({
    * The bounds are the cap's own.
    */
   groupingSec: z.number().int().min(NC_GROUPING_MIN_SEC).max(NC_GROUPING_MAX_SEC).optional(),
+  /** Mirror of the hub's `askVerdict` (#243): absent and `false` mean off. */
+  askVerdict: z.boolean().optional(),
 })
 export type NcRuleInput = z.infer<typeof NcRuleInputSchema>
 
@@ -923,6 +925,8 @@ export const NcRulePatchSchema = z.object({
   actions: NcRuleActionsSchema.optional(),
   confirm: NcConfirmSchema.optional(),
   groupingSec: z.number().int().min(NC_GROUPING_MIN_SEC).max(NC_GROUPING_MAX_SEC).optional(),
+  /** Mirror of the hub's `askVerdict` (#243): absent and `false` mean off. */
+  askVerdict: z.boolean().optional(),
 })
 export type NcRulePatch = z.infer<typeof NcRulePatchSchema>
 

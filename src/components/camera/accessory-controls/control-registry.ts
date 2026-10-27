@@ -205,8 +205,10 @@ const CONTROL_BY_DEVICE_TYPE = {
   [DeviceType.PetFeeder]: 'pet-feeder',
   [DeviceType.Container]: 'none',
   [DeviceType.Image]: 'image',
-  // No dishwasher control here yet: its device page is the hub's own.
+  // No appliance control here yet: their device pages are the hub's own.
   [DeviceType.Dishwasher]: 'none',
+  [DeviceType.Washer]: 'none',
+  [DeviceType.Dryer]: 'none',
 } as const satisfies Record<DeviceType, AccessoryControlKind>
 
 /** Resolve a raw device-type string to its base control kind via the guarded

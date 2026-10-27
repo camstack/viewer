@@ -2241,7 +2241,9 @@
         "container": "Contenitore",
         "image": "Immagine",
         "pet-feeder": "Distributore di cibo per animali",
-        "dishwasher": "Lavastoviglie"
+        "dishwasher": "Lavastoviglie",
+        "washer": "Lavatrice",
+        "dryer": "Asciugatrice"
       },
       "prune": {
         "device": "Disattivata il {{date}}: il suo ultimo dispositivo (#{{id}}) è stato eliminato.",

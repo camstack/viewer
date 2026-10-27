@@ -112,7 +112,7 @@ describe('DeviceType parity', () => {
     'automation',
   ]
   // Controllable, but the viewer has no row for it yet (its page is the hub's).
-  const NO_VIEWER_CONTROL_YET: readonly string[] = ['dishwasher']
+  const NO_VIEWER_CONTROL_YET: readonly string[] = ['dishwasher', 'washer', 'dryer']
 
   it('resolves a control kind for every shared DeviceType', () => {
     for (const type of Object.values(DeviceType)) {
