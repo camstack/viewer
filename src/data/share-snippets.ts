@@ -101,11 +101,11 @@ export function eventsCardYaml(params: EventsShareParams): string {
   if (params.view === 'reel' && params.rows !== undefined) lines.push(`rows: ${params.rows}`)
   if (params.view === 'gallery' && params.columns !== undefined) lines.push(`columns: ${params.columns}`)
   lines.push(`theme: ${params.theme}`)
-  // The viewer's tile settings, under the viewer's own names. Written only when
+  // The viewer's tile settings, as snake_case card keys of the viewer settings. Written only when
   // the link overrides them: an absent key is the default on both sides.
-  if (params.tileLabelMode !== undefined) lines.push(`tileLabelMode: ${params.tileLabelMode}`)
-  if (params.tileDetailCamera !== undefined) lines.push(`tileDetailCamera: ${params.tileDetailCamera}`)
-  if (params.tileDetailZone !== undefined) lines.push(`tileDetailZone: ${params.tileDetailZone}`)
+  if (params.tileLabelMode !== undefined) lines.push(`tile_label_mode: ${params.tileLabelMode}`)
+  if (params.tileDetailCamera !== undefined) lines.push(`tile_detail_camera: ${params.tileDetailCamera}`)
+  if (params.tileDetailZone !== undefined) lines.push(`tile_detail_zone: ${params.tileDetailZone}`)
   lines.push(...listBlock('fields', EVENTS_FIELD_KEYS.filter((key) => params.fields[key])))
   return `${lines.join('\n')}\n`
 }

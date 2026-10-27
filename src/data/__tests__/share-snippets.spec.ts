@@ -117,9 +117,9 @@ describe('eventsCardYaml', () => {
     const base = { view: 'gallery' as const, thumb: 'small' as const, deviceIds: [], fields: DEFAULT_EVENTS_FIELDS, theme: 'auto' as const }
     expect(eventsCardYaml(base)).not.toContain('tile')
     const yaml = eventsCardYaml({ ...base, tileLabelMode: 'icon', tileDetailCamera: false, tileDetailZone: true })
-    expect(yaml).toContain('tileLabelMode: icon\n')
-    expect(yaml).toContain('tileDetailCamera: false\n')
-    expect(yaml).toContain('tileDetailZone: true\n')
+    expect(yaml).toContain('tile_label_mode: icon\n')
+    expect(yaml).toContain('tile_detail_camera: false\n')
+    expect(yaml).toContain('tile_detail_zone: true\n')
   })
 
   it('carries the theme the dialog picked', () => {
