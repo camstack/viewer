@@ -102,9 +102,9 @@ describe('fields is an ALLOW-LIST', () => {
     expect(p.get('fields')).toBe('')
   })
 
-  it('emits all five when all are on', () => {
+  it('emits every default-on field', () => {
     // `importance` is off by default, so a default link does not list it.
-    expect(q(base).get('fields')).toBe('label,sublabel,camera,time,badges')
+    expect(q(base).get('fields')).toBe('label,camera,time,badges')
   })
 })
 

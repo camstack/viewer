@@ -105,7 +105,6 @@ describe('eventsCardYaml', () => {
         'theme: auto',
         'fields:',
         '  - label',
-        '  - sublabel',
         '  - camera',
         '  - time',
         '  - badges',

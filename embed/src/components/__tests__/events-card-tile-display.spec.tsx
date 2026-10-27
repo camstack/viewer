@@ -18,15 +18,15 @@ import { EventsCard } from '../EventsCard'
 const ROW: EventsTrackRow = {
   trackId: 'trk-1',
   deviceId: 101,
-  cameraName: 'Videocamera salone',
+  cameraName: 'Camera hall one',
   className: 'person',
-  label: 'Anna',
+  label: 'Alice',
   firstSeen: 1000,
   lastSeen: 2000,
   state: 'moving',
   active: false,
-  zonesVisited: ['Ingresso'],
-  zoneNames: ['Ingresso'],
+  zonesVisited: ['Porch'],
+  zoneNames: ['Porch'],
   classes: ['person'],
   audioLabels: [],
   bestEventId: 'evt-1',
@@ -78,7 +78,7 @@ describe('the viewer tile settings', () => {
 
   it('tileLabelMode label adds the finest name; off removes every chip', () => {
     const label = renderCard({ ...DEFAULT_TILE_DISPLAY, tileLabelMode: 'label' })
-    expect(label.getByTestId('card-title').textContent).toBe('Anna')
+    expect(label.getByTestId('card-title').textContent).toBe('Alice')
     cleanup()
     const off = renderCard({ ...DEFAULT_TILE_DISPLAY, tileLabelMode: 'off' })
     expect(off.queryByTestId('card-class-glyph')).toBeNull()
@@ -91,8 +91,8 @@ describe('the viewer tile settings', () => {
       tileDetailCamera: true,
       tileDetailZone: true,
     })
-    expect(getByTestId('card-camera').textContent).toBe('Videocamera salone')
-    expect(getByTestId('card-zone').textContent).toBe('Ingresso')
+    expect(getByTestId('card-camera').textContent).toBe('Camera hall one')
+    expect(getByTestId('card-zone').textContent).toBe('Porch')
   })
 
   it('a legacy fields-only host resolves to what it always rendered', () => {
@@ -110,12 +110,12 @@ describe('the viewer tile settings', () => {
 
 describe('the camera line scales with the tile', () => {
   it('shrinks to fit one line, then takes a second line at the floor', () => {
-    const wide = fitTileText('Videocamera salone', 200)
+    const wide = fitTileText('Camera hall one', 200)
     expect(wide).toEqual({ fontSizePx: TILE_TEXT_MAX_PX, maxLines: 1 })
-    const mid = fitTileText('Videocamera salone', 110)
+    const mid = fitTileText('Camera hall one', 90)
     expect(mid.maxLines).toBe(1)
     expect(mid.fontSizePx).toBeLessThan(TILE_TEXT_MAX_PX)
-    expect(fitTileText('Videocamera sala da pranzo', 74)).toEqual({
+    expect(fitTileText('Camera hall number two', 74)).toEqual({
       fontSizePx: TILE_TEXT_MIN_PX,
       maxLines: 2,
     })
