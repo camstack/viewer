@@ -9,6 +9,7 @@
  *     &fields=label,sublabel,camera,time,badges,importance
  *     &tileLabelMode=off|icon|label&tileDetailCamera=0|1&tileDetailZone=0|1
  *     &page=<1..500> &max=<1..5000> &refresh=<ms> &age=<ms> &theme=auto|dark|light
+ *     &lang=en|it (a tag such as it-IT is read as it; anything else is the browser's)
  *     &smode=text|semantic &slimit=<1..200> &sscore=<0..1>
  *     &since=<ms> &until=<ms> &names=<id>:<name>,<id>:<name>
  *   #t=<token>
@@ -44,6 +45,7 @@ import {
   type EventsFields,
   eventsConfigPatchSchema,
   parseEventsConfig,
+  parseEventsLocale,
 } from './events-config'
 import { VIEWER_EMBED_PATH } from '../../../shared/embed-path'
 import { embedServerUrl, isTransportAuthenticated } from './transport-auth'
@@ -265,6 +267,8 @@ export function parseEventsUrlPatch(
   if (age !== undefined) candidate.maxAgeMs = age
   const theme = params.get('theme')
   if (theme !== null) candidate.theme = theme
+  const lang = parseEventsLocale(params.get('lang'))
+  if (lang !== undefined) candidate.locale = lang
   // `sort=` is NOT read: events are newest first, always. A link minted when
   // it asked for an importance order still opens — newest first.
   const smode = params.get('smode')

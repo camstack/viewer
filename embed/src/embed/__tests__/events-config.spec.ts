@@ -11,6 +11,8 @@ import {
   REEL_EVENTS_MAX_ROWS,
   resolveMaxRows,
   thumbEdgePx,
+  parseEventsLocale,
+  resolveEventsLocale,
 } from '../events-config'
 
 const MINIMAL = { serverUrl: 'https://hub:4443', token: 'jwt' }
@@ -158,5 +160,19 @@ describe('readEventsConfig', () => {
     const result = readEventsConfig()
     expect(result.ok).toBe(true)
     if (result.ok) expect(result.config.view).toBe('gallery')
+  })
+})
+
+describe('events locale', () => {
+  it('maps a language tag to a shipped locale', () => {
+    expect(parseEventsLocale('it-IT')).toBe('it')
+    expect(parseEventsLocale('EN_gb')).toBe('en')
+    expect(parseEventsLocale('de')).toBeUndefined()
+    expect(parseEventsLocale(null)).toBeUndefined()
+  })
+  it('prefers the host pick, then the browser, then English', () => {
+    expect(resolveEventsLocale('it', 'en-US')).toBe('it')
+    expect(resolveEventsLocale(undefined, 'it-IT')).toBe('it')
+    expect(resolveEventsLocale(undefined, 'de-DE')).toBe('en')
   })
 })

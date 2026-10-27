@@ -30,6 +30,18 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.663',
+    date: '2026-10-28',
+    notes: {
+      en: [
+        'Events embed: no face marker, short tile age, text in your language',
+      ],
+      it: [
+        'Embed eventi: niente segno volto, età breve sulle tessere, testi nella tua lingua',
+      ],
+    },
+  },
+  {
     version: '1.0.662',
     date: '2026-10-28',
     notes: {

@@ -50,6 +50,24 @@ export type EventsThumbSize = z.infer<typeof eventsThumbSizeSchema>
 
 /** Colour scheme. `auto` follows the host's `prefers-color-scheme`. */
 export const eventsThemeSchema = z.enum(['auto', 'dark', 'light'])
+
+/** The languages the viewer ships (`locales/{en,it}.json`). */
+export const EVENTS_LOCALES = ['en', 'it'] as const
+export type EventsLocale = (typeof EVENTS_LOCALES)[number]
+
+/** A language tag (`it`, `it-IT`) to a shipped locale, or `undefined` for any other. */
+export function parseEventsLocale(raw: string | null | undefined): EventsLocale | undefined {
+  const primary = (raw ?? '').toLowerCase().split(/[-_]/)[0]
+  return EVENTS_LOCALES.find((locale) => locale === primary)
+}
+
+/** The page's locale: the host's pick, else the browser's language, else English. */
+export function resolveEventsLocale(
+  configured: EventsLocale | undefined,
+  browserLanguage: string | undefined,
+): EventsLocale {
+  return configured ?? parseEventsLocale(browserLanguage) ?? 'en'
+}
 export type EventsTheme = z.infer<typeof eventsThemeSchema>
 
 /**
@@ -235,8 +253,8 @@ export const eventsConfigSchema = z.object({
   kindLabels: z.record(z.string(), z.string()).default({}),
   /**
    * The surface's OWN words, ALREADY TRANSLATED by the host — the pills a card
-   * draws for itself (`favourite`, `active`, the D/T/✓ flags, the "?" face
-   * chip) and the tail placeholder's accessible name. See `events-labels.ts`.
+   * draws for itself (`favourite`, `active`, the D/T/✓ flags) and the tail
+   * placeholder's accessible name. See `events-labels.ts`.
    *
    * Same reason as `kindLabels` above, for the text a row does not carry: the
    * embed has no i18n, so without this dictionary an Italian gallery shows
@@ -343,6 +361,12 @@ export const eventsConfigSchema = z.object({
   maxAgeMs: z.number().int().min(60_000).default(DEFAULT_EVENTS_MAX_AGE_MS),
   theme: eventsThemeSchema.default('auto'),
   /**
+   * The language of the words the page builds itself (the tile's age). Absent
+   * ⇒ the browser's language. Not part of a share link's meaning, only of how
+   * it reads on the screen that opens it.
+   */
+  locale: z.enum(EVENTS_LOCALES).optional(),
+  /**
    * The HOST draws the pull-to-refresh gesture (a native `RefreshControl`
    * above the WebView). When true the embed's internal overscroll gesture
    * stands down — two overlapping pull gestures is worse than either alone —
@@ -418,6 +442,7 @@ export const eventsConfigPatchSchema = z.object({
   refreshMs: z.number().int().min(0).max(600_000).optional(),
   maxAgeMs: z.number().int().min(60_000).optional(),
   theme: eventsThemeSchema.optional(),
+  locale: z.enum(EVENTS_LOCALES).optional(),
   /** See the config field. Pushed by the NATIVE host once the loaded embed
    *  advertises `native-pull-refresh`. */
   nativePullToRefresh: z.boolean().optional(),

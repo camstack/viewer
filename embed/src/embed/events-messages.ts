@@ -224,20 +224,6 @@ export interface TrackClickPayload {
   readonly className: string
   readonly firstSeen: number
   readonly lastSeen: number
-  /**
-   * WHY the host was asked to open this track.
-   *
-   * Absent is the ordinary tap on a card: open the detail, let the operator
-   * look. `assign-face` is the "?" chip — a card that says a face is waiting
-   * for a name, tapped ON the thing that says so. Opening the detail and
-   * making the operator find the assignment again answers a question they
-   * already asked.
-   *
-   * An intent the host does not understand must behave like a plain open, so
-   * an older viewer paired with a newer embed loses a shortcut rather than a
-   * tap.
-   */
-  readonly intent?: 'assign-face'
 }
 
 export function eventsReadyMsg(view: EventsView): EventsHostMessage {

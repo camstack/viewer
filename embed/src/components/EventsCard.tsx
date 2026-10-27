@@ -28,9 +28,9 @@
  * tile rather than a broken-image glyph.
  */
 import { resolveEventKindIcon } from '@camstack/ui-library'
-import { ScanFace } from 'lucide-react'
 import { memo, useRef, type CSSProperties } from 'react'
-import type { EventsFields } from '../embed/events-config'
+import type { EventsFields, EventsLocale } from '../embed/events-config'
+import { formatEventAge } from '../../../shared/events/events-time'
 import type { TileDisplay } from '../../../shared/events/events-tile-display'
 import { DEFAULT_EVENTS_LABELS, type EventsLabels } from '../../../shared/events/events-labels'
 import { buildTrackThumbUrl } from '../../../shared/events/events-media-url'
@@ -43,7 +43,6 @@ import {
 import {
   accentForClass,
   type EventsPalette,
-  formatEventTime,
   hhmm,
 } from '../embed/events-theme'
 import { usePaletteView } from '../../../shared/palette'
@@ -77,6 +76,8 @@ export interface EventsCardProps {
   readonly display: TileDisplay
   readonly palette: EventsPalette
   readonly nowMs: number
+  /** Language of the tile's age (`5m` / `3g`); English when absent. */
+  readonly locale?: EventsLocale
   readonly variant: 'reel' | 'gallery'
   /** Declared glyph id for this row's class (from the server taxonomy). */
   readonly iconId: string
@@ -104,12 +105,6 @@ export interface EventsCardProps {
   /** D/T/✓ pills. Favourite ★ is always shown when the row is favourited. */
   readonly showAdminFlags?: boolean
   readonly onClick: (row: EventsTrackRow) => void
-  /**
-   * The "?" chip was tapped — open the assignment, not the detail. Optional so
-   * a host that has no assignment surface simply renders an inert chip rather
-   * than a button that lies.
-   */
-  readonly onAssignFace?: (row: EventsTrackRow) => void
 }
 
 const FLAG_PILL_BASE: CSSProperties = {
@@ -137,6 +132,7 @@ export const EventsCard = memo(function EventsCard({
   display,
   palette,
   nowMs,
+  locale,
   variant,
   iconId,
   kindLabels = EMPTY_KIND_LABELS,
@@ -145,7 +141,6 @@ export const EventsCard = memo(function EventsCard({
   eagerImages,
   showAdminFlags,
   onClick,
-  onAssignFace,
 }: EventsCardProps) {
   const kindPalette = usePaletteView()
   const themeColors = THEME[palette.colorScheme]
@@ -339,68 +334,6 @@ export const EventsCard = memo(function EventsCard({
               {title.text}
             </span>
           )}
-          {/* An ASSIGNABLE face still waiting for a name — the "?" chip, in
-              the exact slot the name pill occupies once someone assigns one.
-              The glyph is what gives the "?" its subject; a recognised face
-              never shows it (the name pill already says everything). */}
-          {row.hasUnassignedFace === true && (
-            <span
-              // NOT a `button`: the card itself is one, and a button inside a
-              // button is invalid — React says so on every render and the
-              // parser would split them apart anywhere the markup is parsed
-              // rather than built. A `role`/`tabIndex` span is the same control
-              // with none of that.
-              {...(onAssignFace === undefined
-                ? {}
-                : { role: 'button' as const, tabIndex: 0 })}
-              data-testid="card-face-unassigned"
-              title={labels.unassignedFace}
-              // The chip IS the request. It used to be an inert `span`: it said
-              // a face was waiting for a name and did nothing when tapped, so
-              // the operator opened the card and looked for the assignment
-              // again — answering a question they had already asked.
-              onClick={(e) => {
-                // Never the card's own open as well: two views would race, and
-                // the one that wins is whichever handler ran last.
-                e.stopPropagation()
-                onAssignFace?.(row)
-              }}
-              onKeyDown={(e) => {
-                if (onAssignFace === undefined) return
-                if (e.key !== 'Enter' && e.key !== ' ') return
-                e.stopPropagation()
-                e.preventDefault()
-                onAssignFace(row)
-              }}
-              style={{
-                border: 'none',
-                cursor: onAssignFace ? 'pointer' : 'default',
-                // The chip row above is `pointerEvents: 'none'` on purpose —
-                // caption chips must never eat the card's own open. A `button`
-                // inside it inherits that and is NOT hit-tested: making the
-                // chip a button changed nothing on screen, every tap still fell
-                // through to the card and opened the plain detail. The ONE
-                // interactive chip opts back in, and only when it has somewhere
-                // to send the tap — otherwise it stays transparent so the card
-                // keeps opening through it.
-                pointerEvents: onAssignFace ? 'auto' : 'none',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 3,
-                background: imageScrim,
-                color: onImageText,
-                fontSize: 11,
-                fontWeight: 700,
-                lineHeight: 1.35,
-                padding: '2px 6px',
-                borderRadius: 4,
-                flex: '0 0 auto',
-              }}
-            >
-              <ScanFace size={13} color={onImageText} />
-              {'?'}
-            </span>
-          )}
           {!isReel &&
             labelsOn &&
             row.audioLabels
@@ -509,7 +442,7 @@ export const EventsCard = memo(function EventsCard({
             zIndex: 2,
           }}
         >
-          {formatEventTime(row.lastSeen, nowMs)}
+          {formatEventAge(row.lastSeen, nowMs, locale)}
         </span>
       ) : null}
     </div>

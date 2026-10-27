@@ -47,6 +47,7 @@ import {
   parseEventsConfig,
   reelCardHeightPx,
   REEL_LIST_PADDING_V,
+  resolveEventsLocale,
   resolveDeviceName,
   resolveMaxRows,
   thumbEdgeForCardPx,
@@ -496,6 +497,10 @@ export function Events({ client, initialConfig }: EventsProps) {
   ])
 
   const palette = resolvePalette(config.theme, prefersDark)
+  const locale = resolveEventsLocale(
+    config.locale,
+    typeof navigator === 'undefined' ? undefined : navigator.language,
+  )
   const scrollRef = useRef<HTMLDivElement | null>(null)
   // The scroller as STATE, not just a ref: the cards' viewport observers are
   // rooted on it, and a ref does not re-render them when it is finally set.
@@ -1044,31 +1049,18 @@ export function Events({ client, initialConfig }: EventsProps) {
     enabled: !feed.loading && rows.length > 0,
   })
 
-  const postTrackClick = useCallback(
-    (row: EventsTrackRow, intent?: 'assign-face'): void => {
-      postToEventsHost(
-        trackClickMsg({
-          trackId: row.trackId,
-          deviceId: row.deviceId,
-          bestEventId: row.bestEventId,
-          className: row.className,
-          firstSeen: row.firstSeen,
-          lastSeen: row.lastSeen,
-          ...(intent === undefined ? {} : { intent }),
-        }),
-      )
-    },
-    [],
-  )
-  const onCardClick = useCallback(
-    (row: EventsTrackRow): void => postTrackClick(row),
-    [postTrackClick],
-  )
-  /** The "?" chip: the same open, carrying WHY. */
-  const onAssignFace = useCallback(
-    (row: EventsTrackRow): void => postTrackClick(row, 'assign-face'),
-    [postTrackClick],
-  )
+  const onCardClick = useCallback((row: EventsTrackRow): void => {
+    postToEventsHost(
+      trackClickMsg({
+        trackId: row.trackId,
+        deviceId: row.deviceId,
+        bestEventId: row.bestEventId,
+        className: row.className,
+        firstSeen: row.firstSeen,
+        lastSeen: row.lastSeen,
+      }),
+    )
+  }, [])
 
   // Reel: a fixed-row grid flowing into columns → horizontal scroll.
   // Gallery: ONE grid per virtualized row, at the resolved column count. The
@@ -1187,8 +1179,8 @@ export function Events({ client, initialConfig }: EventsProps) {
       showAdminFlags={config.showAdminFlags === true}
       palette={palette}
       nowMs={now}
+      locale={locale}
       onClick={onCardClick}
-      onAssignFace={onAssignFace}
     />
   )
 

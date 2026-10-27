@@ -62,3 +62,32 @@ export function formatEventTime(lastSeen: number, nowMs: number, locale?: string
   const month = String(d.getMonth() + 1).padStart(2, '0')
   return `${day}/${month} ${time}`
 }
+
+const MINUTE_MS = 60_000
+const HOUR_MS = 3_600_000
+const DAY_MS = 86_400_000
+
+/** Narrow unit letters and the "just now" word, per language. */
+const AGE_UNITS: Readonly<Record<string, { now: string; m: string; h: string; d: string }>> = {
+  en: { now: 'now', m: 'm', h: 'h', d: 'd' },
+  it: { now: 'ora', m: 'm', h: 'h', d: 'g' },
+}
+
+/**
+ * The compact age of an event for a small tile corner: `now`, `5m`, `3h`, `2d`
+ * up to {@link FRIENDLY_DAY_SPAN} days, then a short date (`10 Oct` / `10 ott`).
+ * A timestamp in the future is a date too. No `Intl.RelativeTimeFormat`
+ * (see the note above), so the unit letters live in a two-language table;
+ * an unknown language reads English.
+ */
+export function formatEventAge(lastSeen: number, nowMs: number, locale?: string): string {
+  const age = nowMs - lastSeen
+  if (age >= 0 && age < FRIENDLY_DAY_SPAN * DAY_MS) {
+    const units = AGE_UNITS[(locale ?? 'en').toLowerCase().slice(0, 2)] ?? AGE_UNITS['en']!
+    if (age < MINUTE_MS) return units.now
+    if (age < HOUR_MS) return `${Math.floor(age / MINUTE_MS)}${units.m}`
+    if (age < DAY_MS) return `${Math.floor(age / HOUR_MS)}${units.h}`
+    return `${Math.floor(age / DAY_MS)}${units.d}`
+  }
+  return new Date(lastSeen).toLocaleDateString(locale, { day: 'numeric', month: 'short' })
+}

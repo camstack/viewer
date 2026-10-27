@@ -66,6 +66,13 @@ describe('parseEventsUrlPatch', () => {
     })
   })
 
+  it('reads lang as a shipped locale and ignores any other', () => {
+    const it = parseEventsUrlPatch('?v=1&lang=it-IT')
+    expect(it?.ok && it.patch.locale).toBe('it')
+    const unknown = parseEventsUrlPatch('?v=1&lang=xx')
+    expect(unknown).toEqual({ ok: true, patch: {} })
+  })
+
   it('reads cols=auto', () => {
     const result = parseEventsUrlPatch('?v=1&cols=auto')
     expect(result?.ok).toBe(true)
