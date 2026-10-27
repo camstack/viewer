@@ -113,6 +113,15 @@ describe('eventsCardYaml', () => {
     )
   })
 
+  it('carries the tile settings under the viewer names, only when overridden', () => {
+    const base = { view: 'gallery' as const, thumb: 'small' as const, deviceIds: [], fields: DEFAULT_EVENTS_FIELDS, theme: 'auto' as const }
+    expect(eventsCardYaml(base)).not.toContain('tile')
+    const yaml = eventsCardYaml({ ...base, tileLabelMode: 'icon', tileDetailCamera: false, tileDetailZone: true })
+    expect(yaml).toContain('tileLabelMode: icon\n')
+    expect(yaml).toContain('tileDetailCamera: false\n')
+    expect(yaml).toContain('tileDetailZone: true\n')
+  })
+
   it('carries the theme the dialog picked', () => {
     const yaml = eventsCardYaml({ view: 'gallery', columns: 3, thumb: 'large', deviceIds: [4], fields: DEFAULT_EVENTS_FIELDS, theme: 'dark' })
     expect(yaml).toContain('theme: dark\n')

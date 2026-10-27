@@ -8,6 +8,7 @@
  *   ?mode=recording        → EmbedRecordingPage (reads window.__CAMSTACK_RECORDING__)
  *   ?mode=events           → EmbedEventsPage    (reads window.__CAMSTACK_EVENTS__,
  *                                                or the v1 query params + `#t=`)
+ *   ?mode=track            → EmbedTrackPage     (one track; events config + `id`/`device`)
  *
  * Each page reads + validates its own injected config global; EmbedApp only routes.
  */
@@ -16,6 +17,7 @@ import { EmbedEventsPage } from './pages/EmbedEventsPage'
 import { EmbedGridPage } from './pages/EmbedGridPage'
 import { EmbedPlayerPage } from './pages/EmbedPlayerPage'
 import { EmbedRecordingPage } from './pages/EmbedRecordingPage'
+import { EmbedTrackPage } from './pages/EmbedTrackPage'
 
 export function EmbedApp() {
   const mode =
@@ -31,5 +33,6 @@ export function EmbedApp() {
   if (mode === 'player') return <EmbedPlayerPage />
   if (mode === 'recording') return <EmbedRecordingPage />
   if (mode === 'events') return <EmbedEventsPage />
+  if (mode === 'track') return <EmbedTrackPage />
   return <EmbedGridPage />
 }

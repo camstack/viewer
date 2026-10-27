@@ -565,6 +565,36 @@ instead of fourteen 106 px ones and a cut fifteenth; a band reserved for the
 preset never grows (it can only shrink a few px so the columns fit whole).
 
 
+### Track detail page (`?mode=track`)
+
+`trackClick` names the track; this page shows it. A host that wants a detail
+view opens a second iframe (a dialog) on the SAME embed bundle:
+
+```
+<embed>/index.html?mode=track&v=1&id=<trackId>&device=<deviceId>[&best=<bestEventId>][&theme=…]
+```
+
+The three ids are exactly the `trackId`, `deviceId` and `bestEventId` of the
+`trackClick` message, so no lookup is needed. `deviceId` is required: the hub
+reads a track by `(deviceId, trackId)`; a link without it renders a message,
+not a guess.
+
+Configuration and authentication are the events page's, unchanged — the same
+three sources (injected global, `embed-ready` handshake, URL with `#t=` or a
+relay that authenticates for the page) through the same `createSystem` and the
+same bearer-fetched media. There is no second auth path. Behind a relay the page
+holds no credential, and it can then also play the track's clip; a bearer-only
+page cannot put a header on a `<video>`, so it shows stills only.
+
+It shows the best shot, the other stored stills as a strip (tap to enlarge),
+the title (identity, finest label or translated class), the activity / favourite
+/ debug / train badges, camera, zone names, and the time with the track's span.
+Read-only: flag toggles, face assignment and seek stay in the app's detail view.
+It honours `theme`, `kindLabels`, `labels` and `deviceNames` like the feed.
+
+A host MUST verify a `trackClick` before acting on it: `event.origin` equal to
+the embed's origin AND `event.source` equal to its own iframe's `contentWindow`.
+
 ---
 
 ## 7. Share links — what a share-view token can and cannot do
