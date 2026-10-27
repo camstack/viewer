@@ -30,6 +30,22 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.662',
+    date: '2026-10-28',
+    notes: {
+      en: [
+        'Events embed: tighter grid, names fit the tile, time on the picture corner',
+        'Events share link carries the same tile settings as the Events page',
+        'Events embed: a track detail page Home Assistant opens on tap',
+      ],
+      it: [
+        "Embed eventi: griglia più compatta, nomi adattati, orario nell'angolo dell'immagine",
+        'Il link di condivisione eventi usa le stesse impostazioni delle tessere della pagina Eventi',
+        'Embed eventi: pagina di dettaglio traccia che Home Assistant apre al tocco',
+      ],
+    },
+  },
+  {
     version: '1.0.661',
     date: '2026-10-26',
     notes: {
