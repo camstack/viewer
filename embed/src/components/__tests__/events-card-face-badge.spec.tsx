@@ -7,6 +7,7 @@
  * pill and gains NO extra glyph (the operator already rejected an icon that
  * restates the pill), and a track the hub said nothing about renders nothing.
  */
+import { resolveTileDisplay } from '../../../../shared/events/events-tile-display'
 import { cleanup, fireEvent, render } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { DEFAULT_EVENTS_FIELDS } from '../../embed/events-config'
@@ -45,6 +46,7 @@ function renderCard(row: EventsTrackRow, handlers: CardHandlers = {}) {
       width="120px"
       heroPx={120}
       fields={DEFAULT_EVENTS_FIELDS}
+      display={resolveTileDisplay(DEFAULT_EVENTS_FIELDS, {})}
       palette={DARK_PALETTE}
       nowMs={3000}
       variant="gallery"
@@ -132,6 +134,7 @@ describe('EventsCard unassigned-face badge', () => {
         width="120px"
         heroPx={120}
         fields={{ ...DEFAULT_EVENTS_FIELDS, label: false }}
+        display={resolveTileDisplay({ ...DEFAULT_EVENTS_FIELDS, label: false }, {})}
         palette={DARK_PALETTE}
         nowMs={3000}
         variant="gallery"

@@ -53,6 +53,7 @@ import {
 } from '../embed/events-config'
 import { resolveEventsLabels } from '../../../shared/events/events-labels'
 import { buildTrackThumbUrl } from '../../../shared/events/events-media-url'
+import { resolveTileDisplay } from '../../../shared/events/events-tile-display'
 import {
   countChangedMsg,
   type EventsCommand,
@@ -116,8 +117,13 @@ declare global {
 /** Gap between cards, px. Shared by both layouts so a host switching `view`
  *  does not see the density change under it. */
 const GAP_PX = 8
+/** Gallery only: the pictures are the content, so the grid is tight — a few px
+ *  between tiles and at the edges (the viewer's Events grid is as dense). */
+const GALLERY_GAP_PX = 3
 /** Outer padding of the scroll container, px. */
 const PAD_PX = 10
+/** Gallery outer padding, px. */
+const GALLERY_PAD_PX = 4
 /**
  * Floor for the prefetch margin, px — what is used when the scroller has no
  * measurable extent yet (a mount before layout, a host that has not sized the
@@ -958,12 +964,23 @@ export function Events({ client, initialConfig }: EventsProps) {
   const geometry = useMemo(
     () =>
       galleryGeometry({
-        viewportWidth: viewport.viewportWidth,
+        viewportWidth: viewport.viewportWidth - 2 * GALLERY_PAD_PX,
         cardWidth,
-        gap: GAP_PX,
+        gap: GALLERY_GAP_PX,
         columns: config.columns,
       }),
     [viewport.viewportWidth, cardWidth, config.columns],
+  )
+  // The viewer's tile settings, resolved once (explicit setting, else the
+  // legacy `fields` flag) — the cards and the row-height key read this.
+  const tileDisplay = useMemo(
+    () =>
+      resolveTileDisplay(config.fields, {
+        tileLabelMode: config.tileLabelMode,
+        tileDetailCamera: config.tileDetailCamera,
+        tileDetailZone: config.tileDetailZone,
+      }),
+    [config.fields, config.tileLabelMode, config.tileDetailCamera, config.tileDetailZone],
   )
   const galleryRowCount = isReel ? 0 : Math.ceil(rows.length / geometry.columns)
   /**
@@ -980,7 +997,7 @@ export function Events({ client, initialConfig }: EventsProps) {
     scrollTop: viewport.scrollTop,
     viewportHeight: viewport.viewportHeight,
     fallbackRowPx: geometry.rowStridePx,
-    geometryKey: `${geometry.columns}|${cardWidth}|${config.fields.sublabel ? 's' : ''}${config.fields.camera ? 'c' : ''}${config.fields.time ? 't' : ''}${config.fields.badges ? 'b' : ''}`,
+    geometryKey: `${geometry.columns}|${cardWidth}|${config.fields.sublabel ? 's' : ''}${tileDisplay.tileDetailCamera ? 'c' : ''}${tileDisplay.tileDetailZone ? 'z' : ''}`,
   })
 
   const preloadRows = useMemo(
@@ -1070,12 +1087,12 @@ export function Events({ client, initialConfig }: EventsProps) {
     : {
         display: 'grid',
         gridTemplateColumns: `repeat(${geometry.columns}, minmax(0, 1fr))`,
-        columnGap: GAP_PX,
+        columnGap: GALLERY_GAP_PX,
         // Inert for a virtualized row (it holds exactly `columns` cards and
         // never wraps); it is what spaces the multi-row loading skeleton, which
         // shares this style.
-        rowGap: GAP_PX,
-        paddingBottom: GAP_PX,
+        rowGap: GALLERY_GAP_PX,
+        paddingBottom: GALLERY_GAP_PX,
         alignContent: 'start',
       }
 
@@ -1159,13 +1176,14 @@ export function Events({ client, initialConfig }: EventsProps) {
       // Reel columns are fixed-width; gallery cards fill their grid column
       // (an explicit `minmax(0, 1fr)` track — see `galleryGeometry`).
       width={isReel ? `${cardWidth}px` : '100%'}
-      heroPx={cardWidth}
+      heroPx={isReel ? cardWidth : geometry.columnWidth}
       variant={isReel ? 'reel' : 'gallery'}
       iconId={iconIdForClass(row.className, kindIconIds, isAudioSourceRow(row))}
       kindLabels={kindLabels}
       labels={labels}
       scrollRoot={scrollEl}
       fields={config.fields}
+      display={tileDisplay}
       showAdminFlags={config.showAdminFlags === true}
       palette={palette}
       nowMs={now}
@@ -1284,7 +1302,7 @@ export function Events({ client, initialConfig }: EventsProps) {
         // The reel's padding is the native list's (SPACING.sm), because the
         // host reserves `cardWidth + 6 + 14 + 8` and nothing more. The gallery
         // scrolls freely and can afford the roomier inset.
-        padding: isReel ? `${REEL_LIST_PADDING_V}px ${PAD_PX}px` : PAD_PX,
+        padding: isReel ? `${REEL_LIST_PADDING_V}px ${PAD_PX}px` : GALLERY_PAD_PX,
         boxSizing: 'border-box',
         WebkitOverflowScrolling: 'touch',
       }}

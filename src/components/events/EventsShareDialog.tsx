@@ -30,6 +30,7 @@ import { fillTokenPlaceholder, withTokenPlaceholder } from '../../data/account-t
 import { eventsCardYaml } from '../../data/share-snippets.js'
 import { useServer } from '../../app/ServerProvider.js'
 import { useCameras } from '../../data/use-cameras.js'
+import { useSettings } from '../../data/use-settings.js'
 import { deviceNamesFromCameras, pickDeviceNames } from '../../events/device-names.js'
 import {
   buildEventsShareUrl,
@@ -42,6 +43,7 @@ import {
   type EventsThumb,
   type EventsView,
 } from '../../../shared/events/events-share-url.js'
+import { TILE_LABEL_MODES, type TileLabelMode } from '../../../shared/events/events-tile-display.js'
 import { Button } from '../ui/Button.js'
 
 export interface EventsShareDialogProps {
@@ -55,6 +57,16 @@ type ColumnChoice = 'auto' | '2' | '3' | '4'
 type RowChoice = '1' | '2' | '3'
 /** What the snippet is: the embed link, or the Home Assistant card. */
 type SnippetFormat = 'link' | 'ha'
+
+const LABEL_MODE_KEY: Readonly<Record<TileLabelMode, string>> = {
+  off: 'v2.settings.tileLabelModeOff',
+  icon: 'v2.settings.tileLabelModeIcon',
+  label: 'v2.settings.tileLabelModeLabel',
+}
+/** The legacy text switches that are NOT the viewer's tile settings. */
+const LINK_FIELD_KEYS: readonly (keyof EventsFields)[] = EVENTS_FIELD_KEYS.filter(
+  (key) => key === 'time' || key === 'importance',
+)
 
 export function EventsShareDialog({ visible, onClose }: EventsShareDialogProps) {
   const { colors } = useTheme()
@@ -82,7 +94,13 @@ function EventsShareBody({ onClose }: { readonly onClose: () => void }) {
   const [rowChoice, setRowChoice] = useState<RowChoice>('2')
   const [thumb, setThumb] = useState<EventsThumb>('medium')
   const [theme, setTheme] = useState<EventsTheme>('auto')
+  const { settings } = useSettings()
   const [fields, setFields] = useState<EventsFields>(DEFAULT_EVENTS_FIELDS)
+  // The link starts from the operator's OWN tile settings — the same three the
+  // Events page's eye menu edits — so what they see is what the link renders.
+  const [tileLabelMode, setTileLabelMode] = useState<TileLabelMode>(settings.events.tileLabelMode)
+  const [tileDetailCamera, setTileDetailCamera] = useState<boolean>(settings.events.tileDetailCamera)
+  const [tileDetailZone, setTileDetailZone] = useState<boolean>(settings.events.tileDetailZone)
   const [deviceIds, setDeviceIds] = useState<readonly number[]>([])
   const [format, setFormat] = useState<SnippetFormat>('link')
   const [tokenChoice, setTokenChoice] = useState<ShareTokenChoice | null>(null)
@@ -109,10 +127,13 @@ function EventsShareBody({ onClose }: { readonly onClose: () => void }) {
       thumb,
       deviceIds: [...deviceIds],
       fields,
+      tileLabelMode,
+      tileDetailCamera,
+      tileDetailZone,
       deviceNames,
       theme,
     }),
-    [view, rowChoice, columnChoice, thumb, deviceIds, fields, deviceNames, theme],
+    [view, rowChoice, columnChoice, thumb, deviceIds, fields, tileLabelMode, tileDetailCamera, tileDetailZone, deviceNames, theme],
   )
 
   // The token the link is scoped to: the selected cameras, or every camera.
@@ -141,6 +162,10 @@ function EventsShareBody({ onClose }: { readonly onClose: () => void }) {
     { value: 'reel', label: t('v2.eventsShare.viewReel') },
     { value: 'gallery', label: t('v2.eventsShare.viewGallery') },
   ]
+  const labelModeOptions: readonly SegmentOption<TileLabelMode>[] = TILE_LABEL_MODES.map((m) => ({
+    value: m,
+    label: t(LABEL_MODE_KEY[m]),
+  }))
   const thumbOptions: readonly SegmentOption<EventsThumb>[] = [
     { value: 'small', label: t('v2.eventsShare.thumbSmall') },
     { value: 'medium', label: t('v2.eventsShare.thumbMedium') },
@@ -209,10 +234,37 @@ function EventsShareBody({ onClose }: { readonly onClose: () => void }) {
           <SegmentedControl options={themeOptions} value={theme} onChange={setTheme} />
 
           <Text style={[styles.fieldLabel, { color: colors.foregroundMuted }]}>
+            {t('v2.settings.tileLabelMode')}
+          </Text>
+          <SegmentedControl options={labelModeOptions} value={tileLabelMode} onChange={setTileLabelMode} />
+
+          <Text style={[styles.fieldLabel, { color: colors.foregroundMuted }]}>
+            {t('v2.settings.tileDetailsSection')}
+          </Text>
+          <View style={styles.chipWrap}>
+            {[
+              { id: 'camera', on: tileDetailCamera, set: setTileDetailCamera, label: t('v2.library.showCamera') },
+              { id: 'zone', on: tileDetailZone, set: setTileDetailZone, label: t('v2.library.showZone') },
+            ].map(({ id, on, set, label }) => (
+              <Pressable
+                key={id}
+                onPress={() => set(!on)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: on }}
+                style={[styles.chip, { backgroundColor: on ? colors.primary : colors.surface }]}
+              >
+                <Text style={[styles.chipText, { color: on ? colors.primaryForeground : colors.foregroundMuted }]}>
+                  {label}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+
+          <Text style={[styles.fieldLabel, { color: colors.foregroundMuted }]}>
             {t('v2.eventsShare.fields')}
           </Text>
           <View style={styles.chipWrap}>
-            {EVENTS_FIELD_KEYS.map((key) => {
+            {LINK_FIELD_KEYS.map((key) => {
               const on = fields[key]
               return (
                 <Pressable

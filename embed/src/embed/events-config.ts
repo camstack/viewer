@@ -20,6 +20,7 @@ import { z } from 'zod'
 import { eventsLabelsSchema } from '../../../shared/events/events-labels'
 import { eventsAttributeSchema, eventsTrackSourceSchema } from '../../../shared/events/events-share-url'
 import { REEL_LIST_PADDING_V } from '../../../shared/events/events-reel-geometry'
+import { tileDisplayOverridesSchema } from '../../../shared/events/events-tile-display'
 import { requireTokenUnlessTransportAuthenticated } from './transport-auth'
 
 export { REEL_LIST_PADDING_V }
@@ -97,7 +98,7 @@ export const eventsFieldsPatchSchema = z.object({
 
 export const DEFAULT_EVENTS_FIELDS: EventsFields = {
   label: true,
-  sublabel: true,
+  sublabel: false,
   camera: true,
   time: true,
   badges: true,
@@ -170,6 +171,13 @@ export const eventsConfigSchema = z.object({
   columns: eventsColumnsSchema.default('auto'),
   thumbSize: eventsThumbSizeSchema.default('medium'),
   fields: eventsFieldsSchema.default(DEFAULT_EVENTS_FIELDS),
+  /**
+   * The viewer's tile settings, by the viewer's own names: `tileLabelMode`,
+   * `tileDetailCamera`, `tileDetailZone` (`shared/events/events-tile-display`).
+   * Absent = the legacy `fields` flag decides (`resolveTileDisplay`), so a link
+   * written before these existed renders unchanged.
+   */
+  ...tileDisplayOverridesSchema.shape,
   /** Cameras to merge. EMPTY = every camera the token can see (resolved once
    *  from `deviceManager.listAll`). */
   deviceIds: z.array(z.number().int().nonnegative()).default([]),
@@ -362,6 +370,7 @@ export const eventsConfigPatchSchema = z.object({
   columns: eventsColumnsSchema.optional(),
   thumbSize: eventsThumbSizeSchema.optional(),
   fields: eventsFieldsPatchSchema.optional(),
+  ...tileDisplayOverridesSchema.shape,
   deviceIds: z.array(z.number().int().nonnegative()).optional(),
   classes: z.array(z.string()).optional(),
   /** See the config field. Replaces the whole selection, never merged. */

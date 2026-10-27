@@ -20,6 +20,7 @@
  *     `Car` inside an Italian app — not a missing key (`locales/it.json` has
  *     all 69 of them) but a path that never asked the translator.
  */
+import { resolveTileDisplay } from '../../../../shared/events/events-tile-display'
 import { cleanup, render } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 import { DEFAULT_EVENTS_FIELDS } from '../../embed/events-config'
@@ -75,6 +76,7 @@ function renderCard(row: EventsTrackRow, kindLabels?: ReadonlyMap<string, string
       width="100%"
       heroPx={TILE_PX}
       fields={DEFAULT_EVENTS_FIELDS}
+      display={resolveTileDisplay(DEFAULT_EVENTS_FIELDS, {})}
       palette={DARK_PALETTE}
       nowMs={3000}
       variant="gallery"
@@ -174,6 +176,7 @@ describe('a SENSOR tile says the sensor TYPE over the image, never the whole nam
         width="80px"
         heroPx={80}
         fields={DEFAULT_EVENTS_FIELDS}
+        display={resolveTileDisplay(DEFAULT_EVENTS_FIELDS, {})}
         palette={DARK_PALETTE}
         nowMs={3000}
         variant="reel"

@@ -7,6 +7,7 @@
  *     &view=reel|gallery &rows=<1..6> &cols=auto|<1..12> &thumb=small|medium|large
  *     &devices=1,5,9 &classes=person,vehicle &attrs=face,plate &q=<text>
  *     &fields=label,sublabel,camera,time,badges,importance
+ *     &tileLabelMode=off|icon|label&tileDetailCamera=0|1&tileDetailZone=0|1
  *     &page=<1..500> &max=<1..5000> &refresh=<ms> &age=<ms> &theme=auto|dark|light
  *     &smode=text|semantic &slimit=<1..200> &sscore=<0..1>
  *     &since=<ms> &until=<ms> &names=<id>:<name>,<id>:<name>
@@ -68,6 +69,14 @@ function intParam(params: URLSearchParams, key: string): number | undefined {
   if (raw === null || raw.trim() === '') return undefined
   const n = Number.parseInt(raw, 10)
   return Number.isFinite(n) ? n : undefined
+}
+
+/** `1`/`true` -> on, `0`/`false` -> off, absent or anything else -> unset. */
+function flagParam(params: URLSearchParams, key: string): boolean | undefined {
+  const raw = params.get(key)?.trim().toLowerCase()
+  if (raw === '1' || raw === 'true') return true
+  if (raw === '0' || raw === 'false') return false
+  return undefined
 }
 
 function csvNumbers(raw: string | null): number[] | undefined {
@@ -231,6 +240,13 @@ export function parseEventsUrlPatch(
   if (thumb !== null) candidate.thumbSize = thumb
   const fields = fieldsParam(params.get('fields'))
   if (fields !== undefined) candidate.fields = fields
+  // The viewer's tile settings, by the viewer's names (`events-tile-display`).
+  const labelMode = params.get('tileLabelMode')
+  if (labelMode !== null) candidate.tileLabelMode = labelMode
+  const detailCamera = flagParam(params, 'tileDetailCamera')
+  if (detailCamera !== undefined) candidate.tileDetailCamera = detailCamera
+  const detailZone = flagParam(params, 'tileDetailZone')
+  if (detailZone !== undefined) candidate.tileDetailZone = detailZone
   const devices = csvNumbers(params.get('devices'))
   if (devices !== undefined) candidate.deviceIds = devices
   const classes = csvStrings(params.get('classes'))

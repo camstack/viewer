@@ -2,6 +2,7 @@
  * The `★nn` importance pip is never drawn — host `fields.importance` is kept
  * for URL/config compat but ignored at render time.
  */
+import { resolveTileDisplay } from '../../../../shared/events/events-tile-display'
 import { cleanup, render } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 import {
@@ -43,6 +44,7 @@ function renderCard(fields: EventsFields) {
       width="120px"
       heroPx={120}
       fields={fields}
+      display={resolveTileDisplay(fields, {})}
       palette={DARK_PALETTE}
       nowMs={3000}
       variant="gallery"

@@ -74,13 +74,13 @@ export interface GalleryGeometry {
 /**
  * Rough vertical cost of the caption under a gallery tile.
  *
- * The tile is NOT uniform: the caption line exists only for a row that has one,
- * the camera name clamps at one OR two 15 px lines, and a zone chip adds
- * another ~17 px. So this can only ever be an estimate, and the row window
+ * The tile is NOT uniform: the camera name is one line (two at the floor size
+ * on a very narrow tile) and a zone chip adds another ~14 px; with neither,
+ * the tile is the picture alone. So this can only ever be an estimate, and the row window
  * treats it as one — a row that has been rendered is MEASURED, and this is what
  * the rows below the fold are guessed at with until they have been.
  */
-const GALLERY_CAPTION_PX = 34
+const GALLERY_CAPTION_PX = 18
 
 /**
  * Columns, column width and the fallback row stride — ONE answer, shared by the

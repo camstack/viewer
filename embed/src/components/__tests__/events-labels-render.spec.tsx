@@ -12,6 +12,7 @@
  * the accessible name a screen reader reaches for a pill whose only content is
  * a glyph (`✓`, `D`, `T`, `★`) or nothing at all (the active dot).
  */
+import { resolveTileDisplay } from '../../../../shared/events/events-tile-display'
 import { cleanup, render } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 import { DEFAULT_EVENTS_FIELDS } from '../../embed/events-config'
@@ -55,6 +56,7 @@ function renderCard(row: EventsTrackRow, labels?: EventsLabels) {
       width="100%"
       heroPx={TILE_PX}
       fields={DEFAULT_EVENTS_FIELDS}
+      display={resolveTileDisplay(DEFAULT_EVENTS_FIELDS, {})}
       palette={DARK_PALETTE}
       nowMs={3000}
       variant="gallery"

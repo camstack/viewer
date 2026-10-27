@@ -31,6 +31,7 @@ import { resolveEventKindIcon } from '@camstack/ui-library'
 import { ScanFace } from 'lucide-react'
 import { memo, useRef, type CSSProperties } from 'react'
 import type { EventsFields } from '../embed/events-config'
+import type { TileDisplay } from '../../../shared/events/events-tile-display'
 import { DEFAULT_EVENTS_LABELS, type EventsLabels } from '../../../shared/events/events-labels'
 import { buildTrackThumbUrl } from '../../../shared/events/events-media-url'
 import {
@@ -52,7 +53,7 @@ import {
   resolveRowTitle,
   rowCaption,
 } from '../../../shared/events/events-track-row'
-import { fitPillText, PILL_FONT_MAX_PX } from '../embed/pill-fit'
+import { fitPillText, fitTileText, PILL_FONT_MAX_PX } from '../embed/pill-fit'
 import { useAuthedImage } from '../embed/use-authed-image'
 import { useInViewport } from '../embed/use-in-viewport'
 import { mediaScrim, THEME, withAlpha } from '../../../src/theme/tokens'
@@ -68,6 +69,12 @@ export interface EventsCardProps {
   /** Hero edge in CSS px. Square, so this is also the hero height. */
   readonly heroPx: number
   readonly fields: EventsFields
+  /**
+   * The viewer's tile settings (`tileLabelMode`, `tileDetailCamera`,
+   * `tileDetailZone`), resolved once by the page (`resolveTileDisplay`). The
+   * card never reads the legacy `fields.label|camera|badges` for layout.
+   */
+  readonly display: TileDisplay
   readonly palette: EventsPalette
   readonly nowMs: number
   readonly variant: 'reel' | 'gallery'
@@ -127,6 +134,7 @@ export const EventsCard = memo(function EventsCard({
   width,
   heroPx,
   fields,
+  display,
   palette,
   nowMs,
   variant,
@@ -185,8 +193,11 @@ export const EventsCard = memo(function EventsCard({
    * put a text pill on every bare `person` tile and removed its glyph.
    */
   const title = resolveRowTitle(row, kindLabels)
-  const hasPill = title.tier !== 'class'
-  const showClassGlyph = !hasPill
+  const labelsOn = display.tileLabelMode !== 'off'
+  // `icon` = the glyph alone (the viewer's Photos-grid density); `label` adds
+  // the finest short name, which then replaces the glyph (see above).
+  const hasPill = display.tileLabelMode === 'label' && title.tier !== 'class'
+  const showClassGlyph = labelsOn && !hasPill
   /**
    * How the pill holds its text. Gallery only: a translated type
    * (`Monossido di carbonio`) or an identity does not fit one line at 106 px,
@@ -200,7 +211,7 @@ export const EventsCard = memo(function EventsCard({
    * pill, and (gallery) one glyph per audio label. The caption below is
    * whatever is left, which — when this is true — is nothing.
    */
-  const thumbnailCarriesLabels = fields.label
+  const thumbnailCarriesLabels = display.tileLabelMode === 'label'
   const caption = rowCaption(row, thumbnailCarriesLabels, title.text, kindLabels)
   // Resolved through the SHARED web icon set (`@camstack/ui-library`), which is
   // byte-identical to the viewer's native map — 65 ids, one source, bundled.
@@ -252,7 +263,7 @@ export const EventsCard = memo(function EventsCard({
           available (identity / plate / sub-class), (3) one chip per audio
           enrichment. The reel keeps only (1)+(2) on one line; the gallery has
           room for the audio chips to wrap. */}
-      {fields.label && (
+      {labelsOn && (
         <div
           style={{
             position: 'absolute',
@@ -391,6 +402,7 @@ export const EventsCard = memo(function EventsCard({
             </span>
           )}
           {!isReel &&
+            labelsOn &&
             row.audioLabels
               .filter((a) => a !== row.className && a !== row.label)
               .map((audio) => {
@@ -428,7 +440,9 @@ export const EventsCard = memo(function EventsCard({
           style={{
             position: 'absolute',
             top: 4,
-            right: fields.badges && row.active ? 16 : 4,
+            // Top-LEFT, as the viewer's tile: the top-right corner is the
+            // clock's (and the active dot's).
+            left: 4,
             display: 'inline-flex',
             gap: 2,
             zIndex: 2,
@@ -478,7 +492,7 @@ export const EventsCard = memo(function EventsCard({
           }}
         />
       )}
-      {fields.time && isReel ? (
+      {fields.time ? (
         <span
           data-testid="card-time"
           style={{
@@ -558,9 +572,13 @@ export const EventsCard = memo(function EventsCard({
   // The sensor's own name is now on NEITHER line: the pill says its TYPE and
   // the detail says its name. The tile is 106 px and a device name spends all
   // of it.
-  const showCameraLine = fields.camera
   const cameraText = row.cameraName
-  const anyBody = showCameraLine || fields.time || (fields.sublabel && caption.length > 0)
+  const showCameraLine = display.tileDetailCamera
+  const showZoneChip = display.tileDetailZone && row.zonesVisited.length > 0
+  const showCaption = fields.sublabel && caption.length > 0
+  const anyBody = showCameraLine || showZoneChip || showCaption
+  // The text under the picture scales with the tile, like the chips on it.
+  const cameraFit = fitTileText(cameraText, heroPx)
 
   return (
     <button
@@ -573,7 +591,7 @@ export const EventsCard = memo(function EventsCard({
         width,
         display: 'flex',
         flexDirection: 'column',
-        gap: 4,
+        gap: 2,
         padding: 0,
         border: 'none',
         background: 'transparent',
@@ -592,14 +610,13 @@ export const EventsCard = memo(function EventsCard({
             flexDirection: 'column',
             gap: 1,
             minWidth: 0,
-            paddingTop: 2,
-            paddingBottom: 2,
+            paddingBottom: 1,
           }}
         >
-          {fields.sublabel && caption.length > 0 && (
+          {showCaption && (
             <span
               style={{
-                fontSize: 11,
+                fontSize: Math.max(9, cameraFit.fontSizePx - 1),
                 color: palette.textMuted,
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
@@ -614,47 +631,32 @@ export const EventsCard = memo(function EventsCard({
               data-testid="card-camera"
               title={cameraText}
               style={{
-                fontSize: 12,
+                fontSize: cameraFit.fontSizePx,
                 fontWeight: 600,
-                lineHeight: '15px',
-                // Two lines MAX, then ellipsis — a long camera name
-                // ("Camera bedroom") must stay readable without
-                // growing the tile and shoving the clock off the bottom.
+                lineHeight: 1.2,
+                // One line at the size that holds the name; two at the floor
+                // when even that does not (`fitTileText`). Never a clock under
+                // it any more — the time is on the picture.
                 display: '-webkit-box',
-                WebkitLineClamp: 2,
+                WebkitLineClamp: cameraFit.maxLines,
                 WebkitBoxOrient: 'vertical',
                 overflow: 'hidden',
+                overflowWrap: 'anywhere',
               }}
             >
               {cameraText}
             </span>
           )}
-          {fields.time && (
+          {showZoneChip && (
             <span
-              data-testid="card-time"
+              data-testid="card-zone"
               style={{
-                fontSize: 11,
-                lineHeight: '14px',
-                color: palette.textMuted,
-                fontVariantNumeric: 'tabular-nums',
-                whiteSpace: 'nowrap',
-                // Never shrink: this is the line the operator reported missing.
-                flex: '0 0 auto',
-              }}
-            >
-              {formatEventTime(row.lastSeen, nowMs)}
-            </span>
-          )}
-          {fields.badges && row.zonesVisited.length > 0 && (
-            <span
-              style={{
-                fontSize: 10,
+                fontSize: Math.max(9, cameraFit.fontSizePx - 2),
                 color: palette.textMuted,
                 background: palette.chip,
                 borderRadius: 5,
                 padding: '1px 5px',
                 alignSelf: 'flex-start',
-                marginTop: 2,
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',

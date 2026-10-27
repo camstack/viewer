@@ -135,3 +135,40 @@ export function fitPillText(text: string, tileWidthPx: number): PillFit {
   }
   return { fontSizePx: PILL_FONT_MIN_PX, maxLines: PILL_MAX_LINES }
 }
+
+/* ── The text UNDER a tile (camera name, zone) ────────────────────────────── */
+
+/** Largest size the line under a tile uses — the size of a roomy tile. */
+export const TILE_TEXT_MAX_PX = 12
+/** Smallest size it steps down to before it takes a second line. */
+export const TILE_TEXT_MIN_PX = 9
+/** Mean glyph advance, em, of the 600-weight system UI font (a touch under the pill's 700). */
+const TILE_GLYPH_WIDTH_EM = 0.56
+
+export interface TileTextFit {
+  readonly fontSizePx: number
+  readonly maxLines: 1 | 2
+}
+
+/**
+ * How the camera name under a tile holds itself, from the tile's WIDTH — the
+ * line scales with the tile the way the chips on the picture do, instead of
+ * keeping one size and wrapping mid-name at five columns on a phone.
+ *
+ * Order: one line at the largest size (up to a ceiling of width/8) that holds the whole text; else one line
+ * at the floor is tried and, failing that, two lines at the floor (the CSS
+ * clamp is the backstop). Pure estimate, like {@link fitPillText}.
+ */
+export function fitTileText(text: string, tileWidthPx: number): TileTextFit {
+  const room = Math.max(MIN_AVAILABLE_PX, tileWidthPx - 4)
+  // The CEILING scales with the tile too, so every tile of one column width
+  // shares a size (a short name does not print bigger than its neighbour's).
+  const ceiling = Math.min(
+    TILE_TEXT_MAX_PX,
+    Math.max(TILE_TEXT_MIN_PX, Math.round(tileWidthPx / 8)),
+  )
+  for (let size = ceiling; size >= TILE_TEXT_MIN_PX; size -= 1) {
+    if ([...text].length * size * TILE_GLYPH_WIDTH_EM <= room) return { fontSizePx: size, maxLines: 1 }
+  }
+  return { fontSizePx: TILE_TEXT_MIN_PX, maxLines: 2 }
+}

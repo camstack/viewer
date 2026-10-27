@@ -25,6 +25,7 @@ import { create } from 'zustand'
 import { CamProfileSchema } from '@camstack/types/client'
 import type { CamProfile } from '@camstack/types'
 import { log } from '../lib/logger.js'
+import { TILE_LABEL_MODES, isTileLabelMode, type TileLabelMode } from '../../shared/events/events-tile-display.js'
 import {
   TOOLBAR_DENSITY_FACTOR,
   type ToolbarDensity,
@@ -235,8 +236,8 @@ export type ReelThumbSize = 'small' | 'medium' | 'large'
  *  ({@link densityColumns}). */
 export type GridDensity = 'compact' | 'medium' | 'large'
 
-/** How label chips render on reel / gallery tiles. */
-export type TileLabelMode = 'off' | 'icon' | 'label'
+/** How label chips render on reel / gallery tiles (one model with the events embed). */
+export type { TileLabelMode }
 
 /** Events-surface preferences (the "Recent" reel + events page). */
 export interface EventsPreferences {
@@ -345,7 +346,7 @@ export function reelThumbSizePx(size: ReelThumbSize): number {
 export const GRID_DENSITIES: readonly GridDensity[] = ['compact', 'medium', 'large']
 
 /** The selectable label modes for reel and gallery tiles. */
-export const TILE_LABEL_MODES: readonly TileLabelMode[] = ['off', 'icon', 'label']
+export { TILE_LABEL_MODES, isTileLabelMode }
 
 /** Target tile edge (px) per density preset — the responsive column count is
  *  derived from it: `columns ≈ containerWidth / target`. Compact packs the most
@@ -709,10 +710,6 @@ export function isReelThumbSize(v: unknown): v is ReelThumbSize {
 
 export function isGridDensity(v: unknown): v is GridDensity {
   return typeof v === 'string' && (GRID_DENSITIES as readonly string[]).includes(v)
-}
-
-export function isTileLabelMode(v: unknown): v is TileLabelMode {
-  return typeof v === 'string' && (TILE_LABEL_MODES as readonly string[]).includes(v)
 }
 
 /** Map legacy `showLabels` + `labelStyle` to {@link TileLabelMode}. */

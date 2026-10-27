@@ -6,6 +6,7 @@
  *     &view=reel|gallery &rows=<1..6> &cols=auto|<1..12> &thumb=small|medium|large
  *     &devices=1,5,9 &classes=person,vehicle &attrs=face,plate &q=<text>
  *     &fields=label,sublabel,camera,time,badges,importance
+ *     &tileLabelMode=off|icon|label&tileDetailCamera=0|1&tileDetailZone=0|1
  *     &page=<1..500> &max=<1..5000> &refresh=<ms> &age=<ms> &theme=auto|dark|light
  *   #t=<token>
  *
@@ -33,6 +34,7 @@
  */
 import { z } from 'zod'
 import { VIEWER_EMBED_PATH } from '../embed-path.js'
+import { tileDisplayOverridesSchema } from './events-tile-display.js'
 
 /** Version stamped into (`v=`) every events embed URL. The parser treats an
  *  absent `v` as "not an events config" and an unknown one as an error. */
@@ -136,7 +138,7 @@ export type EventsFields = z.infer<typeof eventsFieldsSchema>
 
 export const DEFAULT_EVENTS_FIELDS: EventsFields = Object.freeze({
   label: true,
-  sublabel: true,
+  sublabel: false,
   camera: true,
   time: true,
   badges: true,
@@ -187,6 +189,9 @@ export const eventsShareParamsSchema = z.object({
   /** LOCAL renames the link should carry: `{ '<id>': '<name>' }`. */
   deviceNames: z.record(z.string(), z.string()).optional(),
   fields: eventsFieldsSchema,
+  /** The viewer's own tile settings (`events-tile-display`). Omitted = the
+   *  embed's defaults / the legacy `fields` flags decide. */
+  ...tileDisplayOverridesSchema.shape,
   pageSize: z.number().int().min(1).max(500).optional(),
   maxRows: z.number().int().min(1).max(5000).optional(),
   refreshMs: z.number().int().min(0).max(600_000).optional(),
@@ -282,6 +287,13 @@ export function encodeEventsShareQuery(params: EventsShareParams): string {
   // Always emitted: an all-off record is meaningful ("images only") and would
   // be read as "unset" if the parameter were dropped.
   parts.push(`fields=${encodeEventsFields(params.fields)}`)
+  if (params.tileLabelMode !== undefined) parts.push(`tileLabelMode=${params.tileLabelMode}`)
+  if (params.tileDetailCamera !== undefined) {
+    parts.push(`tileDetailCamera=${params.tileDetailCamera ? '1' : '0'}`)
+  }
+  if (params.tileDetailZone !== undefined) {
+    parts.push(`tileDetailZone=${params.tileDetailZone ? '1' : '0'}`)
+  }
   if (params.pageSize !== undefined) parts.push(`page=${String(params.pageSize)}`)
   if (params.maxRows !== undefined) parts.push(`max=${String(params.maxRows)}`)
   if (params.refreshMs !== undefined) parts.push(`refresh=${String(params.refreshMs)}`)

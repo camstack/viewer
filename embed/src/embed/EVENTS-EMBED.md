@@ -75,6 +75,9 @@ host can put the look in the URL and only the credentials on the channel.
 | `until` | ms; **empty = clear** | `untilMs` |
 | `names` | `<id>:<name>,<id>:<name>`, each NAME percent-encoded | `deviceNames` |
 | `fields` | csv allow-list of `label,sublabel,camera,time,badges,importance` (`importance` is off unless listed) | `fields` |
+| `tileLabelMode` | `off` \| `icon` \| `label` — the viewer's Events setting, same name and values. Absent = legacy `fields.label` (`label`) | `tileLabelMode` |
+| `tileDetailCamera` | `1`/`0` — camera name under the picture. Absent = legacy `fields.camera` | `tileDetailCamera` |
+| `tileDetailZone` | `1`/`0` — zone chip under the picture. Absent = legacy `fields.badges` | `tileDetailZone` |
 | `page` | `1..500` | `pageSize` |
 | `max` | `1..5000` | `maxRows` |
 | `refresh` | ms, `0` = off | `refreshMs` |
@@ -84,6 +87,12 @@ host can put the look in the URL and only the credentials on the channel.
 `fields=` is an **allow-list**: keys present are on, everything else off. An
 empty `fields=` therefore means "images only" — a real ask, and why absence must
 stay distinguishable from emptiness.
+
+The three `tile*` params are the viewer's own component settings
+(`shared/events/events-tile-display.ts` — one model, read by the app's
+`EventsPreferences`, this parser and the share-link builder). When present they
+win over the legacy `fields` flags; `fields` keeps `time`, `importance` and
+`sublabel` (default **off** since the viewer has no such line).
 
 ---
 
@@ -310,17 +319,20 @@ fetches with the header and renders an object URL from a bounded, revoking LRU.
 Both layouts render the same information in the same priority as the viewer's
 `TrackCard`, respecting the field toggles element by element:
 
-| Element | Field | Where |
+| Element | Setting | Where |
 | --- | --- | --- |
-| Class **glyph** | `label` | accent pill, over the hero |
-| **Finest label** (`subLabel ?? label ?? className`) | `label` | dark chip beside the glyph — shown only when it says more than the class |
-| Audio enrichment glyphs | `label` | pink chips, gallery only (the reel has one line) |
-| Importance `★nn` | `importance` (default off) | top-left pip, gallery only |
-| Active dot | `badges` | top-right |
-| Caption | `sublabel` | under the hero — **only when `label` is OFF** (see below) |
-| **Camera name** | `camera` | under the hero, 2-line clamp |
-| **Time** | `time` | under the camera, own fixed-height line |
-| Zone chips | `badges` | under the time |
+| Class **glyph** | `tileLabelMode` `icon`/`label` | accent pill, bottom-left of the hero |
+| **Finest label** | `tileLabelMode` = `label` | chip replacing the glyph — only when it says more than the class |
+| Audio enrichment glyphs | `tileLabelMode` ≠ `off` | chips, gallery only |
+| **Time** | `fields.time` | chip on the **top-right corner** of the hero (as the viewer tile), both layouts |
+| Active dot | `fields.badges` | top-right, beside the time |
+| Favourite / admin flags | — | top-left |
+| Caption | `fields.sublabel` (default off) | under the hero |
+| **Camera name** | `tileDetailCamera` | under the hero, one line scaled to the tile width (`fitTileText`), two lines at the 9 px floor |
+| Zone chip | `tileDetailZone` | under the hero |
+
+The gallery grid is tight (3 px gaps, 4 px outer padding) so the picture
+dominates; the reel keeps its host-reserved 8 px geometry.
 
 **The caption says only what the thumbnail does not.** The old rule ("the class
 when the title is finer, else the audio labels") predates the glyphs, and once

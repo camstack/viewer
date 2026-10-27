@@ -24,8 +24,9 @@ import { Events } from '../EmbedEventsPage'
 /** The scroller's stubbed extent. Both axes: `stubLayout` gives width and
  *  height the same number, exactly as the sibling spec does. */
 const EXTENT_PX = 600
-/** Must match `GAP_PX` in the page — the geometry is derived from it. */
-const GAP_PX = 8
+/** Must match `GALLERY_GAP_PX` / `GALLERY_PAD_PX` in the page — the geometry is derived from them. */
+const GAP_PX = 3
+const PAD_PX = 4
 
 function track(trackId: string, lastSeen: number): Record<string, unknown> {
   return {
@@ -116,7 +117,7 @@ function stubLayout(extent: number, scrollHeight: number): void {
  *  the same function the page reads, never re-derived here. */
 function geometry(): { readonly columns: number; readonly rowStridePx: number } {
   const resolved = galleryGeometry({
-    viewportWidth: EXTENT_PX,
+    viewportWidth: EXTENT_PX - 2 * PAD_PX,
     cardWidth: cardEdgePx('medium'),
     gap: GAP_PX,
     columns: 'auto',
@@ -242,11 +243,11 @@ describe('the gallery renders a window, not the feed', () => {
     await pageIn(3)
     await waitFor(() => expect(document.querySelector('[data-testid="tail-more"]')).toBeNull())
 
-    // Scroll into the middle of the 180 loaded rows and settle there.
+    // Scroll into the middle of the 180 loaded rows (26 grid rows of ~103 px at 7 columns) and settle there.
     const scroller = document.querySelector<HTMLElement>('[data-testid="events-scroller"]')
     if (scroller === null) throw new Error('no scroller')
     await act(async () => {
-      scroller.scrollTop = 3_000
+      scroller.scrollTop = 1_200
       scroller.dispatchEvent(new Event('scroll'))
       await Promise.resolve()
     })

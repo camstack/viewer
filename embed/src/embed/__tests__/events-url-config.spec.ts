@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { DEFAULT_EVENTS_FIELDS, parseEventsConfig } from '../events-config'
+import { DEFAULT_EVENTS_SHARE_PARAMS, encodeEventsShareQuery } from '../../../../shared/events/events-share-url'
 import {
   EVENTS_URL_VERSION,
   encodeDeviceNames,
@@ -262,5 +263,41 @@ describe('an old link asking for an importance order', () => {
   it('a junk order value is ignored too, not an error', () => {
     const patch = parseEventsUrlPatch('?v=1&sort=random')
     expect(patch !== null && patch.ok).toBe(true)
+  })
+})
+
+describe('the viewer tile settings in the link', () => {
+  it('are read by the viewer names', () => {
+    const parsed = parseEventsUrlPatch('?v=1&tileLabelMode=label&tileDetailCamera=1&tileDetailZone=0')
+    expect(parsed?.ok && parsed.patch).toMatchObject({
+      tileLabelMode: 'label',
+      tileDetailCamera: true,
+      tileDetailZone: false,
+    })
+  })
+
+  it('an absent setting stays unset so the legacy fields decide', () => {
+    const parsed = parseEventsUrlPatch('?v=1&fields=label,camera')
+    expect(parsed?.ok && parsed.patch.tileLabelMode).toBeUndefined()
+    expect(parsed?.ok && parsed.patch.tileDetailCamera).toBeUndefined()
+  })
+
+  it('an unknown label mode is refused, not guessed', () => {
+    expect(parseEventsUrlPatch('?v=1&tileLabelMode=huge')?.ok).toBe(false)
+  })
+
+  it('the share-link builder and the embed parser agree on every name', () => {
+    const query = encodeEventsShareQuery({
+      ...DEFAULT_EVENTS_SHARE_PARAMS,
+      tileLabelMode: 'off',
+      tileDetailCamera: true,
+      tileDetailZone: false,
+    })
+    const parsed = parseEventsUrlPatch(`?${query}`)
+    expect(parsed?.ok && parsed.patch).toMatchObject({
+      tileLabelMode: 'off',
+      tileDetailCamera: true,
+      tileDetailZone: false,
+    })
   })
 })
