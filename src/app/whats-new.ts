@@ -30,6 +30,14 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.665',
+    date: '2026-10-28',
+    notes: {
+      en: ['A notification rule can ask you to confirm whether a detection was right'],
+      it: ['Una regola di notifica può chiederti se una rilevazione era giusta'],
+    },
+  },
+  {
     version: '1.0.664',
     date: '2026-10-28',
     notes: {
