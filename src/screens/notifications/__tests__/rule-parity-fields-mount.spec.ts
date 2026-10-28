@@ -232,6 +232,34 @@ describe('an ADMIN authors every parity field and the save carries them', () => 
   })
 })
 
+describe('ask for a verdict (askVerdict) through the real Advanced sub-screen and the real save', () => {
+  const ASK_LABEL = 'Ask me to confirm detections'
+
+  it('switching it on sends askVerdict: true in the full patch', async () => {
+    const log: HubLog = { updates: [], meAnswered: false, usersAsked: 0 }
+    const screen = await open(log, true, makeRule())
+    await press(switchFor(screen, ASK_LABEL))
+    await save()
+    expect(log.updates).toHaveLength(1)
+    expect(log.updates[0]).toMatchObject({ patch: { askVerdict: true, conditions: { classes: ['person'] } } })
+  })
+
+  it('switching a stored one off sends false, so the hub merge turns it off', async () => {
+    const log: HubLog = { updates: [], meAnswered: false, usersAsked: 0 }
+    const screen = await open(log, true, makeRule({ askVerdict: true }))
+    await press(switchFor(screen, ASK_LABEL))
+    await save()
+    expect(log.updates[0]).toMatchObject({ patch: { askVerdict: false } })
+  })
+
+  it('an untouched save of a rule without it sends no askVerdict', async () => {
+    const log: HubLog = { updates: [], meAnswered: false, usersAsked: 0 }
+    await open(log, true, makeRule())
+    await save()
+    expect(log.updates[0]).not.toMatchObject({ patch: { askVerdict: expect.anything() } })
+  })
+})
+
 describe('the grouped trigger (D692) through the real sub-screens and the real save', () => {
   it('a detection rule mounts the grouped control; the retired Advanced controls are gone', async () => {
     const log: HubLog = { updates: [], meAnswered: false, usersAsked: 0 }

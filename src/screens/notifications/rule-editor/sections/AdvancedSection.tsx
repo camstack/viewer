@@ -28,10 +28,12 @@ import {
   isSnoozeExempt,
   sequenceResolver,
 } from '../../../../components/notifications/rule-field-choices.js'
+import { verdictApplies } from '../../../../components/notifications/rule-editor.js'
 import { formActionSteps } from '../../../../components/notifications/rule-action-form.js'
 import { useAdminVerdict } from '../../../../data/use-me.js'
 import { useSharedSequences } from '../../../../data/use-shared-sequences.js'
 import { SPACING } from '../../../../theme/tokens.js'
+import { ToggleRow } from '../../../../components/ui/ToggleRow.js'
 import { ConfirmGateFields } from './ConfirmGateFields.js'
 import { Hint } from './SectionHint.js'
 import { SnoozeButtonsFields } from './SnoozeButtonsFields.js'
@@ -71,6 +73,18 @@ export function AdvancedSection(props: RuleSectionProps) {
         onSnoozeOptions={(next) => patch({ snoozeOptions: next })}
         onSnoozeAllowGlobal={(next) => patch({ snoozeAllowGlobal: next })}
       />
+
+      {verdictApplies(form) ? (
+        <Section>
+          <ToggleRow
+            label={t(`${EDITOR}.askVerdictLabel`)}
+            description={t(`${EDITOR}.askVerdictHint`)}
+            value={form.askVerdict === true}
+            onValueChange={(next) => patch({ askVerdict: next })}
+            last
+          />
+        </Section>
+      ) : null}
 
       {offersConfirm ? (
         <ConfirmGateFields confirm={form.confirm} onChange={(next) => patch({ confirm: next })} />

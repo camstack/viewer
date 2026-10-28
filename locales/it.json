@@ -1545,6 +1545,8 @@
           "snoozeResetDefaults": "Torna ai predefiniti dell'hub",
           "snoozeAllowGlobalLabel": "Chiunque può silenziare per tutti",
           "snoozeAllowGlobalHint": "Di norma il silenzia è personale. Accesa: chi riceve questa regola può silenziarla per tutti, non solo per sé.",
+          "askVerdictLabel": "Chiedimi di confermare le rilevazioni",
+          "askVerdictHint": "La notifica porta Corretto e Sbagliato. Un tocco segna la rilevazione per il riaddestramento, lo stesso segno della Libreria, e registra a chi è stato chiesto e quando. I canali senza pulsanti (email, Pushover, Gotify, WhatsApp, Discord) ricevono le stesse due scelte come link.",
           "confirm": {
             "title": "Conferma AI",
             "enabledLabel": "Conferma con l'AI prima di avvisare",

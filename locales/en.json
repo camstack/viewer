@@ -1548,6 +1548,8 @@
           "snoozeResetDefaults": "Back to hub defaults",
           "snoozeAllowGlobalLabel": "Anyone may snooze for everyone",
           "snoozeAllowGlobalHint": "A snooze is personal by default. On: anyone who receives this rule can snooze it for everyone, not only for themselves.",
+          "askVerdictLabel": "Ask me to confirm detections",
+          "askVerdictHint": "The notification carries Correct and Wrong. A tap marks the detection for retraining, the same mark as in the Library, and records who was asked and when. Channels with no buttons (email, Pushover, Gotify, WhatsApp, Discord) get the same two choices as links.",
           "confirm": {
             "title": "AI confirmation",
             "enabledLabel": "Confirm with AI before notifying",

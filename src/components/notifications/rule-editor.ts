@@ -152,6 +152,12 @@ export interface NcRuleFormState {
   /** May a non-admin snooze this rule for everyone. Absent and `false` agree. */
   readonly snoozeAllowGlobal: boolean
   /**
+   * Ask the recipient to confirm the detection (`askVerdict`). `undefined` =
+   * never authored (absent on the wire); `false` is sent once a rule had it on,
+   * so the hub's merge turns it off. Sent only where {@link verdictApplies}.
+   */
+  readonly askVerdict: boolean | undefined
+  /**
    * The window of an "Immediate, grouped" rule, in seconds (D692); `undefined` is
    * plain Immediate. Meaningful only while the rule is an `immediate` DETECTION
    * rule ({@link groupingIsSent}): the save drops it, and `clear` removes a
@@ -193,6 +199,7 @@ export function emptyRuleForm(): NcRuleFormState {
     cooldownSec: NC_DEFAULT_COOLDOWN_SEC,
     snoozeOptions: undefined,
     snoozeAllowGlobal: false,
+    askVerdict: undefined,
     // Plain Immediate: grouping is a deliberate choice on the trigger.
     groupingSec: undefined,
     confirm: NC_CONFIRM_FORM_DEFAULT,
@@ -225,6 +232,7 @@ export function inputToForm(rule: NcRule): NcRuleFormState {
     cooldownSec: rule.throttle.cooldownSec,
     snoozeOptions: rule.snoozeOptions,
     snoozeAllowGlobal: rule.snoozeAllowGlobal === true,
+    askVerdict: rule.askVerdict,
     groupingSec: rule.groupingSec,
     confirm: confirmToForm(rule.confirm),
     actions: actionsToForm(rule.actions),
@@ -358,6 +366,15 @@ export interface NcDeliveryChoiceOption {
  * leftover `groupingSec` on a track-end or sound rule is not a choice, and is
  * never sent.
  */
+/**
+ * Does the rule report a track, so there is a detection to ask about? A mirror
+ * of the admin's `verdictApplies` (`rule-form-state.ts`): a flag left on the
+ * form by a trigger the operator moved away from must not reach the hub.
+ */
+export function verdictApplies(form: Pick<NcRuleFormState, 'delivery'>): boolean {
+  return form.delivery === 'immediate' || form.delivery === 'track-end'
+}
+
 export function deliveryChoiceOf(
   form: NcRuleFormState,
 ): NcDeliveryChoice {
@@ -722,6 +739,7 @@ export function formToInput(form: NcRuleFormState, options: FormToInputOptions =
     // `!== undefined`, never truthiness, or "no buttons" becomes "the hub's".
     ...(form.snoozeOptions !== undefined ? { snoozeOptions: [...form.snoozeOptions] } : {}),
     ...(form.snoozeAllowGlobal ? { snoozeAllowGlobal: true } : {}),
+    ...(form.askVerdict !== undefined && verdictApplies(form) ? { askVerdict: form.askVerdict } : {}),
     ...(groupingIsSent(form) && form.groupingSec !== undefined ? { groupingSec: form.groupingSec } : {}),
     ...(confirm !== undefined ? { confirm } : {}),
     ...adminOnlyFields(form, options.isAdmin === true),

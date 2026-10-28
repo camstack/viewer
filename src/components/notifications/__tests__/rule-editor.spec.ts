@@ -38,6 +38,7 @@ import {
   emptyRuleForm,
   formToInput,
   inputToForm,
+  verdictApplies,
   isRuleFormValid,
   ruleFormProblems,
   buildConditions,
@@ -1434,6 +1435,36 @@ describe('fix round 1 — actions is an ADMIN problem; stored absent-equivalents
     }
     const clears = ruleClearsFor(emptied, { ownTargetIds: ['tgt-a'], stored })
     expect(clears).toEqual(expect.arrayContaining(['confirm', 'groupingSec', 'snoozeAllowGlobal']))
+  })
+})
+
+describe('askVerdict — sent only where a detection can be asked about', () => {
+  const absentEquivalent = NcRuleSchema.parse({
+    id: 'r-v',
+    name: 'Verdict',
+    enabled: true,
+    delivery: 'immediate',
+    conditions: {},
+    targets: [{ targetId: 'tgt-a' }],
+    createdBy: 'admin',
+    createdAt: 1,
+    updatedAt: 2,
+  })
+  const base = inputToForm(absentEquivalent)
+  const opts = { ownTargetIds: ['tgt-a'] }
+
+  it('round-trips through the form and is sent on a detection trigger', () => {
+    const stored = NcRuleSchema.parse({ ...absentEquivalent, askVerdict: true })
+    expect(inputToForm(stored).askVerdict).toBe(true)
+    expect(formToInput(inputToForm(stored), opts).askVerdict).toBe(true)
+    expect(formToInput({ ...base, askVerdict: false }, opts).askVerdict).toBe(false)
+    expect(formToInput(base, opts).askVerdict).toBeUndefined()
+  })
+
+  it('is never sent from a trigger that reports no track', () => {
+    expect(formToInput({ ...base, delivery: 'device-event', askVerdict: true }, opts).askVerdict).toBeUndefined()
+    expect(verdictApplies({ delivery: 'device-event' })).toBe(false)
+    expect(verdictApplies({ delivery: 'track-end' })).toBe(true)
   })
 })
 

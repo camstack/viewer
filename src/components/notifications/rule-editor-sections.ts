@@ -55,7 +55,7 @@ export const NC_VIEWER_SECTION_FIELDS: Readonly<
   ],
   notification: ['priority', 'media', 'templateTitle', 'templateBody'],
   actions: ['actions'],
-  advanced: ['cooldownSec', 'snoozeOptions', 'snoozeAllowGlobal', 'confirm'],
+  advanced: ['cooldownSec', 'snoozeOptions', 'snoozeAllowGlobal', 'askVerdict', 'confirm'],
 }
 
 const EDITOR_PREFIX = 'v2.nc.rules.editor'
