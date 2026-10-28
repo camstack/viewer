@@ -32,12 +32,12 @@ export type StatusGlyphTone = 'foreground' | 'foregroundMuted'
  * header control wears (operator, 2026-10-23).
  */
 export function batteryBadgeColor(
-  battery: Pick<BatteryStatus, 'charging' | 'percentage'>,
+  battery: Pick<BatteryStatus, 'charging' | 'level'>,
   colors: ColorTokens,
   neutral: StatusGlyphTone = 'foregroundMuted',
 ): string {
   const charging = battery.charging === 'dc' || battery.charging === 'solar'
-  return !charging && battery.percentage <= LOW_BATTERY_PCT ? colors.danger : colors[neutral]
+  return !charging && battery.level <= LOW_BATTERY_PCT ? colors.danger : colors[neutral]
 }
 
 export interface BatteryBadgeProps {
@@ -60,7 +60,7 @@ export function BatteryBadge({
 }: BatteryBadgeProps): React.JSX.Element {
   // Only a power source the camera REPORTED lights the charging glyph.
   const charging = battery.charging === 'dc' || battery.charging === 'solar'
-  const low = battery.percentage <= LOW_BATTERY_PCT
+  const low = battery.level <= LOW_BATTERY_PCT
   const color = batteryBadgeColor(battery, colors, neutral)
   const Icon = charging ? BatteryCharging : low ? BatteryLow : BatteryFull
   return (
@@ -68,7 +68,7 @@ export function BatteryBadge({
       <Icon size={size} color={color} />
       {battery.binary || compact ? null : (
         <Text style={[styles.text, { color, fontSize: Math.max(9, size - 3) }]}>
-          {Math.round(battery.percentage)}%
+          {Math.round(battery.level)}%
         </Text>
       )}
     </View>

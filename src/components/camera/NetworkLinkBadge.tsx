@@ -46,7 +46,7 @@ export function NetworkLinkBadge({
   neutral = 'foregroundMuted',
 }: NetworkLinkBadgeProps): React.JSX.Element | null {
   if (!networkLinkBadgeVisible(link) || !link) return null
-  const signal = link.signalPercent
+  const signal = link.signal
   const weak = signal !== null && signal <= WEAK_SIGNAL_PCT
   // `warning`, as the header says: a weak signal is a caution, not a failure.
   const color = weak ? colors.warning : colors[neutral]

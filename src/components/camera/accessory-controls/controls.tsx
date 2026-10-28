@@ -31,6 +31,7 @@ import { createTrailingCommit, type TrailingCommit } from './trailing-commit.js'
 import { FAN_DEFAULT_STEP, stepPercentage } from './fan-logic.js'
 import { formatCoverPosition } from './cover-position.js'
 import { PillButton, IconButton, ControlSpinner, OptionPicker, StepperArrows } from './control-atoms.js'
+import { BRIGHTNESS_LEVEL, FAN_SPEED, quantityArgs } from '../../../data/quantity-fields.js'
 
 export interface AccessoryControlProps {
   readonly deviceId: number
@@ -75,13 +76,13 @@ export function BrightnessControl({ deviceId, online }: AccessoryControlProps) {
   // A dimmable light also exposes `switch` for true on/off; read it for state.
   const sw = useSwitchStatus(deviceId, online)
   const mutator = useCapMutator(deviceId)
-  const level = brightness.data?.percentage ?? 0
+  const level = brightness.data?.level ?? 0
   const on = sw.data?.on ?? level > 0
 
   const setLevel = useCallback(
     async (next: number) => {
       const clamped = Math.max(0, Math.min(100, next))
-      await mutator.run('brightness', 'setBrightness', { percentage: clamped })
+      await mutator.run('brightness', 'setBrightness', quantityArgs(BRIGHTNESS_LEVEL, clamped))
       void brightness.refetch()
       void sw.refetch()
     },
@@ -418,9 +419,9 @@ export function FanControl({ deviceId, online }: AccessoryControlProps) {
   const fan = useFanStatus(deviceId, online)
   const mutator = useCapMutator(deviceId)
 
-  const percentage = fan.data?.percentage ?? 0
+  const speed = fan.data?.speed ?? 0
   const step = fan.data?.percentageStep ?? FAN_DEFAULT_STEP
-  const on = sw.data?.on ?? percentage > 0
+  const on = sw.data?.on ?? speed > 0
   const oscillating = fan.data?.oscillating ?? null
   const preset = fan.data?.preset ?? ''
   const direction = fan.data?.direction ?? null
@@ -441,13 +442,15 @@ export function FanControl({ deviceId, online }: AccessoryControlProps) {
 
   const setSpeed = useCallback(
     async (directionDelta: 1 | -1) => {
-      await mutator.run('fanControl', 'setPercentage', {
-        percentage: stepPercentage(percentage, directionDelta, step),
-      })
+      await mutator.run(
+        'fanControl',
+        'setPercentage',
+        quantityArgs(FAN_SPEED, stepPercentage(speed, directionDelta, step)),
+      )
       void fan.refetch()
       void sw.refetch()
     },
-    [mutator, percentage, step, fan, sw],
+    [mutator, speed, step, fan, sw],
   )
 
   const setPreset = useCallback(
@@ -508,7 +511,7 @@ export function FanControl({ deviceId, online }: AccessoryControlProps) {
         onPress={() => void setSpeed(-1)}
       />
       <Text style={[styles.readout, { color: colors.foregroundMuted }]} numberOfLines={1}>
-        {`${Math.round(percentage)}%`}
+        {`${Math.round(speed)}%`}
       </Text>
       <IconButton
         icon={ChevronUp}

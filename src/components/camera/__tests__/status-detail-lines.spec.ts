@@ -3,9 +3,9 @@
  * number.
  *
  * Three tri-states meet here and each has been shown, in this codebase, as a
- * fabricated figure at some point: `signalPercent: null` is not 0 % (a wire has
+ * fabricated figure at some point: `signal: null` is not 0 % (a wire has
  * no signal at all), `binary: true` is a camera that reports ok/low and no
- * percentage, and `charging: 'unknown'` is the absence of a read, never "not
+ * level, and `charging: 'unknown'` is the absence of a read, never "not
  * charging". Asserted over keys and literal text so the claim survives a
  * wording change in `locales/`.
  */
@@ -31,64 +31,64 @@ const valueKey = (lines: readonly StatusDetailLine[], labelKey: string): string 
 
 describe('battery detail lines', () => {
   it('states the charge as a figure, and the power source in words', () => {
-    const lines = batteryDetailLines({ percentage: 87.4, charging: 'dc', sleeping: false })
+    const lines = batteryDetailLines({ level: 87.4, charging: 'dc', sleeping: false })
     expect(text(lines, STATUS_DETAIL_KEY.label.charge)).toBe('87%')
     expect(valueKey(lines, STATUS_DETAIL_KEY.label.charging)).toBe(STATUS_DETAIL_KEY.value.chargingDc)
     // Not sleeping is not a line: the popover states what IS, not what is not.
     expect(lines.some((l) => l.labelKey === STATUS_DETAIL_KEY.label.state)).toBe(false)
   })
 
-  it('a binary battery gets no percentage at all', () => {
-    const lines = batteryDetailLines({ percentage: 100, charging: 'none', sleeping: false, binary: true })
+  it('a binary battery gets no level at all', () => {
+    const lines = batteryDetailLines({ level: 100, charging: 'none', sleeping: false, binary: true })
     expect(text(lines, STATUS_DETAIL_KEY.label.charge)).toBeNull()
     expect(valueKey(lines, STATUS_DETAIL_KEY.label.charge)).toBe(STATUS_DETAIL_KEY.value.binary)
     expect(JSON.stringify(lines)).not.toContain('100')
   })
 
   it("`unknown` charging is unknown, never 'not charging'", () => {
-    const lines = batteryDetailLines({ percentage: 12, charging: 'unknown', sleeping: false })
+    const lines = batteryDetailLines({ level: 12, charging: 'unknown', sleeping: false })
     expect(valueKey(lines, STATUS_DETAIL_KEY.label.charging)).toBe(STATUS_DETAIL_KEY.value.unknown)
     expect(valueKey(lines, STATUS_DETAIL_KEY.label.charging)).not.toBe(STATUS_DETAIL_KEY.value.chargingNone)
   })
 
   it('says so when the camera is asleep', () => {
-    const lines = batteryDetailLines({ percentage: 40, charging: 'none', sleeping: true })
+    const lines = batteryDetailLines({ level: 40, charging: 'none', sleeping: true })
     expect(valueKey(lines, STATUS_DETAIL_KEY.label.state)).toBe(STATUS_DETAIL_KEY.value.sleeping)
   })
 
-  it('a percentage that is not a number is unknown, not zero', () => {
-    const lines = batteryDetailLines({ percentage: Number.NaN, charging: 'none', sleeping: false })
+  it('a level that is not a number is unknown, not zero', () => {
+    const lines = batteryDetailLines({ level: Number.NaN, charging: 'none', sleeping: false })
     expect(valueKey(lines, STATUS_DETAIL_KEY.label.charge)).toBe(STATUS_DETAIL_KEY.value.unknown)
   })
 })
 
 describe('network link detail lines', () => {
   it('names the link and states the signal with its figure, plus the SSID', () => {
-    const lines = networkLinkDetailLines({ type: 'wifi', signalPercent: 62.6, ssid: 'CasaWifi' })
+    const lines = networkLinkDetailLines({ type: 'wifi', signal: 62.6, ssid: 'CasaWifi' })
     expect(valueKey(lines, STATUS_DETAIL_KEY.label.linkType)).toBe(STATUS_DETAIL_KEY.value.wifi)
     expect(text(lines, STATUS_DETAIL_KEY.label.signal)).toBe('63%')
     expect(text(lines, STATUS_DETAIL_KEY.label.ssid)).toBe('CasaWifi')
   })
 
   it('a wire has no signal — not applicable, never 0 %', () => {
-    const lines = networkLinkDetailLines({ type: 'ethernet', signalPercent: null })
+    const lines = networkLinkDetailLines({ type: 'ethernet', signal: null })
     expect(valueKey(lines, STATUS_DETAIL_KEY.label.signal)).toBe(STATUS_DETAIL_KEY.value.notApplicable)
     expect(JSON.stringify(lines)).not.toContain('0%')
   })
 
   it('a wireless link whose signal was not read is unknown, never 0 %', () => {
-    const lines = networkLinkDetailLines({ type: 'cellular', signalPercent: null })
+    const lines = networkLinkDetailLines({ type: 'cellular', signal: null })
     expect(valueKey(lines, STATUS_DETAIL_KEY.label.signal)).toBe(STATUS_DETAIL_KEY.value.unknown)
     expect(JSON.stringify(lines)).not.toContain('0%')
   })
 
   it('no SSID, no line — an absent name is not an empty one', () => {
-    const lines = networkLinkDetailLines({ type: 'wifi', signalPercent: 10 })
+    const lines = networkLinkDetailLines({ type: 'wifi', signal: 10 })
     expect(lines.some((l) => l.labelKey === STATUS_DETAIL_KEY.label.ssid)).toBe(false)
   })
 
   it('an unknown link type stays unknown', () => {
-    const lines = networkLinkDetailLines({ type: 'unknown', signalPercent: null })
+    const lines = networkLinkDetailLines({ type: 'unknown', signal: null })
     expect(valueKey(lines, STATUS_DETAIL_KEY.label.linkType)).toBe(STATUS_DETAIL_KEY.value.linkUnknown)
   })
 })

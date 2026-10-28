@@ -13,14 +13,14 @@ import {
  * The first source (`getDeviceLiveInfoAggregate`) returns NULL for sensor
  * devices — verified against the live hub on 2026-08-01 (`deviceId: 291`,
  * "Indoor Temperature", aggregate `null`; `temperatureSensor.getStatus` →
- * `{ celsius: 41.1, unit: "C" }`). The payloads below are those real
+ * `{ celsius: 41.1, unit: "C" }`, the field the hub has since renamed to `temperature`). The payloads below are those real
  * responses, so this suite fails if the mapping drifts from what the hub
  * actually sends — not from what a fake was seeded with.
  */
 describe('cap-status readings become pickable fields', () => {
   it('maps the live hub temperature payload', () => {
     const field = capStatusToField('temperature-sensor', {
-      celsius: 41.1,
+      temperature: 41.1,
       lastFetchedAt: 1785596987072,
       unit: 'C',
     })
@@ -36,14 +36,32 @@ describe('cap-status readings become pickable fields', () => {
   it('falls back to the canonical unit when the status carries none', () => {
     // Real hub payloads: humiditySensor(292) → { percent: 16 } with NO unit,
     // pressureSensor(293) → { hpa: 1004.7 } with NO unit.
-    expect(capStatusToField('humidity-sensor', { percent: 16, lastFetchedAt: 1 })).toMatchObject({
+    expect(capStatusToField('humidity-sensor', { humidity: 16, lastFetchedAt: 1 })).toMatchObject({
       value: 16,
       unit: '%',
     })
-    expect(capStatusToField('pressure-sensor', { hpa: 1004.7, lastFetchedAt: 1 })).toMatchObject({
+    expect(capStatusToField('pressure-sensor', { pressure: 1004.7, lastFetchedAt: 1 })).toMatchObject({
       value: 1004.7,
       unit: 'hPa',
     })
+  })
+
+  it('still reads the unit-named fields of a hub that has not been migrated', () => {
+    expect(capStatusToField('temperature-sensor', { celsius: 41.1, unit: 'C' })).toMatchObject({
+      key: 'temperature-sensor',
+      value: 41.1,
+    })
+    expect(capStatusToField('humidity-sensor', { percent: 16 })).toMatchObject({ value: 16, unit: '%' })
+    expect(capStatusToField('battery', { percentage: 64 })).toMatchObject({ value: 64 })
+    // The new name wins when a payload carries both.
+    expect(capStatusToField('battery', { level: 70, percentage: 64 })).toMatchObject({ value: 70 })
+  })
+
+  it('keeps the saved id of a multi-leaf readout across the rename', () => {
+    // A saved overlay stores `air-quality-sensor:co2Ppm`; the hub field is now `co2`.
+    const rows = capStatusToFields('air-quality-sensor', { co2: 612, voc: 80 })
+    expect(rows.map((r) => r.key)).toEqual(['air-quality-sensor:co2Ppm', 'air-quality-sensor:vocPpb'])
+    expect(capStatusToFields('air-quality-sensor', { co2Ppm: 612 })[0]?.value).toBe(612)
   })
 
   it('maps climate-control currentTemp as a multi-leaf cap-status row', () => {
@@ -77,13 +95,13 @@ describe('cap-status readings become pickable fields', () => {
   it('every mapped value key matches its cap schema field name', () => {
     // Field names come from camstack-server's *.cap.ts status schemas; a rename
     // there silently empties every chip. Pin the pairs this module relies on.
-    expect(CAP_STATUS_FIELDS['temperature-sensor']?.valueKey).toBe('celsius')
-    expect(CAP_STATUS_FIELDS['humidity-sensor']?.valueKey).toBe('percent')
-    expect(CAP_STATUS_FIELDS['pressure-sensor']?.valueKey).toBe('hpa')
-    expect(CAP_STATUS_FIELDS['ambient-light-sensor']?.valueKey).toBe('lux')
+    expect(CAP_STATUS_FIELDS['temperature-sensor']?.valueKey).toBe('temperature')
+    expect(CAP_STATUS_FIELDS['humidity-sensor']?.valueKey).toBe('humidity')
+    expect(CAP_STATUS_FIELDS['pressure-sensor']?.valueKey).toBe('pressure')
+    expect(CAP_STATUS_FIELDS['ambient-light-sensor']?.valueKey).toBe('illuminance')
     expect(CAP_STATUS_FIELDS['numeric-sensor']?.valueKey).toBe('value')
     expect(CAP_STATUS_FIELDS['enum-sensor']?.valueKey).toBe('value')
-    expect(CAP_STATUS_FIELDS.battery?.valueKey).toBe('percentage')
+    expect(CAP_STATUS_FIELDS.battery?.valueKey).toBe('level')
   })
 })
 

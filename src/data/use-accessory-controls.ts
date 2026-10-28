@@ -20,10 +20,20 @@
  * (`lockControl`, `alarmPanel`, `temperatureSensor`…), distinct from the
  * kebab-case `features` name the registry keys on.
  */
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { type UseQueryResult } from '@tanstack/react-query'
 import { useConnection } from '../connection/ConnectionProvider.js'
-import { useCapStatus } from './use-cap-status.js'
+import { useCapStatus, useCapStatusParsed } from './use-cap-status.js'
+import {
+  BRIGHTNESS_LEVEL,
+  FAN_SPEED,
+  HUMIDITY,
+  ILLUMINANCE,
+  type QuantityField,
+  readQuantityNumber,
+  readQuantityNullable,
+  TEMPERATURE,
+} from './quantity-fields.js'
 import { NcLocalizedError, ncNotConnectedError } from './nc-errors.js'
 import { useNcErrorText } from '../components/notifications/use-nc-error-text.js'
 
@@ -36,7 +46,8 @@ export interface MotionTriggerStatus {
   readonly enabled: boolean
 }
 export interface BrightnessStatus {
-  readonly percentage: number
+  /** 0–100 (`level` on the hub; an older hub calls it `percentage`). */
+  readonly level: number
 }
 export type LockState = 'locked' | 'unlocked' | 'locking' | 'unlocking' | 'jammed'
 export interface LockStatus {
@@ -85,7 +96,8 @@ export interface ClimateStatus {
 }
 export type FanDirection = 'forward' | 'reverse'
 export interface FanStatus {
-  readonly percentage: number | null
+  /** 0–100, `null` when unknown (`speed` on the hub; an older hub calls it `percentage`). */
+  readonly speed: number | null
   readonly percentageStep?: number
   readonly preset: string
   readonly availablePresets: readonly string[]
@@ -112,8 +124,10 @@ function isSwitchStatus(v: unknown): v is SwitchStatus {
 function isMotionTriggerStatus(v: unknown): v is MotionTriggerStatus {
   return isRecord(v) && typeof v.enabled === 'boolean'
 }
-function isBrightnessStatus(v: unknown): v is BrightnessStatus {
-  return isRecord(v) && typeof v.percentage === 'number'
+export function toBrightnessStatus(v: unknown): BrightnessStatus | null {
+  if (!isRecord(v)) return null
+  const level = readQuantityNumber(v, BRIGHTNESS_LEVEL)
+  return level === undefined ? null : { level }
 }
 const LOCK_STATES: readonly LockState[] = ['locked', 'unlocked', 'locking', 'unlocking', 'jammed']
 function isLockStatus(v: unknown): v is LockStatus {
@@ -163,14 +177,23 @@ function isClimateStatus(v: unknown): v is ClimateStatus {
     (v.swingHorizontal === null || typeof v.swingHorizontal === 'boolean')
   )
 }
-function isFanStatus(v: unknown): v is FanStatus {
-  if (!isRecord(v)) return false
-  if (!(v.percentage === null || typeof v.percentage === 'number')) return false
-  if (!(v.oscillating === null || typeof v.oscillating === 'boolean')) return false
-  if (typeof v.preset !== 'string' || !Array.isArray(v.availablePresets)) return false
-  if (!v.availablePresets.every((preset) => typeof preset === 'string')) return false
-  if (!(v.direction === null || v.direction === 'forward' || v.direction === 'reverse')) return false
-  return v.percentageStep === undefined || typeof v.percentageStep === 'number'
+export function toFanStatus(v: unknown): FanStatus | null {
+  if (!isRecord(v)) return null
+  const speed = readQuantityNullable(v, FAN_SPEED)
+  if (speed === undefined) return null
+  if (!(v.oscillating === null || typeof v.oscillating === 'boolean')) return null
+  if (typeof v.preset !== 'string' || !Array.isArray(v.availablePresets)) return null
+  if (!v.availablePresets.every((preset) => typeof preset === 'string')) return null
+  if (!(v.direction === null || v.direction === 'forward' || v.direction === 'reverse')) return null
+  if (!(v.percentageStep === undefined || typeof v.percentageStep === 'number')) return null
+  return {
+    speed,
+    ...(v.percentageStep === undefined ? {} : { percentageStep: v.percentageStep }),
+    preset: v.preset,
+    availablePresets: v.availablePresets,
+    direction: v.direction,
+    oscillating: v.oscillating,
+  }
 }
 
 // ── status hooks ──────────────────────────────────────────────────────────────
@@ -185,7 +208,7 @@ export function useMotionTriggerStatus(deviceId: number, enabled: boolean): UseQ
   return useCapStatus('motionTrigger', deviceId, isMotionTriggerStatus, enabled)
 }
 export function useBrightnessStatus(deviceId: number, enabled: boolean): UseQueryResult<BrightnessStatus | null> {
-  return useCapStatus('brightness', deviceId, isBrightnessStatus, enabled)
+  return useCapStatusParsed('brightness', deviceId, toBrightnessStatus, enabled)
 }
 export function useLockStatus(deviceId: number, enabled: boolean): UseQueryResult<LockStatus | null> {
   return useCapStatus('lockControl', deviceId, isLockStatus, enabled)
@@ -204,58 +227,57 @@ export function useClimateStatus(deviceId: number, enabled: boolean): UseQueryRe
 /** Read the `fan-control` cap status (speed / oscillation). On/off is read
  *  separately via the fan's `switch` cap. Router key is camelCase `fanControl`. */
 export function useFanStatus(deviceId: number, enabled: boolean): UseQueryResult<FanStatus | null> {
-  return useCapStatus('fanControl', deviceId, isFanStatus, enabled)
+  return useCapStatusParsed('fanControl', deviceId, toFanStatus, enabled)
 }
 
 /** A sensor cap → its `(capKey, field, kind, unit)` mapping for the read-only
  *  value row. Kebab cap name is the lookup key the registry resolves. */
 interface SensorMapping {
   readonly capKey: string
-  readonly field: string
+  readonly field: QuantityField
   readonly fallbackUnit?: string
 }
+/** `numeric-sensor.value` was never renamed: both names are the same. */
+const NUMERIC_SENSOR_VALUE: QuantityField = { name: 'value', legacy: 'value' }
 const SENSOR_MAP: Readonly<Record<string, SensorMapping>> = {
-  'temperature-sensor': { capKey: 'temperatureSensor', field: 'celsius', fallbackUnit: '°C' },
-  'humidity-sensor': { capKey: 'humiditySensor', field: 'percent', fallbackUnit: '%' },
-  'ambient-light-sensor': { capKey: 'ambientLightSensor', field: 'lux', fallbackUnit: 'lx' },
-  'numeric-sensor': { capKey: 'numericSensor', field: 'value' },
+  'temperature-sensor': { capKey: 'temperatureSensor', field: TEMPERATURE, fallbackUnit: '°C' },
+  'humidity-sensor': { capKey: 'humiditySensor', field: HUMIDITY, fallbackUnit: '%' },
+  'ambient-light-sensor': { capKey: 'ambientLightSensor', field: ILLUMINANCE, fallbackUnit: 'lx' },
+  'numeric-sensor': { capKey: 'numericSensor', field: NUMERIC_SENSOR_VALUE },
 }
+
+function enumSensorValue(raw: unknown): SensorValue | null {
+  return isRecord(raw) && typeof raw.value === 'string' ? { kind: 'enum', value: raw.value } : null
+}
+
+function numericSensorValue(mapping: SensorMapping): (raw: unknown) => SensorValue | null {
+  return (raw) => {
+    if (!isRecord(raw)) return null
+    const value = readQuantityNumber(raw, mapping.field)
+    if (value === undefined) return null
+    return {
+      kind: 'number',
+      value,
+      unit: typeof raw.unit === 'string' ? raw.unit : mapping.fallbackUnit,
+      precision: typeof raw.precision === 'number' ? raw.precision : undefined,
+    }
+  }
+}
+
+const NO_SENSOR = (): SensorValue | null => null
 
 /** Read-only value for a sensor `feature`. Maps the typed numeric sensors and
  *  the enum sensor onto the unified `SensorValue`. Returns null when the
  *  feature isn't a known sensor. */
 export function useSensorValue(feature: string, deviceId: number, enabled: boolean): UseQueryResult<SensorValue | null> {
-  const numeric = SENSOR_MAP[feature]
+  const mapping = SENSOR_MAP[feature]
   const isEnum = feature === 'enum-sensor'
-  const guard = useCallback(
-    (v: unknown): v is SensorValue => {
-      if (isEnum) return isRecord(v) && typeof v.value === 'string'
-      if (numeric) return isRecord(v) && typeof v[numeric.field] === 'number'
-      return false
-    },
-    [isEnum, numeric],
+  const parse = useMemo(
+    () => (isEnum ? enumSensorValue : mapping !== undefined ? numericSensorValue(mapping) : NO_SENSOR),
+    [isEnum, mapping],
   )
-  // Resolve to the unified SensorValue inside the query via a wrapper guard;
-  // useCapStatus narrows to the raw record, then this maps it.
-  const capKey = isEnum ? 'enumSensor' : numeric?.capKey ?? ''
-  const query = useCapStatus<Record<string, unknown>>(
-    capKey,
-    deviceId,
-    (v): v is Record<string, unknown> => guard(v),
-    enabled && capKey.length > 0,
-  )
-  const raw = query.data
-  const mapped: SensorValue | null = raw
-    ? isEnum
-      ? { kind: 'enum', value: String(raw.value) }
-      : {
-          kind: 'number',
-          value: Number(raw[numeric!.field]),
-          unit: typeof raw.unit === 'string' ? raw.unit : numeric!.fallbackUnit,
-          precision: typeof raw.precision === 'number' ? raw.precision : undefined,
-        }
-    : null
-  return { ...query, data: mapped } as UseQueryResult<SensorValue | null>
+  const capKey = isEnum ? 'enumSensor' : (mapping?.capKey ?? '')
+  return useCapStatusParsed(capKey, deviceId, parse, enabled && capKey.length > 0)
 }
 
 // ── mutation runner ───────────────────────────────────────────────────────────

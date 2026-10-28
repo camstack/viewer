@@ -134,10 +134,10 @@ describe('the header status glyphs wear the theme', () => {
   for (const mode of ['light', 'dark'] as const) {
     const colors = THEME[mode]
     it(`${mode}: charging and healthy are the icon colour, low is danger, never info`, () => {
-      expect(batteryBadgeColor({ charging: 'dc', percentage: 80 }, colors, 'foreground')).toBe(colors.foreground)
-      expect(batteryBadgeColor({ charging: 'solar', percentage: 10 }, colors, 'foreground')).toBe(colors.foreground)
-      expect(batteryBadgeColor({ charging: 'none', percentage: 70 }, colors, 'foreground')).toBe(colors.foreground)
-      expect(batteryBadgeColor({ charging: 'none', percentage: 15 }, colors, 'foreground')).toBe(colors.danger)
+      expect(batteryBadgeColor({ charging: 'dc', level: 80 }, colors, 'foreground')).toBe(colors.foreground)
+      expect(batteryBadgeColor({ charging: 'solar', level: 10 }, colors, 'foreground')).toBe(colors.foreground)
+      expect(batteryBadgeColor({ charging: 'none', level: 70 }, colors, 'foreground')).toBe(colors.foreground)
+      expect(batteryBadgeColor({ charging: 'none', level: 15 }, colors, 'foreground')).toBe(colors.danger)
     })
   }
 

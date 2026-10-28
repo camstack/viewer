@@ -39,8 +39,8 @@ import type { NetworkLinkStatus } from '../../../data/use-network-link.js'
 
 afterEach(cleanup)
 
-const BATTERY: BatteryStatus = { percentage: 63, charging: 'solar', sleeping: true }
-const LINK: NetworkLinkStatus = { type: 'wifi', signalPercent: 41, ssid: 'CasaWifi' }
+const BATTERY: BatteryStatus = { level: 63, charging: 'solar', sleeping: true }
+const LINK: NetworkLinkStatus = { type: 'wifi', signal: 41, ssid: 'CasaWifi' }
 
 function Subject(): React.ReactElement {
   const status = useStatusDetail()

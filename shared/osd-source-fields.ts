@@ -25,7 +25,14 @@ export const OSD_SOURCE_CAP_NAMES: ReadonlySet<string> = new Set([
 ])
 
 export interface CapStatusLeaf {
+  /** The field on the hub's status slice (its quantity name). */
   readonly path: string
+  /**
+   * The name an older hub still sends (the unit-named field the hub renamed to
+   * `path`, planning issue #260). Read as a fallback, and kept as the stable id
+   * of a stored readout: a phone's saved `fieldKey` must keep matching.
+   */
+  readonly legacyPath?: string
   readonly label: string
   readonly fallbackUnit?: string
 }
@@ -44,19 +51,19 @@ export interface CapStatusCatalogEntry {
 export const CAP_STATUS_CATALOG: Readonly<Record<string, CapStatusCatalogEntry>> = {
   'temperature-sensor': {
     router: 'temperatureSensor',
-    leaves: [{ path: 'celsius', label: 'Temperature', fallbackUnit: '°C' }],
+    leaves: [{ path: 'temperature', legacyPath: 'celsius', label: 'Temperature', fallbackUnit: '°C' }],
   },
   'humidity-sensor': {
     router: 'humiditySensor',
-    leaves: [{ path: 'percent', label: 'Humidity', fallbackUnit: '%' }],
+    leaves: [{ path: 'humidity', legacyPath: 'percent', label: 'Humidity', fallbackUnit: '%' }],
   },
   'pressure-sensor': {
     router: 'pressureSensor',
-    leaves: [{ path: 'hpa', label: 'Pressure', fallbackUnit: 'hPa' }],
+    leaves: [{ path: 'pressure', legacyPath: 'hpa', label: 'Pressure', fallbackUnit: 'hPa' }],
   },
   'ambient-light-sensor': {
     router: 'ambientLightSensor',
-    leaves: [{ path: 'lux', label: 'Illuminance', fallbackUnit: 'lx' }],
+    leaves: [{ path: 'illuminance', legacyPath: 'lux', label: 'Illuminance', fallbackUnit: 'lx' }],
   },
   'numeric-sensor': {
     router: 'numericSensor',
@@ -68,7 +75,7 @@ export const CAP_STATUS_CATALOG: Readonly<Record<string, CapStatusCatalogEntry>>
   },
   battery: {
     router: 'battery',
-    leaves: [{ path: 'percentage', label: 'Battery', fallbackUnit: '%' }],
+    leaves: [{ path: 'level', legacyPath: 'percentage', label: 'Battery', fallbackUnit: '%' }],
   },
   'climate-control': {
     router: 'climateControl',
@@ -94,8 +101,8 @@ export const CAP_STATUS_CATALOG: Readonly<Record<string, CapStatusCatalogEntry>>
   'air-quality-sensor': {
     router: 'airQualitySensor',
     leaves: [
-      { path: 'co2Ppm', label: 'CO₂', fallbackUnit: 'ppm' },
-      { path: 'vocPpb', label: 'VOC', fallbackUnit: 'ppb' },
+      { path: 'co2', legacyPath: 'co2Ppm', label: 'CO₂', fallbackUnit: 'ppm' },
+      { path: 'voc', legacyPath: 'vocPpb', label: 'VOC', fallbackUnit: 'ppb' },
       { path: 'pm25', label: 'PM2.5', fallbackUnit: 'µg/m³' },
       { path: 'pm10', label: 'PM10', fallbackUnit: 'µg/m³' },
       { path: 'aqi', label: 'AQI' },
@@ -125,5 +132,8 @@ export function capStatusDeviceFieldKey(capName: string, path: string): string {
   if (entry !== undefined && entry.leaves.length === 1 && entry.leaves[0].path === path) {
     return capName
   }
-  return `${capName}:${path}`
+  // The id of a multi-leaf readout is the leaf's OLD name where it has one: a
+  // saved overlay carries it, and renaming the hub field must not orphan it.
+  const leaf = entry?.leaves.find((l) => l.path === path)
+  return `${capName}:${leaf?.legacyPath ?? path}`
 }

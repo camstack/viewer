@@ -6,7 +6,7 @@
  * tri-states and every one of them has, at some point in this app, been drawn
  * as a figure it does not carry:
  *
- *  - `signalPercent: null` is "not read" or "does not apply" — a wire has no
+ *  - `signal: null` is "not read" or "does not apply" — a wire has no
  *    signal — and it is NOT 0 %;
  *  - `binary: true` is a camera that reports ok/low and no percentage at all,
  *    so the charge line is a word, not `100%`;
@@ -131,7 +131,7 @@ function percent(value: number | null | undefined): string | null {
 }
 
 export function batteryDetailLines(battery: BatteryStatus): readonly StatusDetailLine[] {
-  const charge = battery.binary === true ? null : percent(battery.percentage)
+  const charge = battery.binary === true ? null : percent(battery.level)
   const lines: StatusDetailLine[] = [
     battery.binary === true
       ? keyLine(STATUS_DETAIL_KEY.label.charge, STATUS_DETAIL_KEY.value.binary)
@@ -146,7 +146,7 @@ export function batteryDetailLines(battery: BatteryStatus): readonly StatusDetai
 }
 
 export function networkLinkDetailLines(link: NetworkLinkStatus): readonly StatusDetailLine[] {
-  const signal = percent(link.signalPercent)
+  const signal = percent(link.signal)
   const lines: StatusDetailLine[] = [
     keyLine(STATUS_DETAIL_KEY.label.linkType, LINK_VALUE[link.type]),
     // A wire is not a weak link: it has no signal to report, ever.

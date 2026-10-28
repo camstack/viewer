@@ -20,20 +20,44 @@ describe('badge batch parsing', () => {
     // A JSON object cannot key by number, so the procedure returns strings and
     // this is where they become ids again.
     const byId = parseBadgeBatch({
-      '101': { battery: { percentage: 80, charging: 'dc', sleeping: false }, 'recording-archive': null },
+      '101': { battery: { level: 80, charging: 'dc', sleeping: false }, 'recording-archive': null },
       '102': { battery: null, 'recording-archive': { activeMode: 'continuous' } },
     })
     expect(byId).not.toBeNull()
-    expect(byId?.[101]?.battery?.percentage).toBe(80)
+    expect(byId?.[101]?.battery?.level).toBe(80)
     expect(byId?.[102]?.recordingMode).toBe('continuous')
     expect(byId?.[101]?.recordingMode).toBeNull()
+  })
+
+  it('still reads the battery and the link of a hub that has not been migrated', () => {
+    // The hub renamed `percentage` to `level` and `signalPercent` to `signal`; a
+    // phone must keep drawing the badges against a hub that has not moved yet.
+    const byId = parseBadgeBatch({
+      '101': {
+        battery: { percentage: 64, charging: 'none', sleeping: false },
+        'network-link': { type: 'wifi', signalPercent: 71 },
+      },
+    })
+    expect(byId?.[101]?.battery?.level).toBe(64)
+    expect(byId?.[101]?.networkLink?.signal).toBe(71)
+  })
+
+  it('reads a null signal as unknown, and the new name over a stale old one', () => {
+    const byId = parseBadgeBatch({
+      '101': {
+        battery: { level: 50, percentage: 99, charging: 'none', sleeping: false },
+        'network-link': { type: 'wifi', signal: null, signalPercent: 90 },
+      },
+    })
+    expect(byId?.[101]?.battery?.level).toBe(50)
+    expect(byId?.[101]?.networkLink?.signal).toBeNull()
   })
 
   it('carries an UNKNOWN power source through instead of calling it none', () => {
     // 'none' on the card is "on battery alone" — a hub that has not read the
     // adapter yet must not be drawn as that.
     const byId = parseBadgeBatch({
-      '101': { battery: { percentage: 80, charging: 'unknown', sleeping: false }, 'recording-archive': null },
+      '101': { battery: { level: 80, charging: 'unknown', sleeping: false }, 'recording-archive': null },
     })
     expect(byId?.[101]?.battery?.charging).toBe('unknown')
   })
@@ -74,13 +98,13 @@ describe('badge batch parsing', () => {
       '101': {
         battery: null,
         'recording-archive': null,
-        'network-link': { type: 'wifi', signalPercent: 75, ssid: 'casa', lastUpdated: 1 },
+        'network-link': { type: 'wifi', signal: 75, ssid: 'casa', lastUpdated: 1 },
       },
-      '102': { battery: null, 'recording-archive': null, 'network-link': { type: 'unknown', signalPercent: null } },
+      '102': { battery: null, 'recording-archive': null, 'network-link': { type: 'unknown', signal: null } },
       '618': { battery: null, 'recording-archive': null },
     })
-    expect(rows?.[101]?.networkLink).toEqual({ type: 'wifi', signalPercent: 75, ssid: 'casa' })
-    expect(rows?.[102]?.networkLink).toEqual({ type: 'unknown', signalPercent: null })
+    expect(rows?.[101]?.networkLink).toEqual({ type: 'wifi', signal: 75, ssid: 'casa' })
+    expect(rows?.[102]?.networkLink).toEqual({ type: 'unknown', signal: null })
     expect(rows?.[618]?.networkLink).toBeNull()
   })
 
@@ -95,9 +119,9 @@ describe('badge batch parsing', () => {
 
   it('a malformed row is dropped without taking the batch with it', () => {
     const byId = parseBadgeBatch({
-      'not-a-number': { battery: { percentage: 5 } },
-      '2': { battery: { percentage: 'lots' } },
-      '3': { battery: { percentage: 30, charging: 'solar', sleeping: true } },
+      'not-a-number': { battery: { level: 5 } },
+      '2': { battery: { level: 'lots' } },
+      '3': { battery: { level: 30, charging: 'solar', sleeping: true } },
     })
     expect(Object.keys(byId ?? {})).toEqual(['2', '3'])
     expect(byId?.[2]?.battery).toBeNull()

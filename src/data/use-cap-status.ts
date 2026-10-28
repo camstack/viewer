@@ -32,11 +32,27 @@ export function useCapStatus<T>(
   guard: (raw: unknown) => raw is T,
   enabled: boolean,
 ): UseQueryResult<T | null> {
-  const { controller, state } = useConnection()
   const narrow = useCallback(
     (raw: unknown): T | null => (guard(raw) ? raw : null),
     [guard],
   )
+  return useCapStatusParsed(capKey, deviceId, narrow, enabled)
+}
+
+/**
+ * {@link useCapStatus} for a payload that must be NORMALISED, not just checked:
+ * `parse` returns the viewer's own shape (or `null` when the payload is not a
+ * usable status). It is where a renamed hub field is read under both its names
+ * (`quantity-fields.ts`). `parse` must be a stable reference.
+ */
+export function useCapStatusParsed<T>(
+  capKey: string,
+  deviceId: number,
+  parse: (raw: unknown) => T | null,
+  enabled: boolean,
+): UseQueryResult<T | null> {
+  const { controller, state } = useConnection()
+  const narrow = parse
   return useQuery<T | null>({
     queryKey: ['v2', 'cap-status', capKey, deviceId],
     enabled: enabled && state === 'connected',

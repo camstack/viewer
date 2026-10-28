@@ -170,11 +170,13 @@ export function parseBindingCapNames(raw: unknown): readonly string[] {
 function capLeafToField(
   capName: string,
   path: string,
+  legacyPath: string | undefined,
   label: string,
   fallbackUnit: string | undefined,
   raw: Record<string, unknown>,
 ): DeviceLiveField | null {
-  const value = scalarOrNull(raw[path])
+  // The new name first, the old one for a hub that has not been migrated.
+  const value = scalarOrNull(raw[path] !== undefined || legacyPath === undefined ? raw[path] : raw[legacyPath])
   if (value === null) return null
   const field: {
     sectionId: string
@@ -205,7 +207,7 @@ export function capStatusToFields(capName: string, raw: unknown): readonly Devic
   if (entry === undefined || !isRecord(raw)) return []
   const out: DeviceLiveField[] = []
   for (const leaf of entry.leaves) {
-    const row = capLeafToField(capName, leaf.path, leaf.label, leaf.fallbackUnit, raw)
+    const row = capLeafToField(capName, leaf.path, leaf.legacyPath, leaf.label, leaf.fallbackUnit, raw)
     if (row !== null) out.push(row)
   }
   return out

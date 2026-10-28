@@ -29,7 +29,7 @@ import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 import { useConnection } from '../connection/ConnectionProvider.js'
 import { capQuery, isRecord } from './cap-query.js'
 import { RECONCILE_MS } from './reconcile.js'
-import type { BatteryStatus } from './use-battery.js'
+import { type BatteryStatus, toBatteryStatus } from './use-battery.js'
 import { type NetworkLinkStatus, toNetworkLink } from './use-network-link.js'
 import type { RecordingMode } from './use-recording.js'
 
@@ -54,26 +54,6 @@ export interface CameraBadges {
 
 const UNSUPPORTED: CameraBadges = Object.freeze({ supported: false, byId: Object.freeze({}) })
 
-function toBattery(raw: unknown): BatteryStatus | null {
-  if (!isRecord(raw)) return null
-  if (typeof raw.percentage !== 'number') return null
-  const charging = raw.charging
-  const battery: {
-    percentage: number
-    charging: 'dc' | 'solar' | 'none' | 'unknown'
-    sleeping: boolean
-    binary?: boolean
-  } = {
-    percentage: raw.percentage,
-    // 'none' is a NEGATIVE the hub reported; anything it did not say is unknown.
-    charging:
-      charging === 'dc' || charging === 'solar' || charging === 'none' ? charging : 'unknown',
-    sleeping: raw.sleeping === true,
-  }
-  if (raw.binary === true) battery.binary = true
-  return battery
-}
-
 function toRecordingMode(raw: unknown): RecordingMode | null {
   if (!isRecord(raw)) return null
   // The status carries `activeMode` — what the recorder is DOING — where the
@@ -92,7 +72,7 @@ export function parseBadgeBatch(raw: unknown): Readonly<Record<number, CameraBad
     const id = Number(key)
     if (!Number.isInteger(id) || !isRecord(value)) continue
     byId[id] = {
-      battery: toBattery(value.battery),
+      battery: toBatteryStatus(value.battery),
       // Keyed by CAP NAME, and the status block lives on `recording-archive`
       // since D625 — `recording` is the device collection now and declares no
       // status at all, so a row read under the old key is silently null for

@@ -1,6 +1,7 @@
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 import { useConnection } from '../connection/ConnectionProvider.js'
 import { capQuery, isRecord } from './cap-query.js'
+import { NETWORK_SIGNAL, readQuantityNullable } from './quantity-fields.js'
 import { RECONCILE_MS } from './reconcile.js'
 
 /** The device's own network link, as the `network-link` cap's auto-injected
@@ -10,7 +11,7 @@ import { RECONCILE_MS } from './reconcile.js'
 export interface NetworkLinkStatus {
   readonly type: 'wifi' | 'ethernet' | 'cellular' | 'unknown'
   /** `null` = not known or not applicable (a wire has no signal). */
-  readonly signalPercent: number | null
+  readonly signal: number | null
   readonly ssid?: string
 }
 
@@ -20,10 +21,10 @@ export function toNetworkLink(raw: unknown): NetworkLinkStatus | null {
   if (!isRecord(raw)) return null
   const type = raw.type
   if (type !== 'wifi' && type !== 'ethernet' && type !== 'cellular' && type !== 'unknown') return null
-  const signal = raw.signalPercent
-  const link: { type: NetworkLinkStatus['type']; signalPercent: number | null; ssid?: string } = {
+  // `signal` on the hub; an older hub calls it `signalPercent`.
+  const link: { type: NetworkLinkStatus['type']; signal: number | null; ssid?: string } = {
     type,
-    signalPercent: typeof signal === 'number' && Number.isFinite(signal) ? signal : null,
+    signal: readQuantityNullable(raw, NETWORK_SIGNAL) ?? null,
   }
   if (typeof raw.ssid === 'string' && raw.ssid !== '') link.ssid = raw.ssid
   return link

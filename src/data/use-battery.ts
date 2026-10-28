@@ -1,6 +1,8 @@
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 import { reportSessionEnded } from '../auth/session-ended.js'
 import { useConnection } from '../connection/ConnectionProvider.js'
+import { isRecord } from './cap-query.js'
+import { BATTERY_LEVEL, readQuantityNumber } from './quantity-fields.js'
 import { RECONCILE_MS } from './reconcile.js'
 
 /** Battery status as exposed by the `battery` cap's auto-injected `getStatus`
@@ -8,12 +10,34 @@ import { RECONCILE_MS } from './reconcile.js'
  *  (`packages/types/src/capabilities/battery.cap.ts`). Only the fields the card
  *  consumes are typed here; the procedure is server-typed end-to-end. */
 export interface BatteryStatus {
-  readonly percentage: number
+  /** The charge, 0–100 (`level` on the hub; an older hub calls it `percentage`). */
+  readonly level: number
   readonly charging: 'dc' | 'solar' | 'none' | 'unknown'
   readonly sleeping: boolean
   readonly binary?: boolean
 }
 
+/** Narrow a raw `battery` slice. `null` when it carries no numeric level. */
+export function toBatteryStatus(raw: unknown): BatteryStatus | null {
+  if (!isRecord(raw)) return null
+  const level = readQuantityNumber(raw, BATTERY_LEVEL)
+  if (level === undefined) return null
+  const charging = raw.charging
+  const battery: {
+    level: number
+    charging: BatteryStatus['charging']
+    sleeping: boolean
+    binary?: boolean
+  } = {
+    level,
+    // 'none' is a NEGATIVE the hub reported; anything it did not say is unknown.
+    charging:
+      charging === 'dc' || charging === 'solar' || charging === 'none' ? charging : 'unknown',
+    sleeping: raw.sleeping === true,
+  }
+  if (raw.binary === true) battery.binary = true
+  return battery
+}
 
 /** Live battery status for a battery-operated device.
  *
@@ -36,7 +60,8 @@ export function useBattery(deviceId: number, enabled: boolean): UseQueryResult<B
       const system = controller.getSystem()
       if (!system) return null
       try {
-        return (await system.trpcClient.battery.getStatus.query({ deviceId })) as BatteryStatus
+        const raw: unknown = await system.trpcClient.battery.getStatus.query({ deviceId })
+        return toBatteryStatus(raw)
       } catch (err) {
         // Swallowed to "unknown" on purpose; a revoked session must still be heard.
         reportSessionEnded(err)
