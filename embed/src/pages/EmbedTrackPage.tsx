@@ -16,7 +16,12 @@ import { resolveEventKindIcon } from '@camstack/ui-library'
 import { createSystem, type System } from '@camstack/sdk'
 import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { PaletteBridge } from '../embed/PaletteBridge'
-import { parseEventsConfig, type EventsConfig } from '../embed/events-config'
+import {
+  parseEventsConfig,
+  resolveEventsLocale,
+  type EventsConfig,
+  type EventsLocale,
+} from '../embed/events-config'
 import { accentForClass, formatEventTime, resolvePalette, type EventsPalette } from '../embed/events-theme'
 import { readEventsUrlConfig } from '../embed/events-url-config'
 import { useEmbedConfig } from '../embed/host-bridge'
@@ -28,6 +33,7 @@ import {
   type TrackDetailMediaSet,
   type TrackDetailQuery,
 } from '../embed/events-track-detail'
+import { trackDetailText, type TrackDetailText } from '../embed/track-detail-text'
 import { useAuthedImage } from '../embed/use-authed-image'
 import { resolveEventsLabels } from '../../../shared/events/events-labels'
 import { buildTrackThumbUrl } from '../../../shared/events/events-media-url'
@@ -58,9 +64,10 @@ async function loadTrack(
   query: TrackDetailQuery,
   deviceName: string | undefined,
   serverUrl: string,
+  text: TrackDetailText,
 ): Promise<LoadState> {
   if (query.deviceId === null) {
-    return { status: 'error', message: 'The track link names no camera (device=)' }
+    return { status: 'error', message: text.noCamera }
   }
   const names = new Map<number, string>(deviceName !== undefined ? [[query.deviceId, deviceName]] : [])
   const [rawTrack, rawMedia] = await Promise.all([
@@ -73,7 +80,7 @@ async function loadTrack(
       .catch(() => []),
   ])
   const row = toEventsTrackRow(rawTrack, names)
-  if (row === null) return { status: 'error', message: 'Track not found' }
+  if (row === null) return { status: 'error', message: text.notFound }
   return { status: 'ready', row, media: selectTrackDetailMedia(rawMedia, serverUrl) }
 }
 
@@ -114,9 +121,16 @@ interface BodyProps {
   readonly palette: EventsPalette
 }
 
+/** The page's language: the host's `lang`, else the browser's, else English. */
+function pageLocaleOf(config: EventsConfig): EventsLocale {
+  return resolveEventsLocale(config.locale, typeof navigator === 'undefined' ? undefined : navigator.language)
+}
+
 export function TrackDetail({ row, media, config, palette }: BodyProps) {
   const kindPalette = usePaletteView()
-  const labels = useMemo(() => resolveEventsLabels(config.labels), [config.labels])
+  const locale = pageLocaleOf(config)
+  const text = trackDetailText(locale)
+  const labels = useMemo(() => resolveEventsLabels(config.labels, locale), [config.labels, locale])
   const kindLabels = useMemo(
     () => (Object.keys(config.kindLabels).length > 0 ? buildKindLabels(config.kindLabels) : EMPTY_KIND_LABELS),
     [config.kindLabels],
@@ -225,17 +239,17 @@ export function TrackDetail({ row, media, config, palette }: BodyProps) {
           </div>
         )}
         <dl style={{ margin: 0, display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '4px 12px', fontSize: 13 }}>
-          <dt style={{ color: palette.textMuted }}>Camera</dt>
+          <dt style={{ color: palette.textMuted }}>{text.camera}</dt>
           <dd style={{ margin: 0 }}>{row.cameraName}</dd>
           {zones.length > 0 && (
             <>
-              <dt style={{ color: palette.textMuted }}>Zone</dt>
+              <dt style={{ color: palette.textMuted }}>{text.zone}</dt>
               <dd style={{ margin: 0 }}>{zones.join(', ')}</dd>
             </>
           )}
-          <dt style={{ color: palette.textMuted }}>Time</dt>
+          <dt style={{ color: palette.textMuted }}>{text.time}</dt>
           <dd style={{ margin: 0 }}>
-            {formatEventTime(row.lastSeen, Date.now())} · {formatTrackSpan(row.firstSeen, row.lastSeen)}
+            {formatEventTime(row.lastSeen, Date.now(), locale)} · {formatTrackSpan(row.firstSeen, row.lastSeen)}
           </dd>
         </dl>
       </section>
@@ -273,21 +287,22 @@ function Loaded({ config, query, palette }: { config: EventsConfig; query: Track
   )
   useEffect(() => () => system.close(), [system])
   const [state, setState] = useState<LoadState>({ status: 'loading' })
+  const text = trackDetailText(pageLocaleOf(config))
   useEffect(() => {
     let alive = true
-    loadTrack(system, query, config.deviceNames[String(query.deviceId)], config.serverUrl)
+    loadTrack(system, query, config.deviceNames[String(query.deviceId)], config.serverUrl, text)
       .then((s) => alive && setState(s))
       .catch((e: unknown) =>
-        alive && setState({ status: 'error', message: e instanceof Error ? e.message : 'Failed to load the track' }),
+        alive && setState({ status: 'error', message: e instanceof Error ? e.message : text.loadFailed }),
       )
     return () => {
       alive = false
     }
-  }, [system, query, config.deviceNames, config.serverUrl])
+  }, [system, query, config.deviceNames, config.serverUrl, text])
   return (
     <>
       <PaletteBridge system={system} />
-      {state.status === 'loading' && <Notice message="Loading" palette={palette} />}
+      {state.status === 'loading' && <Notice message={text.loading} palette={palette} />}
       {state.status === 'error' && <Notice message={state.message} palette={palette} />}
       {state.status === 'ready' && (
         <TrackDetail row={state.row} media={state.media} config={config} palette={palette} />
@@ -311,7 +326,13 @@ export function EmbedTrackPage() {
     window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? true,
   )
   if (result === null) return null
-  if (!result.ok) return <Notice message={`Track embed config error: ${result.error}`} palette={palette} />
-  if (query === null) return <Notice message="The track link names no track (id=)" palette={palette} />
+  const text = trackDetailText(
+    resolveEventsLocale(
+      result.ok ? result.config.locale : undefined,
+      typeof navigator === 'undefined' ? undefined : navigator.language,
+    ),
+  )
+  if (!result.ok) return <Notice message={`${text.configError}: ${result.error}`} palette={palette} />
+  if (query === null) return <Notice message={text.noTrack} palette={palette} />
   return <Loaded config={result.config} query={query} palette={palette} />
 }

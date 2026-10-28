@@ -12,8 +12,8 @@ afterEach(() => {
   resetAuthedImageCache()
 })
 
-function config() {
-  const r = parseEventsConfig({ serverUrl: 'https://hub.test', token: 'jwt', refreshMs: 0 })
+function config(extra: Record<string, unknown> = {}) {
+  const r = parseEventsConfig({ serverUrl: 'https://hub.test', token: 'jwt', refreshMs: 0, ...extra })
   if (!r.ok) throw new Error(r.error)
   return r.config
 }
@@ -79,5 +79,34 @@ describe('TrackDetail', () => {
       }),
     )
     expect(screen.queryByTestId('track-clip')).toBeNull()
+  })
+
+  it('renders its words and badges in Italian when the config says lang it', () => {
+    render(
+      createElement(TrackDetail, {
+        row,
+        media: { stills: [], clip: null },
+        config: config({ locale: 'it' }),
+        palette: DARK_PALETTE,
+      }),
+    )
+    expect(screen.getByText('Zona')).toBeTruthy()
+    expect(screen.getByText('Ora')).toBeTruthy()
+    expect(screen.getByText('preferita')).toBeTruthy()
+    expect(screen.getByText('attiva')).toBeTruthy()
+    expect(screen.queryByText('Zone')).toBeNull()
+  })
+
+  it('lets host labels win over the language default', () => {
+    render(
+      createElement(TrackDetail, {
+        row,
+        media: { stills: [], clip: null },
+        config: config({ locale: 'it', labels: { favourite: 'Top' } }),
+        palette: DARK_PALETTE,
+      }),
+    )
+    expect(screen.getByText('Top')).toBeTruthy()
+    expect(screen.getByText('attiva')).toBeTruthy()
   })
 })

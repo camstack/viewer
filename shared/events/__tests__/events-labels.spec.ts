@@ -18,6 +18,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   DEFAULT_EVENTS_LABELS,
+  IT_EVENTS_LABELS,
   EVENTS_LABEL_KEYS,
   eventsLabelsSchema,
   resolveEventsLabels,
@@ -87,5 +88,25 @@ describe('the schema the injected config is validated by', () => {
 
   it('accepts an EMPTY map — every host that ships today sends none', () => {
     expect(eventsLabelsSchema.safeParse({}).success).toBe(true)
+  })
+})
+
+describe('the language default when the host sent no labels', () => {
+  it('speaks Italian for it, English otherwise', () => {
+    expect(resolveEventsLabels(undefined, 'it')).toEqual(IT_EVENTS_LABELS)
+    expect(resolveEventsLabels({}, 'it').favourite).toBe('preferita')
+    expect(resolveEventsLabels(undefined, 'en')).toEqual(DEFAULT_EVENTS_LABELS)
+    expect(resolveEventsLabels(undefined)).toEqual(DEFAULT_EVENTS_LABELS)
+  })
+
+  it('keeps host words over the language default, per label', () => {
+    const out = resolveEventsLabels({ favourite: 'Pref', debug: '  ' }, 'it')
+    expect(out.favourite).toBe('Pref')
+    expect(out.debug).toBe(IT_EVENTS_LABELS.debug)
+    expect(out.active).toBe(IT_EVENTS_LABELS.active)
+  })
+
+  it('Italian covers every key with a non-blank word', () => {
+    for (const key of EVENTS_LABEL_KEYS) expect(IT_EVENTS_LABELS[key].trim()).not.toBe('')
   })
 })

@@ -73,3 +73,21 @@ describe('track URL shares the events config path', () => {
     expect(r?.ok).toBe(true)
   })
 })
+
+import { trackDetailText } from '../track-detail-text'
+import { parseEventsUrlPatch } from '../events-url-config'
+
+describe('track detail language', () => {
+  it('has Italian words for every English one', () => {
+    const en = trackDetailText('en')
+    const it = trackDetailText('it')
+    expect(Object.keys(it)).toEqual(Object.keys(en))
+    expect(it.zone).toBe('Zona')
+    expect(en.zone).toBe('Zone')
+  })
+
+  it('reads lang from the track URL through the events parser', () => {
+    const patch = parseEventsUrlPatch('?mode=track&v=1&id=t-1&device=7&lang=it-IT')
+    expect(patch?.ok && patch.patch.locale).toBe('it')
+  })
+})

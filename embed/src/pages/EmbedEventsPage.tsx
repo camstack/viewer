@@ -298,7 +298,11 @@ export function Events({ client, initialConfig }: EventsProps) {
   // English is what an older host and every external iframe still get, per
   // label, and resolving per card per render would rebuild seven strings on
   // every frame.
-  const labels = useMemo(() => resolveEventsLabels(config.labels), [config.labels])
+  const pageLocale = resolveEventsLocale(
+    config.locale,
+    typeof navigator === 'undefined' ? undefined : navigator.language,
+  )
+  const labels = useMemo(() => resolveEventsLabels(config.labels, pageLocale), [config.labels, pageLocale])
 
   const deviceIds = useMemo<readonly number[]>(() => {
     if (config.deviceIds.length > 0) return config.deviceIds
@@ -497,10 +501,7 @@ export function Events({ client, initialConfig }: EventsProps) {
   ])
 
   const palette = resolvePalette(config.theme, prefersDark)
-  const locale = resolveEventsLocale(
-    config.locale,
-    typeof navigator === 'undefined' ? undefined : navigator.language,
-  )
+  const locale = pageLocale
   const scrollRef = useRef<HTMLDivElement | null>(null)
   // The scroller as STATE, not just a ref: the cards' viewport observers are
   // rooted on it, and a ref does not re-render them when it is finally set.

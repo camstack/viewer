@@ -79,6 +79,28 @@ export const DEFAULT_EVENTS_LABELS: EventsLabels = {
   loadingMore: 'Loading more events',
 }
 
+/**
+ * The Italian words, for a page whose host sent no `labels`. The app's own
+ * `locales/it.json` stays the source for a host that sends them; this covers an
+ * embed opened with `lang=it` and nothing else (a share link, an iframe in a
+ * dashboard). Host words always win, per label.
+ */
+export const IT_EVENTS_LABELS: EventsLabels = {
+  unassignedFace: 'volto non assegnato',
+  reviewed: 'verificata',
+  debug: 'debug',
+  train: 'addestramento',
+  trained: 'addestramento completato',
+  favourite: 'preferita',
+  active: 'attiva',
+  loadingMore: 'Caricamento altri eventi',
+}
+
+/** The labels a page speaks before any host word is merged in. */
+export function defaultEventsLabels(locale: 'en' | 'it' | undefined): EventsLabels {
+  return locale === 'it' ? IT_EVENTS_LABELS : DEFAULT_EVENTS_LABELS
+}
+
 export type EventsLabelKey = keyof EventsLabels
 
 /** Derived from the defaults so a label cannot be added without a fallback:
@@ -106,10 +128,11 @@ export type EventsLabelsConfig = Readonly<Record<string, string>>
  * strictly worse than leaving it in English. Anything that is not a string is
  * refused for the same reason — this value crossed a trust boundary.
  */
-export function resolveEventsLabels(input: unknown): EventsLabels {
-  if (input === null || typeof input !== 'object') return DEFAULT_EVENTS_LABELS
+export function resolveEventsLabels(input: unknown, locale?: 'en' | 'it'): EventsLabels {
+  const base = defaultEventsLabels(locale)
+  if (input === null || typeof input !== 'object') return base
   const given: Record<string, unknown> = input as Record<string, unknown>
-  const out: Record<string, string> = { ...DEFAULT_EVENTS_LABELS }
+  const out: Record<string, string> = { ...base }
   for (const key of EVENTS_LABEL_KEYS) {
     const value = given[key]
     if (typeof value !== 'string') continue
@@ -117,13 +140,13 @@ export function resolveEventsLabels(input: unknown): EventsLabels {
     out[key] = value
   }
   return {
-    unassignedFace: out.unassignedFace ?? DEFAULT_EVENTS_LABELS.unassignedFace,
-    reviewed: out.reviewed ?? DEFAULT_EVENTS_LABELS.reviewed,
-    debug: out.debug ?? DEFAULT_EVENTS_LABELS.debug,
-    train: out.train ?? DEFAULT_EVENTS_LABELS.train,
-    trained: out.trained ?? DEFAULT_EVENTS_LABELS.trained,
-    favourite: out.favourite ?? DEFAULT_EVENTS_LABELS.favourite,
-    active: out.active ?? DEFAULT_EVENTS_LABELS.active,
-    loadingMore: out.loadingMore ?? DEFAULT_EVENTS_LABELS.loadingMore,
+    unassignedFace: out.unassignedFace ?? base.unassignedFace,
+    reviewed: out.reviewed ?? base.reviewed,
+    debug: out.debug ?? base.debug,
+    train: out.train ?? base.train,
+    trained: out.trained ?? base.trained,
+    favourite: out.favourite ?? base.favourite,
+    active: out.active ?? base.active,
+    loadingMore: out.loadingMore ?? base.loadingMore,
   }
 }

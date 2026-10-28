@@ -35,9 +35,11 @@ export const WHATS_NEW: readonly WhatsNewEntry[] = [
     notes: {
       en: [
         'Events embed: no face marker, short tile age, text in your language',
+        'Events embed: track detail and labels follow the language',
       ],
       it: [
         'Embed eventi: niente segno volto, età breve sulle tessere, testi nella tua lingua',
+        'Embed eventi: dettaglio traccia ed etichette nella lingua scelta',
       ],
     },
   },
