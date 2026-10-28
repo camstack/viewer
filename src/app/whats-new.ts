@@ -30,6 +30,14 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.664',
+    date: '2026-10-28',
+    notes: {
+      en: ['Battery, power, signal and sensor values read the new field names from the hub'],
+      it: ['Batteria, potenza, segnale e sensori leggono i nuovi nomi dei campi dall\'hub'],
+    },
+  },
+  {
     version: '1.0.663',
     date: '2026-10-28',
     notes: {
