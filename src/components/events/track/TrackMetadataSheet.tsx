@@ -19,7 +19,8 @@ import { SheetModal } from '../../ui/SheetModal.js'
 import { copyText } from '../../../lib/copy-text.js'
 import type { TrackSummary } from '../../../data/track-events.js'
 import type { MediaIdRef } from '../../../data/use-track-detail-media.js'
-import { formatPlacement, placementRows, type PlacementRowKind } from '../../../data/track-placement.js'
+import { formatPlacement, placementRows, type NodeNames, type PlacementRowKind } from '../../../data/track-placement.js'
+import { useNodeNames } from '../../../data/use-node-directory.js'
 import { SectionLabel } from '../../ui/SectionLabel.js'
 import { SheetHeader } from '../../ui/SheetHeader.js'
 
@@ -64,12 +65,17 @@ function isoWithEpoch(ms: number): string {
 }
 
 /** The placement rows (none unless `show`, none when the track names no node). */
-function placementEntries(track: TrackSummary, show: boolean, t: (key: string) => string): MetaEntry[] {
+function placementEntries(
+  track: TrackSummary,
+  show: boolean,
+  t: (key: string) => string,
+  names: NodeNames | undefined,
+): MetaEntry[] {
   if (!show) return []
   return placementRows(track.openedPlacement, track.closedPlacement).map((row) => ({
     key: row.kind,
     label: t(PLACEMENT_LABEL_KEYS[row.kind]),
-    value: formatPlacement(row.placement),
+    value: formatPlacement(row.placement, names),
   }))
 }
 
@@ -81,6 +87,7 @@ function buildEntries(
   zoneLabels: readonly string[] | undefined,
   t: (key: string) => string,
   showPlacement = false,
+  nodeNames?: NodeNames,
 ): MetaEntry[] {
   // Display zone NAMES (raw ids remain the copy value for diagnostics).
   const zoneDisplay = zoneLabels !== undefined && zoneLabels.length > 0 ? zoneLabels : track.zonesVisited
@@ -106,7 +113,7 @@ function buildEntries(
       copyValue: String(track.lastSeen),
     },
     { key: 'state', label: t('v2.tracks.meta.state'), value: track.state },
-    ...placementEntries(track, showPlacement, t),
+    ...placementEntries(track, showPlacement, t, nodeNames),
     ...(typeof track.importance === 'number'
       ? [{
           key: 'importance',
@@ -147,6 +154,7 @@ export const TrackMetadataSheet = memo(function TrackMetadataSheet({
   const { colors } = useTheme()
   const { t } = useTranslation()
   const insets = useSafeAreaInsets()
+  const nodeNames = useNodeNames(showPlacement && track !== null)
 
   return (
     <SheetModal
@@ -160,7 +168,7 @@ export const TrackMetadataSheet = memo(function TrackMetadataSheet({
       />
       <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + SPACING.md }}>
         {track !== null
-          ? buildEntries(track, cameraName, confidence, zoneLabels, t, showPlacement).map((e) => (
+          ? buildEntries(track, cameraName, confidence, zoneLabels, t, showPlacement, nodeNames).map((e) => (
               <MetaRow key={e.key} label={e.label} value={e.value} copyValue={e.copyValue ?? e.value} />
             ))
           : null}

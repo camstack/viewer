@@ -10,6 +10,7 @@
  * An answer that does not parse THROWS: the query errors and the picker says
  * "could not read", never "no nodes" (D315).
  */
+import { useMemo } from 'react'
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 import { NodeDirectorySchema } from '@camstack/types/client'
 import type { NodeDirectory } from '@camstack/types'
@@ -49,4 +50,13 @@ export function useNodeDirectory(enabled: boolean): UseQueryResult<NodeDirectory
       return directory
     },
   })
+}
+
+/** Node id → display name, undefined until the directory answers. */
+export function useNodeNames(enabled: boolean): ReadonlyMap<string, string> | undefined {
+  const { data } = useNodeDirectory(enabled)
+  return useMemo(
+    () => (data === undefined ? undefined : new Map(data.nodes.map((node) => [node.id, node.name] as const))),
+    [data],
+  )
 }

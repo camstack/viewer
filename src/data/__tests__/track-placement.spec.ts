@@ -3,7 +3,7 @@
  * agree, "Opened on" / "Closed on" when they differ, nothing when unknown.
  */
 import { describe, expect, it } from 'vitest'
-import { formatPlacement, parseTrackPlacement, placementRows } from '../track-placement.js'
+import { formatPlacement, nodeLabel, parseTrackPlacement, placementRows } from '../track-placement.js'
 import { toTrackSummary } from '../track-events.js'
 
 const HUB_NPU = { nodeId: 'hub', deviceKey: 'openvino:NPU', modelId: 'yolo11n' }
@@ -66,5 +66,28 @@ describe('toTrackSummary carries the placements', () => {
   it('a row from before the fields has neither', () => {
     const summary = toTrackSummary(row, 'Cam')
     expect(summary !== null && 'openedPlacement' in summary).toBe(false)
+  })
+})
+
+describe('nodeLabel', () => {
+  const names = new Map([['agent-1', 'Mac mini'], ['hub', 'hub'], ['blank', '']])
+
+  it('shows the display name when the hub has one', () => {
+    expect(nodeLabel('agent-1', names)).toBe('Mac mini')
+    expect(formatPlacement(AGENT_CORAL, names)).toBe('Mac mini · coral:usb0 (ssd-mobilenet)')
+  })
+
+  it('keeps the id when the name is the id or empty', () => {
+    expect(nodeLabel('hub', names)).toBe('hub')
+    expect(nodeLabel('blank', names)).toBe('blank')
+  })
+
+  it('keeps the id for a node the directory does not know', () => {
+    expect(nodeLabel('agent-9', names)).toBe('agent-9')
+  })
+
+  it('keeps the id while the directory is unanswered', () => {
+    expect(nodeLabel('agent-1', undefined)).toBe('agent-1')
+    expect(formatPlacement(AGENT_CORAL)).toBe('agent-1 · coral:usb0 (ssd-mobilenet)')
   })
 })

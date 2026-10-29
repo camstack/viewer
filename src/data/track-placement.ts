@@ -37,9 +37,23 @@ export function samePlacement(a: TrackPlacement, b: TrackPlacement): boolean {
   return a.nodeId === b.nodeId && a.deviceKey === b.deviceKey && a.modelId === b.modelId
 }
 
+/** Node id → the display name the hub holds for it. */
+export type NodeNames = ReadonlyMap<string, string>
+
+/**
+ * The node's display name; the raw id while the directory is unanswered
+ * (`names` undefined), when the node is unknown, or when its name is empty or
+ * just the id. The hub stays the source of truth.
+ */
+export function nodeLabel(nodeId: string, names?: NodeNames): string {
+  const name = names?.get(nodeId)
+  return name !== undefined && name.length > 0 && name !== nodeId ? name : nodeId
+}
+
 /** `node · device (model)`, leaving out what the placement does not name. */
-export function formatPlacement(placement: TrackPlacement): string {
-  const where = placement.deviceKey !== undefined ? `${placement.nodeId} · ${placement.deviceKey}` : placement.nodeId
+export function formatPlacement(placement: TrackPlacement, names?: NodeNames): string {
+  const node = nodeLabel(placement.nodeId, names)
+  const where = placement.deviceKey !== undefined ? `${node} · ${placement.deviceKey}` : node
   return placement.modelId !== undefined ? `${where} (${placement.modelId})` : where
 }
 
