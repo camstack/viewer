@@ -30,6 +30,14 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.666',
+    date: '2026-10-29',
+    notes: {
+      en: ['Timeline cards sit at their real time again on busy hours.'],
+      it: ['Le card della timeline tornano all\'orario reale nelle ore piene.'],
+    },
+  },
+  {
     version: '1.0.665',
     date: '2026-10-28',
     notes: {
