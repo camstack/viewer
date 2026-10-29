@@ -30,6 +30,14 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.667',
+    date: '2026-10-29',
+    notes: {
+      en: ['The timeline hours line up with the playback position again.'],
+      it: ['Gli orari della timeline tornano allineati alla posizione di riproduzione.'],
+    },
+  },
+  {
     version: '1.0.666',
     date: '2026-10-29',
     notes: {
