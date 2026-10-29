@@ -32,7 +32,7 @@ describe('the card: the gallery panel, always open', () => {
       expect(src, gone).not.toContain(gone)
     }
     expect(src).toContain('paging ?')
-    expect(src).toContain('<ScrollView')
+    expect(src).toContain('<FlatList')
     expect(src).toContain('horizontal')
     expect(src).toContain("'transparent'")
     expect(src).toContain('styles.clipBody')

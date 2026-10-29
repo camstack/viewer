@@ -346,10 +346,6 @@ export function clusterDeviceIds(cluster: PositionedCluster): readonly number[] 
 
 // ─── clusterByZoom ────────────────────────────────────────────────────
 
-/** The most members (distinct subjects) one card holds; the next one opens a
- *  new card. A strip longer than this is a list nobody swipes through. */
-export const MAX_CLUSTER_MEMBERS = 6
-
 export interface ClusterByZoomInput {
   readonly topMs: number
   readonly zoomIndex: number
@@ -373,14 +369,31 @@ export interface ClusterByZoomInput {
  * Algorithm (greedy, O(n log n) for the sort):
  *  1. Sort events newest → oldest (descending timestamp); pixel offsets ascend.
  *  2. Open a cluster at an event's offset — its `anchorPx`, and its first event.
- *  3. Absorb older events while `px - anchorPx < sizePx` — `sizePx` is the card
- *     height, i.e. the time span the card covers at this zoom — and while the
- *     card would still hold at most {@link MAX_CLUSTER_MEMBERS} distinct subjects.
+ *  3. Absorb older events while `px - anchorPx < sizePx + gapPx` — `sizePx` is
+ *     the card height, i.e. the time span the card covers at this zoom, and the
+ *     gap below it belongs to the card too (see below). There is NO member cap.
  *  4. Otherwise close the cluster and open a new one.
  *  5. Position from the first carousel event; a card whose neighbour would
- *     overlap it (dedupe moved its anchor, or the member cap split two cards) is
- *     merged when the union still fits one card, else the OLDER card is pushed
- *     down. A card is never moved above its own newest event.
+ *     overlap it (dedupe moved its anchor) is merged when the union still fits
+ *     one card, else the OLDER card is pushed down. A card is never moved above
+ *     its own newest event.
+ *
+ * ## Why neither a member cap nor a short window (the 2026-10-29 report)
+ *
+ * Cards were drawn up to ~10 minutes (and on a busy camera over 30) away from
+ * their events. A card cannot overlap its neighbour, so every card the layout
+ * had to push down moved ALL the cards after it, and the displacement
+ * compounded down the list. Two rules manufactured pushes on every busy camera:
+ *  - a cap of six subjects per card split one busy minute across several cards,
+ *    each pushed a whole card below the last (a 16th card sat 32 minutes below
+ *    its event);
+ *  - a card absorbed only events inside `sizePx`, so the next card's raw anchor
+ *    was always `gapPx` short of clear of it and was pushed by the gap, again
+ *    and again.
+ * Absorbing through the gap makes the cut itself leave the room, so the greedy
+ * pass never needs to push; only a dedupe-shifted anchor can. A card holding
+ * many subjects pages them in a virtualised strip (`ClusterCard`), so the number
+ * of members costs nothing until they are scrolled to.
  *
  * Guarantees:
  *  - `topPx === epochToOffset(anchorMs)` unless the card was pushed down.
@@ -459,11 +472,10 @@ export function clusterByZoom(
       anchorPx = px
       clusterEvents.push(event)
     } else if (
-      px - anchorPx < sizePx &&
-      dedupeFragmentItems([...clusterEvents, event]).length <= MAX_CLUSTER_MEMBERS
+      px - anchorPx < sizePx + gapPx
     ) {
-      // Older than the anchor by less than a card, and the strip is not full →
-      // same cluster: its time lies inside the card's own band.
+      // Older than the anchor by less than a card plus its gap → same cluster:
+      // its time lies inside the card's own band, or in the gap just under it.
       clusterEvents.push(event)
     } else {
       flushCluster()
@@ -481,7 +493,7 @@ export function clusterByZoom(
   // otherwise PUSHED DOWN — never up, so a card never leaves its newest event.
   const fitsOneCard = (c: PositionedCluster): boolean =>
     c.carouselEvents.every(
-      (e) => epochToOffset(e.timestamp, topMs, zoomIndex) - c.topPx < sizePx,
+      (e) => epochToOffset(e.timestamp, topMs, zoomIndex) - c.topPx < sizePx + gapPx,
     )
   const coalesced: PositionedCluster[] = []
   for (const cluster of result) {
@@ -492,9 +504,8 @@ export function clusterByZoom(
       candidate.topPx - (previous.topPx + previous.heightPx) < gapPx
     ) {
       const merged = [...previous.events, ...candidate.events]
-      const union =
-        dedupeFragmentItems(merged).length <= MAX_CLUSTER_MEMBERS ? positionCluster(merged) : null
-      if (union === null || !fitsOneCard(union)) {
+      const union = positionCluster(merged)
+      if (!fitsOneCard(union)) {
         candidate = { ...candidate, topPx: previous.topPx + previous.heightPx + gapPx }
         break
       }

@@ -120,11 +120,11 @@ describe('the 10:39 card on camera 1438', () => {
   it('the 10:35 card diverges too — its clip starts before the label', () => {
     const { clusters, derived } = derivedFor(FINEST_ZOOM_INDEX)
     const starts = clipStartByCardId(derived)
-    // The card holds the 10:35 and the 10:37:05 subjects; the card now opens on
-    // the newest of them. The recorded footage under it starts 16.5 s before
-    // that label, at 10:36:49 — the tap and the label still disagree.
+    // The 10:35 track is a card of its own (the 10:37:05 subject sits in the gap
+    // under the NEWER card, so it is drawn at its own time). The footage under
+    // it starts before the label, at 10:36:49 — the tap and the label disagree.
     const card = clusters.find((c) => c.events.some((e) => e.id === 't-1035'))
-    expect(card!.anchorEvent.timestamp).toBe(1787215025510)
+    expect(card!.anchorEvent.timestamp).toBe(1787214919838)
     expect(starts.get(card!.id)).toBe(1787215009000)
   })
 

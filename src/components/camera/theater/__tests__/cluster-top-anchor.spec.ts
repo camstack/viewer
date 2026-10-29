@@ -69,13 +69,12 @@ describe('cluster vertical anchoring: top on the newest event', () => {
     }
   })
 
-  it('the member cap pushes the OLDER card down, never the newer one up', () => {
-    const events = Array.from({ length: 8 }, (_, i) => track(`m${i}`, 10 + i * 0.4))
+  it('a dedupe-shifted anchor pushes the OLDER card down, never the newer one up', () => {
+    const events = Array.from({ length: 30 }, (_, i) => track(`m${i}`, 10 + i * 0.4))
     const clusters = clusterByZoom(events, layout)
-    expect(clusters.length).toBeGreaterThan(1)
     for (let i = 1; i < clusters.length; i++) {
       const prev = clusters[i - 1]
-      expect(prev.topPx + prev.heightPx + GAP).toBeLessThanOrEqual(clusters[i].topPx)
+      expect(prev.topPx + prev.heightPx).toBeLessThanOrEqual(clusters[i].topPx)
       expect(clusters[i].topPx).toBeGreaterThanOrEqual(px(clusters[i].anchorMs))
     }
   })

@@ -4,7 +4,7 @@ import {
   memberSeekMs,
   MEMBER_SEEK_LEAD_MS,
 } from '../cluster-members.js'
-import { clusterByZoom, MAX_CLUSTER_MEMBERS, type ObjectEvent } from '../event-cluster.js'
+import { clusterByZoom, type ObjectEvent } from '../event-cluster.js'
 import { clusterCardHeight } from '../cluster-frame-box.js'
 
 function ev(id: string, start: number, end?: number): ObjectEvent {
@@ -25,7 +25,7 @@ describe('memberSeekMs', () => {
   })
 })
 
-describe('clustering by the card height, capped', () => {
+describe('clustering by the card height, uncapped', () => {
   const topMs = 10_000_000
   const dense = (n: number, stepMs: number): ObjectEvent[] =>
     Array.from({ length: n }, (_, i) => ev(`e${i}`, topMs - i * stepMs))
@@ -42,16 +42,13 @@ describe('clustering by the card height, capped', () => {
     expect(short.length).toBeGreaterThan(tall.length)
   })
 
-  it('never holds more than six members: the seventh opens a new card', () => {
+  it('has no member cap: a busy minute stays ONE card at its own time', () => {
     const clusters = clusterByZoom(dense(8, 1_000), {
       topMs,
       zoomIndex: 0,
       sizePx: 10_000,
       gapPx: 0,
     })
-    expect(MAX_CLUSTER_MEMBERS).toBe(6)
-    expect(clusters.map((c) => c.carouselEvents.length)).toEqual([6, 2])
-    // The cap split overlapping spans: the older card is pushed below the newer.
-    expect(clusters[1].topPx).toBeGreaterThanOrEqual(clusters[0].topPx + clusters[0].heightPx)
+    expect(clusters.map((c) => c.carouselEvents.length)).toEqual([8])
   })
 })

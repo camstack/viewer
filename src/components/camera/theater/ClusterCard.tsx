@@ -23,7 +23,7 @@
 import React, { memo, useMemo, useState } from 'react'
 import { dayRelativeLabel } from '../../../lib/day-relative-label.js'
 import { useDateLocale } from '../../../lib/date-locale.js'
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native'
 import { Download, Search, Video } from '../../../lib/icons.js'
 import { useTranslation } from 'react-i18next'
 import { useTheme } from '../../../theme/theme-provider.js'
@@ -53,6 +53,10 @@ import { clusterDeviceIds, type PositionedCluster, type ObjectEvent } from './ev
  * cannot read the chip off its look — and the digit alone appears in the page
  * counter too. See `mount-test-observability`: one id per claim.
  */
+/** Thumbnails a card mounts (and fetches) up front; the rest of a busy card's
+ *  strip is mounted as it is scrolled to. */
+const CAROUSEL_EAGER_ITEMS = 6
+
 export const CLUSTER_CAMERA_COUNT_TEST_ID = 'cluster-camera-count'
 
 /** The card itself — the POSITIVE control every "the chip is absent" assertion
@@ -302,7 +306,6 @@ export const ClusterCard = memo(function ClusterCard({
   const itemWidth = paging ? clusterPanelItemWidth(width) : clusterClipThumbWidth(width)
   const clipThumbHeight = paging ? CLUSTER_PANEL_THUMB_HEIGHT : Math.round((itemWidth * 9) / 16)
   const step = itemWidth + SPACING.sm
-  const contentOffset = useMemo(() => ({ x: Math.max(selectedIndex, 0) * step, y: 0 }), [selectedIndex, step])
 
   const clipLabel =
     clipStartMs === undefined
@@ -377,16 +380,22 @@ export const ClusterCard = memo(function ClusterCard({
       ]}
     >
       {paging ? (
-        <ScrollView
+        <FlatList
           horizontal
+          data={events}
+          keyExtractor={(event) => event.id}
+          renderItem={({ item, index }) => renderThumb(item, index, index === selectedIndex)}
+          extraData={selectedIndex}
           showsHorizontalScrollIndicator={false}
-          contentOffset={contentOffset}
+          initialScrollIndex={Math.max(selectedIndex, 0)}
+          getItemLayout={(_, index) => ({ length: step, offset: index * step, index })}
+          initialNumToRender={CAROUSEL_EAGER_ITEMS}
+          maxToRenderPerBatch={CAROUSEL_EAGER_ITEMS}
+          windowSize={3}
           decelerationRate="fast"
           snapToInterval={step}
           contentContainerStyle={styles.content}
-        >
-          {events.map((event, index) => renderThumb(event, index, index === selectedIndex))}
-        </ScrollView>
+        />
       ) : (
         <View style={styles.clipBody}>
           {renderThumb(events[0]!, 0, selectedIndex === 0 || selectedIndex < 0)}
