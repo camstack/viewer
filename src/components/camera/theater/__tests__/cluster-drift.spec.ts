@@ -5,7 +5,7 @@
  *
  * Event clusters on the timeline sat up to ~10 minutes away from the events
  * they hold. Reproduced against a live camera's last six hours of tracks
- * (device 590, 85 tracks): at the 30 m zoom the 16th card was drawn 32 minutes
+ * (device 101, 85 tracks): at the 30 m zoom the 16th card was drawn 32 minutes
  * (1954 s) below its own newest event.
  *
  * Two things made a card slide down, and each compounded card after card:
@@ -27,7 +27,7 @@ const SEC = 1000
 
 function track(id: string, agoSec: number): ObjectEvent {
   const t = TOP_MS - agoSec * SEC
-  return { id, deviceId: 590, timestamp: t, endTimestamp: t + 8 * SEC, className: 'person', trackId: id }
+  return { id, deviceId: 101, timestamp: t, endTimestamp: t + 8 * SEC, className: 'person', trackId: id }
 }
 
 const layout = { topMs: TOP_MS, zoomIndex: ZOOM, sizePx: SIZE, gapPx: GAP }
