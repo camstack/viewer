@@ -30,6 +30,14 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.668',
+    date: '2026-10-29',
+    notes: {
+      en: ['A track shows the name of the node it ran on.'],
+      it: ['La traccia mostra il nome del nodo su cui è stata elaborata.'],
+    },
+  },
+  {
     version: '1.0.667',
     date: '2026-10-29',
     notes: {
