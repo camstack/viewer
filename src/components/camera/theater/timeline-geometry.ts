@@ -83,3 +83,32 @@ export function mappedOffsetToEpoch(
 ): number {
   return map ? map.offsetToEpoch(offsetY) : offsetToEpoch(offsetY, topMs, zoomIndex)
 }
+
+export interface TimelineLayoutOriginInput {
+  readonly indicatorOffsetPx: number
+  /** Lane-header room. Sizes the scroll content only; it never moves time. */
+  readonly contentTopInset: number
+}
+
+/**
+ * Content-space y of the live edge: the top spacer. The scrub reads the
+ * playhead as `offsetToEpoch(scrollY)` with the playhead at viewport
+ * `indicatorOffsetPx`, so an epoch `e` must be drawn at
+ * `epochToOffset(e) + indicatorOffsetPx` — nothing else may be added.
+ */
+export function timelineLayoutOriginPx(input: TimelineLayoutOriginInput): number {
+  return input.indicatorOffsetPx
+}
+
+/** Content-space y of an epoch (unclamped: future epochs land above the origin). */
+export function epochToContentY(
+  epochMs: number,
+  topMs: number,
+  zoomIndex: number,
+  originPx: number,
+  map: TimelineEpochMap | null | undefined,
+): number {
+  return map
+    ? map.epochToOffset(epochMs) + originPx
+    : ((topMs - epochMs) / MS_PER_HOUR) * pxPerHour(zoomIndex) + originPx
+}

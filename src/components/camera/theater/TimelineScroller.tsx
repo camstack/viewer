@@ -34,7 +34,12 @@ import Animated, { useAnimatedStyle, type SharedValue } from 'react-native-reani
 import { useTranslation } from 'react-i18next'
 import { useTheme } from '../../../theme/theme-provider.js'
 import { RADIUS, SPACING } from '../../../theme/tokens.js'
-import { epochToOffset, pxPerHour, type TimelineEpochMap } from './timeline-geometry.js'
+import {
+  epochToContentY,
+  epochToOffset,
+  timelineLayoutOriginPx,
+  type TimelineEpochMap,
+} from './timeline-geometry.js'
 import { timelineContentHeightPx } from './timeline-content-height.js'
 import {
   bandEpochRange,
@@ -74,7 +79,6 @@ import { formatGapLabel, GAP_ELLIPSIS } from '../../../clips/clip-timeline.js'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const MS_PER_HOUR = 3_600_000
 
 /** Width of the right-side activity column (px). */
 const RIGHT_COL_WIDTH = LANES_WIDTH_PX
@@ -314,7 +318,7 @@ export const TimelineScroller = memo(
     }))
     const { t } = useTranslation()
 
-    const layoutOriginPx = indicatorOffsetPx + contentTopInset
+    const layoutOriginPx = timelineLayoutOriginPx({ indicatorOffsetPx, contentTopInset })
 
     const scrollViewRef = useRef<ScrollView>(null)
     const scrollOffsetRef = useRef(0)
@@ -403,13 +407,10 @@ export const TimelineScroller = memo(
     // not yet reached); ticks for those upcoming minutes render there instead of
     // leaving the band blank. `ticksInBand` is told how deep it is, in pixels,
     // as `futurePx` below.
-    const pph = pxPerHour(zoomIndex)
     // Content-Y for an epoch, UNCLAMPED (negative offsets allowed → future ticks
     // land in the spacer above `now`). `now` (topMs) sits at `indicatorOffsetPx`.
     const contentY = (epochMs: number): number =>
-      epochMap !== null
-        ? epochMap.epochToOffset(epochMs) + layoutOriginPx
-        : ((topMs - epochMs) / MS_PER_HOUR) * pph + layoutOriginPx
+      epochToContentY(epochMs, topMs, zoomIndex, layoutOriginPx, epochMap)
 
     // Only the marks the band can show. The old generator walked the whole
     // loaded window on the zoom's grid — 43 200 elements at the finest zoom over
