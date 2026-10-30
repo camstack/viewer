@@ -30,6 +30,14 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.670',
+    date: '2026-10-30',
+    notes: {
+      en: ['Download an event from its card: a clip with pre and post time, or a snapshot.'],
+      it: ['Scarica un evento dalla sua card: clip con pre e post, oppure snapshot.'],
+    },
+  },
+  {
     version: '1.0.669',
     date: '2026-10-30',
     notes: {
