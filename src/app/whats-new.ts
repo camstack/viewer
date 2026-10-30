@@ -30,6 +30,14 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.669',
+    date: '2026-10-30',
+    notes: {
+      en: ['Far fewer diagnostic logs are sent to the hub.'],
+      it: ['Molti meno log diagnostici inviati all\'hub.'],
+    },
+  },
+  {
     version: '1.0.668',
     date: '2026-10-29',
     notes: {
