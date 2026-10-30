@@ -26,12 +26,15 @@ import { dayRelativeLabel } from '../../../lib/day-relative-label.js'
 import { useDateLocale } from '../../../lib/date-locale.js'
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native'
 import { Download, Search, Video } from '../../../lib/icons.js'
+import { useCameras } from '../../../data/use-cameras.js'
+import { trackCameraName } from '../../../data/track-events.js'
 import { useTranslation } from 'react-i18next'
 import { useTheme } from '../../../theme/theme-provider.js'
 import { useSettings } from '../../../data/use-settings.js'
 import { RADIUS, SPACING, TABULAR } from '../../../theme/tokens.js'
 import { useKindPaint } from '../../../../shared/palette.js'
 import { EventThumb } from './EventThumb.js'
+import { ClusterPill } from './ClusterPill.js'
 import { ClipRowProgress } from './ClipRowProgress.js'
 import type { ClipRowPlayback } from '../../../clips/clip-row-playback.js'
 import { useEventKindResolver } from '../../../data/use-event-kind-resolver.js'
@@ -65,9 +68,6 @@ export const CLUSTER_CAMERA_COUNT_TEST_ID = 'cluster-camera-count'
  *  not to draw the chip. */
 export const CLUSTER_CARD_TEST_ID = 'cluster-card'
 
-/** The event download icon in the card's corner. */
-export const CLUSTER_EVENT_DOWNLOAD_TEST_ID = 'cluster-event-download'
-
 export interface ClusterCardProps {
   readonly cluster: PositionedCluster
   readonly width: number
@@ -76,13 +76,6 @@ export interface ClusterCardProps {
   readonly onPress: (event: ObjectEvent) => void
   /** The LENS: open the cluster detail on the active thumbnail. */
   readonly onOpenDetail?: (event: ObjectEvent) => void
-  /**
-   * Normal mode: download the ACTIVE event (the selected thumbnail, else the
-   * first) — the same corner and the same icon a native clip's save wears. It
-   * only opens the download dialog; it never seeks and never saves by itself.
-   * Absent in clips mode, where {@link onSaveClip} owns the corner.
-   */
-  readonly onDownloadEvent?: (event: ObjectEvent) => void
   /**
    * Whether the panel lists every subject. OFF in clips mode: a clips card is a
    * VISIT and a tap plays it from its start, so it holds one thumbnail.
@@ -286,7 +279,6 @@ export const ClusterCard = memo(function ClusterCard({
   selected = false,
   onPress,
   onOpenDetail,
-  onDownloadEvent,
   paging = true,
   clipStartMs,
   clipEndMs,
@@ -302,6 +294,9 @@ export const ClusterCard = memo(function ClusterCard({
   const { settings } = useSettings()
   const dateLocale = useDateLocale()
   const nowMs = Date.now()
+  // The camera a download is named after; a card that holds one camera's pills
+  // still resolves each pill's own device, so a multi-camera timeline is right.
+  const { data: cameras } = useCameras({ includeHidden: true })
 
   const events: readonly ObjectEvent[] = !paging
     ? [cluster.anchorEvent]
@@ -331,24 +326,31 @@ export const ClusterCard = memo(function ClusterCard({
     const rotation = index % 3 === 0 ? '-2deg' : index % 3 === 2 ? '2deg' : '0deg'
     const accent = paint(event.className)
     const caption = thumbCaptionLabel(event, resolver)
+    const cameraName = trackCameraName({ deviceId: event.deviceId, cameraName: '' }, cameras ?? []) ?? ''
     return (
-      <Pressable
+      <ClusterPill
         key={event.id}
-        accessibilityRole="button"
+        event={event}
+        cameraName={cameraName}
+        width={itemWidth}
+        height={paging ? CLUSTER_PANEL_ITEM_HEIGHT : clipThumbHeight + CLUSTER_CLIP_CAPTION_HEIGHT}
+        centred={!paging}
+        holdEnabled={paging}
         accessibilityLabel={`${formatHHMM(event.timestamp)} ${caption}`}
-        accessibilityState={{ selected: active }}
+        selected={active}
         onPress={() => {
           setTappedId(event.id)
           onPress(event)
         }}
-        style={[
+        rotate={rotation}
+        restScale={selectedIndex < 0 || active ? 1 : 0.94}
+        pillStyle={[
           styles.item,
           paging ? null : styles.clipItem,
           {
             width: itemWidth,
             height: paging ? CLUSTER_PANEL_ITEM_HEIGHT : clipThumbHeight + CLUSTER_CLIP_CAPTION_HEIGHT,
             borderColor: active ? colors.primary : accent,
-            transform: [{ rotate: rotation }, { scale: selectedIndex < 0 || active ? 1 : 0.94 }],
           },
         ]}
       >
@@ -374,7 +376,7 @@ export const ClusterCard = memo(function ClusterCard({
             {clipLabel ?? formatHHMM(event.timestamp)}
           </Text>
         </View>
-      </Pressable>
+      </ClusterPill>
     )
   }
 
@@ -436,18 +438,6 @@ export const ClusterCard = memo(function ClusterCard({
             style={[styles.action, { backgroundColor: colors.background + 'E6' }]}
           >
             <Search size={14} color={colors.foreground} />
-          </Pressable>
-        ) : null}
-        {onDownloadEvent !== undefined ? (
-          <Pressable
-            testID={CLUSTER_EVENT_DOWNLOAD_TEST_ID}
-            accessibilityRole="button"
-            accessibilityLabel={t('v2.eventDownload.open')}
-            onPress={() => onDownloadEvent(activeEvent)}
-            hitSlop={8}
-            style={[styles.action, { backgroundColor: colors.background + 'E6' }]}
-          >
-            <Download size={14} color={colors.foreground} />
           </Pressable>
         ) : null}
         {onSaveClip !== undefined ? (

@@ -19,11 +19,13 @@ import {
   Modal,
   Pressable,
   StyleSheet,
+  View,
   ViewStyle,
 } from 'react-native'
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated'
 import { MOTION, menuOrigin, springTo, useReducedMotion } from '../../theme/motion.js'
 import { useViewportSize } from '../../hooks/use-viewport-size.js'
+import { useTheme } from '../../theme/theme-provider.js'
 import { RADIUS, SPACING } from '../../theme/tokens.js'
 import { MenuGlassFill } from './GlassPanel.js'
 import {
@@ -51,6 +53,14 @@ export interface AnchoredMenuProps {
   readonly estimatedHeight?: number
   /** Force above/below when the caller already knows (footer chip → above). */
   readonly preferredPlacement?: DropdownPlacement
+  /**
+   * Dim everything behind the menu (the default stays transparent). Used by a
+   * menu that belongs to ONE thing on the page, which `highlight` then draws
+   * again above the dim, at the anchor's place.
+   */
+  readonly scrim?: boolean
+  /** Drawn above the scrim exactly over the anchor; never takes a touch. */
+  readonly highlight?: React.ReactNode
 }
 
 /** Tallest a menu is assumed to be (px) when placing it; also the cap of a sheet-height body. */
@@ -66,8 +76,11 @@ export function AnchoredMenu({
   width,
   estimatedHeight = MENU_MAX_ESTIMATE,
   preferredPlacement,
+  scrim = false,
+  highlight,
 }: AnchoredMenuProps): React.JSX.Element | null {
   const window = useViewportSize()
+  const { colors } = useTheme()
 
   // Never wider than the viewport inside its gutters: a card wider than that
   // is clamped to the left gutter and cut at the right one.
@@ -96,6 +109,7 @@ export function AnchoredMenu({
     if (visible) open.set(springTo(1, reduced, MOTION.menu.spring))
     else open.set(0)
   }, [visible, open, reduced])
+  const scrimStyle = useAnimatedStyle(() => ({ opacity: open.get() }))
   const openStyle = useAnimatedStyle(() => ({
     opacity: open.get(),
     transform: [{ scale: MOTION.menu.fromScale + (1 - MOTION.menu.fromScale) * open.get() }],
@@ -122,6 +136,20 @@ export function AnchoredMenu({
       onRequestClose={onRequestClose}
     >
       <Pressable style={styles.scrim} onPress={onRequestClose}>
+        {scrim ? (
+          <Animated.View
+            pointerEvents="none"
+            style={[StyleSheet.absoluteFill, { backgroundColor: colors.background + 'CC' }, scrimStyle]}
+          />
+        ) : null}
+        {scrim && highlight !== undefined && anchor !== null ? (
+          <View
+            pointerEvents="none"
+            style={[styles.highlight, { left: anchor.x, top: anchor.y, width: anchor.width, height: anchor.height }]}
+          >
+            {highlight}
+          </View>
+        ) : null}
         <Animated.View style={[styles.menu, menuStyle, { transformOrigin: [origin.x, origin.y, 0] }, openStyle]}>
         <MenuGlassFill />
         <Pressable
@@ -149,6 +177,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   menuBody: { flexShrink: 1 },
+  highlight: { position: 'absolute' },
   menu: {
     position: 'absolute',
     borderRadius: RADIUS.lg,

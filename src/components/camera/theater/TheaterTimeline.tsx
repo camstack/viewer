@@ -154,8 +154,6 @@ import { useClipExport } from '../../../clips/use-clip-export.js'
 import type { ClipQualityOption } from '../../../clips/clip-export-quality.js'
 import type { ClipProfile } from '../../../clips/clip-quality.js'
 import { ClipExportModal } from './ClipExportModal.js'
-import { EventDownloadModal } from './EventDownloadModal.js'
-import { useCameras } from '../../../data/use-cameras.js'
 import { IDLE_CLIP_EXPORT } from '../../../clips/clip-export-progress.js'
 import { resolveTimelineCursor } from './timeline-cursor.js'
 import type { ClipSaveBinding } from './TimelineScroller.js'
@@ -1392,9 +1390,6 @@ export const TheaterTimeline = memo(function TheaterTimeline(props: TheaterTimel
   const clipExport = useClipExport()
   /** The clip whose picker is open, with the copies to offer. */
   const [qualityPick, setQualityPick] = useState<ClipQualityPick | null>(null)
-  /** The event whose download dialog is open (normal mode's card icon). */
-  const [downloadEvent, setDownloadEvent] = useState<ObjectEvent | null>(null)
-  const { data: cameraList } = useCameras()
 
   // Where the subject's `provider` and `sourceLabel` come from — the SAME read
   // the list itself came from, never a second lookup. `sourceLabel` is frozen
@@ -1455,8 +1450,7 @@ export const TheaterTimeline = memo(function TheaterTimeline(props: TheaterTimel
       }
       const quality = offer.quality
       out.set(cardIdForClip(entry), {
-        // Always the modal, even with one copy: the press opens the same
-        // dialog an event's download does, so a keep never starts silently.
+        // Always the modal, even with one copy, so a keep never starts silently.
         onSave: () => {
           setQualityPick({
             clip: entry.clip,
@@ -2723,7 +2717,6 @@ export const TheaterTimeline = memo(function TheaterTimeline(props: TheaterTimel
             onMomentumScrollEnd: scrub.onMomentumScrollEnd,
             onClusterPress: onClusterTrackSeek,
             onClusterOpenDetail: clipsMode ? undefined : openClusterDetail,
-            onClusterDownloadEvent: clipsMode ? undefined : setDownloadEvent,
             expansion: expansionByCluster,
             epochMap,
             gapMarkers,
@@ -2941,24 +2934,6 @@ export const TheaterTimeline = memo(function TheaterTimeline(props: TheaterTimel
 
           Closing it abandons the WATCH and never the job: an export outlives
           this screen and is collected from the Library. */}
-      {/* The event's download dialog — the card's icon opens it for the
-          selected thumbnail's event. Mounted only while open, so the media and
-          export hooks it holds cost nothing on a closed timeline. */}
-      {downloadEvent !== null ? (
-        <EventDownloadModal
-          event={downloadEvent}
-          cameraName={
-            downloadEvent.deviceId === props.deviceId
-              ? props.name
-              : (cameraList?.find((c) => c.id === downloadEvent.deviceId)?.name ?? props.name)
-          }
-          coverage={coverage}
-          windowFromMs={dayWindow.from}
-          windowToMs={dayWindow.to}
-          onClose={() => setDownloadEvent(null)}
-        />
-      ) : null}
-
       {qualityPick !== null ? (
         <ClipExportModal
           visible

@@ -25,22 +25,25 @@ export interface MenuRowProps {
   readonly trailing?: React.ReactNode
   readonly selected?: boolean
   readonly testID?: string
+  /** Drawn dimmed and inert (an action this item cannot offer now). */
+  readonly disabled?: boolean
 }
 
 export const MENU_ROW_ICON_SIZE = 18
 
-export function MenuRow({ icon: Icon, label, onPress, destructive = false, trailing, selected, testID }: MenuRowProps): React.JSX.Element {
+export function MenuRow({ icon: Icon, label, onPress, destructive = false, trailing, selected, testID, disabled = false }: MenuRowProps): React.JSX.Element {
   const { colors } = useTheme()
   return (
     <Pressable
       testID={testID}
       onPress={onPress}
+      disabled={disabled}
       accessibilityRole="menuitem"
-      accessibilityState={selected === undefined ? undefined : { selected }}
+      accessibilityState={selected === undefined && !disabled ? undefined : { ...(selected !== undefined ? { selected } : {}), disabled }}
     >
       <View style={styles.row} testID={testID === undefined ? undefined : `${testID}-row`}>
-        <Icon size={MENU_ROW_ICON_SIZE} color={destructive ? colors.danger : colors.foregroundMuted} />
-        <Text numberOfLines={1} style={[styles.label, { color: destructive ? colors.danger : colors.foreground }]}>
+        <Icon size={MENU_ROW_ICON_SIZE} color={disabled ? colors.foregroundDisabled : destructive ? colors.danger : colors.foregroundMuted} />
+        <Text numberOfLines={1} style={[styles.label, { color: disabled ? colors.foregroundDisabled : destructive ? colors.danger : colors.foreground }]}>
           {label}
         </Text>
         {trailing}

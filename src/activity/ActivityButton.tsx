@@ -6,21 +6,26 @@
  * fills / turns and a count badge says how many; when something finished and
  * was not opened yet, a "ready" dot sits on the corner.
  */
-import React, { memo, useMemo, useRef, useState, type RefObject } from 'react'
+import React, { memo, useEffect, useMemo, useRef, useState, type RefObject } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
+import Animated, { Easing, cancelAnimation, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
 import { useTranslation } from 'react-i18next'
 
 import { hapticTap } from '../lib/haptics.js'
 import { Activity } from '../lib/icons.js'
+import { useReducedMotion } from '../theme/motion.js'
 import { useTheme } from '../theme/theme-provider.js'
 import { TABULAR } from '../theme/tokens.js'
 import { useActivityStore } from './activity-instance.js'
 import { hasUndismissedItems, overallProgress, unseenFinishedCount } from './activity-model.js'
+import { START_PULSE_MS, useActivityStartPulse } from './activity-start-pulse.js'
 import { ActivityRing } from './ActivityRing.js'
 import { ActivityPopover } from './ActivityPopover.js'
 import type { AnchorRect } from '../components/ui/dropdown-placement.js'
 
 export const ACTIVITY_BUTTON_TEST_ID = 'activity-button'
+/** Present only while the start-of-operation pulse plays. */
+export const ACTIVITY_START_PULSE_TEST_ID = 'activity-start-pulse'
 
 const SIZE = 38
 const RING_WIDTH = 3
@@ -47,6 +52,24 @@ export const ActivityButton = memo(function ActivityButton({ menuAlign = 'end', 
   // In the bar only while there is something to look at; kept while its own
   // popover is open so clearing the last row does not pull the anchor away.
   const present = useMemo(() => hasUndismissedItems(items), [items])
+  // A new running activity is the acknowledgement of a download: the button
+  // bounces and a ring spreads from it.
+  const pulsing = useActivityStartPulse(items)
+  const reduced = useReducedMotion()
+  const beat = useSharedValue(0)
+  useEffect(() => {
+    if (!pulsing || reduced) return
+    cancelAnimation(beat)
+    beat.set(0)
+    beat.set(withTiming(1, { duration: START_PULSE_MS, easing: Easing.out(Easing.quad) }))
+  }, [pulsing, reduced, beat])
+  const bounce = useAnimatedStyle(() => ({
+    transform: [{ scale: 1 + 0.22 * Math.sin(Math.PI * Math.min(beat.get() * 2, 1)) }],
+  }))
+  const ripple = useAnimatedStyle(() => ({
+    opacity: 0.6 * (1 - beat.get()),
+    transform: [{ scale: 1 + 0.9 * beat.get() }],
+  }))
   if (!present && !open) return <></>
 
   const label =
@@ -74,7 +97,14 @@ export const ActivityButton = memo(function ActivityButton({ menuAlign = 'end', 
         hitSlop={6}
         style={styles.hit}
       >
-        <View style={[styles.circle, { backgroundColor: running > 0 ? colors.surfaceHover : 'transparent' }]}>
+        {pulsing ? (
+          <Animated.View
+            testID={ACTIVITY_START_PULSE_TEST_ID}
+            pointerEvents="none"
+            style={[styles.ripple, { borderColor: colors.primary }, ripple]}
+          />
+        ) : null}
+        <Animated.View style={[styles.circle, { backgroundColor: running > 0 ? colors.surfaceHover : 'transparent' }, bounce]}>
           <ActivityRing
             size={SIZE}
             strokeWidth={RING_WIDTH}
@@ -92,7 +122,7 @@ export const ActivityButton = memo(function ActivityButton({ menuAlign = 'end', 
           ) : unseen > 0 ? (
             <View style={[styles.dot, { backgroundColor: colors.success, borderColor: colors.backgroundElevated }]} />
           ) : null}
-        </View>
+        </Animated.View>
       </Pressable>
       </View>
       <ActivityPopover visible={open} onClose={() => setOpen(false)} anchor={anchor} menuAlign={menuAlign} />
@@ -102,6 +132,7 @@ export const ActivityButton = memo(function ActivityButton({ menuAlign = 'end', 
 
 const styles = StyleSheet.create({
   hit: { alignItems: 'center', justifyContent: 'center' },
+  ripple: { position: 'absolute', width: SIZE, height: SIZE, borderRadius: SIZE / 2, borderWidth: 2 },
   circle: {
     width: SIZE,
     height: SIZE,

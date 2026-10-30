@@ -6,13 +6,13 @@
  * > progress se possibile"* — the operator, 2026-09-23.
  *
  * ## Every keep goes through it
-
-The press on a clip's download icon always opens this dialog, the same way an
-event's download opens its own (`EventDownloadModal`): one gesture, one place
-where the operator sees what will be kept. With one distinct copy it lists that
-one; with two it lists both with the sizes beside them — the size is the thing
-that makes the choice mean anything (20.0 MB main vs 0.67 MB sub, on 592).
-
+ *
+ * The press on a clip's download icon always opens this dialog: one gesture, one
+ * place where the operator sees what will be kept. With one distinct copy it
+ * lists that one; with two it lists both with the sizes beside them — the size
+ * is the thing that makes the choice mean anything (20.0 MB main vs 0.67 MB sub,
+ * on 592).
+ *
 ## An option that would be refused is SHOWN refused
  *
  * A copy above the export path's 50 MiB read bound is drawn disabled with its

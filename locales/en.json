@@ -4271,26 +4271,12 @@
     "access": {
       "notForYourAccount": "Not available for your account"
     },
-    "eventDownload": {
-      "open": "Download this event",
+    "eventMenu": {
+      "open": "Download",
       "title": "Download",
-      "modeClip": "Clip",
-      "modeSnapshot": "Snapshot",
-      "before": "Before the event",
-      "after": "After the event",
-      "seconds": "{{count}} s",
-      "span": "{{from}} – {{to}} · {{duration}}",
-      "absent": "Nothing was recorded in this period.",
-      "partial": "Part of this period was not recorded.",
-      "saveClip": "Save clip",
-      "saveSnapshot": "Save snapshot",
-      "resolution": {
-        "high": "High resolution",
-        "low": "Standard resolution"
-      },
-      "highUnavailable": "This event has no full-resolution image.",
-      "snapshotLoading": "Looking for the event image…",
-      "snapshotNone": "This event has no image to save.",
+      "clip": "Download clip",
+      "snapshot": "Download snapshot",
+      "keyframe": "Download keyframe",
       "failed": "The image could not be saved."
     }
   },

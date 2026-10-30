@@ -27,7 +27,7 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import { Image } from 'expo-image'
 import * as Linking from 'expo-linking'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { X, Crosshair, ImageOff, Star, UserRound, UserRoundPlus, Info, Share2, Link2, Check, Maximize2, Route, ChevronLeft, ChevronRight, TriangleAlert } from '../../../lib/icons.js'
+import { Download, X, Crosshair, ImageOff, Star, UserRound, UserRoundPlus, Info, Share2, Link2, Check, Maximize2, Route, ChevronLeft, ChevronRight, TriangleAlert } from '../../../lib/icons.js'
 import { useTranslation } from 'react-i18next'
 import { useTheme } from '../../../theme/theme-provider.js'
 import { RADIUS, SPACING, mediaScrim } from '../../../theme/tokens.js'
@@ -72,8 +72,14 @@ import {
 import { TrajectoryOverlay } from '../../camera/theater/detail/TrajectoryOverlay.js'
 import { trackShareTarget, shareImageFilename } from '../../../data/track-share.js'
 import { copyText } from '../../../lib/copy-text.js'
+import { targetFromTrack } from '../../../recording/event-download.js'
+import { EventActionMenu } from '../EventActionMenu.js'
+import type { AnchorRect } from '../../ui/dropdown-placement.js'
 import type { ObjectEvent } from '../../camera/theater/event-cluster.js'
 import { SectionLabel } from '../../ui/SectionLabel.js'
+
+/** The Download button that opens the shared event menu. */
+export const TRACK_DETAIL_DOWNLOAD_TEST_ID = 'track-detail-download'
 
 export interface TrackDetailViewProps {
   /**
@@ -304,6 +310,17 @@ export const TrackDetailView = memo(function TrackDetailView({
   // multi-MB buffer we deliberately never parse on the JS thread).
   const [loadedSize, setLoadedSize] = useState<{ readonly width: number; readonly height: number } | null>(null)
   const [linkCopied, setLinkCopied] = useState(false)
+  // The download menu — the same one a cluster pill opens on a long press.
+  const downloadRef = useRef<View>(null)
+  const [downloadAnchor, setDownloadAnchor] = useState<AnchorRect | null>(null)
+  const [downloadOpen, setDownloadOpen] = useState(false)
+  const onOpenDownload = useCallback((): void => {
+    hapticTap()
+    downloadRef.current?.measureInWindow((x, y, width, height) => {
+      setDownloadAnchor({ x, y, width, height })
+      setDownloadOpen(true)
+    })
+  }, [])
   // The hub's refusal message from the header flag buttons (e.g. the per-camera
   // pin budget). Lifted out of the buttons because the header is one flex row
   // with nowhere to put a sentence — see {@link TrackFlagButtons}.
@@ -723,6 +740,25 @@ export const TrackDetailView = memo(function TrackDetailView({
               {t('v2.tracks.shareImage', 'Share image')}
             </Text>
           </Pressable>
+          <Pressable
+            ref={downloadRef}
+            testID={TRACK_DETAIL_DOWNLOAD_TEST_ID}
+            onPress={onOpenDownload}
+            accessibilityRole="button"
+            accessibilityLabel={t('v2.eventMenu.open')}
+            style={[styles.shareBtn, { backgroundColor: colors.surface }]}
+          >
+            <Download size={15} color={colors.foreground} />
+            <Text style={[styles.shareBtnText, { color: colors.foreground }]}>
+              {t('v2.eventMenu.open')}
+            </Text>
+          </Pressable>
+          <EventActionMenu
+            visible={downloadOpen}
+            target={targetFromTrack(track, resolvedCameraName ?? track.cameraName)}
+            anchor={downloadAnchor}
+            onClose={() => setDownloadOpen(false)}
+          />
         </View>
 
         {/* 2 — ALL media the pipeline stored for the track, ONE tile per LOGICAL

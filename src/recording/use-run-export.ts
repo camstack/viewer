@@ -25,7 +25,17 @@ export interface RunExport {
   readonly pending: boolean
 }
 
-export function useRunExport(deviceId: number, cameraName: string): RunExport {
+export interface RunExportOptions {
+  /**
+   * Say "export started" in a notice. Off where the Activity button is the
+   * acknowledgement (an event's download), so a start never needs a dismissal;
+   * a failure is always said.
+   */
+  readonly announceStart?: boolean
+}
+
+export function useRunExport(deviceId: number, cameraName: string, options: RunExportOptions = {}): RunExport {
+  const announceStart = options.announceStart ?? true
   const { t } = useTranslation()
   const notice = useNotice()
   const createExport = useCreateExport()
@@ -43,12 +53,14 @@ export function useRunExport(deviceId: number, cameraName: string): RunExport {
       // a null would be a lie about the one act in this cycle the operator
       // cannot repeat from memory.
       if (rec !== null) addActivity(exportItemFrom(rec, cameraName, Date.now()))
-      notice({
-        title: t('v2.exportSelection.title'),
-        message: rec === null ? t('v2.exportSelection.failed') : t('v2.activity.exportStarted'),
-      })
+      if (rec === null || announceStart) {
+        notice({
+          title: t('v2.exportSelection.title'),
+          message: rec === null ? t('v2.exportSelection.failed') : t('v2.activity.exportStarted'),
+        })
+      }
     },
-    [addActivity, cameraName, createExport, deviceId, notice, t],
+    [addActivity, announceStart, cameraName, createExport, deviceId, notice, t],
   )
 
   return { run, pending: createExport.isPending }
