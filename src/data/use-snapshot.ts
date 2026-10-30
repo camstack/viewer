@@ -4,7 +4,7 @@ import { useConnection } from '../connection/ConnectionProvider.js'
 import { useServer } from '../app/ServerProvider.js'
 import { log } from '../lib/logger.js'
 import { resolveSnapshotUri } from './snapshot-media-url.js'
-import { snapshotTransitionSignature } from './snapshot-transition-signature.js'
+import { snapshotTransitionSignature, SNAPSHOT_STUCK_WAITING_MS } from './snapshot-transition-signature.js'
 import {
   isSignedSnapshotLink,
   snapshotPageOrigin,
@@ -523,16 +523,34 @@ export function useSnapshot(
     if (lastTransitionRef.current === transitionSig) return
     const prev = lastTransitionRef.current
     lastTransitionRef.current = transitionSig
-    // PER TILE, and a grid is tens of them: 66 shipped lines in thirty
-    // minutes on 2026-09-10. `debug` keeps them for the ring buffer and for
-    // debug mode, which is where a per-tile trace belongs (D437).
-    log.debug('media:snapshot', prev === null ? 'tile mount' : 'tile transition', {
+    // The first signature is the baseline, not an event: a grid mount is tens
+    // of tiles and `tile mount` was pure volume. Only a CHANGE is a line, and
+    // the signature excludes the routine waiting<->ready refresh cycle, so
+    // what is left is enable/disable, a state reason, failure/recovery,
+    // never-captured and cache-support changes — a handful per hour.
+    if (prev === null) return
+    log.info('media:snapshot', 'tile transition', {
       deviceId,
-      ...(prev === null ? {} : { from: prev }),
+      from: prev,
       to: transitionSig,
       ...(ageMs === null ? {} : { ageMs }),
     })
   }, [transitionSig, deviceId, ageMs])
+
+  // A tile that stays "waiting" past the bound is worth exactly one line per
+  // episode; a refresh that ends ready inside the bound is silent.
+  useEffect(() => {
+    if (!awaitingFrame) return
+    const timer = setTimeout(() => {
+      log.warn('media:snapshot', 'tile stuck waiting for a frame', {
+        deviceId,
+        waitedMs: SNAPSHOT_STUCK_WAITING_MS,
+      })
+    }, SNAPSHOT_STUCK_WAITING_MS)
+    return () => {
+      clearTimeout(timer)
+    }
+  }, [awaitingFrame, deviceId])
 
   /**
    * The image credential, memoised on its OWN inputs and never rebuilt with the

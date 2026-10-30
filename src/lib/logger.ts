@@ -138,6 +138,8 @@ const ALWAYS_SHIP_SCOPES: ReadonlySet<string> = new Set([
   // exactly the "an info scope not in the allowlist is invisible" trap the
   // 2026-08-07 instrumentation spec warns about. One line per gesture,
   // low-rate and bounded like the rest.
+  // Data-change deduped (`cluster-render-state-signature`): a handful per screen per hour.
+  'theater:clusters',
   'theater:scrub',
   // The camera-detail layout decision — one line per TRANSITION (rotation,
   // Split View drag, rail appearing, measurement accepted/expired), carrying

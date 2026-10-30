@@ -45,17 +45,30 @@ describe('the snapshot tile-transition signature', () => {
     expect(ancient).toBe(fresh)
   })
 
+  it('a waiting <-> ready refresh cycle produces zero lines', () => {
+    const sigs = new Set<string>()
+    for (let poll = 0; poll < 720; poll += 1) {
+      sigs.add(
+        snapshotTransitionSignature({ ...BASE, ageMs: 1_000, awaitingFrame: poll % 2 === 0 }),
+      )
+      sigs.add(
+        snapshotTransitionSignature({
+          ...BASE,
+          ageMs: 1_000,
+          awaitingFrame: true,
+          cachedFileUri: poll % 2 === 0 ? null : BASE.cachedFileUri,
+        }),
+      )
+    }
+    // One distinct key => the effect's dedupe writes nothing after the baseline.
+    expect(sigs.size).toBe(1)
+  })
+
   it('still changes on every state a human would ask about', () => {
     const base = snapshotTransitionSignature({ ...BASE, ageMs: 1_000 })
     expect(snapshotTransitionSignature({ ...BASE, ageMs: 1_000, enabled: false })).not.toBe(base)
     expect(snapshotTransitionSignature({ ...BASE, ageMs: 1_000, uri: null })).not.toBe(base)
     expect(snapshotTransitionSignature({ ...BASE, ageMs: 1_000, failed: true })).not.toBe(base)
-    expect(snapshotTransitionSignature({ ...BASE, ageMs: 1_000, awaitingFrame: true })).not.toBe(
-      base,
-    )
-    expect(snapshotTransitionSignature({ ...BASE, ageMs: 1_000, cachedFileUri: null })).not.toBe(
-      base,
-    )
     expect(
       snapshotTransitionSignature({ ...BASE, ageMs: 1_000, cachedFileSupported: false }),
     ).not.toBe(base)

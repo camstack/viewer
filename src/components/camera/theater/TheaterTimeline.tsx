@@ -34,6 +34,7 @@
  * heatmap bins, and the wiring from the scroll gesture into the playback
  * machine (`use-timeline-scrub`).
  */
+import { clusterRenderStateSignature } from './cluster-render-state-signature.js'
 import type { ServedProfileReport } from '../../../recording/recording-messages.js'
 import React, { memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import { View, StyleSheet } from 'react-native'
@@ -1586,6 +1587,7 @@ export const TheaterTimeline = memo(function TheaterTimeline(props: TheaterTimel
   // DIAGNOSTIC: trace the cluster/activity pipeline so an "empty timeline" can be
   // localised to data (cap returned nothing) vs geometry (data arrived but the
   // window/measure dropped it).
+  const lastClusterStateSigRef = useRef<string | null>(null)
   useEffect(() => {
     // The visible count is computed HERE, not on every render: it is only ever
     // read by this line, and sampling it when the DATA or the geometry changes
@@ -1604,26 +1606,47 @@ export const TheaterTimeline = memo(function TheaterTimeline(props: TheaterTimel
     // identical on screen, and the frame it resolved is what tells them apart —
     // a frame that disagrees with the camera's real detection size means the
     // rect and the tracks are being compared in different spaces.
+    const objectEventRange =
+      evTs.length > 0 ? { first: clock(Math.min(...evTs)), last: clock(Math.max(...evTs)) } : null
+    const zone =
+      zoneRect === null
+        ? null
+        : {
+            // `kind` matters here: a polygon and its bounding rect drop
+            // different sets, and "the filter is too aggressive" reads the
+            // same either way without it.
+            kind: zoneRect.kind,
+            points: zoneRect.kind === 'polygon' ? zoneRect.points.length : 4,
+            kept: zoneFilteredEvents.length,
+            dropped: objectEvents.length - zoneFilteredEvents.length,
+            frame: resolveFrameSize(objectEvents),
+          }
+    const activityCounts = {
+      recording: activity.recording.length,
+      motion: activity.motion.length,
+      audio: activity.audio.length,
+    }
+    // One line per change of the DATA (`cluster-render-state-signature`), not
+    // per layout recompute: this is `info` and always shipped (D437).
+    const sig = clusterRenderStateSignature({
+      deviceId: props.deviceId,
+      objectEvents: objectEvents.length,
+      objectEventRange,
+      zone,
+      clusters: clusters.length,
+      activity: activityCounts,
+      dayWindow,
+    })
+    if (lastClusterStateSigRef.current === sig) return
+    lastClusterStateSigRef.current = sig
     log.info('theater:clusters', 'render state', {
       deviceId: props.deviceId,
       objectEvents: objectEvents.length,
-      objectEventRange: evTs.length > 0 ? { first: clock(Math.min(...evTs)), last: clock(Math.max(...evTs)) } : null,
-      zone:
-        zoneRect === null
-          ? null
-          : {
-              // `kind` matters here: a polygon and its bounding rect drop
-              // different sets, and "the filter is too aggressive" reads the
-              // same either way without it.
-              kind: zoneRect.kind,
-              points: zoneRect.kind === 'polygon' ? zoneRect.points.length : 4,
-              kept: zoneFilteredEvents.length,
-              dropped: objectEvents.length - zoneFilteredEvents.length,
-              frame: resolveFrameSize(objectEvents),
-            },
+      objectEventRange,
+      zone,
       clusters: clusters.length,
       visibleClusters: visibleClusterCount,
-      activity: { recording: activity.recording.length, motion: activity.motion.length, audio: activity.audio.length },
+      activity: activityCounts,
       geometry: { cardWidth, viewportHeight, listWrapWidth, scrollOffsetY, sizePx, gapPx, zoomIndex },
       dayWindow,
     })

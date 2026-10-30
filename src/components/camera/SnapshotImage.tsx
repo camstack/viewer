@@ -140,12 +140,9 @@ export function SnapshotImage({
           setPainted({ deviceId, source: candidate })
           source.onLoad()
           if (shouldLogPaint(ms, frameAgeMs)) {
-            // `debug`, not `info`: this is PER TILE. Measured on the hub,
-            // 2026-09-10, it was 24 shipped lines in thirty minutes beside
-            // 41 `tile transition` and 25 `tile mount` — and the logger's own
-            // allowlist says the scopes that always ship must be "low-rate
-            // and bounded... anything noisier belongs at debug" (D437).
-            log.debug('media:snapshot', 'image displayed', {
+            // Slow paints only (`snapshot-paint-log`), so the rate is a handful
+            // an hour and `info` (always shipped) is safe (D437).
+            log.info('media:snapshot', 'image displayed', {
               deviceId,
               ms,
               capturedAt: source.capturedAt,
