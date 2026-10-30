@@ -29,12 +29,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQueryClient } from '@tanstack/react-query'
 
-import { useActivityStore } from '../activity/activity-instance.js'
-import { exportItemFrom } from '../activity/activity-model.js'
 import { useConfirm, useNotice } from '../components/ui/confirm.js'
 import { useConnection } from '../connection/ConnectionProvider.js'
 import { formatBytes } from '../data/export-format.js'
-import { useCreateExport } from '../data/use-exports.js'
 import { useIsAdmin } from '../data/use-me.js'
 import { useDeleteFootprint } from '../data/use-storage-management.js'
 import { log } from '../lib/logger.js'
@@ -46,8 +43,8 @@ import {
 } from './export-selection.js'
 import { selectActiveEpoch, type PlaybackMachine } from './playback-machine.js'
 import { planSelectionCommit, type SelectionCommit, type SelectionKind } from './selection-commit.js'
+import { useRunExport } from './use-run-export.js'
 
-type ExportCommit = Extract<SelectionCommit, { readonly action: 'export' }>
 type DeleteCommit = Extract<SelectionCommit, { readonly action: 'delete' }>
 
 /** The recording queries (coverage, days, profiles) a delete makes stale. */
@@ -72,11 +69,9 @@ export function useExportSelection(
   const { t } = useTranslation()
   const confirm = useConfirm()
   const notice = useNotice()
-  const createExport = useCreateExport()
   const deleteFootprint = useDeleteFootprint()
   const queryClient = useQueryClient()
   const isAdmin = useIsAdmin()
-  const addActivity = useActivityStore((s) => s.add)
   const { state: connectionState } = useConnection()
   const [kind, setKind] = useState<SelectionKind>('export')
 
@@ -101,25 +96,7 @@ export function useExportSelection(
     playback.endSelection()
   }, [playback])
 
-  const runExport = useCallback(
-    async ({ input }: ExportCommit): Promise<void> => {
-      log.info('exports', 'createExport from timeline selection', {
-        deviceId,
-        fromMs: input.fromMs,
-        toMs: input.toMs,
-      })
-      const rec = await createExport.mutateAsync(input)
-      // `capMutate` swallows an absent cap to `null`. Reporting "saved" on
-      // a null would be a lie about the one act in this cycle the operator
-      // cannot repeat from memory.
-      if (rec !== null) addActivity(exportItemFrom(rec, cameraName, Date.now()))
-      notice({
-        title: t('v2.exportSelection.title'),
-        message: rec === null ? t('v2.exportSelection.failed') : t('v2.activity.exportStarted'),
-      })
-    },
-    [addActivity, cameraName, createExport, deviceId, notice, t],
-  )
+  const { run: runExport, pending: exportPending } = useRunExport(deviceId, cameraName)
 
   const runDelete = useCallback(
     /** Resolves `false` when the operator declined the dialog. */
@@ -216,8 +193,8 @@ export function useExportSelection(
       onBegin,
       onSave,
       onDiscard,
-      saving: createExport.isPending || deleteFootprint.isPending,
+      saving: exportPending || deleteFootprint.isPending,
     }),
-    [playback.state.selectionAnchor, kind, onBegin, onSave, onDiscard, createExport.isPending, deleteFootprint.isPending],
+    [playback.state.selectionAnchor, kind, onBegin, onSave, onDiscard, exportPending, deleteFootprint.isPending],
   )
 }

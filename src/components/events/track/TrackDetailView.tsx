@@ -43,7 +43,7 @@ import { TrackDetailSkeleton } from './TrackDetailSkeleton.js'
 import { TrackMetadataSheet } from './TrackMetadataSheet.js'
 import { hapticTap } from '../../../lib/haptics.js'
 import { useTrackDetailMedia } from '../../../data/use-track-detail-media.js'
-import { useTrackMediaEntry } from '../../../data/use-track-media-entry.js'
+import { useShareTrackMedia } from '../../../data/use-share-track-media.js'
 import { mediaFileUri, mediaImageSource } from '../../../data/track-media-uri.js'
 import { useConnection } from '../../../connection/ConnectionProvider.js'
 import { useServer } from '../../../app/ServerProvider.js'
@@ -71,7 +71,6 @@ import {
 } from '../../camera/theater/detail/track-trajectory.js'
 import { TrajectoryOverlay } from '../../camera/theater/detail/TrajectoryOverlay.js'
 import { trackShareTarget, shareImageFilename } from '../../../data/track-share.js'
-import { shareImageBase64 } from '../../../lib/share-image.js'
 import { copyText } from '../../../lib/copy-text.js'
 import type { ObjectEvent } from '../../camera/theater/event-cluster.js'
 import { SectionLabel } from '../../ui/SectionLabel.js'
@@ -436,10 +435,7 @@ export const TrackDetailView = memo(function TrackDetailView({
   // display — the base64 read (`useTrackMediaEntry`) runs ONLY when the
   // operator asks to share, which is rare; opening a track is not.
   const heroFile: MediaFileLite | null = effectiveFile
-  const [shareWanted, setShareWanted] = useState(false)
-  const entry = useTrackMediaEntry(track.deviceId, track.trackId, shareWanted ? effectiveFile : null)
-  const entryStatus = entry.state.status
-  const shareBytes = entry.state.status === 'ready' ? entry.state.base64 : null
+  const shareMedia = useShareTrackMedia(track.deviceId, track.trackId)
 
   // What the IMAGE says about itself: loading until its first paint, error on a
   // failed fetch (with a retry that asks for a fresh copy), ready after. These
@@ -537,20 +533,10 @@ export const TrackDetailView = memo(function TrackDetailView({
   const onShareImage = useCallback((): void => {
     if (heroFile === null) return
     hapticTap()
-    // Ask for the bytes now; the effect below hands them to the share sheet
-    // when they land. Sharing is the one moment the base64 read is worth it.
-    setShareWanted(true)
-  }, [heroFile])
-  useEffect(() => {
-    if (!shareWanted || heroFile === null) return
-    if (shareBytes !== null) {
-      setShareWanted(false)
-      void shareImageBase64(shareBytes, shareImageFilename(track, heroFile.kind))
-    } else if (entryStatus === 'error' || entryStatus === 'absent') {
-      // A failed share surfaces nothing to the OS either — nothing to undo.
-      setShareWanted(false)
-    }
-  }, [shareWanted, shareBytes, entryStatus, heroFile, track])
+    // The bytes are read now and handed to the share sheet when they land.
+    // Sharing is the one moment the base64 read is worth it.
+    shareMedia.share(heroFile, shareImageFilename(track, heroFile.kind))
+  }, [heroFile, shareMedia.share, track])
 
   // The large viewer renders the selected media file verbatim — boxes (when any)
   // are already burned into the server-stored frame; the client never draws them.

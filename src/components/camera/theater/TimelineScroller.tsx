@@ -222,6 +222,8 @@ export interface TimelineScrollerProps {
    * `reason` carries the provider's own words.
    */
   readonly clipSaveByCardId?: ReadonlyMap<string, ClipSaveBinding>
+  /** Normal mode: a card's download icon was pressed on this event. */
+  readonly onClusterDownloadEvent?: (event: ObjectEvent) => void
   /**
    * Clips mode: card id → the state of the clip that is RUNNING. At most one
    * entry — the frame has one occupant.
@@ -299,6 +301,7 @@ export const TimelineScroller = memo(
       clipStartByCardId,
       clipEndByCardId,
       clipSaveByCardId,
+      onClusterDownloadEvent,
       clipPlaybackByCardId,
     },
     ref,
@@ -586,6 +589,7 @@ export const TimelineScroller = memo(
             clipStartMs={clipStartByCardId?.get(cluster.id)}
             clipEndMs={clipEndByCardId?.get(cluster.id)}
             clipSave={clipSaveByCardId?.get(cluster.id)}
+            onDownloadEvent={enableClusterActions ? onClusterDownloadEvent : undefined}
             clipPlayback={clipPlaybackByCardId?.get(cluster.id)}
           />
         ))}
@@ -656,6 +660,7 @@ const ClusterSlot = memo(function ClusterSlot({
   clipStartMs,
   clipEndMs,
   clipSave,
+  onDownloadEvent,
   clipPlayback,
 }: {
   readonly cluster: PositionedCluster
@@ -669,6 +674,7 @@ const ClusterSlot = memo(function ClusterSlot({
   readonly clipStartMs?: number
   readonly clipEndMs?: number
   readonly clipSave?: ClipSaveBinding
+  readonly onDownloadEvent?: (event: ObjectEvent) => void
   /** This row's clip is running, and how far through — absent when it is not. */
   readonly clipPlayback?: ClipRowPlayback
 }): React.ReactElement {
@@ -697,6 +703,7 @@ const ClusterSlot = memo(function ClusterSlot({
           selected={selected}
           onPress={handlePress}
           onOpenDetail={handleOpenDetail}
+          onDownloadEvent={onDownloadEvent}
           paging={paging}
           clipStartMs={clipStartMs}
           clipEndMs={clipEndMs}

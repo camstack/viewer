@@ -170,10 +170,9 @@ describe('a clip is KEPT by creating an export, not by downloading it here', () 
     expect(TIMELINE).toContain('setQualityPick')
   })
 
-  it('a single copy short-circuits the modal', () => {
-    // A dialog with one option is friction pretending to be agency.
-    expect(TIMELINE).toContain("if (quality.kind === 'choice')")
-    expect(TIMELINE).toContain('startClipExport(entry.clip, quality.option.profile)')
+  it('a single copy still opens the modal — the press never starts a keep silently', () => {
+    expect(TIMELINE).toContain("quality.kind === 'choice' ? quality.options : [quality.option]")
+    expect(TIMELINE).not.toContain('startClipExport(entry.clip, quality.option.profile)')
   })
 })
 

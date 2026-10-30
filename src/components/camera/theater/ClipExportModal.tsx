@@ -5,15 +5,15 @@
  * > mostriamo un piccolo modal dove far selezionare la qualita' e con un
  * > progress se possibile"* — the operator, 2026-09-23.
  *
- * ## It only exists when there is a real choice
- *
- * `resolveClipExportQuality` decides, off the catalog row. One distinct copy
- * and this is never mounted: the tile queues the export straight away, because
- * a dialog with one option is friction pretending to be agency. Two distinct
- * copies and it opens with the sizes beside them — the size is the thing that
- * makes the choice mean anything (20.0 MB main vs 0.67 MB sub, on 592).
- *
- * ## An option that would be refused is SHOWN refused
+ * ## Every keep goes through it
+
+The press on a clip's download icon always opens this dialog, the same way an
+event's download opens its own (`EventDownloadModal`): one gesture, one place
+where the operator sees what will be kept. With one distinct copy it lists that
+one; with two it lists both with the sizes beside them — the size is the thing
+that makes the choice mean anything (20.0 MB main vs 0.67 MB sub, on 592).
+
+## An option that would be refused is SHOWN refused
  *
  * A copy above the export path's 50 MiB read bound is drawn disabled with its
  * reason, never dropped. Dropping it would silently downgrade the keep to the
@@ -36,6 +36,7 @@
  */
 
 import React, { memo } from 'react'
+// ui-check-ok: the clip picker predates SheetModal; migrating its progress states is its own change (pre-existing)
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 
@@ -220,6 +221,7 @@ function PhaseBody({ phase }: { readonly phase: ClipExportPhase }): React.ReactE
 
 const styles = StyleSheet.create({
   backdrop: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  // ui-check-ok: modal scrim; no scrim token in tokens.ts yet (pre-existing)
   scrim: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#000000AA' },
   sheet: {
     width: BAR_WIDTH + SPACING.lg * 2,

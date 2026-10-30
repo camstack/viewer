@@ -12,7 +12,8 @@
  *   the accent border; with no tap yet, none is selected. Playback never lights
  *   or scrolls a thumbnail.
  * - The lens (panel top-right) opens the detail on the SELECTED thumbnail, else
- *   the first one.
+ *   the first one; the download icon beside it opens the download dialog for
+ *   that same thumbnail.
  * - Clips mode (`paging` false): the panel holds the visit's one thumbnail, its
  *   caption carries the clip's start/end label, the lens slot is the save button.
  * - Camera count chip when the group spans cameras; per-thumbnail importance
@@ -64,6 +65,9 @@ export const CLUSTER_CAMERA_COUNT_TEST_ID = 'cluster-camera-count'
  *  not to draw the chip. */
 export const CLUSTER_CARD_TEST_ID = 'cluster-card'
 
+/** The event download icon in the card's corner. */
+export const CLUSTER_EVENT_DOWNLOAD_TEST_ID = 'cluster-event-download'
+
 export interface ClusterCardProps {
   readonly cluster: PositionedCluster
   readonly width: number
@@ -72,6 +76,13 @@ export interface ClusterCardProps {
   readonly onPress: (event: ObjectEvent) => void
   /** The LENS: open the cluster detail on the active thumbnail. */
   readonly onOpenDetail?: (event: ObjectEvent) => void
+  /**
+   * Normal mode: download the ACTIVE event (the selected thumbnail, else the
+   * first) — the same corner and the same icon a native clip's save wears. It
+   * only opens the download dialog; it never seeks and never saves by itself.
+   * Absent in clips mode, where {@link onSaveClip} owns the corner.
+   */
+  readonly onDownloadEvent?: (event: ObjectEvent) => void
   /**
    * Whether the panel lists every subject. OFF in clips mode: a clips card is a
    * VISIT and a tap plays it from its start, so it holds one thumbnail.
@@ -275,6 +286,7 @@ export const ClusterCard = memo(function ClusterCard({
   selected = false,
   onPress,
   onOpenDetail,
+  onDownloadEvent,
   paging = true,
   clipStartMs,
   clipEndMs,
@@ -424,6 +436,18 @@ export const ClusterCard = memo(function ClusterCard({
             style={[styles.action, { backgroundColor: colors.background + 'E6' }]}
           >
             <Search size={14} color={colors.foreground} />
+          </Pressable>
+        ) : null}
+        {onDownloadEvent !== undefined ? (
+          <Pressable
+            testID={CLUSTER_EVENT_DOWNLOAD_TEST_ID}
+            accessibilityRole="button"
+            accessibilityLabel={t('v2.eventDownload.open')}
+            onPress={() => onDownloadEvent(activeEvent)}
+            hitSlop={8}
+            style={[styles.action, { backgroundColor: colors.background + 'E6' }]}
+          >
+            <Download size={14} color={colors.foreground} />
           </Pressable>
         ) : null}
         {onSaveClip !== undefined ? (

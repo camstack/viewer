@@ -154,6 +154,8 @@ import { useClipExport } from '../../../clips/use-clip-export.js'
 import type { ClipQualityOption } from '../../../clips/clip-export-quality.js'
 import type { ClipProfile } from '../../../clips/clip-quality.js'
 import { ClipExportModal } from './ClipExportModal.js'
+import { EventDownloadModal } from './EventDownloadModal.js'
+import { useCameras } from '../../../data/use-cameras.js'
 import { IDLE_CLIP_EXPORT } from '../../../clips/clip-export-progress.js'
 import { resolveTimelineCursor } from './timeline-cursor.js'
 import type { ClipSaveBinding } from './TimelineScroller.js'
@@ -1385,13 +1387,14 @@ export const TheaterTimeline = memo(function TheaterTimeline(props: TheaterTimel
    * else is offered. The press CREATES AN EXPORT (D558) — it is no longer a
    * fetch to this device.
    *
-   * One distinct copy queues immediately; two open the picker. That test is
-   * `clip-export-quality.ts`'s and is made once, here, so the card never has
-   * to know what a twin is.
+   * The press always opens the modal; with one distinct copy it lists that one.
    */
   const clipExport = useClipExport()
   /** The clip whose picker is open, with the copies to offer. */
   const [qualityPick, setQualityPick] = useState<ClipQualityPick | null>(null)
+  /** The event whose download dialog is open (normal mode's card icon). */
+  const [downloadEvent, setDownloadEvent] = useState<ObjectEvent | null>(null)
+  const { data: cameraList } = useCameras()
 
   // Where the subject's `provider` and `sourceLabel` come from — the SAME read
   // the list itself came from, never a second lookup. `sourceLabel` is frozen
@@ -1452,14 +1455,13 @@ export const TheaterTimeline = memo(function TheaterTimeline(props: TheaterTimel
       }
       const quality = offer.quality
       out.set(cardIdForClip(entry), {
+        // Always the modal, even with one copy: the press opens the same
+        // dialog an event's download does, so a keep never starts silently.
         onSave: () => {
-          if (quality.kind === 'choice') {
-            setQualityPick({ clip: entry.clip, options: quality.options })
-            return
-          }
-          // One copy. No dialog — a dialog with one option is friction
-          // pretending to be agency.
-          startClipExport(entry.clip, quality.option.profile)
+          setQualityPick({
+            clip: entry.clip,
+            options: quality.kind === 'choice' ? quality.options : [quality.option],
+          })
         },
         reason: null,
         // Per CLIP, not per surface: two cards must not both spin because one
@@ -1470,7 +1472,7 @@ export const TheaterTimeline = memo(function TheaterTimeline(props: TheaterTimel
       })
     }
     return out
-  }, [clipsMode, derivedClips, clipExport, startClipExport, t])
+  }, [clipsMode, derivedClips, clipExport, t])
 
   // The `Clip` view of the same list — what the compressed axis lays out and
   // what the advance sequencer walks.
@@ -2721,6 +2723,7 @@ export const TheaterTimeline = memo(function TheaterTimeline(props: TheaterTimel
             onMomentumScrollEnd: scrub.onMomentumScrollEnd,
             onClusterPress: onClusterTrackSeek,
             onClusterOpenDetail: clipsMode ? undefined : openClusterDetail,
+            onClusterDownloadEvent: clipsMode ? undefined : setDownloadEvent,
             expansion: expansionByCluster,
             epochMap,
             gapMarkers,
@@ -2938,6 +2941,24 @@ export const TheaterTimeline = memo(function TheaterTimeline(props: TheaterTimel
 
           Closing it abandons the WATCH and never the job: an export outlives
           this screen and is collected from the Library. */}
+      {/* The event's download dialog — the card's icon opens it for the
+          selected thumbnail's event. Mounted only while open, so the media and
+          export hooks it holds cost nothing on a closed timeline. */}
+      {downloadEvent !== null ? (
+        <EventDownloadModal
+          event={downloadEvent}
+          cameraName={
+            downloadEvent.deviceId === props.deviceId
+              ? props.name
+              : (cameraList?.find((c) => c.id === downloadEvent.deviceId)?.name ?? props.name)
+          }
+          coverage={coverage}
+          windowFromMs={dayWindow.from}
+          windowToMs={dayWindow.to}
+          onClose={() => setDownloadEvent(null)}
+        />
+      ) : null}
+
       {qualityPick !== null ? (
         <ClipExportModal
           visible

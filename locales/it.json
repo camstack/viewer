@@ -4267,6 +4267,28 @@
     },
     "access": {
       "notForYourAccount": "Non disponibile per il tuo account"
+    },
+    "eventDownload": {
+      "open": "Scarica questo evento",
+      "title": "Scarica",
+      "modeClip": "Clip",
+      "modeSnapshot": "Immagine",
+      "before": "Prima dell’evento",
+      "after": "Dopo l’evento",
+      "seconds": "{{count}} s",
+      "span": "{{from}} – {{to}} · {{duration}}",
+      "absent": "In questo periodo non è stato registrato nulla.",
+      "partial": "Una parte di questo periodo non è stata registrata.",
+      "saveClip": "Salva la clip",
+      "saveSnapshot": "Salva l’immagine",
+      "resolution": {
+        "high": "Alta risoluzione",
+        "low": "Risoluzione standard"
+      },
+      "highUnavailable": "Questo evento non ha un’immagine a piena risoluzione.",
+      "snapshotLoading": "Cerco l’immagine dell’evento…",
+      "snapshotNone": "Questo evento non ha un’immagine da salvare.",
+      "failed": "Non è stato possibile salvare l’immagine."
     }
   },
   "prototype": {
