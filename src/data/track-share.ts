@@ -14,7 +14,7 @@
  * single event/track/media, and no unauthenticated route serves shared media by
  * token. A public single-event link needs a new server share-scope member — see
  * the task report. Until then the public affordance is a native OS share of the
- * image FILE itself ({@link ../lib/share-image.ts}).
+ * image FILE itself (the shared event menu).
  */
 
 import type { TrackSummary } from './track-events.js'
@@ -41,11 +41,4 @@ export function trackShareTarget(track: TrackSummary): TrackShareTarget {
       ts: String(track.firstSeen),
     },
   }
-}
-
-/** A short, filesystem-safe basename for a shared media file. Pure. */
-export function shareImageFilename(track: TrackSummary, kind: string): string {
-  const safeKind = kind.replace(/[^a-z0-9]+/gi, '-').toLowerCase()
-  const safeTrack = track.trackId.replace(/[^a-z0-9]+/gi, '-').toLowerCase()
-  return `camstack-${safeTrack}-${safeKind}`
 }

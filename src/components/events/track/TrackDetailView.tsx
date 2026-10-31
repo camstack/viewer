@@ -27,7 +27,7 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import { Image } from 'expo-image'
 import * as Linking from 'expo-linking'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { Download, X, Crosshair, ImageOff, Star, UserRound, UserRoundPlus, Info, Share2, Link2, Check, Maximize2, Route, ChevronLeft, ChevronRight, TriangleAlert } from '../../../lib/icons.js'
+import { Download, X, Crosshair, ImageOff, Star, UserRound, UserRoundPlus, Info, Link2, Check, Maximize2, Route, ChevronLeft, ChevronRight, TriangleAlert } from '../../../lib/icons.js'
 import { useTranslation } from 'react-i18next'
 import { useTheme } from '../../../theme/theme-provider.js'
 import { RADIUS, SPACING, mediaScrim } from '../../../theme/tokens.js'
@@ -43,7 +43,6 @@ import { TrackDetailSkeleton } from './TrackDetailSkeleton.js'
 import { TrackMetadataSheet } from './TrackMetadataSheet.js'
 import { hapticTap } from '../../../lib/haptics.js'
 import { useTrackDetailMedia } from '../../../data/use-track-detail-media.js'
-import { useShareTrackMedia } from '../../../data/use-share-track-media.js'
 import { mediaFileUri, mediaImageSource } from '../../../data/track-media-uri.js'
 import { useConnection } from '../../../connection/ConnectionProvider.js'
 import { useServer } from '../../../app/ServerProvider.js'
@@ -70,7 +69,7 @@ import {
   type TrackTrajectory,
 } from '../../camera/theater/detail/track-trajectory.js'
 import { TrajectoryOverlay } from '../../camera/theater/detail/TrajectoryOverlay.js'
-import { trackShareTarget, shareImageFilename } from '../../../data/track-share.js'
+import { trackShareTarget } from '../../../data/track-share.js'
 import { copyText } from '../../../lib/copy-text.js'
 import { targetFromTrack } from '../../../recording/event-download.js'
 import { EventActionMenu } from '../EventActionMenu.js'
@@ -452,7 +451,6 @@ export const TrackDetailView = memo(function TrackDetailView({
   // display — the base64 read (`useTrackMediaEntry`) runs ONLY when the
   // operator asks to share, which is rare; opening a track is not.
   const heroFile: MediaFileLite | null = effectiveFile
-  const shareMedia = useShareTrackMedia(track.deviceId, track.trackId)
 
   // What the IMAGE says about itself: loading until its first paint, error on a
   // failed fetch (with a retry that asks for a fresh copy), ready after. These
@@ -543,17 +541,6 @@ export const TrackDetailView = memo(function TrackDetailView({
       setTimeout(() => setLinkCopied(false), 1500)
     })
   }, [track])
-
-  // Share the CURRENTLY SHOWN media image via the OS share sheet (native) / Web
-  // Share (web). Public single-event links are not a server capability yet, so
-  // sharing the image file itself is the portable "send this out" affordance.
-  const onShareImage = useCallback((): void => {
-    if (heroFile === null) return
-    hapticTap()
-    // The bytes are read now and handed to the share sheet when they land.
-    // Sharing is the one moment the base64 read is worth it.
-    shareMedia.share(heroFile, shareImageFilename(track, heroFile.kind))
-  }, [heroFile, shareMedia.share, track])
 
   // The large viewer renders the selected media file verbatim — boxes (when any)
   // are already burned into the server-stored frame; the client never draws them.
@@ -712,10 +699,8 @@ export const TrackDetailView = memo(function TrackDetailView({
         </View>
 
         {/* Share actions — copy an authenticated deep link into the viewer (opens
-            this track's detail) + share the SHOWN image via the OS share sheet.
-            Public single-event links are not a server capability yet (only
-            grid-view share tokens exist), so the portable share is the image
-            file itself. */}
+            this track's detail) + the Download button, which opens the shared event
+            menu (share / save the media). */}
         <View style={styles.shareRow}>
           <Pressable
             onPress={onCopyLink}
@@ -726,18 +711,6 @@ export const TrackDetailView = memo(function TrackDetailView({
             {linkCopied ? <Check size={15} color={colors.primary} /> : <Link2 size={15} color={colors.foreground} />}
             <Text style={[styles.shareBtnText, { color: linkCopied ? colors.primary : colors.foreground }]}>
               {linkCopied ? t('v2.tracks.linkCopied', 'Link copied') : t('v2.tracks.copyLink', 'Copy link')}
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={onShareImage}
-            disabled={effectiveFile === null}
-            accessibilityRole="button"
-            accessibilityLabel={t('v2.tracks.shareImage', 'Share image')}
-            style={[styles.shareBtn, { backgroundColor: colors.surface, opacity: effectiveFile === null ? 0.4 : 1 }]}
-          >
-            <Share2 size={15} color={colors.foreground} />
-            <Text style={[styles.shareBtnText, { color: colors.foreground }]}>
-              {t('v2.tracks.shareImage', 'Share image')}
             </Text>
           </Pressable>
           <Pressable

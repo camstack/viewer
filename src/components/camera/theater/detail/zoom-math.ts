@@ -154,3 +154,41 @@ export function resolvePanActivation(input: PanActivationInput): PanActivation {
   const travel = Math.hypot(input.dx, input.dy)
   return travel >= PAN_MIN_DISTANCE ? 'activate' : 'wait'
 }
+
+export type PinchActivation = 'activate' | 'fail' | 'wait'
+
+export interface PinchActivationInput {
+  /** Fingers currently on the picture. */
+  readonly touches: number
+  /** Travel of the first finger since it went down (px). */
+  readonly travel: number
+}
+
+/**
+ * What the pinch does with the touches it has seen. It activates MANUALLY, so
+ * this is the only thing that turns touches into a zoom: two fingers activate
+ * it; ONE finger that has travelled `PAN_MIN_DISTANCE` is a scroll or a pan,
+ * and the pinch FAILS so it stops holding the host scroll view back.
+ *
+ * Without this the pinch never failed on a one-finger drag (a pinch recognizer
+ * waits for a second finger until the touch ends), and since it blocks the host
+ * scroll view (`blocksExternalGesture`) the modal could not be scrolled from a
+ * drag that started on the picture. A short wait covers fingers that land a few
+ * ms apart: the second one arrives before the first has travelled.
+ */
+export function resolvePinchActivation(input: PinchActivationInput): PinchActivation {
+  'worklet'
+  if (input.touches >= 2) return 'activate'
+  if (!Number.isFinite(input.travel)) return 'wait'
+  return input.travel >= PAN_MIN_DISTANCE ? 'fail' : 'wait'
+}
+
+/**
+ * The browser `touch-action` of the picture on the web. Unzoomed the picture
+ * leaves vertical panning to the browser so a one-finger drag scrolls the
+ * container (RNGH defaults to `none`, which swallows it); zoomed the picture
+ * owns every drag. Pinch (two fingers) is delivered as pointer events either way.
+ */
+export function pictureTouchAction(zoomed: boolean): 'none' | 'pan-y' {
+  return zoomed ? 'none' : 'pan-y'
+}

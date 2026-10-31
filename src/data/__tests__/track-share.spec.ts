@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { trackShareTarget, shareImageFilename } from '../track-share.js'
+import { trackShareTarget } from '../track-share.js'
 import type { TrackSummary } from '../track-events.js'
 
 function track(over: Partial<TrackSummary> = {}): TrackSummary {
@@ -26,11 +26,5 @@ describe('trackShareTarget', () => {
       path: '/events',
       queryParams: { trackId: 'trk-42', deviceId: '102', ts: '1700000000000' },
     })
-  })
-})
-
-describe('shareImageFilename', () => {
-  it('produces a filesystem-safe basename', () => {
-    expect(shareImageFilename(track({ trackId: 'a/b:c' }), 'keyFrame')).toBe('camstack-a-b-c-keyframe')
   })
 })

@@ -27,11 +27,12 @@
  * `Gesture.Native()` and hands it here, and the pinch/pan block it.
  */
 
-import React, { memo, useCallback, useEffect, useMemo, useRef } from 'react'
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Platform, StyleSheet, View, type LayoutChangeEvent } from 'react-native'
 import { Gesture, GestureDetector, type GestureType } from 'react-native-gesture-handler'
 import { ImageOff } from '../../../../lib/icons.js'
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
+import Animated, { runOnJS, useAnimatedReaction, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
+import { useTheme } from '../../../../theme/theme-provider.js'
 import { RenderErrorBoundary } from '../../../ui/RenderErrorBoundary.js'
 import { focalPan, nextZoomStep } from '../../../../live/zoom-steps.js'
 import {
@@ -39,7 +40,9 @@ import {
   clampZoom,
   containBox,
   MIN_ZOOM,
+  pictureTouchAction,
   resolvePanActivation,
+  resolvePinchActivation,
   zoomBy,
 } from './zoom-math.js'
 
@@ -84,6 +87,7 @@ export const ZoomableImage = memo(function ZoomableImage({
   hostScroll,
   children,
 }: ZoomableImageProps) {
+  const { colors } = useTheme()
   const scale = useSharedValue(1)
   const savedScale = useSharedValue(1)
   const tx = useSharedValue(0)
@@ -107,6 +111,17 @@ export const ZoomableImage = memo(function ZoomableImage({
   const panDecided = useSharedValue(false)
 
   const containerRef = useRef<View>(null)
+
+  // Web only matters: lets the browser scroll the page from a one-finger drag
+  // while unzoomed (see `pictureTouchAction`). Flips only when the picture
+  // crosses 1×, never per frame.
+  const [zoomed, setZoomed] = useState(false)
+  useAnimatedReaction(
+    () => scale.value > MIN_ZOOM,
+    (isZoomed, prev) => {
+      if (isZoomed !== prev) runOnJS(setZoomed)(isZoomed)
+    },
+  )
 
   // The scroll view the gestures below must hold still, as a relation list
   // (`blocksExternalGesture` is variadic; no host → nothing to block).
@@ -140,6 +155,27 @@ export const ZoomableImage = memo(function ZoomableImage({
   const pinch = useMemo(
     () =>
       Gesture.Pinch()
+        // Two fingers activate it; one finger that travels FAILS it, so the
+        // host scroll view it blocks is released for a vertical drag.
+        .manualActivation(true)
+        .onTouchesDown((e, state) => {
+          const t = e.allTouches[0]
+          if (t !== undefined && e.numberOfTouches === 1) {
+            panDownX.value = t.x
+            panDownY.value = t.y
+          }
+          if (resolvePinchActivation({ touches: e.numberOfTouches, travel: 0 }) === 'activate') state.activate()
+        })
+        .onTouchesMove((e, state) => {
+          const t = e.allTouches[0]
+          if (t === undefined) return
+          const decision = resolvePinchActivation({
+            touches: e.numberOfTouches,
+            travel: Math.hypot(t.x - panDownX.value, t.y - panDownY.value),
+          })
+          if (decision === 'activate') state.activate()
+          else if (decision === 'fail') state.fail()
+        })
         .onStart((e) => {
           pinchStart.value = savedScale.value
           pinchFocalX.value = e.focalX
@@ -197,7 +233,7 @@ export const ZoomableImage = memo(function ZoomableImage({
         // The host scroll view waits for this pinch to fail before it may
         // scroll: two fingers on the picture are a zoom, never a page scroll.
         .blocksExternalGesture(...blocked),
-    [pinchStart, pinchFocalX, pinchFocalY, savedScale, w, h, aspect, scale, tx, ty, savedTx, savedTy, blocked],
+    [pinchStart, pinchFocalX, pinchFocalY, savedScale, w, h, aspect, scale, tx, ty, savedTx, savedTy, panDownX, panDownY, blocked],
   )
 
   const pan = useMemo(
@@ -347,13 +383,13 @@ export const ZoomableImage = memo(function ZoomableImage({
   // decoder rejects) falls back to a placeholder instead of crashing the app.
   const fallback = (
     <View style={[styles.fallback, { width, height }]}>
-      <ImageOff size={40} color="#6b7280" />
+      <ImageOff size={40} color={colors.foregroundSubtle} />
     </View>
   )
 
   return (
     <View ref={containerRef} onLayout={onLayout} style={[styles.container, { width, height }]}>
-      <GestureDetector gesture={gesture}>
+      <GestureDetector gesture={gesture} touchAction={pictureTouchAction(zoomed)}>
         <Animated.View style={[{ width, height }, contentStyle]}>
           <RenderErrorBoundary resetKey={resetKey} fallback={fallback}>
             {children}
@@ -365,6 +401,8 @@ export const ZoomableImage = memo(function ZoomableImage({
 })
 
 const styles = StyleSheet.create({
+  // ui-check-ok: a picture's letterbox stays black on every theme, like the player's
   container: { overflow: 'hidden', backgroundColor: '#000' },
+  // ui-check-ok: same letterbox black behind the failed picture
   fallback: { alignItems: 'center', justifyContent: 'center', backgroundColor: '#000' },
 })

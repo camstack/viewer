@@ -8,6 +8,8 @@ import {
   panExtent,
   clampPanContent,
   resolvePanActivation,
+  resolvePinchActivation,
+  pictureTouchAction,
   PAN_MIN_DISTANCE,
   MIN_ZOOM,
   MAX_ZOOM,
@@ -132,5 +134,24 @@ describe('resolvePanActivation', () => {
   it('defends against non-finite input', () => {
     expect(resolvePanActivation({ scale: Number.NaN, dx: 5, dy: 5 })).toBe('fail')
     expect(resolvePanActivation({ scale: 2, dx: Number.NaN, dy: 5 })).toBe('wait')
+  })
+})
+
+describe('scroll vs zoom gesture config', () => {
+  it('unzoomed: a one-finger drag fails the pan AND the pinch, so the container scrolls', () => {
+    expect(resolvePanActivation({ scale: MIN_ZOOM, dx: 0, dy: 30 })).toBe('fail')
+    expect(resolvePinchActivation({ touches: 1, travel: 30 })).toBe('fail')
+  })
+  it('zoomed: a one-finger drag activates the pan', () => {
+    expect(resolvePanActivation({ scale: 2, dx: 0, dy: 30 })).toBe('activate')
+  })
+  it('two fingers always activate the pinch; a still single finger waits for a second', () => {
+    expect(resolvePinchActivation({ touches: 2, travel: 0 })).toBe('activate')
+    expect(resolvePinchActivation({ touches: 1, travel: 0 })).toBe('wait')
+    expect(resolvePinchActivation({ touches: 1, travel: Number.NaN })).toBe('wait')
+  })
+  it('web touch-action lets the browser scroll vertically only when unzoomed', () => {
+    expect(pictureTouchAction(false)).toBe('pan-y')
+    expect(pictureTouchAction(true)).toBe('none')
   })
 })

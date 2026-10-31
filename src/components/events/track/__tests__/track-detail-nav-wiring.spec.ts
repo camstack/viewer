@@ -137,3 +137,15 @@ describe('the Media section never vanishes silently (2026-08-21)', () => {
     }
   })
 })
+
+describe('the track detail has no separate "share image" button', () => {
+  it('Download (the shared event menu) is the one way to send the image out', () => {
+    const src = read('components/events/track/TrackDetailView.tsx')
+    expect(src).not.toContain('useShareTrackMedia')
+    expect(src).not.toContain('onShareImage')
+    expect(src).not.toContain('v2.tracks.shareImage')
+    expect(src).toContain('TRACK_DETAIL_DOWNLOAD_TEST_ID')
+    expect(JSON.stringify(enLocale)).not.toContain('Share image')
+    expect(JSON.stringify(itLocale)).not.toContain('Condividi immagine')
+  })
+})
