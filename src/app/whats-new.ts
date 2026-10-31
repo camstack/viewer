@@ -30,6 +30,20 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.673',
+    date: '2026-10-31',
+    notes: {
+      en: [
+        'Track detail: the image no longer blocks scrolling; pinch still zooms.',
+        'Track detail: Share image removed — Download does the same.',
+      ],
+      it: [
+        "Dettaglio traccia: l'immagine non blocca più lo scorrimento; il pinch zooma ancora.",
+        "Dettaglio traccia: rimosso Condividi immagine — Scarica fa lo stesso.",
+      ],
+    },
+  },
+  {
     version: '1.0.672',
     date: '2026-10-31',
     notes: {
