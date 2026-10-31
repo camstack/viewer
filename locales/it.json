@@ -1903,7 +1903,12 @@
           "config": "Configurazione",
           "nameLabel": "Nome",
           "nameHint": "Un'etichetta per riconoscere questa destinazione.",
-          "secretHint": "Lascia vuoto per mantenere il valore salvato."
+          "secretHint": "Lascia vuoto per mantenere il valore salvato.",
+          "select": "— Seleziona —",
+          "loadingOptions": "Caricamento opzioni…",
+          "discoverNotReady": "Compila i campi sopra per caricare l'elenco, oppure digita il valore.",
+          "discoverFailed": "Impossibile caricare l'elenco: {{message}}. Digita il valore.",
+          "discoverEmpty": "Non è stato trovato nulla. Digita il valore."
         }
       },
       "snooze": {

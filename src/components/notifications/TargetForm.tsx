@@ -22,11 +22,16 @@ import { SelectRow, type SelectOption } from '../ui/SelectRow.js'
 import { NotifierIcon } from './NotifierIcon.js'
 import { SPACING, RADIUS } from '../../theme/tokens.js'
 import { useNcUpsertTarget } from '../../data/use-notification-center.js'
+import { useNcBrokers, useNcDiscoveredTargets } from '../../data/use-nc-target-options.js'
+import { useDebouncedValue } from '../../hooks/use-debounced-value.js'
 import type { Target, TargetKind } from '../../data/notification-center.js'
 import {
   buildInitialConfig,
   buildTargetPayload,
   configFromTarget,
+  discoverReady,
+  discoveryConfig,
+  optionsFromCandidates,
   parseConfigSchema,
   validateConfig,
   type NcConfigValues,
@@ -108,6 +113,8 @@ export function TargetForm({ kind, target, onCancel, onSaved }: TargetFormProps)
               key={field.key}
               field={field}
               value={values[field.key]}
+              values={values}
+              targetId={target?.id}
               onChange={(next) => setValue(field.key, next)}
               invalid={invalid.includes(field.key)}
               editing={target !== null}
@@ -165,6 +172,9 @@ export function TargetForm({ kind, target, onCancel, onSaved }: TargetFormProps)
 interface FieldControlProps {
   readonly field: NcFormField
   readonly value: unknown
+  /** The whole form state: a discovered select reads its `dependsOn` from it. */
+  readonly values: NcConfigValues
+  readonly targetId?: string
   readonly onChange: (next: unknown) => void
   readonly invalid: boolean
   readonly editing: boolean
@@ -172,7 +182,7 @@ interface FieldControlProps {
 }
 
 /** Render one `NcFormField` onto the matching settings primitive. */
-function FieldControl({ field, value, onChange, invalid, editing, last }: FieldControlProps) {
+function FieldControl({ field, value, values, targetId, onChange, invalid, editing, last }: FieldControlProps) {
   const { t } = useTranslation()
 
   if (field.type === 'boolean') {
@@ -182,6 +192,31 @@ function FieldControl({ field, value, onChange, invalid, editing, last }: FieldC
         description={field.description}
         value={value === true}
         onValueChange={onChange}
+        last={last}
+      />
+    )
+  }
+
+  if (field.type === 'broker-select') {
+    return (
+      <BrokerSelectControl
+        field={field}
+        value={typeof value === 'string' ? value : ''}
+        onChange={onChange}
+        last={last}
+      />
+    )
+  }
+
+  if (field.type === 'select' && field.discover) {
+    return (
+      <DiscoveredSelectControl
+        field={field}
+        values={values}
+        value={typeof value === 'string' ? value : ''}
+        targetId={targetId}
+        onChange={onChange}
+        invalid={invalid}
         last={last}
       />
     )
@@ -218,6 +253,104 @@ function FieldControl({ field, value, onChange, invalid, editing, last }: FieldC
       secure={field.secret}
       multiline={field.type === 'textarea'}
       numeric={field.type === 'number'}
+      last={last}
+    />
+  )
+}
+
+const DISCOVER_TYPING_DEBOUNCE_MS = 500
+
+/** A `broker-select`: the existing brokers of one kind, as the same picker row
+ *  every select uses. Nothing is pre-selected. */
+function BrokerSelectControl({
+  field,
+  value,
+  onChange,
+  last,
+}: {
+  readonly field: NcFormField
+  readonly value: string
+  readonly onChange: (next: string) => void
+  readonly last: boolean
+}) {
+  const { t } = useTranslation()
+  const brokers = useNcBrokers(field.brokerKind ?? '')
+  const rows = brokers.data ?? []
+  const known = rows.some((b) => b.id === value)
+  const options: readonly SelectOption<string>[] = [
+    { value: '', label: brokers.isLoading ? t('v2.nc.targets.form.loadingOptions') : t('v2.nc.targets.form.select') },
+    ...(value !== '' && !known ? [{ value, label: value }] : []),
+    ...rows.map((b) => ({ value: b.id, label: b.name })),
+  ]
+  return (
+    <SelectRow<string> label={field.label} options={options} value={value} onChange={onChange} last={last} />
+  )
+}
+
+/** A `select` whose options are discovered. Asked only once every `dependsOn`
+ *  field has a value; until then, while loading, on failure and when nothing was
+ *  found it is a free-text row with its own status line. */
+function DiscoveredSelectControl({
+  field,
+  values,
+  value,
+  targetId,
+  onChange,
+  invalid,
+  last,
+}: {
+  readonly field: NcFormField
+  readonly values: NcConfigValues
+  readonly value: string
+  readonly targetId?: string
+  readonly onChange: (next: string) => void
+  readonly invalid: boolean
+  readonly last: boolean
+}) {
+  const { t } = useTranslation()
+  const ready = discoverReady(field, values)
+  const config = useMemo(() => discoveryConfig(values), [values])
+  const configKey = JSON.stringify(config)
+  const settledKey = useDebouncedValue(configKey, DISCOVER_TYPING_DEBOUNCE_MS)
+  const settled = configKey === settledKey
+  const query = useNcDiscoveredTargets({
+    kind: field.discover?.kind ?? '',
+    config,
+    enabled: ready && settled,
+    targetId,
+  })
+  const found = ready && settled && query.data ? optionsFromCandidates(query.data, field.key) : []
+
+  if (found.length > 0) {
+    const known = found.some((o) => o.value === value)
+    const options: readonly SelectOption<string>[] = [
+      { value: '', label: t('v2.nc.targets.form.select') },
+      ...(value !== '' && !known ? [{ value, label: value }] : []),
+      ...found,
+    ]
+    return (
+      <SelectRow<string> label={field.label} options={options} value={value} onChange={onChange} last={last} />
+    )
+  }
+
+  let status: string
+  if (!ready) status = t('v2.nc.targets.form.discoverNotReady')
+  else if (!settled || query.isLoading || query.isFetching) status = t('v2.nc.targets.form.loadingOptions')
+  else if (query.isError) {
+    status = t('v2.nc.targets.form.discoverFailed', {
+      message: query.error instanceof Error ? query.error.message : String(query.error),
+    })
+  } else status = t('v2.nc.targets.form.discoverEmpty')
+
+  return (
+    <FieldRow
+      label={field.label}
+      description={field.description ? `${field.description} ${status}` : status}
+      required={field.required}
+      invalid={invalid}
+      value={value}
+      onChangeText={onChange}
+      placeholder={field.placeholder}
       last={last}
     />
   )

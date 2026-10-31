@@ -22,12 +22,26 @@ import type { Target, TargetKind } from '../../data/notification-center.js'
 
 /** The field-input flavours the viewer renders. Every richer `ConfigField`
  *  type collapses onto one of these (or is dropped as structural chrome). */
-export type NcFormFieldType = 'text' | 'password' | 'textarea' | 'number' | 'boolean' | 'select'
+export type NcFormFieldType =
+  | 'text'
+  | 'password'
+  | 'textarea'
+  | 'number'
+  | 'boolean'
+  | 'select'
+  | 'broker-select'
 
 /** One choice in a `select` field. Values are normalized to strings. */
 export interface NcSelectOption {
   readonly value: string
   readonly label: string
+}
+
+/** A `select` whose options come from the kind's `discoverTargets`, asked for
+ *  the form's current values once every `dependsOn` field has a value. */
+export interface NcDiscoverOptions {
+  readonly kind: string
+  readonly dependsOn: readonly string[]
 }
 
 /** A normalized, renderable field extracted from a kind's `configSchema`. */
@@ -44,6 +58,10 @@ export interface NcFormField {
   /** The schema-declared default (raw), consulted for initial values. */
   readonly default: unknown
   readonly placeholder?: string
+  /** `broker-select` only: the broker kind whose existing brokers are listed. */
+  readonly brokerKind?: string
+  /** Discovered `select` only; absent for a static select. */
+  readonly discover?: NcDiscoverOptions
 }
 
 /** The live form-state map (keyed by field `key`). */
@@ -73,6 +91,7 @@ function mapType(type: string | undefined): NcFormFieldType | null {
     case 'number':
     case 'boolean':
     case 'select':
+    case 'broker-select':
       return type
     // A slider is a bounded number — render it as a numeric input.
     case 'slider':
@@ -95,6 +114,14 @@ function parseOptions(options: unknown): NcSelectOption[] {
   return out
 }
 
+function parseDiscover(raw: unknown): NcDiscoverOptions | undefined {
+  if (!isRecord(raw)) return undefined
+  const kind = asString(raw.kind)
+  if (!kind || !Array.isArray(raw.dependsOn)) return undefined
+  const dependsOn = raw.dependsOn.filter((key): key is string => typeof key === 'string')
+  return { kind, dependsOn }
+}
+
 function toFormField(raw: Record<string, unknown>): NcFormField | null {
   const key = asString(raw.key)
   if (!key) return null
@@ -111,6 +138,8 @@ function toFormField(raw: Record<string, unknown>): NcFormField | null {
     options: type === 'select' ? parseOptions(raw.options) : [],
     default: raw.default,
     placeholder: asString(raw.placeholder),
+    brokerKind: type === 'broker-select' ? asString(raw.brokerKind) : undefined,
+    discover: type === 'select' ? parseDiscover(raw.discoverOptions) : undefined,
   }
 }
 
@@ -155,13 +184,59 @@ export function parseConfigSchema(schema: unknown): NcFormField[] {
 
 // ── value helpers ──────────────────────────────────────────────────────────
 
+function hasValue(value: unknown): boolean {
+  return typeof value === 'string' ? value.trim().length > 0 : value !== undefined && value !== null
+}
+
+/** True once every `dependsOn` field of a discovered select has a value —
+ *  the only moment the hub is asked for options. */
+export function discoverReady(field: NcFormField, values: NcConfigValues): boolean {
+  if (!field.discover) return false
+  return field.discover.dependsOn.every((key) => hasValue(values[key]))
+}
+
+/** The non-empty scalar form values: what `discoverTargets` is asked about. */
+export function discoveryConfig(values: NcConfigValues): Record<string, string | number | boolean> {
+  const config: Record<string, string | number | boolean> = {}
+  for (const [key, value] of Object.entries(values)) {
+    if (
+      (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') &&
+      hasValue(value)
+    ) {
+      config[key] = value
+    }
+  }
+  return config
+}
+
+/** A discovered candidate becomes an option: value = `config[field.key]`,
+ *  label = `suggestedName`. Blank and repeated values are dropped. */
+export function optionsFromCandidates(
+  candidates: readonly { readonly suggestedName: string; readonly config: Record<string, unknown> }[],
+  key: string,
+): NcSelectOption[] {
+  const seen = new Set<string>()
+  const out: NcSelectOption[] = []
+  for (const candidate of candidates) {
+    const raw = candidate.config[key]
+    if (typeof raw !== 'string' || raw === '' || seen.has(raw)) continue
+    seen.add(raw)
+    out.push({ value: raw, label: candidate.suggestedName })
+  }
+  return out
+}
+
 /** The form-state initial value for a freshly-created target's field. */
 export function initialFieldValue(field: NcFormField): unknown {
   switch (field.type) {
     case 'boolean':
       return typeof field.default === 'boolean' ? field.default : false
+    case 'broker-select':
+      return ''
     case 'select':
       if (typeof field.default === 'string') return field.default
+      // A discovered or broker pick is never pre-selected.
+      if (field.discover) return ''
       return field.options[0]?.value ?? ''
     case 'number':
       return typeof field.default === 'number' ? String(field.default) : ''

@@ -1906,7 +1906,12 @@
           "config": "Configuration",
           "nameLabel": "Name",
           "nameHint": "A label to recognize this target.",
-          "secretHint": "Leave blank to keep the saved value."
+          "secretHint": "Leave blank to keep the saved value.",
+          "select": "— Select —",
+          "loadingOptions": "Loading options…",
+          "discoverNotReady": "Fill in the fields above to load the list, or type the value.",
+          "discoverFailed": "Could not load the list: {{message}}. Type the value instead.",
+          "discoverEmpty": "Nothing was found. Type the value instead."
         }
       },
       "snooze": {
