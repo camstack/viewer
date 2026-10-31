@@ -69,10 +69,11 @@ import {
   type TrackTrajectory,
 } from '../../camera/theater/detail/track-trajectory.js'
 import { TrajectoryOverlay } from '../../camera/theater/detail/TrajectoryOverlay.js'
-import { trackShareTarget } from '../../../data/track-share.js'
+import { buildPublicLink, trackShareTarget } from '../../../data/track-share.js'
 import { copyText } from '../../../lib/copy-text.js'
 import { targetFromTrack } from '../../../recording/event-download.js'
 import { EventActionMenu } from '../EventActionMenu.js'
+import { TrackCopyLinkMenu } from './TrackCopyLinkMenu.js'
 import type { AnchorRect } from '../../ui/dropdown-placement.js'
 import type { ObjectEvent } from '../../camera/theater/event-cluster.js'
 import { SectionLabel } from '../../ui/SectionLabel.js'
@@ -530,17 +531,34 @@ export const TrackDetailView = memo(function TrackDetailView({
     [],
   )
 
-  // Copy an authenticated deep link into the viewer (opens this track's detail).
+  // Copy link opens a two-entry choice: the app link (opens the CamStack app) or
+  // the public link (the hub's public web viewer).
+  const copyRef = useRef<View>(null)
+  const [copyAnchor, setCopyAnchor] = useState<AnchorRect | null>(null)
+  const [copyOpen, setCopyOpen] = useState(false)
   const onCopyLink = useCallback((): void => {
     hapticTap()
-    const target = trackShareTarget(track)
-    const url = Linking.createURL(target.path, { queryParams: target.queryParams })
+    copyRef.current?.measureInWindow((x, y, width, height) => {
+      setCopyAnchor({ x, y, width, height })
+      setCopyOpen(true)
+    })
+  }, [])
+  const copyUrl = useCallback((url: string): void => {
+    setCopyOpen(false)
     void copyText(url).then((ok) => {
       if (!ok) return
       setLinkCopied(true)
       setTimeout(() => setLinkCopied(false), 1500)
     })
-  }, [track])
+  }, [])
+  const onCopyApp = useCallback((): void => {
+    const target = trackShareTarget(track)
+    copyUrl(Linking.createURL(target.path, { queryParams: target.queryParams }))
+  }, [track, copyUrl])
+  const onCopyPublic = useCallback((publicEndpoint: string): void => {
+    const url = buildPublicLink(publicEndpoint, trackShareTarget(track))
+    if (url !== null) copyUrl(url)
+  }, [track, copyUrl])
 
   // The large viewer renders the selected media file verbatim — boxes (when any)
   // are already burned into the server-stored frame; the client never draws them.
@@ -703,6 +721,7 @@ export const TrackDetailView = memo(function TrackDetailView({
             menu (share / save the media). */}
         <View style={styles.shareRow}>
           <Pressable
+            ref={copyRef}
             onPress={onCopyLink}
             accessibilityRole="button"
             accessibilityLabel={t('v2.tracks.copyLink', 'Copy link')}
@@ -726,6 +745,13 @@ export const TrackDetailView = memo(function TrackDetailView({
               {t('v2.eventMenu.open')}
             </Text>
           </Pressable>
+          <TrackCopyLinkMenu
+            visible={copyOpen}
+            anchor={copyAnchor}
+            onClose={() => setCopyOpen(false)}
+            onCopyApp={onCopyApp}
+            onCopyPublic={onCopyPublic}
+          />
           <EventActionMenu
             visible={downloadOpen}
             target={targetFromTrack(track, resolvedCameraName ?? track.cameraName)}

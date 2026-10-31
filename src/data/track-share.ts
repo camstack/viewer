@@ -8,13 +8,8 @@
  * resolved at call-time by `expo-linking` `createURL(path, { queryParams })`, so
  * this module stays a PURE builder of the `(path, queryParams)` pair it is given.
  *
- * NOTE: there is deliberately NO public (unauthenticated tokenized) link here.
- * The hub's only share primitive is a share-view token (`auth.mintToken`
- * with a `grid-view` / `events-view` grant); it cannot scope to a
- * single event/track/media, and no unauthenticated route serves shared media by
- * token. A public single-event link needs a new server share-scope member — see
- * the task report. Until then the public affordance is a native OS share of the
- * image FILE itself (the shared event menu).
+ * The PUBLIC link (`buildPublicLink`) is the hub's public web viewer URL for the
+ * same target; its origin is the hub's `roles.publicEndpoint`, read from the hub.
  */
 
 import type { TrackSummary } from './track-events.js'
@@ -41,4 +36,25 @@ export function trackShareTarget(track: TrackSummary): TrackShareTarget {
       ts: String(track.firstSeen),
     },
   }
+}
+
+/** Where the hub mounts the web viewer, under its public address. */
+export const WEB_VIEWER_BASE_PATH = '/viewer/camstack'
+
+/**
+ * The browser-openable URL for `target`: the hub's public address, the web
+ * viewer base, the same path and query the app link carries. `null` when the
+ * hub has no public address (the caller shows the entry disabled, never a
+ * guessed origin). Pure.
+ */
+export function buildPublicLink(
+  publicEndpoint: string | null,
+  target: TrackShareTarget,
+): string | null {
+  if (publicEndpoint === null) return null
+  const origin = publicEndpoint.trim().replace(/\/+$/, '')
+  if (origin.length === 0) return null
+  const path = target.path.startsWith('/') ? target.path : `/${target.path}`
+  const query = new URLSearchParams(target.queryParams).toString()
+  return `${origin}${WEB_VIEWER_BASE_PATH}${path}${query.length > 0 ? `?${query}` : ''}`
 }
