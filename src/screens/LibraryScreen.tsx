@@ -34,6 +34,7 @@ import { useTheme } from '../theme/theme-provider.js'
 import { ScopeBar } from '../components/ui/ScopeBar.js'
 import { useGrantedFeatures } from '../data/use-me.js'
 import { EventsScreen } from './EventsScreen.js'
+import { TimelineLibraryScreen } from './TimelineLibraryScreen.js'
 import { ArtifactsScreen } from './artifacts/ArtifactsScreen.js'
 import { FaceReviewScreen } from './faces/FaceReviewScreen.js'
 import { PlateReviewScreen } from './plates/PlateReviewScreen.js'
@@ -84,6 +85,8 @@ export function LibraryScreen() {
 
       {visibleSection === 'events' ? (
         <EventsScreen embedded />
+      ) : visibleSection === 'timeline' ? (
+        <TimelineLibraryScreen />
       ) : visibleSection === 'review' ? (
         <FaceReviewScreen />
       ) : visibleSection === 'plates' ? (

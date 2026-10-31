@@ -29,6 +29,7 @@ import { TimelineFilterPanel } from './TimelineFilterPanel.js'
 import { TimelineDatePanel } from './TimelineDatePanel.js'
 import { TimelineClusterPanel } from './TimelineClusterPanel.js'
 import { TimelineCameraPanel } from './TimelineCameraPanel.js'
+import type { CameraScopeBinding } from '../camera-scope-binding.js'
 import { TimelineViewOptionsPanel } from './TimelineViewOptionsPanel.js'
 import { TimelineLegendPanel } from './TimelineLegendPanel.js'
 import { StorageManagementPanel } from '../management/StorageManagementPanel.js'
@@ -114,6 +115,14 @@ export interface TimelineDeviceBinding {
   readonly hasNavigation: boolean
   /** See {@link TimelineCameraJumpBinding} — absent ⟺ no camera panel here. */
   readonly cameraJump?: TimelineCameraJumpBinding
+  /**
+   * The surface reads a SET of cameras and the camera panel is its multi-select
+   * (the Library timeline). It is offered at every width — the "tablet builds
+   * its view on the surface itself" rule is about camera-detail, whose view is
+   * the scope; here there is no other control to pick it with — and replaces
+   * {@link cameraJump} (a surface with a scope has nowhere to "jump" to).
+   */
+  readonly cameraScope?: CameraScopeBinding
 }
 
 /** The live stream tier — owned by the screen, which derives the WebRTC target. */
@@ -252,6 +261,10 @@ export interface TimelineBodyPanelProps {
   readonly managementBinding: TimelineManagementBinding
 }
 
+/** A scope panel never switches or opens a grid; the props are required by the
+ *  shared panel, and this is what they are when a scope owns the ticks. */
+function ignoreCameraPick(): void {}
+
 export function TimelineBodyPanel({
   panel,
   deviceId,
@@ -307,6 +320,17 @@ export function TimelineBodyPanel({
       // `singleCamera`: the footer's camera button is the panel's only trigger
       // and it is not rendered when the group is absent (`TimelineFooterBar`).
       // The guard is here so the TYPE refuses a panel with nothing behind it.
+      if (deviceBinding.cameraScope) {
+        return (
+          <TimelineCameraPanel
+            currentId={deviceId}
+            onSwitch={ignoreCameraPick}
+            onOpenGrid={ignoreCameraPick}
+            scope={deviceBinding.cameraScope}
+            onClose={onClose}
+          />
+        )
+      }
       if (!deviceBinding.cameraJump) return null
       return (
         <TimelineCameraPanel

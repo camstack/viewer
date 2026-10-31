@@ -48,7 +48,7 @@ function lookup(tree: unknown, key: string): string {
 
 describe('library-sections', () => {
   it('exposes Events, then the media section — and no Exports segment', () => {
-    expect(LIBRARY_SECTION_ORDER).toEqual<readonly LibrarySectionKey[]>(['events', 'artifacts'])
+    expect(LIBRARY_SECTION_ORDER).toEqual<readonly LibrarySectionKey[]>(['events', 'timeline', 'artifacts'])
   })
 
   it('defaults to Events, so the tab opens on what the old Events tab showed', () => {
@@ -60,6 +60,7 @@ describe('library-sections', () => {
     const sections = buildLibrarySections((key) => `label:${key}`)
     expect(sections).toEqual([
       { value: 'events', label: `label:${LIBRARY_SECTION_LABEL_KEYS.events}` },
+      { value: 'timeline', label: `label:${LIBRARY_SECTION_LABEL_KEYS.timeline}` },
       { value: 'artifacts', label: `label:${LIBRARY_SECTION_LABEL_KEYS.artifacts}` },
     ])
   })
@@ -67,14 +68,14 @@ describe('library-sections', () => {
   it('has every label in the English locale, plus the Library nav word', () => {
     const sections = buildLibrarySections((key) => lookup(enLocale, key))
     // The LABEL is Media; the KEY stays `artifacts` (see the module header).
-    expect(sections.map((s) => s.label)).toEqual(['Events', 'Media'])
+    expect(sections.map((s) => s.label)).toEqual(['Events', 'Timeline', 'Media'])
     expect(lookup(enLocale, 'nav.library')).toBe('Library')
     expect(lookup(enLocale, 'v2.library.title')).toBe('Library')
   })
 
   it('has every label in the Italian locale, plus the Libreria nav word', () => {
     const sections = buildLibrarySections((key) => lookup(itLocale, key))
-    expect(sections.map((s) => s.label)).toEqual(['Eventi', 'Media'])
+    expect(sections.map((s) => s.label)).toEqual(['Eventi', 'Timeline', 'Media'])
     expect(lookup(itLocale, 'nav.library')).toBe('Libreria')
     expect(lookup(itLocale, 'v2.library.title')).toBe('Libreria')
   })
@@ -93,12 +94,12 @@ describe('the feature sections — each one needs its feature (D921)', () => {
   })
 
   it('an admin (every feature) sees People, Plates, then Retrain, last', () => {
-    expect(librarySectionsFor(ADMIN)).toEqual(['events', 'artifacts', 'review', 'plates', 'retrain'])
+    expect(librarySectionsFor(ADMIN)).toEqual(['events', 'timeline', 'artifacts', 'review', 'plates', 'retrain'])
   })
 
   it('a viewer with no feature, or an unanswered session, sees Events and Media only', () => {
-    expect(librarySectionsFor(NONE)).toEqual(['events', 'artifacts'])
-    expect(librarySectionsFor(NONE, ON)).toEqual(['events', 'artifacts'])
+    expect(librarySectionsFor(NONE)).toEqual(['events', 'timeline', 'artifacts'])
+    expect(librarySectionsFor(NONE, ON)).toEqual(['events', 'timeline', 'artifacts'])
   })
 
   it.each([
@@ -106,7 +107,7 @@ describe('the feature sections — each one needs its feature (D921)', () => {
     ['plate-assignment', 'plates'],
     ['retrain', 'retrain'],
   ] as const)('a viewer with only %s sees exactly the %s section', (feature, section) => {
-    expect(librarySectionsFor([feature])).toEqual(['events', 'artifacts', section])
+    expect(librarySectionsFor([feature])).toEqual(['events', 'timeline', 'artifacts', section])
     expect(librarySectionFromParam(section, [feature])).toBe(section)
   })
 
@@ -122,22 +123,22 @@ describe('the feature sections — each one needs its feature (D921)', () => {
   })
 
   it('defaults to no feature — a caller that forgets the grant stays safe', () => {
-    expect(buildLibrarySections((key) => `label:${key}`).map((s) => s.value)).toEqual(['events', 'artifacts'])
+    expect(buildLibrarySections((key) => `label:${key}`).map((s) => s.value)).toEqual(['events', 'timeline', 'artifacts'])
     expect(librarySectionFromParam('review')).toBe('events')
     expect(librarySectionFromParam('plates')).toBe('events')
     expect(librarySectionFromParam('retrain')).toBe('events')
   })
 
   it('keeps the catalog order whatever order the hub lists the features in', () => {
-    expect(librarySectionsFor(['retrain', 'face-assignment'])).toEqual(['events', 'artifacts', 'review', 'retrain'])
+    expect(librarySectionsFor(['retrain', 'face-assignment'])).toEqual(['events', 'timeline', 'artifacts', 'review', 'retrain'])
   })
 
   it('resolves every feature section label in both locales', () => {
     expect(buildLibrarySections((key) => lookup(enLocale, key), ADMIN).map((s) => s.label)).toEqual([
-      'Events', 'Media', 'People', 'Plates', 'Retrain',
+      'Events', 'Timeline', 'Media', 'People', 'Plates', 'Retrain',
     ])
     expect(buildLibrarySections((key) => lookup(itLocale, key), ADMIN).map((s) => s.label)).toEqual([
-      'Eventi', 'Media', 'Persone', 'Targhe', 'Riaddestra',
+      'Eventi', 'Timeline', 'Media', 'Persone', 'Targhe', 'Riaddestra',
     ])
   })
 })
@@ -156,12 +157,12 @@ describe('Scenes — prepared, behind a flag that is OFF, and the scenes feature
   })
 
   it('flag on: offered to an admin between Plates and Retrain', () => {
-    expect(librarySectionsFor(ADMIN, ON)).toEqual(['events', 'artifacts', 'review', 'plates', 'scenes', 'retrain'])
+    expect(librarySectionsFor(ADMIN, ON)).toEqual(['events', 'timeline', 'artifacts', 'review', 'plates', 'scenes', 'retrain'])
     expect(librarySectionFromParam('scenes', ADMIN, ON)).toBe('scenes')
   })
 
   it('flag on: a viewer sees it with the scenes feature and not without', () => {
-    expect(librarySectionsFor(['scenes'], ON)).toEqual(['events', 'artifacts', 'scenes'])
+    expect(librarySectionsFor(['scenes'], ON)).toEqual(['events', 'timeline', 'artifacts', 'scenes'])
     expect(scenesSectionOffered(['scenes'], ON)).toBe(true)
     expect(scenesSectionOffered(['face-assignment', 'plate-assignment', 'retrain'], ON)).toBe(false)
     expect(librarySectionsFor(['face-assignment'], ON)).not.toContain('scenes')
@@ -178,6 +179,7 @@ describe('Scenes — prepared, behind a flag that is OFF, and the scenes feature
 describe('librarySectionFromParam', () => {
   it('opens the media section for `?section=artifacts` — the key outlived the label', () => {
     expect(librarySectionFromParam('artifacts')).toBe('artifacts')
+    expect(librarySectionFromParam('timeline')).toBe('timeline')
     expect(librarySectionFromParam('events')).toBe('events')
   })
 

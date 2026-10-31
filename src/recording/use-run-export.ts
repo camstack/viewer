@@ -20,8 +20,16 @@ import type { SelectionCommit } from './selection-commit.js'
 
 export type ExportCommit = Extract<SelectionCommit, { readonly action: 'export' }>
 
+/** The camera an export is for, when it is not the hook's own (a scoped selection). */
+export interface ExportTarget {
+  readonly deviceId: number
+  readonly name: string
+}
+
 export interface RunExport {
-  readonly run: (commit: ExportCommit) => Promise<void>
+  /** `target` names the camera when it differs from the hook's; `announce`
+   *  overrides {@link RunExportOptions.announceStart} for this one run. */
+  readonly run: (commit: ExportCommit, target?: ExportTarget, announce?: boolean) => Promise<void>
   readonly pending: boolean
 }
 
@@ -42,9 +50,10 @@ export function useRunExport(deviceId: number, cameraName: string, options: RunE
   const addActivity = useActivityStore((s) => s.add)
 
   const run = useCallback(
-    async ({ input }: ExportCommit): Promise<void> => {
+    async ({ input }: ExportCommit, target?: ExportTarget, announce?: boolean): Promise<void> => {
+      const name = target?.name ?? cameraName
       log.info('exports', 'createExport from the timeline', {
-        deviceId,
+        deviceId: target?.deviceId ?? deviceId,
         fromMs: input.fromMs,
         toMs: input.toMs,
       })
@@ -52,8 +61,8 @@ export function useRunExport(deviceId: number, cameraName: string, options: RunE
       // `capMutate` swallows an absent cap to `null`. Reporting "saved" on
       // a null would be a lie about the one act in this cycle the operator
       // cannot repeat from memory.
-      if (rec !== null) addActivity(exportItemFrom(rec, cameraName, Date.now()))
-      if (rec === null || announceStart) {
+      if (rec !== null) addActivity(exportItemFrom(rec, name, Date.now()))
+      if (rec === null || (announce ?? announceStart)) {
         notice({
           title: t('v2.exportSelection.title'),
           message: rec === null ? t('v2.exportSelection.failed') : t('v2.activity.exportStarted'),

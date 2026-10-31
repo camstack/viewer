@@ -4,6 +4,8 @@
  * testable in the repo's node test environment, like `nc-tabs.ts`.
  *
  *   • Events    — the track-centric events page (`EventsScreen`).
+ *   • Timeline  — the events of every camera on one timeline
+ *                 (`TimelineLibraryScreen`), `?section=timeline`.
  *   • Artifacts — LABELLED **Media** since 2026-09-13; the key, the `?section=`
  *                 value and the `/artifacts` route keep the old word because
  *                 bookmarks and deep links carry them, and a word is not worth
@@ -39,10 +41,10 @@ import { FEATURE_FLAGS, type FeatureFlags } from '../app/feature-flags.js'
 import { NO_VIEWER_FEATURES, type ViewerFeatureId } from '../hooks/viewer-features.js'
 
 /** Discriminant for the Library's subsections. */
-export type LibrarySectionKey = 'events' | 'artifacts' | 'review' | 'plates' | 'scenes' | 'retrain'
+export type LibrarySectionKey = 'events' | 'timeline' | 'artifacts' | 'review' | 'plates' | 'scenes' | 'retrain'
 
 /** Ordered sections shown in the shell. */
-export const LIBRARY_SECTION_ORDER: readonly LibrarySectionKey[] = ['events', 'artifacts']
+export const LIBRARY_SECTION_ORDER: readonly LibrarySectionKey[] = ['events', 'timeline', 'artifacts']
 
 /** The subsection shown when the tab first opens. */
 export const DEFAULT_LIBRARY_SECTION: LibrarySectionKey = 'events'
@@ -50,6 +52,7 @@ export const DEFAULT_LIBRARY_SECTION: LibrarySectionKey = 'events'
 /** i18n label key for each subsection. */
 export const LIBRARY_SECTION_LABEL_KEYS: Readonly<Record<LibrarySectionKey, string>> = {
   events: 'v2.library.sections.events',
+  timeline: 'v2.library.sections.timeline',
   artifacts: 'v2.library.sections.artifacts',
   review: 'v2.library.sections.review',
   plates: 'v2.library.sections.plates',

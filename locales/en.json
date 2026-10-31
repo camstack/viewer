@@ -3052,7 +3052,8 @@
         "review": "People",
         "retrain": "Retrain",
         "plates": "Plates",
-        "scenes": "Scenes"
+        "scenes": "Scenes",
+        "timeline": "Timeline"
       },
       "moreActions": "More actions",
       "sortBy": "Sort by",
@@ -4111,7 +4112,9 @@
       "confirmMessage": "This cannot be undone.",
       "confirmLabel": "Delete",
       "done": "Deleted {{span}} of recording. {{size}} freed.",
-      "failed": "The recording could not be deleted."
+      "failed": "The recording could not be deleted.",
+      "cameras_one": "{{count}} camera",
+      "cameras_other": "{{count}} cameras"
     },
     "plateReview": {
       "applySuggestions": "Apply {{count}} suggestion(s)",
@@ -4286,6 +4289,14 @@
       "snapshot": "Download snapshot",
       "keyframe": "Download keyframe",
       "failed": "The image could not be saved."
+    },
+    "timelineLibrary": {
+      "allCameras": "All cameras",
+      "moreCameras_one": "+{{count}} more camera",
+      "moreCameras_other": "+{{count}} more cameras",
+      "noFootage": "No footage at this time",
+      "loading": "Loading cameras…",
+      "noCameras": "No cameras to show"
     }
   },
   "prototype": {

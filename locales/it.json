@@ -3049,7 +3049,8 @@
         "review": "Persone",
         "retrain": "Riaddestra",
         "plates": "Targhe",
-        "scenes": "Scene"
+        "scenes": "Scene",
+        "timeline": "Timeline"
       },
       "moreActions": "Altre azioni",
       "sortBy": "Ordina per",
@@ -4108,7 +4109,9 @@
       "confirmMessage": "L'operazione non può essere annullata.",
       "confirmLabel": "Elimina",
       "done": "Eliminati {{span}} di registrazione. Liberati {{size}}.",
-      "failed": "Impossibile eliminare la registrazione."
+      "failed": "Impossibile eliminare la registrazione.",
+      "cameras_one": "{{count}} camera",
+      "cameras_other": "{{count}} camere"
     },
     "plateReview": {
       "applySuggestions": "Applica {{count}} suggerimento/i",
@@ -4283,6 +4286,14 @@
       "snapshot": "Scarica lo snapshot",
       "keyframe": "Scarica il keyframe",
       "failed": "Non è stato possibile salvare l’immagine."
+    },
+    "timelineLibrary": {
+      "allCameras": "Tutte le camere",
+      "moreCameras_one": "+{{count}} camera in più",
+      "moreCameras_other": "+{{count}} camere in più",
+      "noFootage": "Nessuna registrazione a quest’ora",
+      "loading": "Caricamento camere…",
+      "noCameras": "Nessuna camera da mostrare"
     }
   },
   "prototype": {

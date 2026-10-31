@@ -54,7 +54,7 @@ import {
   selectScrubDirection,
   type PlaybackControlSink,
 } from '../../recording/playback-machine.js'
-import { jogTarget, resolveJogBase } from '../../recording/playback-status.js'
+import { useWallTransport } from '../../recording/use-wall-transport.js'
 import type { DetailLayoutMode } from '../../screens/camera-detail/detail-layout.js'
 import { GRID_WALL_SLOT_TEST_ID, gridWallSlotStyle } from '../../grid/grid-timeline-surface.js'
 import { View } from 'react-native'
@@ -126,39 +126,11 @@ export function GridWallTimeline(props: GridWallTimelineProps): React.JSX.Elemen
   const playback = usePlaybackMachine(sink)
 
   // Transport state the machine does not own: the wall has no rate of its own,
-  // so the bar's rate and its pause are held here and pushed onto the bus.
-  // `setRate(0)` IS the pause, which is why resuming has to know the rate to
-  // return to — read from state, in a callback that depends on it, rather than
-  // from a ref written during render.
-  const [rate, setRate] = React.useState(1)
-  const [paused, setPaused] = React.useState(false)
-
-  const onSelectRate = useCallback((next: number) => {
-    setRate(next)
-    setPaused(false)
-    reach('setRate', (s) => s.setRate(next))
-  }, [])
-  const onTogglePlayPause = useCallback(() => {
-    const next = !paused
-    setPaused(next)
-    reach('setRate', (s) => s.setRate(next ? 0 : rate))
-  }, [paused, rate])
-
-  // ±10 s. A jog IS a seek, and it goes through the machine's own `seek` so
-  // the wall and the timeline's cursor move together — the grid's old band had
-  // no jog at all.
-  const machineSeek = playback.seek
-  const playhead = playback.state.playhead
+  // so the bar's rate and its pause are held by `useWallTransport` and pushed
+  // onto the bus (`setRate(0)` IS the pause).
+  const onSetRate = useCallback((next: number) => reach('setRate', (s) => s.setRate(next)), [])
+  const transport = useWallTransport(playback, onSetRate)
   const activeEpoch = selectActiveEpoch(playback.state)
-  const jog = useCallback(
-    (dir: 1 | -1): void => {
-      const target = jogTarget(resolveJogBase(playhead, activeEpoch), dir)
-      if (target != null) machineSeek(target, 'timeline')
-    },
-    [playhead, activeEpoch, machineSeek],
-  )
-  const onJogBack = useCallback(() => jog(-1), [jog])
-  const onJogForward = useCallback(() => jog(1), [jog])
 
   const primaryId = deviceIds[0] ?? NO_CAMERA
   const wallSlot = useMemo(
@@ -223,8 +195,8 @@ export function GridWallTimeline(props: GridWallTimelineProps): React.JSX.Elemen
       onGoLive={playback.goLive}
       liveLocked={playback.state.liveLocked}
       onToggleLiveLock={playback.toggleLiveLock}
-      playbackRate={rate}
-      paused={paused}
+      playbackRate={transport.rate}
+      paused={transport.paused}
       loading={false}
       // The wall reports no aggregate health, so this makes NO claim about the
       // picture: `failed: false` here means "nothing reported a fault", not
@@ -234,10 +206,10 @@ export function GridWallTimeline(props: GridWallTimelineProps): React.JSX.Elemen
       // the scope notice.
       streamFault={{ failed: false, fetching: false, reason: null, onRetry: onRetryNothing }}
       scrubDirection={selectScrubDirection(playback.state)}
-      onTogglePlayPause={onTogglePlayPause}
-      onJogBack={onJogBack}
-      onJogForward={onJogForward}
-      onSelectRate={onSelectRate}
+      onTogglePlayPause={transport.onTogglePlayPause}
+      onJogBack={transport.onJogBack}
+      onJogForward={transport.onJogForward}
+      onSelectRate={transport.onSelectRate}
     />
   )
 }

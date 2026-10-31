@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next'
 
 import { TimelinePanelHost } from './TimelinePanelHost.js'
 import { CameraSwitcherPanel } from '../CameraSwitcherPanel.js'
+import type { CameraScopeBinding } from '../camera-scope-binding.js'
 import type { CameraSelectionMode } from '../../../screens/camera-detail/camera-selection.js'
 
 export interface TimelineCameraPanelProps {
@@ -27,6 +28,9 @@ export interface TimelineCameraPanelProps {
   /** What confirming means on this surface (`camera-selection.ts`). */
   readonly selectionMode?: CameraSelectionMode
   /** Grid timeline: checkboxes are the data scope (pre-selected, user can drop). */
+  /** The surface reads a SET of cameras: the panel is its multi-select and
+   *  `onSwitch` / `onOpenGrid` are not used (see `CameraSwitcherPanel`). */
+  readonly scope?: CameraScopeBinding
   readonly onClose: () => void
 }
 
@@ -35,6 +39,7 @@ export function TimelineCameraPanel({
   onSwitch,
   onOpenGrid,
   selectionMode,
+  scope,
   onClose,
 }: TimelineCameraPanelProps): React.JSX.Element {
   const { t } = useTranslation()
@@ -46,6 +51,7 @@ export function TimelineCameraPanel({
         onSwitch={onSwitch}
         onOpenGrid={onOpenGrid}
         selectionMode={selectionMode}
+        scope={scope}
       />
     </TimelinePanelHost>
   )

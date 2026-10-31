@@ -42,7 +42,12 @@ import {
   type SelectionCoverage,
 } from './export-selection.js'
 import { selectActiveEpoch, type PlaybackMachine } from './playback-machine.js'
-import { planSelectionCommit, type SelectionCommit, type SelectionKind } from './selection-commit.js'
+import {
+  planScopeSelectionCommit,
+  type SelectionCommit,
+  type SelectionKind,
+  type SelectionTarget,
+} from './selection-commit.js'
 import { useRunExport } from './use-run-export.js'
 
 type DeleteCommit = Extract<SelectionCommit, { readonly action: 'delete' }>
@@ -61,9 +66,30 @@ export interface ExportSelectionBinding {
   readonly saving: boolean
 }
 
+/**
+ * The selection over ONE camera — what camera-detail mounts. It is the N=1 case
+ * of {@link useScopeExportSelection}, not a second implementation of it.
+ */
 export function useExportSelection(
   deviceId: number,
   cameraName: string,
+  playback: PlaybackMachine,
+): ExportSelectionBinding {
+  const targets = useMemo<readonly SelectionTarget[]>(
+    () => [{ deviceId, name: cameraName }],
+    [deviceId, cameraName],
+  )
+  return useScopeExportSelection(targets, playback)
+}
+
+/**
+ * The selection over a SET of cameras (the Library timeline). The range is one,
+ * the hub calls are one per camera — `planScopeSelectionCommit` — and every
+ * rule of the single-camera cycle (Save-only creation, the gap warning, the
+ * delete dialog, admin-only delete) applies unchanged to each of them.
+ */
+export function useScopeExportSelection(
+  targets: readonly SelectionTarget[],
   playback: PlaybackMachine,
 ): ExportSelectionBinding {
   const { t } = useTranslation()
@@ -96,45 +122,57 @@ export function useExportSelection(
     playback.endSelection()
   }, [playback])
 
-  const { run: runExport, pending: exportPending } = useRunExport(deviceId, cameraName)
+  // The hook's own camera only feeds the log line; every commit names the
+  // camera it is for (`run`'s `target`), so one hook serves any number of them.
+  const head = targets[0]
+  const { run: runExport, pending: exportPending } = useRunExport(head?.deviceId ?? 0, head?.name ?? '')
+
+  /** What the dialogs call the cameras: its name for one, a count for several. */
+  const label =
+    targets.length === 1 ? (head?.name ?? '') : t('v2.deleteSelection.cameras', { count: targets.length })
 
   const runDelete = useCallback(
     /** Resolves `false` when the operator declined the dialog. */
-    async (plan: DeleteCommit, range: ExportSelectionRange): Promise<boolean> => {
+    async (commits: readonly DeleteCommit[], range: ExportSelectionRange): Promise<boolean> => {
       const span = formatSelectionSpan(range.durationMs)
       // The last word, and a destructive one: the dialog names what goes and
       // from where, and says there is no way back.
       const proceed = await confirm({
-        title: t('v2.deleteSelection.confirmTitle', { span, camera: cameraName }),
+        title: t('v2.deleteSelection.confirmTitle', { span, camera: label }),
         message: t('v2.deleteSelection.confirmMessage'),
         confirmLabel: t('v2.deleteSelection.confirmLabel'),
         cancelLabel: t('common.cancel'),
         destructive: true,
       })
       if (!proceed) return false
-      log.info('recording', 'deleteFootprint from timeline selection', {
-        deviceId,
-        fromMs: plan.request.fromMs,
-        toMs: plan.request.toMs,
-      })
-      const result = await deleteFootprint.mutateAsync(plan.request)
+      let reclaimedBytes = 0
+      let failed = false
+      for (const commit of commits) {
+        log.info('recording', 'deleteFootprint from timeline selection', {
+          deviceId: commit.request.deviceId,
+          fromMs: commit.request.fromMs,
+          toMs: commit.request.toMs,
+        })
+        const result = await deleteFootprint.mutateAsync(commit.request)
+        if (result === null) failed = true
+        else reclaimedBytes += result.reclaimedBytes
+      }
       void queryClient.invalidateQueries({ queryKey: RECORDING_QUERIES })
       notice({
         title: t('v2.deleteSelection.title'),
-        message:
-          result === null
-            ? t('v2.deleteSelection.failed')
-            : t('v2.deleteSelection.done', { span, size: formatBytes(result.reclaimedBytes) }),
+        message: failed
+          ? t('v2.deleteSelection.failed')
+          : t('v2.deleteSelection.done', { span, size: formatBytes(reclaimedBytes) }),
       })
       return true
     },
-    [cameraName, confirm, deleteFootprint, deviceId, notice, queryClient, t],
+    [confirm, deleteFootprint, label, notice, queryClient, t],
   )
 
   const onSave = useCallback(
     (range: ExportSelectionRange, coverage: SelectionCoverage): void => {
       void (async () => {
-        const plan = planSelectionCommit(kind, isAdmin, deviceId, range)
+        const plan = planScopeSelectionCommit(kind, isAdmin, targets, range)
         if (plan.action === 'refuse') {
           playback.endSelection()
           return
@@ -162,8 +200,14 @@ export function useExportSelection(
         // declining the gap warning: the operator refused this act, not the mode.
         let finished = true
         try {
-          if (plan.action === 'export') await runExport(plan)
-          else finished = await runDelete(plan, range)
+          if (plan.action === 'export') {
+            // One export per camera. Only the LAST announces itself: N notices
+            // for one press would each need a dismissal.
+            for (const [index, commit] of plan.commits.entries()) {
+              const target = targets.find((candidate) => candidate.deviceId === commit.input.deviceId)
+              await runExport(commit, target, index === plan.commits.length - 1)
+            }
+          } else finished = await runDelete(plan.commits, range)
         } catch {
           notice({
             title: t(plan.action === 'export' ? 'v2.exportSelection.title' : 'v2.deleteSelection.title'),
@@ -174,7 +218,7 @@ export function useExportSelection(
         }
       })()
     },
-    [confirm, deviceId, isAdmin, kind, notice, playback, runDelete, runExport, t],
+    [confirm, isAdmin, kind, notice, playback, runDelete, runExport, t, targets],
   )
 
   useEffect(() => {

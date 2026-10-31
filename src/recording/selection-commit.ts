@@ -71,3 +71,54 @@ export function planSelectionCommit(
   if (!isAdmin) return { action: 'refuse', reason: 'not-admin' }
   return { action: 'delete', request: { deviceId, fromMs: range.fromMs, toMs: range.toMs } }
 }
+
+/** One camera a scoped selection acts on. */
+export interface SelectionTarget {
+  readonly deviceId: number
+  readonly name: string
+}
+
+/** What a selection over N cameras does: one commit per camera, in scope order. */
+export type ScopeSelectionPlan =
+  | { readonly action: 'export'; readonly commits: readonly ExportCommit[] }
+  | { readonly action: 'delete'; readonly commits: readonly DeleteCommit[] }
+  | { readonly action: 'refuse'; readonly reason: 'not-admin' | 'no-cameras' }
+
+type ExportCommit = Extract<SelectionCommit, { readonly action: 'export' }>
+type DeleteCommit = Extract<SelectionCommit, { readonly action: 'delete' }>
+
+/**
+ * The commits a selection produces over a SET of cameras.
+ *
+ * The hub's export and footprint-delete are per camera, so a range over N
+ * cameras is N of the same call — never a new multi-camera procedure. With one
+ * target this is exactly {@link planSelectionCommit}'s answer in a list of one,
+ * which is what keeps the single-camera selection unchanged. The permission
+ * rule is also the same one: a delete is refused for anyone the hub has not
+ * confirmed as an admin, before any commit exists.
+ */
+export function planScopeSelectionCommit(
+  kind: SelectionKind,
+  isAdmin: boolean,
+  targets: readonly SelectionTarget[],
+  range: ExportSelectionRange,
+): ScopeSelectionPlan {
+  if (targets.length === 0) return { action: 'refuse', reason: 'no-cameras' }
+  if (kind === 'export') {
+    return {
+      action: 'export',
+      commits: targets.map((target) => ({
+        action: 'export' as const,
+        input: buildExportSelectionInput(target.deviceId, range),
+      })),
+    }
+  }
+  if (!isAdmin) return { action: 'refuse', reason: 'not-admin' }
+  return {
+    action: 'delete',
+    commits: targets.map((target) => ({
+      action: 'delete' as const,
+      request: { deviceId: target.deviceId, fromMs: range.fromMs, toMs: range.toMs },
+    })),
+  }
+}

@@ -25,6 +25,14 @@
  * one fact; taking it out of the view is the one verb, and it is `removeMember`
  * (`store/workspace.ts`).
  *
+ * A third use, SCOPE, belongs to a surface whose timeline reads a SET of cameras
+ * and has no single "current" one (the Library timeline). The panel is then
+ * fully controlled: `scope` carries the ticked ids, a tap on a row toggles it at
+ * once, there is no confirm and no switch — the ticks ARE the data scope, and the
+ * surface re-reads as they change. (The paragraph above is about camera-detail,
+ * where the view already is the scope and a second knob would disagree with it;
+ * on a surface with no view of its own this panel is the only knob.)
+ *
  * Presentational + controlled: hosted by `TimelineCameraPanel`, which gives it
  * the whole timeline body (`scroll={false}` — the list scrolls itself, so the
  * "Open grid" action stays docked at the bottom no matter how long the fleet).
@@ -43,10 +51,14 @@ import {
   type CameraSelectionMode,
 } from '../../screens/camera-detail/camera-selection.js'
 
+import type { CameraScopeBinding } from './camera-scope-binding.js'
+
 /** Marker for the confirm action. `testID` reaches the web as `data-testid` and
  *  is inert on a device; the "does not navigate" gate is asserted through it
  *  rather than through the button's words, which change with the mode. */
 export const CAMERA_SELECT_CONFIRM_TEST_ID = 'camera-select-confirm'
+/** The "all cameras" row of the scope mode. */
+export const CAMERA_SCOPE_ALL_TEST_ID = 'camera-scope-all'
 
 export interface CameraSwitcherPanelProps {
   /** The camera currently open in the detail view (highlighted row). */
@@ -58,6 +70,9 @@ export interface CameraSwitcherPanelProps {
   readonly onOpenGrid: (deviceIds: readonly number[]) => void
   /** What confirming means here. Defaults to what shipped: route to a grid. */
   readonly selectionMode?: CameraSelectionMode
+  /** When set, the panel is a controlled multi-select over the surface's scope
+   *  (see the header) and `onSwitch` / `onOpenGrid` are never called. */
+  readonly scope?: CameraScopeBinding
 }
 
 export function CameraSwitcherPanel({
@@ -65,6 +80,7 @@ export function CameraSwitcherPanel({
   onSwitch,
   onOpenGrid,
   selectionMode = 'openGrid',
+  scope,
 }: CameraSwitcherPanelProps) {
   const { t } = useTranslation()
   const { colors } = useTheme()
@@ -75,10 +91,19 @@ export function CameraSwitcherPanel({
   const { data: cameras = [], isLoading } = useCameras()
 
   const [selected, setSelected] = useState<ReadonlySet<number>>(new Set())
-  const checked = selected
-  const selectionActive = checked.size > 0
+  // In scope mode the ticks belong to the surface; otherwise to this panel.
+  const checked = scope ? scope.selectedIds : selected
+  // A scope is always "active": a tap on a row is a tick, never a switch.
+  const selectionActive = scope !== undefined || checked.size > 0
 
   const toggleSelected = (id: number): void => {
+    if (scope) {
+      const next = new Set(scope.selectedIds)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      scope.onChange(cameras.filter((c) => next.has(c.id)).map((c) => c.id))
+      return
+    }
     setSelected((prev) => {
       const next = new Set(prev)
       if (next.has(id)) next.delete(id)
@@ -95,6 +120,7 @@ export function CameraSwitcherPanel({
   // One number, one source: the same table the outcome resolver reads, so an
   // armed button and a `'none'` outcome cannot disagree.
   const canOpenGrid = selectedInOrder.length >= MIN_SELECTION[selectionMode]
+  const allTicked = cameras.length > 0 && selectedInOrder.length === cameras.length
 
   if (isLoading && cameras.length === 0) {
     return (
@@ -114,9 +140,30 @@ export function CameraSwitcherPanel({
 
   return (
     <View style={styles.body}>
+      {scope ? (
+        <Pressable
+          onPress={() => {
+            // Select-all only: an empty scope is never offered.
+            if (!allTicked) scope.onChange(cameras.map((c) => c.id))
+          }}
+          accessibilityRole="checkbox"
+          accessibilityState={{ checked: allTicked }}
+          testID={CAMERA_SCOPE_ALL_TEST_ID}
+          style={[styles.row, { borderBottomColor: colors.borderSubtle }]}
+        >
+          {allTicked ? (
+            <CheckSquare size={18} color={colors.primary} />
+          ) : (
+            <Square size={18} color={colors.foregroundSubtle} />
+          )}
+          <Text style={[styles.name, { color: colors.foreground, fontSize: ui.font.sm }]} numberOfLines={1}>
+            {t('v2.timelineLibrary.allCameras')}
+          </Text>
+        </Pressable>
+      ) : null}
       <ScrollView style={styles.list} showsVerticalScrollIndicator={false}>
         {cameras.map((camera) => {
-          const isCurrent = camera.id === currentId
+          const isCurrent = scope === undefined && camera.id === currentId
           const isSelected = checked.has(camera.id)
           return (
             <Pressable
@@ -173,8 +220,9 @@ export function CameraSwitcherPanel({
         })}
       </ScrollView>
 
-      {/* The confirm — armed at the minimum this mode gives meaning to. */}
-      {selectionActive ? (
+      {/* The confirm — armed at the minimum this mode gives meaning to. A scope
+          has none: its ticks apply as they are made. */}
+      {selectionActive && scope === undefined ? (
         <Pressable
           onPress={() => {
             if (canOpenGrid) onOpenGrid(selectedInOrder)

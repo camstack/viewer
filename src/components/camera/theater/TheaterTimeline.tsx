@@ -279,6 +279,14 @@ export interface TheaterTimelineProps {
    * behavioural difference of any kind.
    */
   readonly scopeIds?: readonly number[]
+  /**
+   * The id the activity filter's selection is stored under, for a surface whose
+   * scope is chosen by the operator and has no stable "first camera" (the
+   * Library timeline). It also widens the filter panel's vocabulary to the
+   * kinds of every camera in the scope. Absent ⟺ the filter belongs to
+   * `deviceId`, which is every other surface.
+   */
+  readonly filterKeyId?: number
   readonly name: string
   readonly onBack: () => void
   /** Wide rail: hide the toolbar's back arrow (app sidebar navigates). */
@@ -810,7 +818,10 @@ export const TheaterTimeline = memo(function TheaterTimeline(props: TheaterTimel
    * cannot tell a tablet in portrait from a phone in portrait, and both are
    * `stack`.
    */
-  const canPickCamera = !useTabletViewport() && props.deviceBinding.cameraJump !== undefined
+  const belowTablet = !useTabletViewport()
+  const canPickCamera =
+    (belowTablet && props.deviceBinding.cameraJump !== undefined) ||
+    props.deviceBinding.cameraScope !== undefined
   // NOT toggles: the two management panels are reached FROM the view-options
   // panel and replace it — toggling would hand the menu back on tap.
   const openPanel = panels.open
@@ -855,7 +866,14 @@ export const TheaterTimeline = memo(function TheaterTimeline(props: TheaterTimel
   )
 
   // ─── Activity filter + event-kind taxonomy (per camera, persisted) ──
-  const activityFilter = useTimelineFilter(props.deviceId)
+  // A surface that reads a SET of cameras names the key the selection is kept
+  // under (`filterKeyId`) — otherwise the filter would reset whenever the first
+  // camera of the scope changed — and its vocabulary is the union of the scope's
+  // kinds. Absent is every other surface exactly as it shipped.
+  const activityFilter = useTimelineFilter(
+    props.filterKeyId ?? props.deviceId,
+    props.filterKeyId === undefined ? undefined : scopeIds,
+  )
   const { filter, classFilter, filterAll, classToMacro } = activityFilter
 
   // Zone filter (v0, client-side): the rect is owned by the screen (drawn on
