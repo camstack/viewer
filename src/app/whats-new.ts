@@ -30,6 +30,14 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.672',
+    date: '2026-10-31',
+    notes: {
+      en: ['New notification targets: pick the account, then the device from a list.'],
+      it: ["Nuovi target di notifica: scegli l'account, poi il dispositivo da un elenco."],
+    },
+  },
+  {
     version: '1.0.671',
     date: '2026-10-31',
     notes: {
