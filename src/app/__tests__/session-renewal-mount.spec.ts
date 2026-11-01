@@ -120,28 +120,40 @@ describe('the hub server name on connect (D861)', () => {
   })
 })
 
-describe('cold start with an expired access token', () => {
-  it('renews FIRST with the refresh token, and keeps the rotated one', async () => {
+describe('cold start with an expired access token — never waits on the network', () => {
+  it('(a) boots from the stored session without awaiting the renewal', async () => {
+    await seed(EXPIRED, 'csr_1')
+    const calls = stubWire(() => ({ status: 200 }))
+    // A hub that never answers the refresh: the old boot held the app for the freshen timeout.
+    vi.stubGlobal('fetch', vi.fn((url: string) => (String(url).includes('refreshSession') ? new Promise(() => undefined) : Promise.resolve(new Response('{}', { status: 404 })))))
+    const started = Date.now()
+    await mountLoaded()
+    expect(Date.now() - started).toBeLessThan(1_500)
+    expect(seen.server?.token).toBe(EXPIRED)
+    expect(await store.getRefreshToken(HUB.id)).toBe('csr_1')
+    expect(calls).toEqual([])
+  })
+
+  it('renews in the background with the refresh token, and keeps the rotated one', async () => {
     await seed(EXPIRED, 'csr_1')
     const calls = stubWire(() => ({ status: 200, json: { token: LIVE, refreshToken: 'csr_2' } }))
     await mountLoaded()
-    expect(seen.server?.token).toBe(LIVE)
-    expect(seen.server?.sessionToken).toBe(LIVE)
+    await vi.waitFor(() => expect(seen.server?.token).toBe(LIVE))
     expect(calls.map((c) => c.url)).toEqual(['http://hub.test:8080/trpc/auth.refreshSession'])
     expect(calls[0]?.body).toBe('{"json":{"refreshToken":"csr_1"}}')
     expect(await store.getRefreshToken(HUB.id)).toBe('csr_2')
   })
 
-  it('signs out only when the hub refuses the renewal — and forgets both tokens', async () => {
+  it('(b) an explicit rejection routes to login — and forgets both tokens', async () => {
     await seed(EXPIRED, 'csr_revoked')
     stubWire(() => ({ status: 401 }))
     await mountLoaded()
-    expect(seen.server?.token).toBeNull()
+    await vi.waitFor(() => expect(seen.server?.token).toBeNull())
     expect(await store.getToken(HUB.id)).toBeNull()
     expect(await store.getRefreshToken(HUB.id)).toBeNull()
   })
 
-  it('an unreachable hub keeps the session (the renewal is retried once connected)', async () => {
+  it('(c) a network failure keeps the session (the renewal is retried)', async () => {
     await seed(EXPIRED, 'csr_1')
     vi.stubGlobal(
       'fetch',
@@ -150,6 +162,7 @@ describe('cold start with an expired access token', () => {
       }),
     )
     await mountLoaded()
+    await new Promise((r) => setTimeout(r, 50))
     expect(seen.server?.token).toBe(EXPIRED)
     expect(await store.getRefreshToken(HUB.id)).toBe('csr_1')
   })

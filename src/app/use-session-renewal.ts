@@ -200,6 +200,8 @@ export function useSessionRenewal(options: SessionRenewalOptions): SessionRenewa
     }
     const delay = refreshDelayMs(token)
     if (delay !== null) schedule(delay)
+    // An expired token (installed by a cold start that could not renew it yet) is retried.
+    else if (isJwtExpired(token)) schedule(RETRY_EXPIRED_MS)
     return () => {
       cancelled = true
       if (timer !== undefined) clearTimeout(timer)

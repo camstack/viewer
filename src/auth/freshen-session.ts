@@ -43,3 +43,20 @@ export async function freshenStoredSession(input: FreshenInput): Promise<Freshen
     if (timer !== undefined) clearTimeout(timer)
   }
 }
+
+export type StoredSessionPlan =
+  | { readonly status: 'ready'; readonly token: string; readonly renewInBackground: boolean }
+  | { readonly status: 'signed-out' }
+
+/**
+ * The cold-start decision, made from what is stored — no network, so the
+ * launch never waits. A usable token is installed as is. An expired one with a
+ * refresh token is installed too, and renewed IN THE BACKGROUND through the
+ * ordinary renewal path (`useSessionRenewal`): only the hub refusing the
+ * renewal signs out, a network failure keeps the session and is retried.
+ */
+export function planStoredSession(input: Pick<FreshenInput, 'token' | 'hasRefreshToken' | 'isTokenUsable'>): StoredSessionPlan {
+  if (input.isTokenUsable(input.token)) return { status: 'ready', token: input.token, renewInBackground: false }
+  if (!input.hasRefreshToken) return { status: 'signed-out' }
+  return { status: 'ready', token: input.token, renewInBackground: true }
+}

@@ -20,7 +20,7 @@ import {
 import { markBoot } from '../connection/boot-timeline.js'
 import { asyncKvStore } from './kv-async-storage.js'
 import { isJwtExpired } from '../auth/session-token.js'
-import { freshenStoredSession } from '../auth/freshen-session.js'
+import { freshenStoredSession, planStoredSession } from '../auth/freshen-session.js'
 import { logoutFromHub, type LogoutOutcome } from '../auth/hub-logout.js'
 import type { RenewOutcome } from '../auth/refresh-session.js'
 import { createSessionRenewer, type SessionRenewer } from '../auth/session-renewer.js'
@@ -125,6 +125,8 @@ export function ServerProvider({ children }: { children: React.ReactNode }) {
   )
   const queryClient = useQueryClient()
   const [loading, setLoading] = useState(true)
+  /** The boot installed an expired token: renew it once mounted. */
+  const bootRenewRef = useRef(false)
   const [server, setServer] = useState<ServerConfig | null>(null)
   const [token, setToken] = useState<string | null>(null)
   const [sessionToken, setSessionToken] = useState<string | null>(null)
@@ -153,12 +155,25 @@ export function ServerProvider({ children }: { children: React.ReactNode }) {
         // kept (D812); without one it must NOT count as "logged in" (it would
         // pass the auth gate and then fail every query with UNAUTHORIZED), and
         // it is cleared from storage too. (FIX 1/6)
-        const fresh = activeServer
-          ? activeToken
-            ? await freshenActive(store, renewer, activeServer, activeToken)
-            : // No session kept: a device certificate opens one (D855).
-              await signInWithDeviceCertificate(store, activeServer)
-          : null
+        // The stored session is installed at once; an expired one is renewed
+        // in the background after mount (`bootRenewRef`), never awaited here.
+        let fresh: string | null = null
+        if (activeServer && activeToken) {
+          const plan = planStoredSession({
+            token: activeToken,
+            hasRefreshToken: (await store.getRefreshToken(activeServer.id)) !== null,
+            isTokenUsable,
+          })
+          if (plan.status === 'ready') {
+            fresh = plan.token
+            bootRenewRef.current = plan.renewInBackground
+          } else {
+            fresh = await dropStoredSession(store, renewer, activeServer)
+          }
+        } else if (activeServer) {
+          // No session kept: a device certificate opens one (D855).
+          fresh = await signInWithDeviceCertificate(store, activeServer)
+        }
         const saved = await listServerSessions(store, isTokenUsable)
         if (cancelled) return
         setServer(activeServer)
@@ -415,6 +430,15 @@ export function ServerProvider({ children }: { children: React.ReactNode }) {
     onSignedOut: signedOutByHub,
   })
 
+  // Cold start with an expired token: the app is already up on the stored
+  // session; the renewal runs now. Refused signs out (`signedOutByHub`); a
+  // failure keeps the session and the scheduled retry picks it up.
+  useEffect(() => {
+    if (loading || token === null || !bootRenewRef.current) return
+    bootRenewRef.current = false
+    void renewSession('resume')
+  }, [loading, token, renewSession])
+
   // ONE place a session change is seen — derived from the state every sign-in
   // and sign-out path already writes, so no handler can forget it. The caches
   // no key scopes to the session are RESET (to pending, refetched if on
@@ -537,6 +561,15 @@ async function freshenActive(
     renew: () => renewer.renew(server.id, { serverUrl: server.serverUrl, currentToken: token, client: null }),
   })
   if (fresh.status === 'ready') return fresh.token
+  return dropStoredSession(store, renewer, server)
+}
+
+/** The stored session is gone: drop its tokens; a device certificate may still open one. */
+async function dropStoredSession(
+  store: ServerStore,
+  renewer: SessionRenewer,
+  server: ServerConfig,
+): Promise<string | null> {
   renewer.forget(server.id)
   await store.clearToken(server.id)
   // The session is gone, the device certificate may not be (D855).

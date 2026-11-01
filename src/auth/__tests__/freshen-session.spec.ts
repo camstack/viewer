@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { freshenStoredSession } from '../freshen-session.js'
+import { freshenStoredSession, planStoredSession } from '../freshen-session.js'
 import type { RenewOutcome } from '../refresh-session.js'
 
 const usable = (t: string): boolean => t !== 'expired'
@@ -50,5 +50,17 @@ describe('freshenStoredSession — a stored session on cold start or a switch', 
     expect(
       await freshenStoredSession({ token: 'expired', hasRefreshToken: true, isTokenUsable: usable, renew, timeoutMs: 10 }),
     ).toEqual({ status: 'ready', token: 'expired' })
+  })
+})
+
+describe('planStoredSession — the cold start never touches the network', () => {
+  it('a live token is ready, no renewal', () => {
+    expect(planStoredSession({ token: 'live', hasRefreshToken: true, isTokenUsable: usable })).toEqual({ status: 'ready', token: 'live', renewInBackground: false })
+  })
+  it('an expired token with a refresh token is ready and renewed in the background', () => {
+    expect(planStoredSession({ token: 'expired', hasRefreshToken: true, isTokenUsable: usable })).toEqual({ status: 'ready', token: 'expired', renewInBackground: true })
+  })
+  it('an expired token with no refresh token is signed out', () => {
+    expect(planStoredSession({ token: 'expired', hasRefreshToken: false, isTokenUsable: usable })).toEqual({ status: 'signed-out' })
   })
 })
