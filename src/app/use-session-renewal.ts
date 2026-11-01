@@ -14,9 +14,11 @@
  * A renewal updates the live token everywhere it is used: React state (every
  * Bearer-header fetch reads it), storage (`session-renewer.ts`, rotated
  * refresh token first) and the live `System` in place — no reconnect, unless
- * the token was refused (a socket that authenticated with a dead token stays
- * unauthenticated until it reconnects) or the renewal moved to a new session.
- * In the second case the superseded session is then ended on the hub.
+ * the token was refused, the open socket was handshaken with another token
+ * (a socket authenticates once: one opened with a dead token — anonymous,
+ * after a cold start with an expired one — stays unauthenticated until it
+ * reconnects), or the renewal moved to a new session. In the last case the
+ * superseded session is then ended on the hub.
  *
  * Concurrent callers share one renewal and its side effects: a burst of
  * UNAUTHORIZED queries is one refresh and at most one reconnect.
@@ -40,6 +42,8 @@ export interface LiveSystem {
   readonly trpcClient: unknown
   setToken(token: string): void
   reconnect(): void
+  /** The open socket authenticated (at its handshake) with another token, or anonymously. */
+  isSocketTokenStale(): boolean
 }
 
 /** How the connection lends its live System; `null` detaches. */
@@ -124,7 +128,15 @@ export function useSessionRenewal(options: SessionRenewalOptions): SessionRenewa
       onRenewed(outcome.token)
       if (system !== null) {
         system.setToken(outcome.token)
-        if (reconnect || outcome.supersededToken !== null) system.reconnect()
+        const staleSocket = system.isSocketTokenStale()
+        if (reconnect || staleSocket || outcome.supersededToken !== null) {
+          log.info('conn', 'session renewed — reconnecting the socket', {
+            refused: reconnect,
+            staleSocket,
+            superseded: outcome.supersededToken !== null,
+          })
+          system.reconnect()
+        }
       }
       if (outcome.supersededToken !== null) {
         const ended = await logoutFromHub({
@@ -152,6 +164,13 @@ export function useSessionRenewal(options: SessionRenewalOptions): SessionRenewa
       const straggler =
         last !== null && last.serverId === serverRef.current?.id && Date.now() - last.at < STRAGGLER_WINDOW_MS
       if (reason === 'unauthorized' && straggler) {
+        // A late answer to a request sent with the old token — unless the
+        // socket itself still carries one: then every call keeps failing.
+        const system = systemRef.current?.() ?? null
+        if (system !== null && system.isSocketTokenStale()) {
+          log.warn('conn', 'UNAUTHORIZED after a renewal on a socket handshaken with an old token — reconnecting')
+          system.reconnect()
+        }
         return Promise.resolve(last.outcome)
       }
       // A renewal that could not settle is not asked again by every poll behind it.
