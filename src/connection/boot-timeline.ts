@@ -123,6 +123,19 @@ export class BootTimeline {
   }
 }
 
+/** `performance.mark` where the runtime has it; never throws. */
+export function markUserTiming(name: string): void {
+  const perf: unknown = Reflect.get(globalThis, 'performance')
+  if (typeof perf !== 'object' || perf === null) return
+  const mark: unknown = Reflect.get(perf, 'mark')
+  if (typeof mark !== 'function') return
+  try {
+    Reflect.apply(mark, perf, [name])
+  } catch {
+    // A runtime with a partial User Timing must not break the boot.
+  }
+}
+
 /** The launch currently being measured. */
 let current = new BootTimeline()
 
@@ -135,6 +148,8 @@ let current = new BootTimeline()
 export function markBoot(stage: BootStage, meta?: Record<string, unknown>): void {
   const mark = current.mark(stage)
   if (mark === null) return
+  // User Timing entry for a profiler or a web trace; absent runtimes skip it.
+  markUserTiming(`camstack:boot:${stage}`)
   log.info(BOOT_SCOPE, `stage ${stage}`, {
     stage,
     atMs: mark.atMs,

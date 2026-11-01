@@ -180,6 +180,33 @@ function catalogIds(): readonly string[] {
  * only weight on a config that is re-sent on every language change.
  */
 export function eventLabelVocabulary(t: KindTranslationFn): Record<string, string> {
+  const known = vocabularyByTranslator.get(t)
+  if (known !== undefined) return { ...known }
+  const built = buildVocabulary(t)
+  vocabularyByTranslator.set(t, built)
+  return { ...built }
+}
+
+/**
+ * One vocabulary per translator, shared by every consumer.
+ *
+ * Building it asks `t` for every catalog id, one to three times each — around a
+ * thousand i18next lookups. Two screens read it (the cameras reel and the
+ * events gallery), each from a `useMemo` that re-ran whenever the hub's
+ * descriptor list arrived, and the vocabulary does not depend on that list at
+ * all. Measured at 4x CPU slowdown on the web build the lookups cost ~40 ms of
+ * the first seconds after launch, on the thread that has to answer the first
+ * tap.
+ *
+ * Keyed by the translator's IDENTITY: react-i18next's `t` is a new function
+ * exactly when the language changes, which is the one event that must rebuild
+ * the dictionary. A caller that keeps one `t` while swapping the language under
+ * it would be served the old words — pass the hook's `t`, not `i18n.t`.
+ * Weak, so a retired translator takes its dictionary with it.
+ */
+const vocabularyByTranslator = new WeakMap<KindTranslationFn, Readonly<Record<string, string>>>()
+
+function buildVocabulary(t: KindTranslationFn): Record<string, string> {
   const out: Record<string, string> = {}
   for (const id of catalogIds()) {
     if (out[id] !== undefined) continue

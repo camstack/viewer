@@ -158,3 +158,42 @@ describe('the vocabulary covers every class the hub catalogs know', () => {
     expect(eventLabelVocabulary(it_).dog).toBe('Cane')
   })
 })
+
+describe('eventLabelVocabulary is built once per translator', () => {
+  /** A translator that counts its own calls. */
+  function counting(locale: Record<string, unknown>): { t: KindTranslationFn; calls: () => number } {
+    const inner = translatorFor(locale)
+    let n = 0
+    return {
+      t: (key) => {
+        n += 1
+        return inner(key)
+      },
+      calls: () => n,
+    }
+  }
+
+  it('asks the translator nothing the second time the same one is passed', () => {
+    const counted = counting(itLocale)
+    const first = eventLabelVocabulary(counted.t)
+    const afterFirst = counted.calls()
+    expect(afterFirst).toBeGreaterThan(100)
+    const second = eventLabelVocabulary(counted.t)
+    expect(counted.calls()).toBe(afterFirst)
+    expect(second).toEqual(first)
+  })
+
+  it('rebuilds for a different translator — a language switch is a new `t`', () => {
+    const it_ = eventLabelVocabulary(translatorFor(itLocale))
+    const en_ = eventLabelVocabulary(translatorFor(enLocale))
+    expect(it_.dog).toBe('Cane')
+    expect(en_.dog).toBe('Dog')
+  })
+
+  it('hands every caller its own object, so a merge into one never reaches the next', () => {
+    const t = translatorFor(enLocale)
+    const mine = eventLabelVocabulary(t)
+    mine.dog = 'changed by a caller'
+    expect(eventLabelVocabulary(t).dog).toBe('Dog')
+  })
+})

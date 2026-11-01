@@ -10,6 +10,8 @@ import "../src/app/embed-cache-identity";
 // screen never renders with a placeholder value it then has to correct. See
 // the module for the mid-start stream swap that caused.
 import "../src/app/prefs-warmup";
+// Side effect: samples JS-thread stalls for the first seconds (one debug line).
+import "../src/connection/boot-stall-probe-start";
 import { Stack } from "expo-router";
 import { RootProviders } from "../src/app/RootProviders";
 

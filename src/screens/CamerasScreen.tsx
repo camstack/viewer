@@ -47,6 +47,7 @@ import {
   SNAPSHOT_VIEWABILITY_CONFIG,
   snapshotViewport,
 } from '../data/snapshot-viewport.js'
+import { CAMERAS_LIST_WINDOW } from './cameras-list-window.js'
 import { useScreenActive } from '../hooks/use-screen-active.js'
 import { useGridColumns } from '../hooks/use-responsive.js'
 import { useUserScope } from '../hooks/use-user-scope.js'
@@ -366,6 +367,9 @@ export function CamerasScreen() {
           key={`cols-${numColumns}`}
           numColumns={numColumns}
           keyExtractor={(item) => String(item.id)}
+          // How far ahead of the fold the list builds. The defaults realised
+          // the whole install in the first seconds — see `cameras-list-window.ts`.
+          {...CAMERAS_LIST_WINDOW}
           // Snapshot demand follows what is on screen, not what is mounted —
           // see the effect above and `snapshot-viewport.ts`.
           onViewableItemsChanged={onViewableItemsChanged}
