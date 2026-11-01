@@ -30,6 +30,14 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.675',
+    date: '2026-11-01',
+    notes: {
+      en: ['The app opens at once with your saved session and renews it in the background.'],
+      it: ["L'app si apre subito con la sessione salvata e la rinnova in background."],
+    },
+  },
+  {
     version: '1.0.674',
     date: '2026-11-01',
     notes: {
