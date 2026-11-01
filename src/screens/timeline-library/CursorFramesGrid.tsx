@@ -15,7 +15,7 @@
  */
 import React, { useMemo, useState } from 'react'
 import type { LayoutChangeEvent } from 'react-native'
-import { StyleSheet, Text, View } from 'react-native'
+import { ScrollView, StyleSheet, Text, View } from 'react-native'
 import { Image } from 'expo-image'
 import { useTranslation } from 'react-i18next'
 
@@ -39,6 +39,9 @@ export interface CursorFramesGridProps {
   readonly cameras: readonly FrameCamera[]
   /** The settled instant (epoch ms) every tile is cut at. */
   readonly instant: number
+  /** `grid` (default) lays the tiles out to fill the box; `strip` is one
+   *  horizontally scrolling row of small tiles, as tall as the box. */
+  readonly variant?: 'grid' | 'strip'
 }
 
 /** The grid's own padding around the tiles, and between them. */
@@ -60,7 +63,7 @@ function clock(atMs: number, locale: string): string {
   })
 }
 
-export function CursorFramesGrid({ cameras, instant }: CursorFramesGridProps): React.JSX.Element {
+export function CursorFramesGrid({ cameras, instant, variant = 'grid' }: CursorFramesGridProps): React.JSX.Element {
   const { t } = useTranslation()
   const { colors } = useTheme()
   const [box, setBox] = useState({ width: 0, height: 0 })
@@ -82,6 +85,25 @@ export function CursorFramesGrid({ cameras, instant }: CursorFramesGridProps): R
     return computeGridLayout(plan.shown.length, innerW, innerH, 'auto', 16 / 9)
   }, [plan.shown.length, box.width, box.height, noteHeight])
   const rows = useMemo(() => splitIntoRows(plan.shown, layout.cols), [plan.shown, layout.cols])
+
+  if (variant === 'strip') {
+    const tileH = Math.max(0, box.height - GAP * 2)
+    const tileW = Math.round(Math.max(0, tileH - CAPTION_HEIGHT) * (16 / 9))
+    return (
+      <View testID={CURSOR_FRAMES_TEST_ID} style={styles.fill} onLayout={onLayout}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.strip, { padding: GAP, gap: GAP }]}>
+          {plan.shown.map((camera) => (
+            <FrameTile key={camera.id} camera={camera} instant={instant} width={tileW} height={tileH} />
+          ))}
+          {plan.hidden > 0 ? (
+            <Text style={[styles.note, { color: colors.foregroundSubtle }]} numberOfLines={1}>
+              {t('v2.timelineLibrary.moreCameras', { count: plan.hidden })}
+            </Text>
+          ) : null}
+        </ScrollView>
+      </View>
+    )
+  }
 
   return (
     <View testID={CURSOR_FRAMES_TEST_ID} style={styles.fill} onLayout={onLayout}>
@@ -173,6 +195,7 @@ const styles = StyleSheet.create({
   fill: { flex: 1, minHeight: 0, minWidth: 0 },
   wall: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   row: { flexDirection: 'row', justifyContent: 'center' },
+  strip: { alignItems: 'flex-start' },
   tile: {
     borderWidth: StyleSheet.hairlineWidth,
     borderRadius: RADIUS.md,

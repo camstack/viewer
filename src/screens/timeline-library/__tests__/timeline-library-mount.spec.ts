@@ -13,6 +13,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { mountScreen } from '../../../testing/mount.js'
 import { hubCalls } from '../../../testing/hub-stub.js'
 import { TimelineLibraryScreen } from '../../TimelineLibraryScreen.js'
+import { IPAD_LANDSCAPE, IPHONE_PORTRAIT, setTestViewport } from '../../../testing/viewport-control.js'
 import { CURSOR_FRAME_TILE_TEST_ID } from '../CursorFramesGrid.js'
 
 vi.mock('../../../connection/ConnectionProvider.js', async () =>
@@ -25,7 +26,10 @@ const CAMERAS = [
   { id: 13, name: 'Garden', isCamera: true, online: true, disabled: false, type: 'camera', features: [] },
 ]
 
-afterEach(cleanup)
+afterEach(() => {
+  cleanup()
+  setTestViewport(IPHONE_PORTRAIT)
+})
 
 describe('TimelineLibraryScreen', () => {
   it('draws one frame tile per camera in the fleet', async () => {
@@ -58,5 +62,25 @@ describe('TimelineLibraryScreen', () => {
       hub: { 'deviceManager.listAll': [] },
     })
     await waitFor(() => expect(view.getByText('No cameras to show')).toBeTruthy())
+  })
+
+  it('on a phone the timeline is full page under a collapsed strip with a drag handle', async () => {
+    setTestViewport(IPHONE_PORTRAIT)
+    const view = mountScreen(React.createElement(TimelineLibraryScreen), {
+      hub: { 'deviceManager.listAll': CAMERAS },
+    })
+    await waitFor(() => expect(view.queryByTestId('timeline-library-strip')).not.toBeNull())
+    expect(view.queryByTestId('timeline-library-strip-handle')).not.toBeNull()
+    expect(view.queryByTestId('timeline-library-column')).toBeNull()
+  })
+
+  it('on a tablet or desktop the stills are a right column with a resize handle', async () => {
+    setTestViewport(IPAD_LANDSCAPE)
+    const view = mountScreen(React.createElement(TimelineLibraryScreen), {
+      hub: { 'deviceManager.listAll': CAMERAS },
+    })
+    await waitFor(() => expect(view.queryByTestId('timeline-library-column')).not.toBeNull())
+    expect(view.queryByTestId('timeline-library-column-handle')).not.toBeNull()
+    expect(view.queryByTestId('timeline-library-strip')).toBeNull()
   })
 })
