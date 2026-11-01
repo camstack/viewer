@@ -22,8 +22,6 @@ import { Platform, Text, View } from 'react-native'
 import type { LayoutChangeEvent } from 'react-native'
 import { useTranslation } from 'react-i18next'
 
-import { useRouter } from 'expo-router'
-
 import { TheaterTimeline } from '../components/camera/theater/TheaterTimeline.js'
 import { gridWallSlotStyle, gridWallStackHeight } from '../grid/grid-timeline-surface.js'
 import { useCameras } from '../data/use-cameras.js'
@@ -66,11 +64,11 @@ const NO_PLAYER_SINK: PlaybackControlSink = {
 
 function onRetryNothing(): void {}
 function setNoRate(): void {}
+function onBackNothing(): void {}
 
 export function TimelineLibraryScreen(): React.JSX.Element {
   const { t } = useTranslation()
   const { colors } = useTheme()
-  const router = useRouter()
   const camerasQuery = useCameras()
   const cameras = useMemo(() => camerasQuery.data ?? [], [camerasQuery.data])
   const known = useMemo(() => cameras.map((c) => c.id), [cameras])
@@ -155,7 +153,9 @@ export function TimelineLibraryScreen(): React.JSX.Element {
         scopeIds={scope}
         filterKeyId={LIBRARY_FILTER_KEY}
         name={title}
-        onBack={() => router.back()}
+        // A tab of the Library: there is no page behind it to go back to, and
+        // the back button is hidden (`hideBack`).
+        onBack={onBackNothing}
         deviceBinding={{
           cameraName: title,
           hasPtz: false,

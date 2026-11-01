@@ -134,7 +134,7 @@ function toRanges(raw: unknown): Range[] {
  * rather than contributing its empty histogram: adding zeros would lower
  * nothing, but it would let the surface believe it had that camera's answer.
  */
-function fuseDensityRows(raw: unknown): readonly DensityRow[] {
+export function fuseDensityRows(raw: unknown): readonly DensityRow[] {
   const groups: DensityRow[][] = []
   for (const row of scopeRowsOf(raw)) {
     if (!isReadRow(row)) continue
@@ -144,7 +144,7 @@ function fuseDensityRows(raw: unknown): readonly DensityRow[] {
 }
 
 /** The coverage union over every camera that answered. Same skip rule. */
-function fuseRanges(raw: unknown): readonly Range[] {
+export function fuseRanges(raw: unknown): readonly Range[] {
   const merged: Range[] = []
   for (const row of scopeRowsOf(raw)) {
     if (!isReadRow(row)) continue
