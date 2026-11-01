@@ -30,6 +30,14 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.676',
+    date: '2026-11-01',
+    notes: {
+      en: ['Reopening the app after a long pause no longer leaves cameras and events empty.'],
+      it: ["Riaprendo l'app dopo una lunga pausa, telecamere ed eventi non restano più vuoti."],
+    },
+  },
+  {
     version: '1.0.675',
     date: '2026-11-01',
     notes: {
