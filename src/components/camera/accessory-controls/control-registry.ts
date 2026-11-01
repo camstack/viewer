@@ -204,11 +204,15 @@ const CONTROL_BY_DEVICE_TYPE = {
   [DeviceType.LawnMower]: 'lawn-mower',
   [DeviceType.PetFeeder]: 'pet-feeder',
   [DeviceType.Container]: 'none',
+  [DeviceType.Gateway]: 'none', // structural: carries hub actions, no control of its own
   [DeviceType.Image]: 'image',
   // No appliance control here yet: their device pages are the hub's own.
   [DeviceType.Dishwasher]: 'none',
   [DeviceType.Washer]: 'none',
   [DeviceType.Dryer]: 'none',
+  // Its pump is the `pet-fountain` cap (setPump), not the `switch` cap the
+  // switch control drives; no viewer row for it yet.
+  [DeviceType.PetFountain]: 'none',
 } as const satisfies Record<DeviceType, AccessoryControlKind>
 
 /** Resolve a raw device-type string to its base control kind via the guarded

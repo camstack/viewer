@@ -17,7 +17,7 @@ describe('stateLabelFor — the shared dictionary, in the app language', () => {
     expect(stateLabelFor('matched', 'en')).toBe('Matched (as captured)')
   })
 
-  it('an unknown word is shown as it is stored, never throws', () => {
-    expect(stateLabelFor('some_new_state', 'it')).toBe('some_new_state')
+  it('an unknown word is humanised by the shared dictionary, never throws', () => {
+    expect(stateLabelFor('some_new_state', 'it')).toBe('Some new state')
   })
 })

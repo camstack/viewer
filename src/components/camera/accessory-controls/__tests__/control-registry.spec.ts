@@ -109,10 +109,10 @@ describe('DeviceType parity', () => {
   /** Non-interactive / structural types intentionally map to 'none'. */
   const STRUCTURAL: readonly string[] = [
     'camera', 'hub', 'generic', 'container', 'notifier', 'script',
-    'automation',
+    'automation', 'gateway',
   ]
   // Controllable, but the viewer has no row for it yet (its page is the hub's).
-  const NO_VIEWER_CONTROL_YET: readonly string[] = ['dishwasher', 'washer', 'dryer']
+  const NO_VIEWER_CONTROL_YET: readonly string[] = ['dishwasher', 'washer', 'dryer', 'pet-fountain']
 
   it('resolves a control kind for every shared DeviceType', () => {
     for (const type of Object.values(DeviceType)) {

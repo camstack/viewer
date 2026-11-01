@@ -35,6 +35,7 @@ import {
   NC_CONSUMABLE_LOW_PERCENT_MAX,
   NC_GROUPING_MAX_SEC,
   NC_GROUPING_MIN_SEC,
+  DeviceType,
   TimelapseRuleSchema,
   isSystemRuleKind,
   systemEventKindsOfFamily,
@@ -695,16 +696,41 @@ export const NC_ACTION_BUTTON_ID_MAX = 64
 export const NC_ACTION_BUTTON_LABEL_MAX = 40
 export const NC_ACTION_BUTTONS_MAX = 8
 
+/** WHO a cap step acts on — mirrors `ActionTargetSchema` (D983). */
+export const NcActionTargetSchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('devices'), ids: z.array(z.number().int()).min(1) }),
+  z.object({
+    kind: z.literal('domain'),
+    /** Narrow to one kind of device. */
+    deviceType: z.enum(DeviceType).optional(),
+    /** Narrow to one room: the `location` label devices carry. */
+    roomId: z.string().min(1).optional(),
+  }),
+  z.object({ kind: z.literal('var'), name: z.string().min(1) }),
+])
+export type NcActionTarget = z.infer<typeof NcActionTargetSchema>
+
 /** One step of a sequence: a pause, or one device-scoped cap method call. */
 export const NcRuleActionSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('wait'), seconds: z.number().min(0).max(NC_ACTION_WAIT_MAX_SEC) }),
   z.object({
     kind: z.literal('cap'),
-    deviceId: z.number().int(),
+    /** WHO the step acts on (D983) — the only shape that is written. */
+    target: NcActionTargetSchema.optional(),
+    /** The vocabulary action the step performs; required for a `domain` target. */
+    actionId: z.string().min(1).optional(),
+    /** @deprecated The pre-D983 single device. Read, never written. */
+    deviceId: z.number().int().optional(),
     cap: z.string().min(1),
     method: z.string().min(1),
     /** Method arguments, minus `deviceId` (the executor injects it). */
     args: z.record(z.string(), z.unknown()).optional(),
+  }).refine((step) => step.target !== undefined || step.deviceId !== undefined, {
+    message: 'a cap step needs a target',
+    path: ['target'],
+  }).refine((step) => step.target?.kind !== 'domain' || step.actionId !== undefined, {
+    message: 'a domain target needs the vocabulary action it applies to (actionId)',
+    path: ['actionId'],
   }),
 ])
 export type NcRuleAction = z.infer<typeof NcRuleActionSchema>

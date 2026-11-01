@@ -2253,7 +2253,9 @@
         "pet-feeder": "Pet feeder",
         "dishwasher": "Dishwasher",
         "washer": "Washing machine",
-        "dryer": "Dryer"
+        "dryer": "Dryer",
+        "gateway": "Gateway",
+        "pet-fountain": "Pet fountain"
       },
       "prune": {
         "device": "Disabled on {{date}}: its last device (#{{id}}) was deleted.",

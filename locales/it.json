@@ -2250,7 +2250,9 @@
         "pet-feeder": "Distributore di cibo per animali",
         "dishwasher": "Lavastoviglie",
         "washer": "Lavatrice",
-        "dryer": "Asciugatrice"
+        "dryer": "Asciugatrice",
+        "gateway": "Gateway",
+        "pet-fountain": "Fontana per animali"
       },
       "prune": {
         "device": "Disattivata il {{date}}: il suo ultimo dispositivo (#{{id}}) è stato eliminato.",
