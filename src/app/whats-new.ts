@@ -30,6 +30,22 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.674',
+    date: '2026-11-01',
+    notes: {
+      en: [
+        'Library: new Timeline with the events of every camera on one timeline.',
+        'Copy link on a track offers the app link or the public link.',
+        'The app responds sooner after a cold start.',
+      ],
+      it: [
+        'Libreria: nuova Timeline con gli eventi di tutte le camere su una sola linea.',
+        'Copia link su una traccia offre il link app o il link pubblico.',
+        "L'app risponde prima dopo un avvio a freddo.",
+      ],
+    },
+  },
+  {
     version: '1.0.673',
     date: '2026-10-31',
     notes: {
