@@ -30,6 +30,14 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.677',
+    date: '2026-11-01',
+    notes: {
+      en: ['Library Timeline fills the page; stills sit in a strip or a resizable side column.'],
+      it: ['La Timeline della Libreria occupa la pagina; i fotogrammi in una striscia o colonna.'],
+    },
+  },
+  {
     version: '1.0.676',
     date: '2026-11-01',
     notes: {
