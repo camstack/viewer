@@ -14,21 +14,20 @@ import React, { useState } from 'react'
 import { Linking, Platform, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import Constants from 'expo-constants'
-import * as Updates from 'expo-updates'
 import { Info, RefreshCcw, Vibrate } from '../../lib/icons.js'
 import { nativeReleaseState, storeUrlFor } from '../../app/native-release.js'
 import { runningBuildNumber } from '../../app/running-bundle.js'
 import { whatsNewHistory, type WhatsNewHistory } from '../../app/whats-new.js'
 import { WhatsNewModal } from '../../app/WhatsNewModal.js'
 import { useNativeRelease } from '../../data/use-native-release.js'
-import { reloadRuntimeForUpdate } from '../../lib/reload-runtime.js'
+import { runUpdateCheck } from '../../activity/app-update-activity.js'
 import { useTheme } from '../../theme/theme-provider.js'
 import type { ThemePreference } from '../../theme/resolve-theme.js'
 import { Section } from '../../components/ui/Section.js'
 import { Row } from '../../components/ui/Row.js'
 import { ToggleRow } from '../../components/ui/ToggleRow.js'
 import { SegmentedControl } from '../../components/ui/SegmentedControl.js'
-import { useConfirm, useNotice } from '../../components/ui/confirm.js'
+import { useNotice } from '../../components/ui/confirm.js'
 import { useLanguage, type LanguagePreference } from '../../data/use-language.js'
 import { useSettings } from '../../data/use-settings.js'
 import { SPACING } from '../../theme/tokens.js'
@@ -98,7 +97,6 @@ export function AppSegment() {
 
 function AboutSection() {
   const { t } = useTranslation()
-  const confirm = useConfirm()
   const notice = useNotice()
   const [checkingUpdate, setCheckingUpdate] = useState(false)
   const [whatsNew, setWhatsNew] = useState<WhatsNewHistory | null>(null)
@@ -128,38 +126,16 @@ function AboutSection() {
 
   /**
    * Ask the update server RIGHT NOW instead of waiting for the launch check.
-   * The reload is offered rather than performed: unlike `OtaUpdateGate` — which
-   * may reload only within seconds of mount — this can fire at any point in a
-   * session, so discarding the user's place has to be their choice.
+   * Only "disabled" and "up to date" need words here; a download, its progress,
+   * "restart now" and a failure all show in the Activity (no modal).
    */
   const handleCheckForUpdates = (): void => {
-    if (!Updates.isEnabled) {
-      notice({ title: t('v2.settings.updatesDisabled') })
-      return
-    }
     setCheckingUpdate(true)
     void (async () => {
       try {
-        const check = await Updates.checkForUpdateAsync()
-        if (!check.isAvailable) {
-          notice({ title: t('v2.settings.updateUpToDate') })
-          return
-        }
-        await Updates.fetchUpdateAsync()
-        const ok = await confirm({
-          title: t('v2.settings.updateReadyTitle'),
-          message: t('v2.settings.updateReadyBody'),
-          confirmLabel: t('v2.settings.confirm'),
-          cancelLabel: t('v2.settings.cancel'),
-        })
-        if (ok) await reloadRuntimeForUpdate('settings')
-      } catch (e: unknown) {
-        // Offline, or the update server is unreachable — say so, rather than
-        // leaving the operator with a button that appears to do nothing.
-        notice({
-          title: t('v2.settings.updateCheckFailed'),
-          message: e instanceof Error ? e.message : String(e),
-        })
+        const outcome = await runUpdateCheck(true)
+        if (outcome === 'disabled') notice({ title: t('v2.settings.updatesDisabled') })
+        else if (outcome === 'up-to-date') notice({ title: t('v2.settings.updateUpToDate') })
       } finally {
         setCheckingUpdate(false)
       }

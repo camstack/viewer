@@ -29,6 +29,7 @@ import {
   canCollect,
   exportDurationLabel,
   jobCountLabel,
+  appUpdateFailureReason,
   jobFailureReason,
   progressPercent,
   rowState,
@@ -42,6 +43,8 @@ export interface ActivityRowProps {
   readonly onDownload: (item: ActivityItem) => Promise<void>
   readonly onShare: (item: ActivityItem) => Promise<void>
   readonly onRemove: (id: string) => void
+  /** "Restart now" on a ready app update. */
+  readonly onRestart: () => Promise<void>
 }
 
 const JOB_ICON: Readonly<Record<JobKind, LucideIcon>> = {
@@ -57,6 +60,7 @@ const JOB_ICON: Readonly<Record<JobKind, LucideIcon>> = {
 
 function iconFor(item: ActivityItem): LucideIcon {
   if (item.kind === 'job') return JOB_ICON[item.jobKind]
+  if (item.kind === 'app-update') return Download
   return item.kind === 'snapshot' ? Camera : Clapperboard
 }
 
@@ -70,11 +74,12 @@ export const ActivityRow = memo(function ActivityRow({
   onDownload,
   onShare,
   onRemove,
+  onRestart,
 }: ActivityRowProps): React.JSX.Element {
   const { t } = useTranslation()
   const { colors } = useTheme()
   const locale = useDateLocale()
-  const [busy, setBusy] = useState<'download' | 'share' | null>(null)
+  const [busy, setBusy] = useState<'download' | 'share' | 'restart' | null>(null)
   const [stripWidth, setStripWidth] = useState(0)
 
   const state = rowState(item)
@@ -82,7 +87,8 @@ export const ActivityRow = memo(function ActivityRow({
   const percent = progressPercent(item)
   const KindIcon = iconFor(item)
   const duration = exportDurationLabel(item)
-  const title = rowTitle(item)
+  const title = item.kind === 'app-update' ? t('v2.activity.appUpdate.title') : rowTitle(item)
+  const updateFailure = appUpdateFailureReason(item)
   const jobFailure = jobFailureReason(item)
   // A running job cannot be cleared; a queued one is cancelled by the same X.
   const removable = state !== 'running'
@@ -96,15 +102,16 @@ export const ActivityRow = memo(function ActivityRow({
   const stateText = stateLabel(item, state, percent, t)
 
   const run = useCallback(
-    async (kind: 'download' | 'share'): Promise<void> => {
+    async (kind: 'download' | 'share' | 'restart'): Promise<void> => {
       setBusy(kind)
       try {
-        await (kind === 'download' ? onDownload(item) : onShare(item))
+        if (kind === 'restart') await onRestart()
+        else await (kind === 'download' ? onDownload(item) : onShare(item))
       } finally {
         setBusy(null)
       }
     },
-    [item, onDownload, onShare],
+    [item, onDownload, onShare, onRestart],
   )
 
   const onStripLayout = useCallback((e: LayoutChangeEvent): void => {
@@ -139,7 +146,7 @@ export const ActivityRow = memo(function ActivityRow({
             hitSlop={8}
             style={styles.remove}
             accessibilityRole="button"
-            accessibilityLabel={state === 'queued' && item.kind === 'job' ? t('v2.activity.cancel') : t('v2.activity.remove')}
+            accessibilityLabel={removeLabel(item, state, t)}
           >
             <X size={ACTION_ICON} color={colors.foregroundSubtle} />
           </Pressable>
@@ -169,6 +176,25 @@ export const ActivityRow = memo(function ActivityRow({
         </Text>
       ) : null}
 
+      {updateFailure !== null ? (
+        <Text style={[styles.reason, { color: colors.danger }]} numberOfLines={2}>
+          {updateFailure}
+        </Text>
+      ) : null}
+
+      {item.kind === 'app-update' && item.state === 'ready' ? (
+        <View style={styles.actions}>
+          <ActionButton
+            label={t('v2.updates.install')}
+            busy={busy === 'restart'}
+            disabled={busy !== null}
+            onPress={() => void run('restart')}
+            icon={<RefreshCw size={ACTION_ICON} color={colors.primaryForeground} />}
+            filled
+          />
+        </View>
+      ) : null}
+
       {canCollect(item) ? (
         <View style={styles.actions}>
           <ActionButton
@@ -192,6 +218,11 @@ export const ActivityRow = memo(function ActivityRow({
   )
 })
 
+function removeLabel(item: ActivityItem, state: ReturnType<typeof rowState>, t: Translate): string {
+  if (item.kind === 'app-update') return t('v2.updates.later')
+  return state === 'queued' && item.kind === 'job' ? t('v2.activity.cancel') : t('v2.activity.remove')
+}
+
 /** The state line: a job says how far it is or what it did; a file says where it stands. */
 function stateLabel(
   item: ActivityItem,
@@ -206,6 +237,15 @@ function stateLabel(
     }
     if (item.state === 'done' && item.summary !== null) return item.summary
     if (item.state === 'failed' && item.interrupted) return t('v2.activity.state.interrupted')
+  }
+  if (item.kind === 'app-update') {
+    if (item.state === 'checking') return t('v2.activity.appUpdate.checking')
+    if (item.state === 'downloading') {
+      return percent === null
+        ? t('v2.activity.appUpdate.downloading')
+        : t('v2.activity.appUpdate.downloadingPct', { pct: percent })
+    }
+    return t(item.state === 'ready' ? 'v2.activity.appUpdate.ready' : 'v2.activity.appUpdate.failed')
   }
   if (state === 'rendering' && percent !== null) return t('v2.activity.state.renderingPct', { pct: percent })
   return t(`v2.activity.state.${state}`)

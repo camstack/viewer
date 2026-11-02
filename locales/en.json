@@ -855,9 +855,6 @@
       "checkingUpdates": "Checking…",
       "updateUpToDate": "You're on the latest version.",
       "updatesDisabled": "Updates are disabled in this build.",
-      "updateReadyTitle": "Update downloaded",
-      "updateReadyBody": "Restart the app now to apply it?",
-      "updateCheckFailed": "Could not check for updates",
       "listOverlays": "Camera cards",
       "listMotionBorder": "Motion ring",
       "listMotionBorderHint": "Pulse a ring around a card while the camera sees motion.",
@@ -2924,8 +2921,6 @@
       "alarmBypassedDropped_other": "{{count}} triggers dropped"
     },
     "updates": {
-      "otaReadyTitle": "Update downloaded",
-      "otaReadyBody": "Restart the app now to apply it? Later applies it at the next start.",
       "install": "Restart now",
       "later": "Later",
       "whatsNewTitle": "What's new in {{version}}",
@@ -4081,6 +4076,14 @@
       "exportStarted": "Export started — see Activity",
       "snapshotSaved": "Snapshot saved — see Activity",
       "snapshotFailed": "The snapshot could not be taken.",
+      "appUpdate": {
+        "title": "App update",
+        "checking": "Checking for updates…",
+        "downloading": "Downloading update",
+        "downloadingPct": "Downloading update {{pct}}%",
+        "ready": "Downloaded — restart to apply",
+        "failed": "Update failed"
+      },
       "state": {
         "queued": "Queued",
         "rendering": "Rendering",

@@ -150,3 +150,38 @@ describe('seen / remove', () => {
     expect(store.getState().items).toHaveLength(0)
   })
 })
+
+describe('the app update item in the store', () => {
+  const ready = { state: 'ready', progress: null, version: null, error: null } as const
+
+  it('is device-level: it follows a server switch and is never written to a server list', async () => {
+    const kv = memoryKv()
+    const store = createActivityStore(kv)
+    await store.getState().bind('hub-a')
+    store.getState().setAppUpdate(ready)
+    await store.getState().bind('hub-b')
+    expect(store.getState().items.map((i) => i.kind)).toEqual(['app-update'])
+    await flush()
+    expect([...kv.data.values()].join('')).not.toContain('app-update')
+  })
+
+  it('dismiss is "later": hidden, and the same state does not bring it back', async () => {
+    const store = createActivityStore(memoryKv())
+    await store.getState().bind('hub-a')
+    store.getState().setAppUpdate(ready)
+    store.getState().dismiss('app-update')
+    store.getState().setAppUpdate(ready)
+    expect(store.getState().items[0]).toMatchObject({ kind: 'app-update', dismissed: true })
+  })
+
+  it('a restart does not read it back as interrupted', async () => {
+    const kv = memoryKv()
+    const first = createActivityStore(kv)
+    await first.getState().bind('hub-a')
+    first.getState().setAppUpdate({ state: 'downloading', progress: 0.2, version: null, error: null })
+    await flush()
+    const second = createActivityStore(kv)
+    await second.getState().bind('hub-a')
+    expect(second.getState().items).toEqual([])
+  })
+})

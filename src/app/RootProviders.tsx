@@ -8,7 +8,7 @@ import { ServerProvider } from './ServerProvider.js'
 import { CameraOrderBoot } from './CameraOrderBoot.js'
 import { ServerScopeBinder } from './ServerScopeBinder.js'
 import { EmbedWarmup } from './EmbedWarmup.js'
-import { OtaUpdateGate } from './OtaUpdateGate.js'
+import { AppUpdateActivityBridge } from './AppUpdateActivityBridge.js'
 import { WhatsNewGate } from './WhatsNewGate.js'
 import { LoggerBridge } from './LoggerBridge.js'
 import { createQueryClient } from './query-client.js'
@@ -66,7 +66,7 @@ export function RootProviders({ children }: { children: React.ReactNode }) {
                 <ServerProvider>
                   <CameraOrderBoot />
                   <LoggerBridge>
-                    <OtaUpdateGate />
+                    <AppUpdateActivityBridge />
                     <WhatsNewGate />
                     <EmbedWarmup />
                     <ServerScopeBinder />

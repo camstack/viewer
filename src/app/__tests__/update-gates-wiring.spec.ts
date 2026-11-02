@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 const read = (rel: string): string => readFileSync(new URL(rel, import.meta.url), 'utf8')
@@ -10,13 +10,23 @@ const read = (rel: string): string => readFileSync(new URL(rel, import.meta.url)
  * and the release script publishes the native build for the app to compare.
  */
 describe('update announcements', () => {
-  it('the launch OTA gate asks before reloading', () => {
-    const src = read('../OtaUpdateGate.tsx')
-    const ask = src.indexOf("t('v2.updates.otaReadyTitle')")
-    const reload = src.indexOf("reloadRuntimeForUpdate('launch-gate')")
-    expect(ask).toBeGreaterThan(-1)
-    expect(reload).toBeGreaterThan(ask)
-    expect(src).toContain('if (!install || cancelled) return')
+  it('the update is announced through the Activity, never a modal: the launch modal is gone', () => {
+    const root = read('../RootProviders.tsx')
+    expect(root).toContain('<AppUpdateActivityBridge />')
+    expect(root).not.toContain('OtaUpdateGate')
+    expect(existsSync(new URL('../OtaUpdateGate.tsx', import.meta.url))).toBe(false)
+    const bridge = read('../AppUpdateActivityBridge.tsx')
+    expect(bridge).not.toContain('useConfirm')
+    // useUpdates re-renders on every progress tick: it lives in a leaf that renders nothing.
+    expect(bridge).toContain('Updates.useUpdates()')
+    expect(bridge).toMatch(/return null/)
+    expect(bridge).toContain("Platform.OS === 'web'")
+  })
+  it('the bridge writes only to the activity store, and the activity row restarts through the one door', () => {
+    const bridge = read('../AppUpdateActivityBridge.tsx')
+    expect(bridge).toContain('setAppUpdate')
+    const present = read('../../activity/app-update-activity.ts')
+    expect(present).toContain("reloadRuntimeForUpdate('activity')")
   })
   it("the what's new gate is mounted under the dialog and server providers", () => {
     const src = read('../RootProviders.tsx')
@@ -30,11 +40,10 @@ describe('update announcements', () => {
     expect(src).toContain('handleOpenNativeRelease')
   })
   it('every restart drains native downloads first — a download landing on a dead runtime was the 1.0.454 (16) segfault', () => {
-    for (const rel of ['../OtaUpdateGate.tsx', '../../screens/settings/AppSegment.tsx']) {
-      const src = read(rel)
-      expect(src, rel).not.toContain('Updates.reloadAsync()')
-      expect(src, rel).toContain('reloadRuntimeForUpdate(')
+    for (const rel of ['../../activity/app-update-activity.ts', '../../screens/settings/AppSegment.tsx']) {
+      expect(read(rel), rel).not.toContain('Updates.reloadAsync()')
     }
+    expect(read('../../activity/app-update-activity.ts')).toContain('reloadRuntimeForUpdate(')
     const reload = read('../../lib/reload-runtime.ts')
     const quiesce = reload.indexOf('runtimeQuiesce.requestQuiesce()')
     const drain = reload.indexOf('runtimeQuiesce.waitForIdle(')

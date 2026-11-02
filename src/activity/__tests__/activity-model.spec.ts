@@ -9,8 +9,10 @@ import {
   markAllSeen,
   overallProgress,
   parseActivity,
+  hasUndismissedItems,
   reconcileExports,
   serializeActivity,
+  upsertAppUpdate,
   snapshotItemFrom,
   unseenFinishedCount,
   type ActivityList,
@@ -168,3 +170,43 @@ describe('persistence format', () => {
     expect(parseActivity(serializeActivity([snap]))).toEqual([])
   })
 })
+
+describe('the app update item', () => {
+  const draft = { state: 'downloading', progress: 0.4, version: null, error: null } as const
+
+  it('is never serialised: it is a fact about this launch, not a list to restore', () => {
+    const list = upsertAppUpdate([exp('e1', 1)], draft, 5)
+    expect(list.some((i) => i.kind === 'app-update')).toBe(true)
+    expect(parseActivity(serializeActivity(list)).map((i) => i.kind)).toEqual(['export'])
+    expect(serializeActivity(list)).not.toContain('app-update')
+  })
+
+  it('counts as undismissed so the Activity button appears, until the operator says later', () => {
+    const list = upsertAppUdateReady()
+    expect(hasUndismissedItems(list)).toBe(true)
+    const hidden = list.map((i) => (i.kind === 'app-update' ? { ...i, dismissed: true } : i))
+    expect(hasUndismissedItems(hidden)).toBe(false)
+  })
+
+  it('a progress tick keeps its place and its dismissal; a new state re-surfaces it', () => {
+    const first = upsertAppUpdate([], draft, 5)
+    const dismissed = first.map((i) => (i.kind === 'app-update' ? { ...i, dismissed: true } : i))
+    const tick = upsertAppUpdate(dismissed, { ...draft, progress: 0.7 }, 6)
+    expect(tick[0]).toMatchObject({ kind: 'app-update', progress: 0.7, dismissed: true, createdAt: 5 })
+    const ready = upsertAppUpdate(tick, { state: 'ready', progress: null, version: null, error: null }, 7)
+    expect(ready[0]).toMatchObject({ state: 'ready', dismissed: false, seen: false })
+  })
+
+  it('a null draft removes the item', () => {
+    expect(upsertAppUpdate(upsertAppUpdate([], draft, 5), null, 6)).toEqual([])
+  })
+
+  it('is overall progress while it downloads and unseen news once ready', () => {
+    expect(overallProgress(upsertAppUpdate([], draft, 5))).toMatchObject({ kind: 'known', fraction: 0.4 })
+    expect(unseenFinishedCount(upsertAppUdateReady())).toBe(1)
+  })
+})
+
+function upsertAppUdateReady(): ActivityList {
+  return upsertAppUpdate([], { state: 'ready', progress: null, version: null, error: null }, 5)
+}

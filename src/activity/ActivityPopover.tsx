@@ -25,6 +25,7 @@ import type { ActivityItem } from './activity-model.js'
 import { hasFinishedJobs, orderForDisplay } from './activity-jobs.js'
 import { activityPopoverSize } from './activity-popover-size.js'
 import { ActivityRow } from './ActivityRow.js'
+import { restartForUpdate } from './app-update-activity.js'
 import { useActivityCollect } from './use-activity-collect.js'
 
 export interface ActivityPopoverProps {
@@ -55,7 +56,7 @@ export function ActivityPopover({ visible, onClose, anchor, menuAlign }: Activit
   // A job is cleared (finished: hidden, queued: cancelled); a file is removed.
   const clearItem = useCallback(
     (id: string): void => {
-      if (items.some((item) => item.id === id && item.kind === 'job')) dismiss(id)
+      if (items.some((item) => item.id === id && (item.kind === 'job' || item.kind === 'app-update'))) dismiss(id)
       else remove(id)
     },
     [items, dismiss, remove],
@@ -125,7 +126,7 @@ export function ActivityPopover({ visible, onClose, anchor, menuAlign }: Activit
           nestedScrollEnabled
         >
           {listed.map((item) => (
-            <ActivityRow key={item.id} item={item} nowMs={nowMs} onDownload={onDownload} onShare={onShare} onRemove={clearItem} />
+            <ActivityRow key={item.id} item={item} nowMs={nowMs} onDownload={onDownload} onShare={onShare} onRemove={clearItem} onRestart={restartForUpdate} />
           ))}
         </ScrollView>
       )}

@@ -110,25 +110,59 @@ export interface JobActivityItem extends ActivityBase {
   readonly dismissed: boolean
 }
 
-export type ActivityItem = ExportActivityItem | SnapshotActivityItem | JobActivityItem
+export type AppUpdateState = 'checking' | 'downloading' | 'ready' | 'failed'
+
+/**
+ * The app's own update (an OTA), as an Activity row. A fact about THIS launch
+ * of THIS device: never persisted, never read back as interrupted, and it
+ * follows the operator across servers. One item at most, id `app-update`.
+ */
+export interface AppUpdateActivityItem extends ActivityBase {
+  readonly kind: 'app-update'
+  readonly state: AppUpdateState
+  /** 0..1 while downloading; `null` where none is known (never `0`). */
+  readonly progress: number | null
+  readonly version: string | null
+  readonly error: string | null
+  /** "Later": hidden until the update changes state. */
+  readonly dismissed: boolean
+}
+
+/** What the update source reports; the model turns it into the item. */
+export interface AppUpdateDraft {
+  readonly state: AppUpdateState
+  readonly progress: number | null
+  readonly version: string | null
+  readonly error: string | null
+}
+
+export const APP_UPDATE_ID = 'app-update'
+
+export type ActivityItem =
+  | ExportActivityItem
+  | SnapshotActivityItem
+  | JobActivityItem
+  | AppUpdateActivityItem
 
 export type ActivityList = readonly ActivityItem[]
 
 /** An export being produced, or a job queued / running. */
 export function isRunning(item: ActivityItem): boolean {
   if (item.kind === 'job') return item.state === 'queued' || item.state === 'running'
+  if (item.kind === 'app-update') return item.state === 'checking' || item.state === 'downloading'
   return item.kind === 'export' && (item.state === 'queued' || item.state === 'rendering')
 }
 
 /** A finished item the operator can act on or must hear about. */
 export function isFinished(item: ActivityItem): boolean {
   if (item.kind === 'job') return item.state === 'done' || item.state === 'failed'
+  if (item.kind === 'app-update') return item.state === 'ready' || item.state === 'failed'
   return item.kind === 'snapshot' || item.state === 'ready' || item.state === 'failed'
 }
 
 /** The items the list shows: a dismissed job is history, not a row. */
 export function isListed(item: ActivityItem): boolean {
-  return item.kind !== 'job' || !item.dismissed
+  return (item.kind !== 'job' && item.kind !== 'app-update') || !item.dismissed
 }
 
 /**
@@ -140,6 +174,7 @@ export function hasUndismissedItems(list: ActivityList): boolean {
 }
 
 function isLiveJob(item: ActivityItem): boolean {
+  if (item.kind === 'app-update') return true
   return item.kind === 'job' && (item.state === 'queued' || item.state === 'running')
 }
 
@@ -252,6 +287,7 @@ export function overallProgress(list: ActivityList): OverallProgress {
     if (item.kind === 'job' && item.progress !== null && item.progress.total > 0) {
       return [(item.progress.done / item.progress.total) * 100]
     }
+    if (item.kind === 'app-update' && item.progress !== null) return [item.progress * 100]
     return []
   })
   if (known.length === 0) return { kind: 'indeterminate', running: running.length }
@@ -271,8 +307,9 @@ export function activityStorageKey(serverId: string): string {
   return `camstack.activity.v1.${serverId}`
 }
 
+/** The list as stored. The app update is not in it: it is not about this server's history. */
 export function serializeActivity(list: ActivityList): string {
-  return JSON.stringify(list)
+  return JSON.stringify(list.filter((item) => item.kind !== 'app-update'))
 }
 
 function isExportState(v: string): v is ExportState {
@@ -445,4 +482,56 @@ export function snapshotItemFrom(input: SnapshotItemInput): SnapshotActivityItem
     mime: input.mime,
     seen: true,
   }
+}
+
+/**
+ * Fold what the update source reports into the list: `null` removes the item.
+ * A tick within the same state keeps its place and its "later"; a new state
+ * is news again (visible, unseen).
+ */
+export function upsertAppUpdate(
+  list: ActivityList,
+  draft: AppUpdateDraft | null,
+  now: number,
+): ActivityList {
+  const rest = list.filter((item) => item.kind !== 'app-update')
+  if (draft === null) return rest.length === list.length ? list : rest
+  const existing = list.find((item) => item.kind === 'app-update')
+  const same = existing?.kind === 'app-update' && existing.state === draft.state
+  const next: AppUpdateActivityItem = {
+    kind: 'app-update',
+    id: APP_UPDATE_ID,
+    createdAt: same ? existing.createdAt : now,
+    seen: same ? existing.seen : !isFinished({ ...BLANK_UPDATE, state: draft.state }),
+    state: draft.state,
+    progress: draft.progress,
+    version: draft.version,
+    error: draft.error,
+    dismissed: same ? existing.dismissed : false,
+  }
+  if (same && sameUpdate(existing, next)) return list
+  return normalise([next, ...rest])
+}
+
+const BLANK_UPDATE: AppUpdateActivityItem = {
+  kind: 'app-update',
+  id: APP_UPDATE_ID,
+  createdAt: 0,
+  seen: true,
+  state: 'checking',
+  progress: null,
+  version: null,
+  error: null,
+  dismissed: false,
+}
+
+function sameUpdate(a: AppUpdateActivityItem, b: AppUpdateActivityItem): boolean {
+  return a.progress === b.progress && a.version === b.version && a.error === b.error
+}
+
+/** "Later": hide the update row until it changes state. */
+export function dismissAppUpdate(list: ActivityList): ActivityList {
+  const item = list.find((entry) => entry.kind === 'app-update')
+  if (item === undefined || item.kind !== 'app-update' || item.dismissed) return list
+  return list.map((entry) => (entry === item ? { ...item, dismissed: true } : entry))
 }

@@ -18,6 +18,9 @@ export type ActivityRowState =
 export function rowState(item: ActivityItem): ActivityRowState {
   if (item.kind === 'snapshot') return 'ready'
   if (item.kind === 'job') return item.state
+  if (item.kind === 'app-update') {
+    return item.state === 'checking' || item.state === 'downloading' ? 'running' : item.state
+  }
   switch (item.state) {
     case 'queued':
       return 'queued'
@@ -35,12 +38,13 @@ export function rowState(item: ActivityItem): ActivityRowState {
 
 /** The row's heading: what the job asked for, else the camera the file is of. */
 export function rowTitle(item: ActivityItem): string {
+  if (item.kind === 'app-update') return ''
   return item.kind === 'job' ? item.title : item.cameraName
 }
 
 /** Download / Share are offered only on a finished, still-existing file. */
 export function canCollect(item: ActivityItem): boolean {
-  return rowState(item) === 'ready'
+  return item.kind !== 'app-update' && rowState(item) === 'ready'
 }
 
 /** Length of an exported period, `m:ss`. */
@@ -51,6 +55,9 @@ export function exportDurationLabel(item: ActivityItem): string | null {
 
 /** Whole percent for a running export or job, or null where none is known. */
 export function progressPercent(item: ActivityItem): number | null {
+  if (item.kind === 'app-update') {
+    return item.state === 'downloading' && item.progress !== null ? clampPercent(item.progress * 100) : null
+  }
   if (item.kind === 'job') {
     if (item.progress === null || item.progress.total <= 0) return null
     return clampPercent((item.progress.done / item.progress.total) * 100)
@@ -71,6 +78,11 @@ export function jobCountLabel(item: ActivityItem): string | null {
 }
 
 /** What a failed job says: the cause, or nothing for an interrupted one (the row words it). */
+/** The cause of a failed app update, for the row's reason line. */
+export function appUpdateFailureReason(item: ActivityItem): string | null {
+  return item.kind === 'app-update' && item.state === 'failed' ? item.error : null
+}
+
 export function jobFailureReason(item: ActivityItem): string | null {
   return item.kind === 'job' && item.state === 'failed' && !item.interrupted ? item.error : null
 }
@@ -82,6 +94,7 @@ import { dayRelativeLabel } from '../lib/day-relative-label.js'
  * named only when it is not today (`dayRelativeLabel`'s rule).
  */
 export function whenLabel(item: ActivityItem, nowMs: number, locale: string): string {
+  if (item.kind === 'app-update') return dayRelativeLabel(item.createdAt, nowMs, { locale })
   if (item.kind === 'job') return dayRelativeLabel(item.startedAt ?? item.createdAt, nowMs, { locale })
   if (item.kind === 'snapshot') return dayRelativeLabel(item.atMs, nowMs, { locale })
   const from = dayRelativeLabel(item.fromMs, nowMs, { locale })

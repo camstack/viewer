@@ -17,7 +17,7 @@
  *  - There was no root error boundary, so a render throw did the same.
  *  - The shipper flushes on a 4 s interval with no persistence (`lib/logger.ts`),
  *    so whatever WAS logged in the final moments died with the process.
- *  - Nothing recorded why a runtime STARTED, and `OtaUpdateGate` legitimately
+ *  - Nothing recorded why a runtime STARTED, and an OTA restart legitimately
  *    calls `Updates.reloadAsync()` at launch — which produces a brand-new
  *    runtime, a fresh `BootTimeline` and a second `transportReady`, completely
  *    indistinguishable from a crash in the hub's logs.
@@ -46,7 +46,7 @@
 export type PreviousExit =
   /** No marker at all: a first install, cleared storage, or a downgrade. */
   | 'first-launch'
-  /** `OtaUpdateGate` fetched an update and reloaded on purpose. NOT a crash. */
+  /** The operator chose "Restart now" for a downloaded update. NOT a crash. */
   | 'ota-reload'
   /** A JS error reached the global handler. `message`/`stack` are carried. */
   | 'js-fatal'

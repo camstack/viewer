@@ -68,7 +68,7 @@ export function useActivityCollect(): ActivityCollect {
 
   const download = useCallback(
     async (item: ActivityItem): Promise<boolean> => {
-      if (item.kind === 'job') return false
+      if (item.kind === 'job' || item.kind === 'app-update') return false
       if (item.kind === 'export') return downloadExport(item.exportId)
       return saveFile({ uri: item.fileUri, mime: item.mime, fileName: `snapshot-${item.createdAt}.jpg` })
     },
@@ -77,7 +77,7 @@ export function useActivityCollect(): ActivityCollect {
 
   const share = useCallback(
     async (item: ActivityItem): Promise<boolean> => {
-      if (item.kind === 'job') return false
+      if (item.kind === 'job' || item.kind === 'app-update') return false
       if (item.kind === 'export') return shareExport(item.exportId)
       return shareFile({ uri: item.fileUri, mime: item.mime, fileName: `snapshot-${item.createdAt}.jpg` })
     },

@@ -32,7 +32,9 @@ import { create, type UseBoundStore, type StoreApi } from 'zustand'
 
 import {
   activityStorageKey,
+  APP_UPDATE_ID,
   addItem,
+  dismissAppUpdate,
   dropRetiredSeen,
   markAllSeen,
   parseActivity,
@@ -41,6 +43,8 @@ import {
   serializeActivity,
   type ActivityItem,
   type ActivityList,
+  type AppUpdateDraft,
+  upsertAppUpdate,
   type JobKind,
 } from './activity-model.js'
 import {
@@ -123,6 +127,8 @@ export interface ActivityState {
   dismiss: (id: string) => void
   /** Hide every finished job. */
   dismissFinished: () => void
+  /** The app's own update, from its source; `null` removes the row. Device-level. */
+  setAppUpdate: (draft: AppUpdateDraft | null) => void
 }
 
 export type ActivityStore = UseBoundStore<StoreApi<ActivityState>>
@@ -205,7 +211,9 @@ export function createActivityStore(kv: ActivityKv, clock: ActivityClock = syste
         // A job queued under another server cannot be run from this list.
         if (get().serverId !== serverId) runners.clear()
         // Anything added to THIS server's list before it was read survives.
-        const pending = get().serverId === serverId ? get().items : []
+        // The app update is about the device, so it follows a switch.
+        const pending =
+          get().serverId === serverId ? get().items : get().items.filter((item) => item.kind === 'app-update')
         set({ serverId, items: pending, hydrated: false })
         if (serverId === null) return
         const raw = await read(serverId)
@@ -248,10 +256,11 @@ export function createActivityStore(kv: ActivityKv, clock: ActivityClock = syste
         // Only a job still waiting has a function left to forget.
         const waiting = runners.get(id)
         runners.delete(id)
-        update((list) => dismissJob(list, id))
+        update((list) => (id === APP_UPDATE_ID ? dismissAppUpdate(list) : dismissJob(list, id)))
         waiting?.onCancel?.()
       },
       dismissFinished: () => update(dismissFinishedJobs),
+      setAppUpdate: (draft) => update((list) => upsertAppUpdate(list, draft, clock.now())),
     }
   })
 }

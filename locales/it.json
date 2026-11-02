@@ -852,9 +852,6 @@
       "checkingUpdates": "Controllo…",
       "updateUpToDate": "Sei già all'ultima versione.",
       "updatesDisabled": "Gli aggiornamenti sono disattivati in questa build.",
-      "updateReadyTitle": "Aggiornamento scaricato",
-      "updateReadyBody": "Riavviare l'app ora per applicarlo?",
-      "updateCheckFailed": "Impossibile controllare gli aggiornamenti",
       "listOverlays": "Schede videocamere",
       "listMotionBorder": "Anello movimento",
       "listMotionBorderHint": "Pulsa un anello attorno alla scheda mentre la videocamera vede movimento.",
@@ -2921,8 +2918,6 @@
       "alarmBypassedDropped_other": "{{count}} allarmi ignorati"
     },
     "updates": {
-      "otaReadyTitle": "Aggiornamento scaricato",
-      "otaReadyBody": "Riavviare l'app adesso per applicarlo? Con \"Più tardi\" si applica al prossimo avvio.",
       "install": "Riavvia ora",
       "later": "Più tardi",
       "whatsNewTitle": "Novità nella {{version}}",
@@ -4078,6 +4073,14 @@
       "exportStarted": "Esportazione avviata — vedi Attività",
       "snapshotSaved": "Istantanea salvata — vedi Attività",
       "snapshotFailed": "Impossibile scattare l'istantanea.",
+      "appUpdate": {
+        "title": "Aggiornamento app",
+        "checking": "Controllo aggiornamenti…",
+        "downloading": "Download aggiornamento",
+        "downloadingPct": "Download aggiornamento {{pct}}%",
+        "ready": "Scaricato — riavvia per applicarlo",
+        "failed": "Aggiornamento non riuscito"
+      },
       "state": {
         "queued": "In coda",
         "rendering": "In elaborazione",
