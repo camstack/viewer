@@ -30,6 +30,7 @@ const ACTIVE_LABEL = 'Active'
 const RESET_DEFAULTS = 'Back to hub defaults'
 const LINKED_LABEL = 'Linked cameras'
 const IMAGE_LABEL = 'Image'
+const WAKE_LABEL = 'Wake a sleeping battery camera for the picture'
 const TRIGGER_ZONE_LABEL = 'Draw the zone that triggered the rule'
 const SUBJECT_PATH_LABEL = "Show the subject's path"
 /** A rule a ZONE triggers — the only kind of rule that may draw it. */
@@ -440,6 +441,45 @@ describe('media parity controls', () => {
     await save()
     expect(log.updates).toHaveLength(1)
     expect(mediaOf(log.updates[0])).toEqual({ image: 'clean' })
+  })
+
+  it('a SENSOR rule with a picture offers "wake a sleeping camera", ON by default; turning it off writes an explicit false (D998)', async () => {
+    const log: HubLog = { updates: [], meAnswered: false, usersAsked: 0 }
+    const screen = await open(log, true, makeRule({ delivery: 'device-event', conditions: {} }))
+    const wake = switchFor(screen, WAKE_LABEL)
+    expect(wake instanceof HTMLInputElement && wake.checked).toBe(true)
+    await press(wake)
+    await save()
+    expect(mediaOf(log.updates[0])).toEqual({ image: 'clean', wakeSleepingCamera: false })
+  })
+
+  it('turning it back on REMOVES the field instead of writing true', async () => {
+    const log: HubLog = { updates: [], meAnswered: false, usersAsked: 0 }
+    const screen = await open(
+      log,
+      true,
+      makeRule({ delivery: 'device-event', conditions: {}, media: { image: 'clean', wakeSleepingCamera: false } }),
+    )
+    const wake = switchFor(screen, WAKE_LABEL)
+    expect(wake instanceof HTMLInputElement && wake.checked).toBe(false)
+    await press(wake)
+    await save()
+    expect(mediaOf(log.updates[0])).toEqual({ image: 'clean' })
+  })
+
+  it('a non-sensor rule, or a sensor with no picture, has no wake row', async () => {
+    const detection = await open({ updates: [], meAnswered: false, usersAsked: 0 }, true, makeRule())
+    expect(detection.queryByText(IMAGE_LABEL)).not.toBeNull()
+    expect(detection.queryByText(WAKE_LABEL)).toBeNull()
+    cleanup()
+    resetRuleDrafts()
+    const noPicture = await open(
+      { updates: [], meAnswered: false, usersAsked: 0 },
+      true,
+      makeRule({ delivery: 'device-event', conditions: {}, media: { image: 'none' } }),
+    )
+    expect(noPicture.queryByText(IMAGE_LABEL)).not.toBeNull()
+    expect(noPicture.queryByText(WAKE_LABEL)).toBeNull()
   })
 
   it('the speed chips appear for a GIF too — the hub speeds up both', async () => {

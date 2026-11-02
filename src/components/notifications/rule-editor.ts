@@ -945,6 +945,10 @@ export function pruneMediaPolicy(media: NcMediaPolicy, subject: NcMediaPruneSubj
     ...(linkedCamerasApplies(subject.kind) && image !== 'none' && media.linkedCameras !== undefined
       ? { linkedCameras: media.linkedCameras }
       : {}),
+    // Absent = wake (the hub's default); only the opt-out is ever written.
+    ...(linkedCamerasApplies(subject.kind) && image !== 'none' && media.wakeSleepingCamera === false
+      ? { wakeSleepingCamera: false }
+      : {}),
   }
 }
 

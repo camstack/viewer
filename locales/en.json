@@ -1571,6 +1571,8 @@
             "onTimeoutHint": "Notify anyway is the safe choice: a slow or offline model never swallows a notification."
           },
           "linkedCamerasLabel": "Linked cameras",
+          "wakeSleepingCameraLabel": "Wake a sleeping battery camera for the picture",
+          "wakeSleepingCameraHint": "Costs battery and waits up to 15 s before the notification is sent.",
           "linkedCamerasHint": "Every linked camera is photographed the moment the sensor fires; cameras that are offline or asleep are left out. Mosaic: one image composed from every linked camera. Each: one image per camera where the notifier accepts several, otherwise the first.",
           "linkedCameras": {
             "mosaic": "Mosaic",

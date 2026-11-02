@@ -138,6 +138,16 @@ export function MediaPolicyFields({ media, kind, conditions, onChange }: MediaPo
       ) : null}
       {offersLinkedCameras ? <Hint text={t('v2.nc.rules.editor.linkedCamerasHint')} /> : null}
 
+      {offersLinkedCameras ? (
+        <ToggleRow
+          label={t('v2.nc.rules.editor.wakeSleepingCameraLabel')}
+          description={t('v2.nc.rules.editor.wakeSleepingCameraHint')}
+          value={media.wakeSleepingCamera !== false}
+          // On is the hub's default: turning it back on REMOVES the field.
+          onValueChange={(next) => patch({ wakeSleepingCamera: next ? undefined : false })}
+        />
+      ) : null}
+
       <ToggleRow
         label={t('v2.nc.rules.editor.gifLabel')}
         description={t('v2.nc.rules.editor.gifHint')}

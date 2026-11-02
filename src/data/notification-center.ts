@@ -601,6 +601,12 @@ export const NcMediaPolicySchema = z.object({
   clipSpeed: z.number().min(1).max(8).optional(),
   /** Sensor rules only — see {@link NcLinkedCameraModeSchema}. */
   linkedCameras: NcLinkedCameraModeSchema.optional(),
+  /**
+   * Sensor rules with a picture: may the hub wake a sleeping battery camera for
+   * it. Absent = yes; only an explicit `false` opts out, so the field is
+   * mirrored here or an edit from the phone would strip it on save.
+   */
+  wakeSleepingCamera: z.boolean().optional(),
 })
 export type NcMediaPolicy = z.infer<typeof NcMediaPolicySchema>
 
