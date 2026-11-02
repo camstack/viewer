@@ -61,6 +61,7 @@ const RESUME_SKEW_MS = 60_000
 const STRAGGLER_WINDOW_MS = 15_000
 
 const UNAVAILABLE: RenewOutcome = { status: 'unavailable' }
+const REFUSED: RenewOutcome = { status: 'refused' }
 
 export interface SessionRenewalOptions {
   /** Shared with the boot and switch paths (single flight per server). */
@@ -93,11 +94,17 @@ export function useSessionRenewal(options: SessionRenewalOptions): SessionRenewa
     readonly serverId: string
     readonly at: number
     readonly outcome: RenewOutcome
+    /** Stragglers that reconnected for this renewal (at most one). */
+    reconnected: boolean
+    /** The reconnect did not help: the renewal now answers `refused`. */
+    stranded: boolean
   } | null>(null)
+  const onSignedOutRef = useRef(onSignedOut)
   useEffect(() => {
     tokenRef.current = token
     serverRef.current = server
-  }, [token, server])
+    onSignedOutRef.current = onSignedOut
+  }, [token, server, onSignedOut])
 
   const attachSystem = useCallback<AttachSystem>((getSystem) => {
     systemRef.current = getSystem
@@ -123,7 +130,7 @@ export function useSessionRenewal(options: SessionRenewalOptions): SessionRenewa
     // and the live state now belongs to another server.
     if (serverRef.current?.id !== active.id) return outcome
     if (outcome.status === 'renewed') {
-      lastRenewedRef.current = { serverId: active.id, at: Date.now(), outcome }
+      lastRenewedRef.current = { serverId: active.id, at: Date.now(), outcome, reconnected: false, stranded: false }
       tokenRef.current = outcome.token
       onRenewed(outcome.token)
       if (system !== null) {
@@ -166,10 +173,24 @@ export function useSessionRenewal(options: SessionRenewalOptions): SessionRenewa
       if (reason === 'unauthorized' && straggler) {
         // A late answer to a request sent with the old token — unless the
         // socket itself still carries one: then every call keeps failing.
+        // ONE reconnect per renewal: a socket that is still stale after it
+        // was handshaken anonymously (the hub rejects the token), and another
+        // reconnect re-opens it anonymously again — a storm. Report `refused`
+        // instead: the sign-in-again path takes over.
+        if (last.stranded) return Promise.resolve(REFUSED)
         const system = systemRef.current?.() ?? null
         if (system !== null && system.isSocketTokenStale()) {
-          log.warn('conn', 'UNAUTHORIZED after a renewal on a socket handshaken with an old token — reconnecting')
-          system.reconnect()
+          if (!last.reconnected) {
+            last.reconnected = true
+            log.warn('conn', 'UNAUTHORIZED after a renewal on a socket handshaken with an old token — reconnecting once')
+            system.reconnect()
+          } else {
+            last.stranded = true
+            log.warn('conn', 'socket still anonymous after the renewal reconnect — the hub rejects the token, not reconnecting; signing out')
+            const serverId = last.serverId
+            void onSignedOutRef.current(serverId)
+            return Promise.resolve(REFUSED)
+          }
         }
         return Promise.resolve(last.outcome)
       }

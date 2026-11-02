@@ -35,7 +35,11 @@ interface FakeSystem extends LiveSystem {
 }
 
 /** `handshake` = the token the open socket authenticated with; `undefined` = anonymous. */
-function fakeSystem(token: string, handshake: string | undefined): FakeSystem {
+function fakeSystem(
+  token: string,
+  handshake: string | undefined,
+  rejectsToken = false,
+): FakeSystem {
   let current = token
   let handshaken = handshake
   let reconnects = 0
@@ -47,7 +51,8 @@ function fakeSystem(token: string, handshake: string | undefined): FakeSystem {
     },
     reconnect: () => {
       reconnects += 1
-      handshaken = current
+      // A hub that rejects the token (4401): the SDK re-opens ANONYMOUSLY.
+      handshaken = rejectsToken ? undefined : current
     },
     isSocketTokenStale: () => handshaken !== current,
     reconnects: () => reconnects,
@@ -65,14 +70,14 @@ const RENEWED_OUTCOME: RenewOutcome = {
   supersededToken: null,
 }
 
-function mount(renewer: SessionRenewer, system: FakeSystem) {
+function mount(renewer: SessionRenewer, system: FakeSystem, onSignedOut: () => Promise<void> = async () => undefined) {
   const hook = renderHook(() =>
     useSessionRenewal({
       renewer,
       server: HUB,
       token: EXPIRED,
       onRenewed: () => undefined,
-      onSignedOut: async () => undefined,
+      onSignedOut,
     }),
   )
   hook.result.current.attachSystem(() => system)
@@ -131,5 +136,28 @@ describe('session renewal × a socket handshaken with an old token', () => {
     })
 
     expect(system.reconnects()).toBe(before)
+  })
+})
+
+describe('session renewal × a hub that rejects the token (reconnect storm)', () => {
+  it('20 UNAUTHORIZED in the straggler window reconnect at most once, then the renewal reports refused', async () => {
+    const system = fakeSystem(EXPIRED, undefined, true)
+    const signedOut = vi.fn(async () => undefined)
+    const hook = mount(renewerAnswering(RENEWED_OUTCOME), system, signedOut)
+    await act(async () => {
+      await hook.result.current.renewSession('resume')
+    })
+    const before = system.reconnects()
+
+    const outcomes: RenewOutcome[] = []
+    await act(async () => {
+      for (let i = 0; i < 20; i += 1) outcomes.push(await hook.result.current.renewSession('unauthorized'))
+    })
+
+    expect(system.reconnects() - before).toBeLessThanOrEqual(1)
+    expect(outcomes).toHaveLength(20)
+    // The one reconnect did not help (anonymous handshake): everything behind it is `refused`.
+    expect(new Set(outcomes.slice(1).map((o) => o.status))).toEqual(new Set(['refused']))
+    expect(signedOut).toHaveBeenCalledTimes(1)
   })
 })
