@@ -427,6 +427,11 @@
     "goToMostRecent": "Vai al più recente"
   },
   "v2": {
+    "firstConnect": {
+      "connecting": "Connessione a {{name}}…",
+      "retry": "Riprova",
+      "changeServer": "Cambia server"
+    },
     "hubStatus": {
       "connecting": "Connessione all'hub…",
       "offline": "Hub non raggiungibile",

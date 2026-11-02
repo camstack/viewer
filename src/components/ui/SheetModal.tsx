@@ -156,6 +156,8 @@ export interface SheetModalProps {
   readonly backdropLabel?: string
   /** testID of the card. */
   readonly testID?: string
+  /** A centred card with a fade on every platform (a notice, not a sheet). */
+  readonly centered?: boolean
 }
 
 export function SheetModal({
@@ -167,8 +169,9 @@ export function SheetModal({
   onBackdropPress,
   backdropLabel,
   testID,
+  centered = false,
 }: SheetModalProps): React.JSX.Element {
-  const presentation = sheetPresentation(Platform.OS)
+  const presentation = centered ? 'dialog' : sheetPresentation(Platform.OS)
   const isDialog = presentation === 'dialog'
   const { height: windowHeight } = useWindowDimensions()
   const insets = useSafeAreaInsets()

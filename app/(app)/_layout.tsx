@@ -13,6 +13,7 @@ import { stashPendingDeepLink } from "../../src/navigation/pending-deep-link";
 import { HubParamOffer } from "../../src/navigation/HubParamOffer";
 import { ConnectionProvider } from "../../src/connection/ConnectionProvider";
 import { HubConnectionOverlay } from "../../src/components/HubConnectionOverlay";
+import { FirstConnectOverlay } from "../../src/components/FirstConnectOverlay";
 import { PaletteUnknownNote } from "../../src/components/PaletteUnknownNote";
 import { AppPhaseTracer } from "../../src/connection/AppPhaseTracer";
 import { useLiveInvalidation } from '../../src/data/use-live-invalidation';
@@ -191,6 +192,7 @@ export default function AppLayout() {
               keep their content and never render a connection state of their
               own — see src/components/HubConnectionOverlay.tsx. */}
           <HubConnectionOverlay />
+          <FirstConnectOverlay />
           <PaletteUnknownNote />
         </View>
       </SnapshotOverviewBridge>
