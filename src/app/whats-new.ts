@@ -30,6 +30,24 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.678',
+    date: '2026-11-02',
+    notes: {
+      en: [
+        'The app no longer flickers or freezes while it reconnects after an expired session.',
+        'App updates download in Activity, with a Restart now button instead of a dialog.',
+        'A centered card shows the server the app is connecting to on first launch.',
+        'A sensor rule can choose not to wake a sleeping battery camera.',
+      ],
+      it: [
+        "L'app non lampeggia né si blocca più mentre si ricollega dopo una sessione scaduta.",
+        'Gli aggiornamenti si scaricano in Attività, con Riavvia ora al posto del dialogo.',
+        "Al primo avvio una scheda centrale mostra il server a cui l'app si sta collegando.",
+        'Una regola sensore può scegliere di non svegliare una telecamera a batteria.',
+      ],
+    },
+  },
+  {
     version: '1.0.677',
     date: '2026-11-01',
     notes: {
