@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import type { System } from '@camstack/sdk'
-import { SystemController, type SystemControllerConfig } from './system-controller.js'
+import { SystemController, type RenewableSystem, type SystemControllerConfig } from './system-controller.js'
 import type { ConnState } from './recheck-policy.js'
 import { OfflineDebouncer } from './offline-debounce.js'
 
@@ -43,7 +42,7 @@ export interface ConnectionProviderProps {
   /** Lend the live System to the host, so a session renewal can swap the token
    *  on it in place (no reconnect) — the renewal itself is the host's
    *  (`use-session-renewal.ts`), not this provider's. `null` detaches. */
-  attachSystem?: (getSystem: (() => System | null) | null) => void
+  attachSystem?: (getSystem: (() => RenewableSystem | null) | null) => void
   children: React.ReactNode
 }
 
@@ -89,7 +88,7 @@ export function ConnectionProvider({
 
   useEffect(() => {
     if (!attachSystem) return undefined
-    attachSystem(() => controller.getSystem())
+    attachSystem(() => controller.getRenewableSystem())
     return () => attachSystem(null)
   }, [controller, attachSystem])
 

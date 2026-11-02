@@ -117,6 +117,15 @@ export interface SystemControllerConfig {
   readonly pageProtocol?: string | null
 }
 
+/** What a session renewal may touch on the live System (see `getRenewableSystem`). */
+export interface RenewableSystem {
+  readonly serverUrl: string
+  readonly trpcClient: unknown
+  setToken(token: string): void
+  reconnect(): void
+  isSocketTokenStale(): boolean
+}
+
 /** Owns the live `System` transport: creates it for the active server, then
  *  continuously evaluates the fastest route (LAN vs remote) and pivots the
  *  transport onto the winner — on connect and on every connection recovery. It
@@ -783,6 +792,32 @@ export class SystemController {
 
   getSystem(): System | null {
     return this.system
+  }
+
+  /**
+   * The slice of the live System a session renewal drives, with `reconnect()`
+   * owned by this controller. A renewal rebuilds the socket so it
+   * authenticates with the new token; that is a change WE asked for, exactly
+   * like a route switch, so its `connecting` → `connected` echo must not be
+   * taken for a recovery. Taken for one, every renewal (twice on a cold start
+   * with an expired token) ran a fresh route race and endpoint probe, and each
+   * could switch the transport again: the app blinked through
+   * connecting/connected repeatedly while it opened.
+   */
+  getRenewableSystem(): RenewableSystem | null {
+    const system = this.system
+    if (system === null) return null
+    return {
+      serverUrl: system.serverUrl,
+      trpcClient: system.trpcClient,
+      setToken: (token) => system.setToken(token),
+      isSocketTokenStale: () => system.isSocketTokenStale(),
+      reconnect: () => {
+        if (this.system !== system) return
+        this.selfSwitchPending = true
+        system.reconnect()
+      },
+    }
   }
 
   /**
