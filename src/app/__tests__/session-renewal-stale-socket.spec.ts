@@ -140,7 +140,7 @@ describe('session renewal × a socket handshaken with an old token', () => {
 })
 
 describe('session renewal × a hub that rejects the token (reconnect storm)', () => {
-  it('20 UNAUTHORIZED in the straggler window reconnect at most once, then the renewal reports refused', async () => {
+  it('20 UNAUTHORIZED in the straggler window reconnect at most once, return the renewal outcome and never sign out', async () => {
     const system = fakeSystem(EXPIRED, undefined, true)
     const signedOut = vi.fn(async () => undefined)
     const hook = mount(renewerAnswering(RENEWED_OUTCOME), system, signedOut)
@@ -156,8 +156,8 @@ describe('session renewal × a hub that rejects the token (reconnect storm)', ()
 
     expect(system.reconnects() - before).toBeLessThanOrEqual(1)
     expect(outcomes).toHaveLength(20)
-    // The one reconnect did not help (anonymous handshake): everything behind it is `refused`.
-    expect(new Set(outcomes.slice(1).map((o) => o.status))).toEqual(new Set(['refused']))
-    expect(signedOut).toHaveBeenCalledTimes(1)
+    // Every straggler gets the renewal's outcome; a socket that stays anonymous never signs out.
+    expect(new Set(outcomes.map((o) => o.status))).toEqual(new Set(['renewed']))
+    expect(signedOut).not.toHaveBeenCalled()
   })
 })
