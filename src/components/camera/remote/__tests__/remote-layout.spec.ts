@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
-  humanRole,
+  keyIcon,
+  keyLegend,
   keyName,
   parseRemoteCommandList,
   parseRemoteLayout,
@@ -8,7 +9,11 @@ import {
   rowSpanBox,
   slimRows,
   totalRows,
+  vocabLocale,
 } from '../remote-layout.js'
+import { REMOTE_CUSTOM_ROLE_ICON, REMOTE_ROLE_VOCABULARY } from '@camstack/types'
+import { ICON_NODES } from '../../../../lib/icon-nodes.generated.js'
+import { iconNodeFor } from '../../../../lib/icon-node-for.js'
 
 const button = (id: string, role: string, row: number, col: number) => ({
   id, role, row, col, rowSpan: 1, colSpan: 1,
@@ -67,14 +72,40 @@ describe('remoteLayoutFromTemplates', () => {
 })
 
 describe('names', () => {
-  it('a role reads as words, a custom role as its key', () => {
-    expect(humanRole('volume_up')).toBe('Volume up')
-    expect(humanRole('custom:pre_ch')).toBe('pre ch')
+  it('a role is named from the shared vocabulary in the app locale', () => {
+    const power = button('p', 'power', 0, 0)
+    expect(keyName(power, 'en')).toBe('Power')
+    expect(keyName(power, 'it')).toBe('Accensione')
+    expect(keyName(button('v', 'volume_down', 0, 0), 'it')).toBe('Volume giù')
   })
-  it('a label wins over the role', () => {
+  it('the app language maps to a vocabulary locale', () => {
+    expect(vocabLocale('it-IT')).toBe('it')
+    expect(vocabLocale('en')).toBe('en')
+    expect(vocabLocale('fr')).toBe('en')
+    expect(vocabLocale(undefined)).toBe('en')
+  })
+  it('a custom role is named by its key and wears the circle', () => {
+    const custom = button('c', 'custom:pre_ch', 0, 0)
+    expect(keyName(custom, 'it')).toBe('pre ch')
+    expect(keyIcon(custom)).toBe(REMOTE_CUSTOM_ROLE_ICON)
+  })
+  it('a label wins over the role, an icon of the layout wins over the vocabulary', () => {
     const parsed = parseRemoteLayout(layout)
-    expect(parsed === null ? '' : keyName(parsed.buttons[1]!)).toBe('Louder')
-    expect(parsed === null ? '' : keyName(parsed.buttons[0]!)).toBe('Power')
+    expect(parsed === null ? '' : keyName(parsed.buttons[1]!, 'it')).toBe('Louder')
+    expect(keyIcon({ ...button('x', 'power', 0, 0), icon: 'star' })).toBe('star')
+  })
+  it('a digit prints its legend instead of a glyph', () => {
+    expect(keyLegend(button('d', 'digit_7', 0, 0))).toBe('7')
+    expect(keyLegend(button('p', 'power', 0, 0))).toBeUndefined()
+  })
+})
+
+describe('vocabulary icons', () => {
+  it.each(Object.keys(REMOTE_ROLE_VOCABULARY))('role %s resolves to an icon the viewer draws', (role) => {
+    expect(iconNodeFor(keyIcon(button('k', role, 0, 0)), ICON_NODES)).toBeDefined()
+  })
+  it('the custom-role icon is drawn too', () => {
+    expect(iconNodeFor(REMOTE_CUSTOM_ROLE_ICON, ICON_NODES)).toBeDefined()
   })
 })
 

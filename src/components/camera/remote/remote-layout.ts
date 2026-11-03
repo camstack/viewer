@@ -9,6 +9,8 @@
  * Pure: no React, no hub. The sheet (`RemoteSheet.tsx`) places what this returns.
  */
 
+import { remoteRoleIcon, remoteRoleLabel, remoteRoleLegend, type VocabLocale } from '@camstack/types'
+
 export interface RemoteLayoutButton {
   readonly id: string
   readonly role: string
@@ -123,16 +125,24 @@ export function remoteLayoutFromTemplates(raw: unknown, templateId: string): Rem
   return null
 }
 
-/** What a key is called when its layout names no label: the role as words (`volume_up` → `Volume up`). */
-export function humanRole(role: string): string {
-  const custom = role.startsWith('custom:') ? role.slice('custom:'.length) : null
-  const text = (custom ?? role).replace(/_/g, ' ')
-  return custom === null ? text.charAt(0).toUpperCase() + text.slice(1) : text
+/** The vocabulary's locales: the app language as `it` or `en` (anything else is English). */
+export function vocabLocale(language: string | undefined): VocabLocale {
+  return typeof language === 'string' && language.slice(0, 2).toLowerCase() === 'it' ? 'it' : 'en'
 }
 
-/** A key's name: its own label, else its role as words. */
-export function keyName(button: RemoteLayoutButton): string {
-  return button.label ?? humanRole(button.role)
+/** A key's name: its own label, else the shared vocabulary's name for its role in `locale`. */
+export function keyName(button: RemoteLayoutButton, locale: VocabLocale): string {
+  return button.label ?? remoteRoleLabel(button.role, locale)
+}
+
+/** A key's glyph: the layout's own icon, else the vocabulary's (a custom or unknown role wears the circle). */
+export function keyIcon(button: RemoteLayoutButton): string {
+  return button.icon ?? remoteRoleIcon(button.role)
+}
+
+/** Text printed on a key instead of a glyph (a digit), or `undefined`. */
+export function keyLegend(button: RemoteLayoutButton): string | undefined {
+  return button.icon === undefined ? remoteRoleLegend(button.role) : undefined
 }
 
 /** The buttons that do something: a role the remote has a bound command for. */

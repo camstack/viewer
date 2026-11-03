@@ -21,7 +21,10 @@ import { RADIUS, SPACING, TYPOGRAPHY, withAlpha, type ColorTokens } from '../../
 import {
   isBound,
   isDividerFrame,
+  keyIcon,
+  keyLegend,
   keyName,
+  vocabLocale,
   rowSpanBox,
   totalRows,
   type RemoteLayout,
@@ -130,11 +133,12 @@ interface KeyProps {
 
 function Key({ layout, button, bound, onPress }: KeyProps) {
   const { colors } = useTheme()
+  const { i18n } = useTranslation()
   const look = keyLook(button.tone, bound, colors)
-  const name = keyName(button)
+  const name = keyName(button, vocabLocale(i18n.language))
+  const legend = keyLegend(button)
   const round = button.shape === 'round'
   const radius = button.shape === 'pill' || round ? RADIUS.pill : button.shape === 'rect' ? RADIUS.sm : RADIUS.lg
-  const hasIcon = button.icon !== undefined
   return (
     <View style={[cellStyle(layout, button), styles.cell, round && styles.cellRound]}>
       <Pressable
@@ -157,8 +161,14 @@ function Key({ layout, button, bound, onPress }: KeyProps) {
           },
         ]}
       >
-        {hasIcon ? <CatalogIcon iconKey={button.icon} size={ICON_SIZE} color={look.foreground} /> : null}
-        {hasIcon && button.label === undefined ? null : (
+        {legend === undefined ? (
+          <CatalogIcon iconKey={keyIcon(button)} size={ICON_SIZE} color={look.foreground} />
+        ) : (
+          <Text numberOfLines={1} style={[styles.keyText, { color: look.foreground }]}>
+            {legend}
+          </Text>
+        )}
+        {button.label === undefined ? null : (
           <Text numberOfLines={1} style={[styles.keyText, { color: look.foreground }]}>
             {name}
           </Text>
