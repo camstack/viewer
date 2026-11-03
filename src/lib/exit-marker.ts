@@ -57,6 +57,8 @@ export class ExitMarkerRecorder {
     private readonly now: () => number = Date.now,
   ) {}
 
+  private failureRecorded = false
+
   /** The marker the PREVIOUS runtime left, or null when there is none. */
   readPrevious = async (): Promise<ExitMarker | null> => {
     try {
@@ -80,6 +82,12 @@ export class ExitMarkerRecorder {
    * `vanished`, which is not a wrong answer, only a less specific one.
    */
   record = async (kind: ExitKind, description?: ThrownDescription): Promise<void> => {
+    // A failure this runtime already recorded outlives the 'running' /
+    // 'backgrounded' writes that follow it (the operator backgrounds the app on
+    // the error screen): the next launch must still read the failure, not a
+    // clean-looking exit.
+    if (this.failureRecorded && (kind === 'running' || kind === 'backgrounded')) return
+    if (kind === 'js-fatal' || kind === 'render-error') this.failureRecorded = true
     const marker: ExitMarker = {
       kind,
       at: this.now(),

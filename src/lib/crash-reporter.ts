@@ -26,7 +26,13 @@
  * a frozen screen, which is strictly harder to diagnose than the crash.
  */
 import { flushLogsNow, log } from './logger.js'
-import { describeThrown, classifyPreviousExit, isCrashExit, type ExitKind } from './crash-record.js'
+import {
+  describeThrown,
+  classifyPreviousExit,
+  isCrashExit,
+  withComponentStack,
+  type ExitKind,
+} from './crash-record.js'
 import { getExitMarkerRecorder, type ExitMarkerRecorder } from './exit-marker.js'
 
 /** React Native's `AppState`, declared structurally for the same reason
@@ -99,8 +105,9 @@ export function reportFatal(
   kind: ExitKind,
   thrown: unknown,
   recorder: ExitMarkerRecorder = getExitMarkerRecorder(),
+  componentStack?: string | null,
 ): void {
-  const described = describeThrown(thrown)
+  const described = withComponentStack(describeThrown(thrown), componentStack)
   log.error(CRASH_SCOPE, `runtime fatal (${kind})`, {
     kind,
     message: described.message,

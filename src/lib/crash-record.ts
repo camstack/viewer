@@ -113,6 +113,26 @@ export function describeThrown(thrown: unknown): ThrownDescription {
   }
 }
 
+/** How much React component stack to carry beside the JS stack. */
+export const COMPONENT_STACK_MAX_CHARS = 1_500
+
+/** The JS stack followed by the React component stack, each bounded. The
+ *  component stack names the screen that threw; the JS stack alone often only
+ *  names React internals. */
+export function withComponentStack(
+  described: ThrownDescription,
+  componentStack: string | null | undefined,
+): ThrownDescription {
+  if (componentStack === undefined || componentStack === null || componentStack.trim() === '') {
+    return described
+  }
+  const component = `component stack:${componentStack.slice(0, COMPONENT_STACK_MAX_CHARS)}`
+  return {
+    message: described.message,
+    stack: described.stack === null ? component : `${described.stack}\n${component}`,
+  }
+}
+
 /** Serialise a marker. Total: a marker that cannot be written is a marker that
  *  reads as `vanished` next launch, which is the wrong answer, so this never
  *  throws and falls back to the minimum that still classifies. */
