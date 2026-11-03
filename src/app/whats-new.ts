@@ -30,6 +30,20 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.679',
+    date: '2026-11-03',
+    notes: {
+      en: [
+        'The app no longer crashes on launch after the 1.0.678 update.',
+        'A drawing error now shows its message and is sent to the hub on the next connect.',
+      ],
+      it: [
+        "L'app non si blocca più all'avvio dopo l'aggiornamento 1.0.678.",
+        "Un errore di disegno mostra il messaggio e viene inviato all'hub alla prossima connessione.",
+      ],
+    },
+  },
+  {
     version: '1.0.678',
     date: '2026-11-02',
     notes: {
