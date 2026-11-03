@@ -8,14 +8,17 @@
  * a crash line and the Settings row can never disagree about what is running.
  */
 import Constants from 'expo-constants'
+import { Platform } from 'react-native'
 import * as Updates from 'expo-updates'
 
 import { setRunningBundle } from '../lib/crash-reporter.js'
+import { setClientIdentity } from '../lib/logger.js'
 import { describeRunningBundle } from './version-info.js'
 
 /** Read the running bundle and hand it to the crash reporter. Total: a missing
  *  native value degrades the line, it never fails the launch. */
 export function publishRunningBundle(): void {
+  setClientIdentity({ platform: Platform.OS, appVersion: Constants.expoConfig?.version ?? null })
   setRunningBundle({
     version: Constants.expoConfig?.version ?? null,
     bundle: describeRunningBundle({

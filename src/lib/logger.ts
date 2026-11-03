@@ -237,6 +237,52 @@ let shipConfig: ShipConfig | null = null
 let shipQueue: LogEntry[] = []
 let shipTimer: ReturnType<typeof setInterval> | null = null
 
+// ── Client header (what the hub groups a shipped batch by) ──────────────────
+
+/** The hub accepts at most this many characters per `client` field. */
+const CLIENT_TOKEN_MAX = 64
+const CLIENT_TOKEN_UNSAFE = /[^\w.+:@/-]/g
+const CLIENT_PLATFORMS: readonly string[] = ['ios', 'android', 'web']
+
+export interface ClientHeader {
+  readonly platform?: string
+  readonly appVersion?: string
+  readonly sessionId: string
+}
+
+/** A `client` field value the hub accepts: `[\w.+:@/-]`, at most 64 characters; `undefined` when nothing is left. */
+export function sanitizeClientToken(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined
+  const clean = value.replace(CLIENT_TOKEN_UNSAFE, '').slice(0, CLIENT_TOKEN_MAX)
+  return clean === '' ? undefined : clean
+}
+
+/** Random per app launch, held in memory only: no device identifier, never persisted. */
+function mintSessionId(): string {
+  const part = (): string => Math.floor(Math.random() * 36 ** 6).toString(36).padStart(6, '0')
+  return `${part()}${part()}${part()}`
+}
+
+const launchSessionId = mintSessionId()
+let clientPlatform: string | undefined
+let clientAppVersion: string | undefined
+
+/** Say which platform and app version this launch runs (the native reads live in `app/running-bundle.ts`). */
+export function setClientIdentity(identity: { readonly platform?: string; readonly appVersion?: string | null }): void {
+  const platform = sanitizeClientToken(identity.platform)
+  clientPlatform = platform !== undefined && CLIENT_PLATFORMS.includes(platform) ? platform : undefined
+  clientAppVersion = sanitizeClientToken(identity.appVersion)
+}
+
+/** The `client` object of every shipped batch. No user: the hub takes it from auth. */
+export function buildClientHeader(): ClientHeader {
+  return {
+    ...(clientPlatform === undefined ? {} : { platform: clientPlatform }),
+    ...(clientAppVersion === undefined ? {} : { appVersion: clientAppVersion }),
+    sessionId: launchSessionId,
+  }
+}
+
 /** Point the shipper at the connected server (call on connect; null on sign-out). */
 export function configureLogShipping(cfg: ShipConfig | null): void {
   shipConfig = cfg
@@ -274,7 +320,7 @@ async function flushShipQueue(): Promise<void> {
     await fetch(`${base}/addon/stream-broker/clientlog/`, {
       method: 'POST',
       headers: { 'content-type': 'application/octet-stream', Authorization: `Bearer ${cfg.token}` },
-      body: JSON.stringify({ source: 'app', entries: batch }),
+      body: JSON.stringify({ source: 'app', client: buildClientHeader(), entries: batch }),
     })
   } catch {
     // Transient failure — requeue (bounded) so we don't lose recent logs.
