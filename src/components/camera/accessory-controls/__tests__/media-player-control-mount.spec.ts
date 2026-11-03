@@ -54,7 +54,7 @@ const IR_FEATURES = ['media-player-power', 'media-player-volume-step']
 
 function mountIr(over: Record<string, unknown> = {}) {
   mountScreen(
-    React.createElement(MediaPlayerControl, { deviceId: 5478, online: true, features: IR_FEATURES, deviceName: 'TV salone' }),
+    React.createElement(MediaPlayerControl, { deviceId: 5478, online: true, features: IR_FEATURES, deviceName: 'Living room TV' }),
     { hub: { ...IR_HUB, ...over } },
   )
 }

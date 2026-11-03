@@ -30,6 +30,7 @@ import { ImageOff, ScanFace, Star } from '../../../lib/icons.js'
 import { useTheme } from '../../../theme/theme-provider.js'
 import { GLASS, RADIUS, SPACING, TABULAR, TYPOGRAPHY, withAlpha } from '../../../theme/tokens.js'
 import { useKindPaint } from '../../../../shared/palette.js'
+import { noteMediaLoad, type MediaSurface } from '../../../lib/media-load-telemetry.js'
 import { resolveEventKindIcon } from '../event-kind-icons.js'
 import type { EventsTrackRow } from '../../../../shared/events/events-track-row.js'
 import type { TileChips } from './tile-model.js'
@@ -47,12 +48,19 @@ export interface TileHeroProps {
   readonly bearer: string | null
   /** The clock chip (`HH:MM`). The gallery draws it; the reel's strip has its own time line. */
   readonly showTime: boolean
+  /** Which surface draws this tile — only the load telemetry reads it. */
+  readonly surface: MediaSurface
 }
 
 const CHIP_RADIUS = 6
 
+/** The page origin on web; null on native, where `window.location` does not exist. */
+function webOrigin(): string | null {
+  return typeof window !== 'undefined' && window.location ? window.location.origin : null
+}
+
 export const TileHero = memo(function TileHero({
-  row, chips, edge, imageUri, bearer, showTime,
+  row, chips, edge, imageUri, bearer, showTime, surface,
 }: TileHeroProps) {
   const { t } = useTranslation()
   const { colors } = useTheme()
@@ -86,7 +94,11 @@ export const TileHero = memo(function TileHero({
           contentFit="cover"
           cachePolicy="memory-disk"
           transition={0}
-          onError={() => setFailedUri(imageUri)}
+          onLoad={() => noteMediaLoad({ surface, ok: true, uri: imageUri, hasBearer: bearer !== null, deviceId: row.deviceId, pageOrigin: webOrigin() })}
+          onError={(e) => {
+            noteMediaLoad({ surface, ok: false, uri: imageUri, hasBearer: bearer !== null, error: e.error, deviceId: row.deviceId, pageOrigin: webOrigin() })
+            setFailedUri(imageUri)
+          }}
         />
       )}
 

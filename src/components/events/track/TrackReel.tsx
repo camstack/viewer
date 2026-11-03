@@ -208,7 +208,7 @@ const ReelCard = memo(function ReelCard({ row, edge, imageUri, bearer, chipOptio
         accessibilityRole="button"
         accessibilityLabel={tileAccessibilityLabel(row, chipOptions.kindLabels, chips.time)}
       >
-        <TileHero row={row} chips={chips} edge={edge} imageUri={imageUri} bearer={bearer} showTime />
+        <TileHero row={row} chips={chips} edge={edge} imageUri={imageUri} bearer={bearer} surface="reel" showTime />
       </Pressable>
       <TileLabels row={row} chips={chips} edge={edge} showCapsule={showCapsule} />
     </View>

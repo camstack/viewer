@@ -51,7 +51,7 @@ export const EventTile = memo(function EventTile({
         accessibilityRole="button"
         accessibilityLabel={spoken}
       >
-        <TileHero row={row} chips={chips} edge={edge} imageUri={imageUri} bearer={bearer} showTime />
+        <TileHero row={row} chips={chips} edge={edge} imageUri={imageUri} bearer={bearer} surface="gallery" showTime />
         {details.camera || zone !== null ? (
           <View style={styles.details}>
             {details.camera ? (
