@@ -30,6 +30,14 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.680',
+    date: '2026-11-03',
+    notes: {
+      en: ['No more "palette unreadable" notice while the app connects.'],
+      it: ['Niente più avviso "tavolozza illeggibile" mentre l\'app si connette.'],
+    },
+  },
+  {
     version: '1.0.679',
     date: '2026-11-03',
     notes: {
