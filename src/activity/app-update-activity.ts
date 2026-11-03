@@ -12,14 +12,22 @@ import * as Updates from 'expo-updates'
 import { reloadRuntimeForUpdate } from '../lib/reload-runtime.js'
 import type { AppUpdateDraft } from './activity-model.js'
 
+/** What the native update state machine reports for an error: a plain object
+ *  with a `message`, NOT an `Error` instance, and `null` — not `undefined` —
+ *  when there is none (the iOS context is a Swift dictionary whose nil values
+ *  cross the bridge as null). 1.0.678 compared with `!== undefined`, took that
+ *  null for a failure and threw `null.message` from the bridge's effect on
+ *  every launch: the root boundary drew before the first connect. */
+export type UpdateErrorLike = { readonly message?: unknown } | null | undefined
+
 /** The slice of `Updates.useUpdates()` the row depends on. */
 export interface AppUpdateStatus {
   readonly isChecking: boolean
   readonly isDownloading: boolean
   readonly isUpdatePending: boolean
   readonly downloadProgress: number | undefined
-  readonly checkError: Error | undefined
-  readonly downloadError: Error | undefined
+  readonly checkError: UpdateErrorLike
+  readonly downloadError: UpdateErrorLike
 }
 
 /**
@@ -28,18 +36,23 @@ export interface AppUpdateStatus {
  * offline, is not news and must not light the Activity button on every start.
  */
 export function appUpdateDraft(status: AppUpdateStatus, manual: boolean): AppUpdateDraft | null {
-  if (status.downloadError !== undefined) return failed(status.downloadError)
+  if (hasError(status.downloadError)) return failed(status.downloadError)
   if (status.isDownloading) {
     return { state: 'downloading', progress: status.downloadProgress ?? null, version: null, error: null }
   }
   if (status.isUpdatePending) return { state: 'ready', progress: null, version: null, error: null }
-  if (manual && status.checkError !== undefined) return failed(status.checkError)
+  if (manual && hasError(status.checkError)) return failed(status.checkError)
   if (manual && status.isChecking) return { state: 'checking', progress: null, version: null, error: null }
   return null
 }
 
-function failed(error: Error): AppUpdateDraft {
-  return { state: 'failed', progress: null, version: null, error: error.message }
+function hasError(error: UpdateErrorLike): error is { readonly message?: unknown } {
+  return typeof error === 'object' && error !== null
+}
+
+function failed(error: { readonly message?: unknown }): AppUpdateDraft {
+  const message = typeof error.message === 'string' && error.message !== '' ? error.message : null
+  return { state: 'failed', progress: null, version: null, error: message }
 }
 
 /** "Restart now" — the one door, so the exit marker and the native drain happen. */

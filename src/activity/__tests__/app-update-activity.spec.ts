@@ -19,6 +19,21 @@ const idle: AppUpdateStatus = {
 beforeEach(() => reload.mockClear())
 
 describe('useUpdates state → the activity row', () => {
+  it('reads a null error as no error (1.0.678 crashed on launch: the native context sends null, not undefined)', () => {
+    const native: AppUpdateStatus = { ...idle, checkError: null, downloadError: null }
+    expect(() => appUpdateDraft(native, false)).not.toThrow()
+    expect(appUpdateDraft(native, false)).toBeNull()
+    expect(appUpdateDraft(native, true)).toBeNull()
+  })
+
+  it('reports a native error object (a plain { message }, not an Error)', () => {
+    expect(appUpdateDraft({ ...idle, downloadError: { message: 'offline' } }, false)).toMatchObject({
+      state: 'failed',
+      error: 'offline',
+    })
+    expect(appUpdateDraft({ ...idle, checkError: { message: 'x' } }, true)).toMatchObject({ state: 'failed', error: 'x' })
+  })
+
   it('shows nothing while idle, and nothing for a launch check that is merely looking', () => {
     expect(appUpdateDraft(idle, false)).toBeNull()
     expect(appUpdateDraft({ ...idle, isChecking: true }, false)).toBeNull()
