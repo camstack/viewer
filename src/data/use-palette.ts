@@ -1,13 +1,17 @@
 /**
  * Fetch the hub display palette and publish it to {@link setPaletteView}.
  *
- * One query per server URL. A reconnect invalidates it. `unknown`, an
- * unreadable payload, and a thrown read all paint the bundled CamStack preset
- * and keep the reason — they never pretend the preset was what the hub stored.
+ * One query per server URL. A reconnect invalidates it. `unknown` and an
+ * unreadable payload paint the bundled CamStack preset and keep the reason —
+ * they never pretend the preset was what the hub stored. A read that never got
+ * an answer (UNAUTHORIZED before the session exists, a transport failure)
+ * throws out of the query: the view stays `pending`, nothing is announced, and
+ * the reconnect after a session renewal refetches it.
  */
 import { useEffect, useRef } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useConnection } from '../connection/ConnectionProvider.js'
+import { isUnauthorizedError } from '../auth/unauthorized.js'
 import { log } from '../lib/logger.js'
 import {
   bundledView,
@@ -52,9 +56,11 @@ async function readPalette(serverUrl: string | null, query: () => Promise<unknow
     if (view.origin === 'unknown') noteUnknown(serverUrl, view.reason)
     return view
   } catch (err) {
-    const reason = failureReason(err)
-    noteUnknown(serverUrl, reason)
-    return bundledView('unknown', reason, serverUrl)
+    log.debug('palette', 'palette read got no answer; keeping the bundled preset silently', {
+      reason: failureReason(err),
+      serverUrl,
+    })
+    throw err
   }
 }
 
@@ -69,7 +75,7 @@ export function usePalette(): PaletteView {
     queryKey: paletteQueryKey(serverUrl),
     enabled: state === 'connected' && serverUrl !== null,
     staleTime: Number.POSITIVE_INFINITY,
-    retry: false,
+    retry: (count, error) => !isUnauthorizedError(error) && count < 2,
     queryFn: (): Promise<PaletteView> => {
       const live = controller.getSystem()
       if (live === null) return Promise.resolve(bundledView('unknown', 'disconnected', serverUrl))

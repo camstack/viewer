@@ -120,4 +120,19 @@ describe('usePalette', () => {
     rerender()
     await waitFor(() => expect(paintKind(result.current, 'person')).toBe('#445566'))
   })
+
+  it('shows nothing when the read is UNAUTHORIZED before the session exists, then paints once it answers', async () => {
+    hub.fail = 'UNAUTHORIZED'
+    const { result, rerender } = renderHook(() => usePalette(), { wrapper: wrapper() })
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    expect(result.current.reason).toBeNull()
+    expect(result.current.origin).toBe('pending')
+
+    hub.fail = null
+    hub.state = 'disconnected'
+    rerender()
+    hub.state = 'connected'
+    rerender()
+    await waitFor(() => expect(result.current.origin).toBe('hub'))
+  })
 })
