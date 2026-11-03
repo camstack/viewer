@@ -4336,6 +4336,8 @@
       "noCameras": "No cameras to show"
     },
     "remote": {
+      "fullScreen": "Full screen",
+      "unreadable": "The remote could not be loaded",
       "title": "{{name}} remote",
       "noLayout": "This device has no remote layout yet.",
       "failure": {

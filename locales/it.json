@@ -4333,6 +4333,8 @@
       "noCameras": "Nessuna camera da mostrare"
     },
     "remote": {
+      "fullScreen": "Schermo intero",
+      "unreadable": "Il telecomando non si è caricato",
       "title": "Telecomando {{name}}",
       "noLayout": "Questo dispositivo non ha ancora un layout del telecomando.",
       "failure": {
