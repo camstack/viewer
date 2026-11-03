@@ -57,7 +57,7 @@ function PrimaryControl({ device }: AccessoryControlComponentProps): React.React
     case 'button':
       return <ButtonControl {...common} />
     case 'media-player':
-      return <MediaPlayerControl {...common} />
+      return <MediaPlayerControl {...common} features={device.features} deviceName={device.name} />
     case 'vacuum':
       return <VacuumControl {...common} />
     case 'lawn-mower':

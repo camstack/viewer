@@ -2920,7 +2920,24 @@
       "alarmBypassed_other": "Attivato — {{count}} ingressi bypassati: {{inputs}}",
       "alarmBypassedInput": "{{name}} ({{dropped}})",
       "alarmBypassedDropped_one": "{{count}} allarme ignorato",
-      "alarmBypassedDropped_other": "{{count}} allarmi ignorati"
+      "alarmBypassedDropped_other": "{{count}} allarmi ignorati",
+      "volumeUp": "Volume su",
+      "volumeDown": "Volume giù",
+      "powerOn": "Accendi",
+      "powerOff": "Spegni",
+      "remote": "Telecomando",
+      "stateUnknown": "Stato sconosciuto",
+      "assumed": "presunto",
+      "assumedHint": "Nessun riscontro dal dispositivo: è l'ultimo comando inviato.",
+      "mediaState": {
+        "off": "Spento",
+        "on": "Acceso",
+        "idle": "Inattivo",
+        "playing": "In riproduzione",
+        "paused": "In pausa",
+        "buffering": "Caricamento",
+        "standby": "Standby"
+      }
     },
     "updates": {
       "install": "Riavvia ora",
@@ -4306,6 +4323,16 @@
       "noFootage": "Nessuna registrazione a quest’ora",
       "loading": "Caricamento camere…",
       "noCameras": "Nessuna camera da mostrare"
+    },
+    "remote": {
+      "title": "Telecomando {{name}}",
+      "noLayout": "Questo dispositivo non ha ancora un layout del telecomando.",
+      "failure": {
+        "no-remote": "Questo dispositivo non ha un telecomando.",
+        "unbound-role": "Questo tasto non ha ancora un comando.",
+        "action-failed": "Impossibile inviare il comando.",
+        "unreachable": "L'hub non ha risposto. Riprova."
+      }
     }
   },
   "prototype": {

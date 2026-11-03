@@ -2923,7 +2923,24 @@
       "alarmBypassed_other": "Armed — {{count}} inputs bypassed: {{inputs}}",
       "alarmBypassedInput": "{{name}} ({{dropped}})",
       "alarmBypassedDropped_one": "{{count}} trigger dropped",
-      "alarmBypassedDropped_other": "{{count}} triggers dropped"
+      "alarmBypassedDropped_other": "{{count}} triggers dropped",
+      "volumeUp": "Volume up",
+      "volumeDown": "Volume down",
+      "powerOn": "Turn on",
+      "powerOff": "Turn off",
+      "remote": "Remote",
+      "stateUnknown": "State unknown",
+      "assumed": "assumed",
+      "assumedHint": "No feedback from the device: this is what was last sent.",
+      "mediaState": {
+        "off": "Off",
+        "on": "On",
+        "idle": "Idle",
+        "playing": "Playing",
+        "paused": "Paused",
+        "buffering": "Buffering",
+        "standby": "Standby"
+      }
     },
     "updates": {
       "install": "Restart now",
@@ -4309,6 +4326,16 @@
       "noFootage": "No footage at this time",
       "loading": "Loading cameras…",
       "noCameras": "No cameras to show"
+    },
+    "remote": {
+      "title": "{{name}} remote",
+      "noLayout": "This device has no remote layout yet.",
+      "failure": {
+        "no-remote": "This device has no remote.",
+        "unbound-role": "That button has no command yet.",
+        "action-failed": "The command could not be sent.",
+        "unreachable": "The hub did not answer. Try again."
+      }
     }
   },
   "prototype": {
