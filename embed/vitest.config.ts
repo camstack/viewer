@@ -12,5 +12,8 @@ export default defineConfig({
     environment: 'jsdom',
     globals: false,
     include: ['src/**/*.spec.{ts,tsx}', '../shared/**/__tests__/**/*.spec.ts'],
+    // A failed page now waits ~1s, ~2s, ~4s before the error state. The specs
+    // that wait for that state need longer than the 5s default.
+    testTimeout: 30_000,
   },
 })

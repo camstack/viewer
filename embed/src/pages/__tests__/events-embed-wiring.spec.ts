@@ -1183,7 +1183,7 @@ describe('events embed wiring', () => {
     render(createElement(Events, { client, initialConfig: config() }))
     await waitFor(
       () => expect(document.querySelector('[data-testid="state-error"]')).toBeTruthy(),
-      { timeout: 4_000 },
+      { timeout: 20_000 },
     )
     expect(document.querySelector('[data-testid="state-empty"]')).toBeNull()
     // The raw server message is NOT the copy — it goes to the host log.
@@ -1232,7 +1232,7 @@ describe('events embed wiring', () => {
     render(createElement(Events, { client, initialConfig: config() }))
     await waitFor(
       () => expect(document.querySelector('[data-testid="state-error"]')).toBeTruthy(),
-      { timeout: 4_000 },
+      { timeout: 20_000 },
     )
 
     failing = false
@@ -1261,7 +1261,7 @@ describe('events embed wiring', () => {
     render(createElement(Events, { client, initialConfig: config() }))
     await waitFor(
       () => expect(document.querySelector('[data-testid="state-error"]')).toBeTruthy(),
-      { timeout: 4_000 },
+      { timeout: 20_000 },
     )
 
     failing = false
@@ -1690,7 +1690,7 @@ describe('events embed wiring', () => {
           message: 'node not answering',
         })
       },
-      { timeout: 4_000 },
+      { timeout: 20_000 },
     )
     // …and the branch is on the shared log channel too, once per attempt.
     expect(posted.some((m) => m.type === 'log' && m.msg === 'listRecentTracks failed')).toBe(true)

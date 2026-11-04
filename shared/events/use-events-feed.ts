@@ -39,6 +39,7 @@ import {
 } from './events-feed'
 import { type EventsTrackRow, toEventsTrackRows } from './events-track-row'
 import { lagWindow, splitDuration, startLagSampler } from './main-thread-lag'
+import { isTerminalPageError, pageRetryDelayMs } from './page-retry.js'
 
 /**
  * How many delta pages one refresh will drain before giving up.
@@ -51,21 +52,6 @@ import { lagWindow, splitDuration, startLagSampler } from './main-thread-lag'
  */
 const MAX_DELTA_PAGES = 5
 
-/**
- * How many times a failed page is retried before the surface admits an error.
- *
- * A single failure is NOT a terminal state, and treating it as one is what put
- * an error banner on screen every time the app came back from background: the
- * WebView resumes, the in-flight fetch is already dead, and the very first
- * request after resume fails once and then works. The user saw a hard error for
- * a condition that had already healed.
- */
-const MAX_PAGE_ATTEMPTS = 3
-
-/** Backoff before each retry, ms. Short on purpose — this is a resume blip, not
- *  a degraded service; by the third the surface should either be showing rows
- *  or admitting it cannot. */
-const RETRY_BACKOFF_MS = [300, 900] as const
 let requestSequence = 0
 
 interface RecentTracksResponse {
@@ -104,7 +90,7 @@ export interface RequestTiming {
 
 type QueryOutcome =
   | { readonly ok: true; readonly page: RecentTracksResponse; readonly timing: RequestTiming }
-  | { readonly ok: false; readonly message: string }
+  | { readonly ok: false; readonly message: string; readonly error: unknown }
 
 function isResponse(v: unknown): v is RecentTracksResponse {
   if (typeof v !== 'object' || v === null) return false
@@ -294,7 +280,7 @@ export function useEventsFeed(params: EventsFeedParams): EventsFeedResult {
   /**
    * One request. Returns the outcome instead of SETTING the error — whether a
    * failure is worth showing is the caller's decision (it may be the first of
-   * three attempts), and a query that writes error state directly cannot be
+   * several attempts), and a query that writes error state directly cannot be
    * retried without flashing.
    */
   const query = useCallback(
@@ -308,7 +294,11 @@ export function useEventsFeed(params: EventsFeedParams): EventsFeedResult {
         const timing: RequestTiming = { requestId, waitMs: Math.round(waitMs), ...split }
         if (!isResponse(raw)) {
           logRef.current('request invalid', { ...timing, channel: channelRef.current })
-          return { ok: false, message: 'unexpected response shape' }
+          return {
+            ok: false,
+            message: 'unexpected response shape',
+            error: new Error('unexpected response shape'),
+          }
         }
         return { ok: true, page: raw, timing }
       } catch (e) {
@@ -326,7 +316,7 @@ export function useEventsFeed(params: EventsFeedParams): EventsFeedResult {
           waitMs: Math.round(waitMs),
           ...splitDuration(finishedAt - startedAt, lagWindow(startedAt, finishedAt)),
         })
-        return { ok: false, message }
+        return { ok: false, message, error: e }
       }
     },
     [client],
@@ -417,18 +407,16 @@ export function useEventsFeed(params: EventsFeedParams): EventsFeedResult {
         }
         // ── Failure. Not necessarily an error. ──────────────────────────────
         //
-        // The resume-from-background case: the WebView wakes, the in-flight
-        // fetch is already dead, and the first request after resume fails once
-        // and then works. Surfacing that immediately put a hard error on screen
-        // for a condition that had already healed — so retry a couple of times,
-        // briefly, before admitting anything.
+        // A blip (resume, a node that missed one round) heals on the next try.
+        // {@link pageRetryDelayMs} keeps the skeleton up across that wait and
+        // refuses to retry an answer that cannot change. The surface admits
+        // the error only when that function says the budget is spent.
         const attempt = attemptRef.current
-        const backoff = RETRY_BACKOFF_MS[attempt]
-        if (attempt + 1 < MAX_PAGE_ATTEMPTS && backoff !== undefined) {
+        const backoff = pageRetryDelayMs(attempt, outcome.error)
+        if (backoff !== null) {
           attemptRef.current = attempt + 1
           logRef.current('page failed — retrying', {
             attempt: attempt + 1,
-            of: MAX_PAGE_ATTEMPTS,
             backoffMs: backoff,
           })
           retryTimerRef.current = setTimeout(() => {
@@ -439,6 +427,10 @@ export function useEventsFeed(params: EventsFeedParams): EventsFeedResult {
           // rather than flashing an error it is about to take back.
           return
         }
+        logRef.current('page failed — giving up', {
+          attempt: attempt + 1,
+          terminal: isTerminalPageError(outcome.error),
+        })
         attemptRef.current = 0
         // A reload that could not be paged in must not leave the surface stuck
         // behind a shadow nobody will ever fill: keep the generation on screen.

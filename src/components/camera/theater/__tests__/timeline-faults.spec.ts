@@ -36,10 +36,10 @@ describe('resolveTimelineFaults', () => {
   it('distinguishes a failure from an attempt in flight', () => {
     expect(
       resolveTimelineFaults({ connected: true, sources: signals({ events: broken }), dismissed: [] }),
-    ).toEqual([{ source: 'events', phase: 'failed', reason: null }])
+    ).toEqual([{ source: 'events', sources: ['events'], phase: 'failed', reason: null }])
     expect(
       resolveTimelineFaults({ connected: true, sources: signals({ events: retrying }), dismissed: [] }),
-    ).toEqual([{ source: 'events', phase: 'retrying', reason: null }])
+    ).toEqual([{ source: 'events', sources: ['events'], phase: 'retrying', reason: null }])
   })
 
   it('carries the stream reason the player gave', () => {
@@ -48,16 +48,22 @@ describe('resolveTimelineFaults', () => {
       sources: signals({ stream: { failed: true, fetching: false, reason: 'ICE failed' } }),
       dismissed: [],
     })
-    expect(faults).toEqual([{ source: 'stream', phase: 'failed', reason: 'ICE failed' }])
+    expect(faults).toEqual([{ source: 'stream', sources: ['stream'], phase: 'failed', reason: 'ICE failed' }])
   })
 
-  it('stacks concurrent faults in priority order: stream > recordings > events', () => {
+  it('N failing parts produce exactly one error surface', () => {
     const faults = resolveTimelineFaults({
       connected: true,
       sources: signals({ events: broken, stream: broken, recordings: broken }),
       dismissed: [],
     })
-    expect(faults.map((f) => f.source)).toEqual(['stream', 'recordings', 'events'])
+    expect(faults).toHaveLength(1)
+    expect(faults[0]).toEqual({
+      source: 'stream',
+      sources: ['stream', 'recordings', 'events'],
+      phase: 'failed',
+      reason: null,
+    })
     expect(FAULT_PRIORITY).toEqual(['stream', 'recordings', 'events'])
   })
 
@@ -76,18 +82,36 @@ describe('resolveTimelineFaults', () => {
       dismissed: [],
     })
     expect(faults).toEqual([
-      { source: 'recordings', phase: 'retrying', reason: null },
-      { source: 'events', phase: 'failed', reason: null },
+      {
+        source: 'recordings',
+        sources: ['recordings', 'events'],
+        // One part is still in flight, another has given up: the button stays
+        // enabled so the idle part can be asked again.
+        phase: 'failed',
+        reason: null,
+      },
     ])
   })
 
-  it('hides a dismissed source and leaves its neighbours alone', () => {
+  it('says it is still trying only while every failing part is in flight', () => {
+    const faults = resolveTimelineFaults({
+      connected: true,
+      sources: signals({ stream: retrying, events: retrying }),
+      dismissed: [],
+    })
+    expect(faults).toEqual([
+      { source: 'stream', sources: ['stream', 'events'], phase: 'retrying', reason: null },
+    ])
+  })
+
+  it('hides a dismissed source and reports whatever is still failing as the one surface', () => {
     const faults = resolveTimelineFaults({
       connected: true,
       sources: signals({ stream: broken, events: broken }),
       dismissed: ['stream'],
     })
-    expect(faults.map((f) => f.source)).toEqual(['events'])
+    expect(faults).toHaveLength(1)
+    expect(faults[0]?.sources).toEqual(['events'])
   })
 })
 

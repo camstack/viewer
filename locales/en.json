@@ -2588,6 +2588,7 @@
       "clipEmptyTitle": "The camera sent no video for this clip.",
       "faultRecordings": "Couldn't load the recordings for this day.",
       "faultEvents": "Couldn't load this day's events.",
+      "faultSummary": "Couldn't load the timeline ({{count}} parts failed).",
       "faultDismiss": "Dismiss",
       "loadRetry": "Retry",
       "loadRetrying": "Retrying…",

@@ -100,9 +100,9 @@ describe('the native reel', () => {
   it('keeps its reserved height on a failure and offers a retry inside the band', async () => {
     const hub = { ...HUB, 'pipelineAnalytics.listRecentTracks': () => { throw new Error('boom') } }
     const { container, findByText } = mountScreen(React.createElement(TrackReel, { cardWidth: 80 }), { hub })
-    expect(await findByText('Retry', {}, { timeout: 5_000 })).toBeTruthy()
+    expect(await findByText('Retry', {}, { timeout: 20_000 })).toBeTruthy()
     expect((container.firstElementChild as HTMLElement).style.height).toBe(`${reelRowHeight(80)}px`)
-  }, 10_000)
+  }, 30_000)
 
   it('is in the live-update registry while the app is in front, and OUT of it when it is not', async () => {
     const { container } = mountScreen(React.createElement(TrackReel, { cardWidth: 80 }), { hub: HUB })

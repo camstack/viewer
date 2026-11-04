@@ -72,12 +72,29 @@ export function TimelineFaultNotice({
   // staying silent on a day that was merely empty, and that property is the
   // reason this one is worth reading at all.
   if (faults.length === 0) return null
+  const fault = faults[0]
+  if (fault === undefined) return null
 
   const chip = {
     height: ui.control.button,
     borderRadius: ui.radius.lg,
     paddingHorizontal: ui.space.md,
     gap: ui.space.xs,
+  }
+  const retrying = fault.phase === 'retrying'
+  // Several parts share one sentence. One part keeps its own words — an error
+  // with no text reads as a glitch rather than as a stream that is down.
+  const message =
+    fault.sources.length > 1
+      ? t('v2.timeline.faultSummary', { count: fault.sources.length })
+      : (fault.reason ?? t(MESSAGE_KEY[fault.source]))
+  const retry = (): void => {
+    hapticTap()
+    for (const source of fault.sources) onRetry(source)
+  }
+  const dismiss = (): void => {
+    hapticTap()
+    for (const source of fault.sources) onDismiss(source)
   }
 
   return (
@@ -88,69 +105,54 @@ export function TimelineFaultNotice({
       ]}
       accessibilityRole="alert"
     >
-      {faults.map((fault) => {
-        const retrying = fault.phase === 'retrying'
-        // The subsystem's own words when it had any — an error with no text
-        // reads as a UI glitch rather than as a stream that is down.
-        const message = fault.reason ?? t(MESSAGE_KEY[fault.source])
-        return (
-          <View
-            key={fault.source}
+      <View
+        style={[
+          styles.row,
+          { paddingHorizontal: ui.space.md, paddingVertical: ui.space.sm, gap: ui.space.sm },
+        ]}
+      >
+        <TriangleAlert size={ui.icon.sm} color={colors.danger} />
+        <Text
+          numberOfLines={1}
+          style={[styles.message, { color: colors.foreground, fontSize: ui.font.xs }]}
+        >
+          {message}
+        </Text>
+        <Pressable
+          onPress={retry}
+          // A second press while the first attempt runs would only cancel
+          // and restart it, which looks like the button doing nothing.
+          disabled={retrying}
+          style={[
+            styles.chip,
+            chip,
+            { backgroundColor: colors.danger, opacity: retrying ? 0.6 : 1 },
+          ]}
+          hitSlop={4}
+          accessibilityRole="button"
+          accessibilityState={{ disabled: retrying }}
+          accessibilityLabel={`${t('v2.timeline.loadRetry')} — ${message}`}
+        >
+          <RefreshCw size={ui.icon.sm} color={colors.primaryForeground} />
+          <Text
             style={[
-              styles.row,
-              { paddingHorizontal: ui.space.md, paddingVertical: ui.space.sm, gap: ui.space.sm },
+              styles.chipStrong,
+              { color: colors.primaryForeground, fontSize: ui.font.xs },
             ]}
           >
-            <TriangleAlert size={ui.icon.sm} color={colors.danger} />
-            <Text
-              numberOfLines={1}
-              style={[styles.message, { color: colors.foreground, fontSize: ui.font.xs }]}
-            >
-              {message}
-            </Text>
-            <Pressable
-              onPress={() => {
-                hapticTap()
-                onRetry(fault.source)
-              }}
-              // A second press while the first attempt runs would only cancel
-              // and restart it, which looks like the button doing nothing.
-              disabled={retrying}
-              style={[
-                styles.chip,
-                chip,
-                { backgroundColor: colors.danger, opacity: retrying ? 0.6 : 1 },
-              ]}
-              hitSlop={4}
-              accessibilityRole="button"
-              accessibilityState={{ disabled: retrying }}
-              accessibilityLabel={`${t('v2.timeline.loadRetry')} — ${message}`}
-            >
-              <RefreshCw size={ui.icon.sm} color={colors.primaryForeground} />
-              <Text
-                style={[
-                  styles.chipStrong,
-                  { color: colors.primaryForeground, fontSize: ui.font.xs },
-                ]}
-              >
-                {retrying ? t('v2.timeline.loadRetrying') : t('v2.timeline.loadRetry')}
-              </Text>
-            </Pressable>
-            <Pressable
-              onPress={() => {
-                hapticTap()
-                onDismiss(fault.source)
-              }}
-              style={[styles.chip, { width: ui.control.button, height: ui.control.button }]}
-              hitSlop={4}
-              accessibilityRole="button"
-              accessibilityLabel={`${t('v2.timeline.faultDismiss')} — ${message}`}
-            >
-              <X size={ui.icon.sm} color={colors.foregroundMuted} />
-            </Pressable>
-          </View>
-        )
-      })}
+            {retrying ? t('v2.timeline.loadRetrying') : t('v2.timeline.loadRetry')}
+          </Text>
+        </Pressable>
+        <Pressable
+          onPress={dismiss}
+          style={[styles.chip, { width: ui.control.button, height: ui.control.button }]}
+          hitSlop={4}
+          accessibilityRole="button"
+          accessibilityLabel={`${t('v2.timeline.faultDismiss')} — ${message}`}
+        >
+          <X size={ui.icon.sm} color={colors.foregroundMuted} />
+        </Pressable>
+      </View>
     </View>
   )
 }

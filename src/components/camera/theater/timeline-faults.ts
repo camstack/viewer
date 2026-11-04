@@ -89,34 +89,46 @@ export interface TimelineFaultsInput {
   readonly dismissed: readonly FaultSource[]
 }
 
-/** One row of the notice. */
+/** One row of the notice. `sources` is every part still failing; `source` is
+ *  the lead one ({@link FAULT_PRIORITY}) so a single failure keeps its name. */
 export interface TimelineFault {
   readonly source: FaultSource
+  readonly sources: readonly FaultSource[]
   readonly phase: FaultPhase
   readonly reason: string | null
 }
 
 /**
- * What the notice should render, in the order it should render it.
+ * What the notice should render.
  *
- * Concurrent faults STACK rather than alternate: alternating hides a fault the
- * operator has not read yet behind one they have, and the whole point of the
- * unification is that there is nowhere else to look.
+ * Concurrent faults used to STACK, one band per source. Three requests failing
+ * together — the stream, the day's recordings, the day's events — put three
+ * alerts on screen for one outage. They are one surface now: the parts are
+ * counted, the lead source (see {@link FAULT_PRIORITY}) names the retry, and
+ * the band goes away when none of them are still failing.
  */
 export function resolveTimelineFaults(input: TimelineFaultsInput): readonly TimelineFault[] {
   if (!input.connected) return []
-  const faults: TimelineFault[] = []
+  const sources: FaultSource[] = []
   for (const source of FAULT_PRIORITY) {
     const signal = input.sources[source]
     if (!signal.failed) continue
     if (input.dismissed.includes(source)) continue
-    faults.push({
-      source,
-      phase: signal.fetching ? 'retrying' : 'failed',
-      reason: signal.reason,
-    })
+    sources.push(source)
   }
-  return faults
+  const lead = sources[0]
+  if (lead === undefined) return []
+  const everyFetching = sources.every((source) => input.sources[source].fetching)
+  return [
+    {
+      source: lead,
+      sources,
+      phase: everyFetching ? 'retrying' : 'failed',
+      // A single part keeps the words it gave. Several parts share one count;
+      // one of their reasons would hide the others.
+      reason: sources.length === 1 ? input.sources[lead].reason : null,
+    },
+  ]
 }
 
 /**

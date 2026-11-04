@@ -149,7 +149,7 @@ export function useEventsGalleryFeed(query: EventsGalleryQuery): EventsGalleryFe
     client,
     log: logEventsFeed,
     // Nothing to ask until the connection is up: a request fired into a
-    // disconnected controller would burn its three attempts on a dead socket.
+    // disconnected controller would burn its attempts on a dead socket.
     deviceIds: state === 'connected' ? deviceIds : EMPTY_IDS,
     nameById,
     pageSize: DEFAULT_EVENTS_PAGE_SIZE,

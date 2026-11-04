@@ -200,7 +200,7 @@ describe('the native gallery', () => {
   it('a failed first page ends in an error with a retry, after the feed\'s own retries', async () => {
     const failing = { ...HUB, 'pipelineAnalytics.listRecentTracks': () => { throw new Error('boom') } }
     const { findByText } = mountScreen(React.createElement(EventsScreen), { hub: failing })
-    expect(await findByText("Couldn't load events", {}, { timeout: 5_000 })).toBeTruthy()
+    expect(await findByText("Couldn't load events", {}, { timeout: 20_000 })).toBeTruthy()
     expect(await findByText('Retry')).toBeTruthy()
-  }, 10_000)
+  }, 30_000)
 })

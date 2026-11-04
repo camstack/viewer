@@ -100,6 +100,7 @@ describe('a load that failed says so', () => {
         'faultStream',
         'faultRecordings',
         'faultEvents',
+        'faultSummary',
         'faultDismiss',
         'loadRetry',
         'loadRetrying',

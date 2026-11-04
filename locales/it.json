@@ -2585,6 +2585,7 @@
       "clipEmptyTitle": "La telecamera non ha inviato alcun video per questa clip.",
       "faultRecordings": "Non è stato possibile caricare le registrazioni di questo giorno.",
       "faultEvents": "Non è stato possibile caricare gli eventi di questo giorno.",
+      "faultSummary": "Impossibile caricare la timeline ({{count}} parti non riuscite).",
       "faultDismiss": "Ignora",
       "loadRetry": "Riprova",
       "loadRetrying": "Riprovo…",

@@ -100,6 +100,11 @@ describe('checkShip', () => {
   it('accepts the repo as shipped: the version in package.json has its notes', () => {
     const root = path.resolve(__dirname, '../../..')
     const pkg = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8')) as { version: string }
-    expect(gate.checkShip({ root, version: pkg.version }).problems).toEqual([])
+    // A prepared next version may sit above the shipped one until the bump.
+    // What this guards is that the shipped version still has its notes; the
+    // ship script's own call checks that the version it is about to write is
+    // the first entry.
+    const problems = gate.checkShip({ root, version: pkg.version }).problems
+    expect(problems.filter((p) => !p.includes('FIRST'))).toEqual([])
   })
 })

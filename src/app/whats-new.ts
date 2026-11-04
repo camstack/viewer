@@ -30,6 +30,20 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.683',
+    date: '2026-11-04',
+    notes: {
+      en: [
+        'Clips retry before showing an error.',
+        'The timeline shows a single error message.',
+      ],
+      it: [
+        'Le clip riprovano prima di mostrare un errore.',
+        'La timeline mostra un solo messaggio di errore.',
+      ],
+    },
+  },
+  {
     version: '1.0.682',
     date: '2026-11-04',
     notes: {
