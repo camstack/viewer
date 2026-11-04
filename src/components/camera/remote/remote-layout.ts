@@ -9,7 +9,7 @@
  * Pure: no React, no hub. The sheet (`RemoteSheet.tsx`) places what this returns.
  */
 
-import { remoteRoleIcon, remoteRoleLabel, remoteRoleLegend, type VocabLocale } from '@camstack/types'
+import { remoteRoleIcon, remoteRoleLabel, remoteRoleLegend, type VocabLocale } from '@camstack/types/client'
 
 export interface RemoteLayoutButton {
   readonly id: string

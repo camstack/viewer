@@ -11,7 +11,7 @@ import {
   totalRows,
   vocabLocale,
 } from '../remote-layout.js'
-import { REMOTE_CUSTOM_ROLE_ICON, REMOTE_ROLE_VOCABULARY } from '@camstack/types'
+import { REMOTE_CUSTOM_ROLE_ICON, REMOTE_ROLE_VOCABULARY } from '@camstack/types/client'
 import { ICON_NODES } from '../../../../lib/icon-nodes.generated.js'
 import { iconNodeFor } from '../../../../lib/icon-node-for.js'
 
