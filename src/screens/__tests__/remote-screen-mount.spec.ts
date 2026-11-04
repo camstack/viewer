@@ -21,6 +21,35 @@ import { mountScreen } from '../../testing/mount.js'
 import { THEME_STORAGE_KEY } from '../../theme/resolve-theme.js'
 import { RemoteScreen } from '../RemoteScreen.js'
 
+// The shared stub draws `Svg`/`Path` as plain Views, so a vector icon would be
+// blank in the HTML dump. Here they are the real SVG elements, as on the web.
+vi.mock('react-native-svg', async () => {
+  const React = await import('react')
+  const tag = (name: string) => {
+    const Node = ({ children, ...props }: Record<string, unknown>) => {
+      const { style: _style, ...rest } = props
+      return React.createElement(name, rest, children as React.ReactNode)
+    }
+    return Node
+  }
+  const Svg = tag('svg')
+  return {
+    __esModule: true,
+    default: Svg,
+    Svg,
+    Circle: tag('circle'),
+    Ellipse: tag('ellipse'),
+    G: tag('g'),
+    Line: tag('line'),
+    Path: tag('path'),
+    Polygon: tag('polygon'),
+    Polyline: tag('polyline'),
+    Rect: tag('rect'),
+    Defs: tag('defs'),
+    ClipPath: tag('clipPath'),
+  }
+})
+
 vi.mock('../../connection/ConnectionProvider.js', async () =>
   (await import('../../testing/connection-stub.js')).connectionStubModule(),
 )
@@ -147,19 +176,31 @@ describe('RemoteScreen', () => {
   })
 })
 
-/** The rendered page as one standalone HTML string, styles included. */
+/**
+ * The rendered page as one standalone HTML string, styles included, laid out
+ * as the web build lays it out: `#root` is a full-height flex column that the
+ * screen's `flex: 1` root fills, and the text uses the platform font stack
+ * (react-native-web resolves `System` to it; a bare dump would fall back to the
+ * browser's serif).
+ */
 function snapshotHtml(): string {
   const rules: string[] = []
   for (const sheet of Array.from(document.styleSheets)) {
     for (const rule of Array.from(sheet.cssRules)) rules.push(rule.cssText)
   }
-  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${rules.join('\n')}</style></head><body style="margin:0">${document.body.innerHTML}</body></html>`
+  const page = [
+    'html,body{height:100%;margin:0}',
+    '#root{display:flex;flex-direction:column;height:100%}',
+    '#root>div{flex:1;display:flex;flex-direction:column;min-height:0}',
+    '#root,#root *{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}',
+  ]
+  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${rules.join('\n')}\n${page.join('\n')}</style></head><body><div id="root">${document.body.innerHTML}</div></body></html>`
 }
 
 const SHOTS = process.env.REMOTE_SHOTS_DIR
 describe.skipIf(SHOTS === undefined)('remote shots', () => {
   for (const mode of ['light', 'dark'] as const) {
-    for (const [size, width] of [['phone', 390], ['tablet', 820]] as const) {
+    for (const [size, width] of [['phone', 390], ['tablet', 820], ['desktop', 1440]] as const) {
       it(`dumps the ${size} ${mode} page`, async () => {
         // jsdom reports no window width; a device has one.
         Object.defineProperty(document.documentElement, 'clientWidth', { configurable: true, value: width })
