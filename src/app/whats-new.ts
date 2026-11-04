@@ -30,6 +30,14 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.682',
+    date: '2026-11-04',
+    notes: {
+      en: ['The TV remote now opens full screen, with the layout saved in the admin.'],
+      it: ["Il telecomando della TV ora si apre a schermo intero, con il layout salvato nell'admin."],
+    },
+  },
+  {
     version: '1.0.681',
     date: '2026-11-03',
     notes: {
