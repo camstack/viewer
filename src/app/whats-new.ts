@@ -30,22 +30,6 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
-    version: '1.0.681',
-    date: '2026-11-03',
-    notes: {
-      en: [
-        'New remote control for your TV, on the camera and device pages.',
-        'Every remote key now shows its icon, named in your language.',
-        'Thumbnails that fail to load are now reported to the hub for diagnosis.',
-      ],
-      it: [
-        'Nuovo telecomando per la TV, nelle pagine di camere e dispositivi.',
-        'Ogni tasto del telecomando mostra ora la sua icona, con nome nella tua lingua.',
-        "Le anteprime che non si caricano vengono ora segnalate all'hub per la diagnosi.",
-      ],
-    },
-  },
-  {
     version: '1.0.680',
     date: '2026-11-03',
     notes: {
