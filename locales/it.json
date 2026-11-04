@@ -4357,6 +4357,7 @@
   },
   "eventKind": {
     "motion": "Movimento",
+    "appliance-cycle": "Ciclo elettrodomestico",
     "audio": "Audio",
     "person": "Persona",
     "vehicle": "Veicolo",

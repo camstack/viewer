@@ -4360,6 +4360,7 @@
   },
   "eventKind": {
     "motion": "Motion",
+    "appliance-cycle": "Appliance cycle",
     "audio": "Audio",
     "person": "Person",
     "vehicle": "Vehicle",
