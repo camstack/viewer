@@ -1362,7 +1362,7 @@
               "source": "Una finestra audio confermata è sempre marcata come soggetto audio, quindi qualsiasi altra origine non potrà mai corrispondere."
             },
             "sensor": {
-              "sensorTransition": "Solo un sensore che scatta e rientra (acqua, fumo, gas, CO, vibrazione, manomissione, movimento, contatto) può notificare su un solo fronte. Scegli solo tipi di sensore di questo genere, o la regola notificherà a ogni cambiamento."
+              "sensorTransition": "Solo un sensore che scatta e rientra (acqua, fumo, gas, CO, vibrazione, manomissione, movimento, contatto) o un ciclo di elettrodomestico (avviato / terminato) può notificare su un solo fronte. Scegli solo tipi di sensore di questo genere, o la regola notificherà a ogni cambiamento."
             },
             "detection": {
               "audio": "Una regola di rilevamento scatta su ciò che la camera ha visto. I suoni sono una regola Suono a parte."
@@ -2106,6 +2106,13 @@
       "templateVars": {
         "nodeName": "Nome del nodo",
         "offlineFor": "Offline da",
+        "device": "Dispositivo",
+        "duration": "Durata del ciclo",
+        "energy": "Energia del ciclo",
+        "afterDuration": "Frammento \"dopo <durata>\"",
+        "usedEnergy": "Frammento \"consumati <energia>\"",
+        "changes": "Cambiamenti dell'intrusione",
+        "graceMin": "Tolleranza aggiornamento (minuti)",
         "camera": "Telecamera",
         "class": "Classe rilevata",
         "classLabel": "Classe rilevata (tradotta)",
@@ -2255,6 +2262,7 @@
         "dishwasher": "Lavastoviglie",
         "washer": "Lavatrice",
         "dryer": "Asciugatrice",
+        "heater": "Riscaldatore",
         "gateway": "Gateway",
         "pet-fountain": "Fontana per animali"
       },

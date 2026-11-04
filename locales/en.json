@@ -1365,7 +1365,7 @@
               "source": "A confirmed sound window is always stamped as an audio subject, so any other source can never match."
             },
             "sensor": {
-              "sensorTransition": "Only a sensor that raises and clears (water, smoke, gas, CO, vibration, tamper, motion, contact) can fire on one edge. Pick only such sensor kinds, or the rule fires on every change."
+              "sensorTransition": "Only a sensor that raises and clears (water, smoke, gas, CO, vibration, tamper, motion, contact) or an appliance cycle (started / finished) can fire on one edge. Pick only such sensor kinds, or the rule fires on every change."
             },
             "detection": {
               "audio": "A detection rule fires on what the camera saw. Sounds are a Sound rule of their own."
@@ -2109,6 +2109,13 @@
       "templateVars": {
         "nodeName": "Node name",
         "offlineFor": "Offline for",
+        "device": "Device",
+        "duration": "Cycle duration",
+        "energy": "Cycle energy",
+        "afterDuration": "\"after <duration>\" fragment",
+        "usedEnergy": "\"used <energy>\" fragment",
+        "changes": "Intrusion changes",
+        "graceMin": "Update grace (minutes)",
         "camera": "Camera",
         "class": "Detected class",
         "classLabel": "Detected class (translated)",
@@ -2258,6 +2265,7 @@
         "dishwasher": "Dishwasher",
         "washer": "Washing machine",
         "dryer": "Dryer",
+        "heater": "Heater",
         "gateway": "Gateway",
         "pet-fountain": "Pet fountain"
       },
