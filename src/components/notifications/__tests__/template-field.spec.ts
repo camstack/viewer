@@ -176,6 +176,7 @@ describe('varsForContext against an independent oracle, exhaustively over a hand
   //    it through and `systemEventKinds` is never consulted.
   //  - `dogBark`: `families: ['rule']`, group `sound`, `deliveries: ['immediate']`.
   const camera = v({ name: 'camera', families: ['rule', 'timelapse', 'summary'], group: 'subject' })
+  const device = v({ name: 'device', families: ['rule', 'summary'], group: 'subject' })
   const rule = v({ name: 'rule', families: ['rule', 'summary'], group: 'rule' })
   const from = v({ name: 'from', families: ['rule', 'summary'], group: 'time' })
   const to = v({ name: 'to', families: ['rule', 'summary'], group: 'time' })
@@ -208,6 +209,7 @@ describe('varsForContext against an independent oracle, exhaustively over a hand
   })
   const catalog: readonly NcTemplateVarDescriptor[] = [
     camera,
+    device,
     rule,
     from,
     to,
@@ -220,7 +222,7 @@ describe('varsForContext against an independent oracle, exhaustively over a hand
   ]
 
   const CAPTION_VARS: Readonly<Record<'previewText' | 'captionText', readonly string[]>> = {
-    previewText: ['camera', 'rule', 'from', 'to'],
+    previewText: ['device', 'rule', 'from', 'to'],
     captionText: ['rule', 'from', 'to'],
   }
 
@@ -335,7 +337,7 @@ describe('varsForContext against an independent oracle, exhaustively over a hand
     // ai (fields:['body']) and dynamicCount (dynamic) are never in the fixed
     // allow-list; batteryPct/zoneCount/immediateOnly/dogBark are also absent
     // by name, independent of their own axis restrictions.
-    expect(names({ family: 'rule', field: 'previewText' })).toEqual(['camera', 'from', 'rule', 'to'])
+    expect(names({ family: 'rule', field: 'previewText' })).toEqual(['device', 'from', 'rule', 'to'])
     expect(names({ family: 'rule', field: 'captionText' })).toEqual(['from', 'rule', 'to'])
   })
 

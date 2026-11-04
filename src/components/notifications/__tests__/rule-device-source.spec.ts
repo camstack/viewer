@@ -30,14 +30,14 @@ import {
 } from '@camstack/types/client'
 import { ruleDeviceCompatCapQueries } from '@camstack/types'
 
-import { ruleDeviceSource, sensorRuleCapNames } from '../rule-device-source.js'
+import { MAX_CAPS_PER_QUERY, ruleDeviceSource, sensorRuleCapNames } from '../rule-device-source.js'
 
 describe('ruleDeviceSource — the device list a rule kind offers', () => {
   it('a SENSOR rule offers the devices bound to a sensor / control cap, PLUS every camera', () => {
     expect(ruleDeviceSource('sensor', undefined)).toEqual({
       kind: 'caps',
-      capNames: EVENTFUL_CAP_NAMES,
-      extraCapNames: [NC_CAMERA_SCOPE_CAP_NAME],
+      capNames: EVENTFUL_CAP_NAMES.slice(0, MAX_CAPS_PER_QUERY),
+      extraCapNames: [...EVENTFUL_CAP_NAMES.slice(MAX_CAPS_PER_QUERY), NC_CAMERA_SCOPE_CAP_NAME],
       subject: 'sensor',
     })
   })
@@ -55,7 +55,7 @@ describe('ruleDeviceSource — the device list a rule kind offers', () => {
     const source = ruleDeviceSource('sensor', undefined)
     expect(source.kind).toBe('caps')
     if (source.kind !== 'caps') throw new Error('unreachable')
-    expect(ruleDeviceCompatCapQueries('sensor')).toEqual([source.capNames, source.extraCapNames])
+    expect(ruleDeviceCompatCapQueries('sensor')?.flat()).toEqual([...source.capNames, ...(source.extraCapNames ?? [])])
   })
 
   it('a kind names its TAXONOMY id, which is not always the cap name', () => {
@@ -100,7 +100,10 @@ describe('ruleDeviceSource — the device list a rule kind offers', () => {
     expect(withDevices).toEqual(['detection', 'sensor', 'occupancy', 'sound'])
   })
 
-  it('the cap list fits the hub\'s bound (16 names)', () => {
-    expect(EVENTFUL_CAP_NAMES.length).toBeLessThanOrEqual(16)
+  it('every query fits the hub\'s bound (16 names), however long the eventful list grows', () => {
+    const source = ruleDeviceSource('sensor', undefined)
+    if (source.kind !== 'caps') throw new Error('unreachable')
+    expect(source.capNames.length).toBeLessThanOrEqual(16)
+    expect(source.extraCapNames?.length ?? 0).toBeLessThanOrEqual(16)
   })
 })

@@ -47,6 +47,9 @@ import {
 } from '@camstack/types/client'
 import type { NcRuleKind } from '@camstack/types'
 
+/** The most cap names one `listDeviceIdsByCaps` call takes. */
+export const MAX_CAPS_PER_QUERY = 16
+
 /** Where a rule's device scope reads its list from. */
 export type RuleDeviceSource =
   | { readonly kind: 'cameras' }
@@ -102,10 +105,13 @@ export function ruleDeviceSource(
   sensorKinds: readonly string[] | undefined,
 ): RuleDeviceSource {
   if (kind === 'sensor') {
+    // `listDeviceIdsByCaps` takes at most MAX_CAPS_PER_QUERY names: the overflow
+    // of a long eventful list rides in the second query, beside the cameras.
+    const names = sensorRuleCapNames(sensorKinds)
     return {
       kind: 'caps',
-      capNames: sensorRuleCapNames(sensorKinds),
-      extraCapNames: [NC_CAMERA_SCOPE_CAP_NAME],
+      capNames: names.slice(0, MAX_CAPS_PER_QUERY),
+      extraCapNames: [...names.slice(MAX_CAPS_PER_QUERY), NC_CAMERA_SCOPE_CAP_NAME],
       subject: 'sensor',
     }
   }

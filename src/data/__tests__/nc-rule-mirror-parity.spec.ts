@@ -107,7 +107,7 @@ function lines(schema: unknown): string[] {
  * be ABSENT from the published types: the day the release lands, this list
  * fails the suite until the entry is removed, so it cannot outlive its reason.
  */
-const AHEAD_OF_PUBLISHED: readonly string[] = ['$.media?.wakeSleepingCamera?: boolean']
+const AHEAD_OF_PUBLISHED: readonly string[] = []
 
 /** Lines one side has and the other lacks — empty both ways is parity. */
 function drift(viewer: unknown, published: unknown): { onlyViewer: string[]; onlyHub: string[] } {
