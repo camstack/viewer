@@ -210,6 +210,7 @@ const CONTROL_BY_DEVICE_TYPE = {
   [DeviceType.Dishwasher]: 'none',
   [DeviceType.Washer]: 'none',
   [DeviceType.Dryer]: 'none',
+  [DeviceType.Heater]: 'none',
   // Its pump is the `pet-fountain` cap (setPump), not the `switch` cap the
   // switch control drives; no viewer row for it yet.
   [DeviceType.PetFountain]: 'none',
