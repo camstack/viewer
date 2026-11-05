@@ -34,7 +34,8 @@ import { setUnauthorizedHandler } from '../auth/unauthorized-signal.js'
 import { createRenewalCooldown } from '../auth/renewal-cooldown.js'
 import { log } from '../lib/logger.js'
 
-export type RenewReason = 'scheduled' | 'resume' | 'unauthorized'
+/** `credential` — the SDK asks BEFORE a handshake (expired token, or a 4401): it handshakes with the result itself. */
+export type RenewReason = 'scheduled' | 'resume' | 'unauthorized' | 'credential'
 
 /** The slice of the live SDK `System` a renewal touches. */
 export interface LiveSystem {
@@ -77,6 +78,13 @@ export interface SessionRenewalOptions {
 export interface SessionRenewal {
   readonly renewSession: (reason: RenewReason) => Promise<RenewOutcome>
   readonly attachSystem: AttachSystem
+  /** The live access token, for a System BUILT while a renewal is in flight. */
+  readonly getLiveToken: () => string | null
+  /**
+   * For `SystemConfig.refreshCredential`. STABLE identity (it sits in the
+   * transport's config, and a new one would redial); always runs the latest renewal.
+   */
+  readonly refreshCredential: () => Promise<void>
 }
 
 export function useSessionRenewal(options: SessionRenewalOptions): SessionRenewal {
@@ -103,24 +111,31 @@ export function useSessionRenewal(options: SessionRenewalOptions): SessionRenewa
     serverRef.current = server
   }, [token, server])
 
+  const getLiveToken = useCallback((): string | null => tokenRef.current, [])
+
   const attachSystem = useCallback<AttachSystem>((getSystem) => {
     systemRef.current = getSystem
   }, [])
 
-  const run = useCallback(async (): Promise<RenewOutcome> => {
+  const run = useCallback(async (reason: RenewReason): Promise<RenewOutcome> => {
     const active = serverRef.current
     const current = tokenRef.current
     if (active === null || current === null) {
       reconnectRef.current = false
       return UNAVAILABLE
     }
-    const system = systemRef.current?.() ?? null
+    // Only the REQUEST uses the System seen now. The token lands on the one
+    // that exists when the answer arrives: a cold start renews in the commit
+    // that ends `loading`, and the connected subtree (the System) mounts during
+    // the round trip.
+    const requestSystem = systemRef.current?.() ?? null
     const outcome = await renewer.renew(active.id, {
-      serverUrl: system?.serverUrl ?? active.serverUrl,
+      serverUrl: requestSystem?.serverUrl ?? active.serverUrl,
       currentToken: current,
       // Documented type boundary: see `RenewClient`.
-      client: system === null ? null : (system.trpcClient as RenewClient),
+      client: requestSystem === null ? null : (requestSystem.trpcClient as RenewClient),
     })
+    const system = systemRef.current?.() ?? null
     const reconnect = reconnectRef.current
     reconnectRef.current = false
     // Switched away meanwhile: the renewer stored it in that server's slot,
@@ -133,7 +148,9 @@ export function useSessionRenewal(options: SessionRenewalOptions): SessionRenewa
       if (system !== null) {
         system.setToken(outcome.token)
         const staleSocket = system.isSocketTokenStale()
-        if (reconnect || staleSocket || outcome.supersededToken !== null) {
+        // `credential`: the SDK is about to handshake with this token itself.
+        const staleReconnect = staleSocket && reason !== 'credential'
+        if (reconnect || staleReconnect || outcome.supersededToken !== null) {
           log.info('conn', 'session renewed — reconnecting the socket', {
             refused: reconnect,
             staleSocket,
@@ -197,7 +214,7 @@ export function useSessionRenewal(options: SessionRenewalOptions): SessionRenewa
       const pending = inflightRef.current
       if (pending !== null) return pending
       const askedFor = serverRef.current?.id ?? null
-      const started = run()
+      const started = run(reason)
         .then((outcome) => {
           if (askedFor !== null) cooldownRef.current.record(askedFor, outcome)
           return outcome
@@ -215,6 +232,10 @@ export function useSessionRenewal(options: SessionRenewalOptions): SessionRenewa
   useEffect(() => {
     renewRef.current = renewSession
   }, [renewSession])
+
+  const refreshCredential = useCallback(async (): Promise<void> => {
+    await renewRef.current('credential')
+  }, [])
 
   // Scheduled: before the token expires. A renewed token re-runs this effect;
   // one that could not be renewed is retried.
@@ -259,5 +280,5 @@ export function useSessionRenewal(options: SessionRenewalOptions): SessionRenewa
     return () => setUnauthorizedHandler(null)
   }, [])
 
-  return { renewSession, attachSystem }
+  return { renewSession, attachSystem, getLiveToken, refreshCredential }
 }

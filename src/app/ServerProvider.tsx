@@ -99,6 +99,10 @@ export interface ServerContextValue {
   renewSession: (reason: RenewReason) => Promise<RenewOutcome>
   /** The connection lends its live System, so a renewal can update it in place. */
   attachSystem: AttachSystem
+  /** The live access token (see `SystemControllerConfig.getLiveToken`). */
+  getLiveToken: () => string | null
+  /** Stable; renews for the SDK's pre-handshake refresh. */
+  refreshCredential: () => Promise<void>
   /** Last URL the operator typed/used — login-screen prefill. */
   readonly lastServerUrl: string | null
   /** Remember a sign-in ATTEMPT's URL (call on tap, before any redirect). */
@@ -422,7 +426,7 @@ export function ServerProvider({ children }: { children: React.ReactNode }) {
 
   // Silent renewal (D812): the live token changes; `sessionToken` does not, so
   // the transport and the per-session caches are left alone.
-  const { renewSession, attachSystem } = useSessionRenewal({
+  const { renewSession, attachSystem, getLiveToken, refreshCredential } = useSessionRenewal({
     renewer,
     server,
     token,
@@ -504,6 +508,8 @@ export function ServerProvider({ children }: { children: React.ReactNode }) {
       switchToCertificateSession: switchToCertificate,
       renewSession,
       attachSystem,
+      getLiveToken,
+      refreshCredential,
       lastServerUrl,
       rememberServerUrl,
     }),
@@ -525,6 +531,8 @@ export function ServerProvider({ children }: { children: React.ReactNode }) {
       switchToCertificate,
       renewSession,
       attachSystem,
+      getLiveToken,
+      refreshCredential,
       lastServerUrl,
       rememberServerUrl,
     ],

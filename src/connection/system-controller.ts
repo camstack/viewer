@@ -1,4 +1,4 @@
-import { createSystem, type System } from '@camstack/sdk'
+import { createSystem, type CredentialRefreshReason, type System } from '@camstack/sdk'
 import { isUnauthorizedError } from '../auth/unauthorized.js'
 import { watchSessionEndedClose } from '../auth/session-ended.js'
 import { shouldRerace, isStaleSwitchClose, type ConnState } from './recheck-policy.js'
@@ -80,6 +80,19 @@ export type ForegroundOutcome = ResumeProbeOutcome | BackgroundResumeOutcome
 export interface SystemControllerConfig {
   readonly serverUrl: string
   readonly token?: string
+  /**
+   * The live access token, read when the System is BUILT. `token` is the
+   * session token the transport is keyed by (a renewal must not redial), so on
+   * a cold start with an expired one a System that mounts mid-refresh would
+   * otherwise handshake anonymously. `null` / omitted = use `token`.
+   */
+  readonly getLiveToken?: () => string | null
+  /**
+   * Renew the session before the SDK handshakes with an expired token, or
+   * after the hub closed a socket 4401. Must resolve once the renewed token is
+   * installed on the System (`setToken`) — it must not reconnect.
+   */
+  readonly refreshCredential?: (reason: CredentialRefreshReason) => Promise<void>
   /** LAN-first candidate base URLs to race for the fastest control-plane route.
    *  Seeded from the last session's persisted hub endpoints (plus `serverUrl`). */
   readonly candidates: readonly string[]
@@ -265,7 +278,8 @@ export class SystemController {
   async connect(): Promise<void> {
     this.system = createSystem({
       serverUrl: this.config.serverUrl,
-      token: this.config.token,
+      token: this.config.getLiveToken?.() ?? this.config.token,
+      refreshCredential: this.config.refreshCredential,
       getLanguage: hubLanguage,
       onConnectionChange: (state) => void this.handleStateChange(state as ConnState),
     })

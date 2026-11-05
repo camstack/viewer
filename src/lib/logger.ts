@@ -62,6 +62,8 @@ const ALWAYS_SHIP_SCOPES: ReadonlySet<string> = new Set([
   'cold-query',
   'conn',
   'conn:lifecycle',
+  // Session renewals and sign-outs: the only trace of why a viewer was signed out.
+  'session',
   // How the PREVIOUS runtime ended. `error` ships anyway; this entry is for the
   // one `info` line each launch writes, which is the line that says a crash
   // happened at all. The 2026-08-20 report arrived with debug mode OFF, so a

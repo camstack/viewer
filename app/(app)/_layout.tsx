@@ -94,6 +94,8 @@ export default function AppLayout() {
     onEndpointsDiscovered,
     renewSession,
     attachSystem,
+    getLiveToken,
+    refreshCredential,
   } = useServer();
   const serverUrl = server?.serverUrl;
 
@@ -112,13 +114,15 @@ export default function AppLayout() {
         ? {
             serverUrl,
             token: sessionToken ?? undefined,
+            getLiveToken,
+            refreshCredential,
             candidates:
               initialCandidates.length > 0 ? [...initialCandidates] : [serverUrl],
             pinnedRouteUrl: initialPinnedRouteUrl,
             onEndpointsDiscovered,
           }
         : null,
-    [serverUrl, sessionToken, initialCandidates, initialPinnedRouteUrl, onEndpointsDiscovered],
+    [serverUrl, sessionToken, getLiveToken, refreshCredential, initialCandidates, initialPinnedRouteUrl, onEndpointsDiscovered],
   );
 
   if (!server || !token || !config) {

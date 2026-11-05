@@ -16,13 +16,16 @@
  * The refresh token is read at call time, never held by a caller: another tab
  * of the hub-served viewer may have rotated it since.
  */
+import { Platform } from 'react-native'
 import { log } from '../lib/logger.js'
 import type { SessionCredentials } from '../connection/server-store.js'
-import { hasCredentialClaim } from './session-token.js'
+import { hasCredentialClaim, isJwtExpired } from './session-token.js'
 import { renewSession, type RenewInput, type RenewOutcome } from './refresh-session.js'
 
 /** Where a server's credentials live (the `ServerStore` fits). */
 export interface SessionVault {
+  /** The stored access token; lets a tab adopt a renewal another tab stored. */
+  getToken?(serverId: string): Promise<string | null>
   getRefreshToken(serverId: string): Promise<string | null>
   setSession(serverId: string, session: SessionCredentials): Promise<void>
 }
@@ -44,8 +47,24 @@ export interface SessionRenewerDeps {
   readonly vault: SessionVault
   /** Told about every refresh that answered for or against a device credential. */
   readonly onDeviceAnswer?: (serverId: string, serverUrl: string, answer: DeviceRefreshAnswer) => void
+  /**
+   * The vault is shared with other tabs (web: localStorage). The hub honours a
+   * rotated-out refresh token for 30 s, then REVOKES the session — two tabs
+   * refreshing with the same token would sign the user out everywhere. So a
+   * renewal runs under a cross-tab lock and, once it holds it, adopts a newer
+   * live token another tab stored instead of rotating again.
+   */
+  readonly crossTab?: boolean
+  /** The cross-tab lock; default `navigator.locks.request` when the browser has it. */
+  readonly withLock?: <T>(name: string, fn: () => Promise<T>) => Promise<T>
   /** Injected for tests. */
   readonly renew?: (input: RenewInput) => Promise<RenewOutcome>
+}
+
+/** `navigator.locks` when the browser has it; else no lock (the adopt-stored re-read alone). */
+function browserLock<T>(name: string, fn: () => Promise<T>): Promise<T> {
+  const locks = typeof navigator === 'undefined' ? undefined : navigator.locks
+  return locks === undefined ? fn() : locks.request(name, fn)
 }
 
 export function createSessionRenewer(deps: SessionRenewerDeps): SessionRenewer {
@@ -54,7 +73,28 @@ export function createSessionRenewer(deps: SessionRenewerDeps): SessionRenewer {
   /** Rotations the vault refused to store; they outrank the vault's copy. */
   const unsaved = new Map<string, string | null>()
 
+  const crossTab = deps.crossTab ?? Platform.OS === 'web'
+  const withLock = deps.withLock ?? browserLock
+
+  /** A live token another tab stored since this tab's `currentToken`: use it, rotate nothing. */
+  const adoptStored = async (serverId: string, request: RenewRequest): Promise<RenewOutcome | null> => {
+    if (!crossTab || deps.vault.getToken === undefined || unsaved.has(serverId)) return null
+    const stored = await deps.vault.getToken(serverId)
+    if (stored === null || stored === request.currentToken || isJwtExpired(stored)) return null
+    const refreshToken = await deps.vault.getRefreshToken(serverId)
+    log.info('session', 'Adopted a session another tab renewed')
+    return { status: 'renewed', token: stored, refreshToken, supersededToken: null }
+  }
+
   const run = async (serverId: string, request: RenewRequest): Promise<RenewOutcome> => {
+    if (!crossTab) return refresh(serverId, request)
+    return withLock(`camstack-session-renew:${serverId}`, async () => {
+      const adopted = await adoptStored(serverId, request)
+      return adopted ?? refresh(serverId, request)
+    })
+  }
+
+  const refresh = async (serverId: string, request: RenewRequest): Promise<RenewOutcome> => {
     const refreshToken = unsaved.has(serverId)
       ? (unsaved.get(serverId) ?? null)
       : await deps.vault.getRefreshToken(serverId)
