@@ -30,6 +30,20 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.684',
+    date: '2026-11-05',
+    notes: {
+      en: [
+        'Opening the app after hours away connects right away, without errors.',
+        'Two browser tabs no longer sign each other out.',
+      ],
+      it: [
+        "Aprendo l'app dopo ore si connette subito, senza errori.",
+        'Due schede del browser non si disconnettono più a vicenda.',
+      ],
+    },
+  },
+  {
     version: '1.0.683',
     date: '2026-11-04',
     notes: {
