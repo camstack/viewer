@@ -30,6 +30,14 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.685',
+    date: '2026-11-06',
+    notes: {
+      en: ['The Alexa and Home Assistant notification targets let you pick their connection again.'],
+      it: ['I target Alexa e Home Assistant tornano a permettere di scegliere la connessione.'],
+    },
+  },
+  {
     version: '1.0.684',
     date: '2026-11-05',
     notes: {
