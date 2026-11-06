@@ -29,7 +29,7 @@ export type NcFormFieldType =
   | 'number'
   | 'boolean'
   | 'select'
-  | 'broker-select'
+  | 'instance-select'
 
 /** One choice in a `select` field. Values are normalized to strings. */
 export interface NcSelectOption {
@@ -58,8 +58,12 @@ export interface NcFormField {
   /** The schema-declared default (raw), consulted for initial values. */
   readonly default: unknown
   readonly placeholder?: string
-  /** `broker-select` only: the broker kind whose existing brokers are listed. */
-  readonly brokerKind?: string
+  /** `instance-select` only: the function cap whose instances are listed. */
+  readonly functionCap?: string
+  /** `instance-select` only: narrows the list to one kind of that cap; absent lists every kind. */
+  readonly instanceKind?: string
+  /** `instance-select` only: the words of the empty choice of an optional link. */
+  readonly noneLabel?: string
   /** Discovered `select` only; absent for a static select. */
   readonly discover?: NcDiscoverOptions
 }
@@ -91,7 +95,7 @@ function mapType(type: string | undefined): NcFormFieldType | null {
     case 'number':
     case 'boolean':
     case 'select':
-    case 'broker-select':
+    case 'instance-select':
       return type
     // A slider is a bounded number — render it as a numeric input.
     case 'slider':
@@ -138,7 +142,9 @@ function toFormField(raw: Record<string, unknown>): NcFormField | null {
     options: type === 'select' ? parseOptions(raw.options) : [],
     default: raw.default,
     placeholder: asString(raw.placeholder),
-    brokerKind: type === 'broker-select' ? asString(raw.brokerKind) : undefined,
+    functionCap: type === 'instance-select' ? asString(raw.functionCap) : undefined,
+    instanceKind: type === 'instance-select' ? asString(raw.kind) : undefined,
+    noneLabel: type === 'instance-select' ? asString(raw.noneLabel) : undefined,
     discover: type === 'select' ? parseDiscover(raw.discoverOptions) : undefined,
   }
 }
@@ -231,11 +237,11 @@ export function initialFieldValue(field: NcFormField): unknown {
   switch (field.type) {
     case 'boolean':
       return typeof field.default === 'boolean' ? field.default : false
-    case 'broker-select':
+    case 'instance-select':
       return ''
     case 'select':
       if (typeof field.default === 'string') return field.default
-      // A discovered or broker pick is never pre-selected.
+      // A discovered or instance pick is never pre-selected.
       if (field.discover) return ''
       return field.options[0]?.value ?? ''
     case 'number':

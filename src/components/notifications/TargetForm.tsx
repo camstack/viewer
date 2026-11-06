@@ -22,7 +22,7 @@ import { SelectRow, type SelectOption } from '../ui/SelectRow.js'
 import { NotifierIcon } from './NotifierIcon.js'
 import { SPACING, RADIUS } from '../../theme/tokens.js'
 import { useNcUpsertTarget } from '../../data/use-notification-center.js'
-import { useNcBrokers, useNcDiscoveredTargets } from '../../data/use-nc-target-options.js'
+import { useNcInstances, useNcDiscoveredTargets } from '../../data/use-nc-target-options.js'
 import { useDebouncedValue } from '../../hooks/use-debounced-value.js'
 import type { Target, TargetKind } from '../../data/notification-center.js'
 import {
@@ -197,9 +197,9 @@ function FieldControl({ field, value, values, targetId, onChange, invalid, editi
     )
   }
 
-  if (field.type === 'broker-select') {
+  if (field.type === 'instance-select') {
     return (
-      <BrokerSelectControl
+      <InstanceSelectControl
         field={field}
         value={typeof value === 'string' ? value : ''}
         onChange={onChange}
@@ -260,9 +260,10 @@ function FieldControl({ field, value, values, targetId, onChange, invalid, editi
 
 const DISCOVER_TYPING_DEBOUNCE_MS = 500
 
-/** A `broker-select`: the existing brokers of one kind, as the same picker row
- *  every select uses. Nothing is pre-selected. */
-function BrokerSelectControl({
+/** An `instance-select`: the instances of one cap (and kind), as the same picker row
+ *  every select uses. Nothing is pre-selected; an optional link offers its own empty
+ *  choice. */
+function InstanceSelectControl({
   field,
   value,
   onChange,
@@ -274,11 +275,16 @@ function BrokerSelectControl({
   readonly last: boolean
 }) {
   const { t } = useTranslation()
-  const brokers = useNcBrokers(field.brokerKind ?? '')
-  const rows = brokers.data ?? []
+  const instances = useNcInstances(field.functionCap ?? '', field.instanceKind)
+  const rows = instances.data ?? []
   const known = rows.some((b) => b.id === value)
+  const emptyLabel = instances.isLoading
+    ? t('v2.nc.targets.form.loadingOptions')
+    : !field.required && field.noneLabel
+      ? field.noneLabel
+      : t('v2.nc.targets.form.select')
   const options: readonly SelectOption<string>[] = [
-    { value: '', label: brokers.isLoading ? t('v2.nc.targets.form.loadingOptions') : t('v2.nc.targets.form.select') },
+    { value: '', label: emptyLabel },
     ...(value !== '' && !known ? [{ value, label: value }] : []),
     ...rows.map((b) => ({ value: b.id, label: b.name })),
   ]

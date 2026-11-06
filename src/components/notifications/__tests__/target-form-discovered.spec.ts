@@ -7,6 +7,7 @@ import {
   optionsFromCandidates,
   parseConfigSchema,
   serializeConfig,
+  validateConfig,
 } from '../target-form.js'
 
 function kindWith(fields: readonly unknown[]): TargetKind {
@@ -31,7 +32,14 @@ function kindWith(fields: readonly unknown[]): TargetKind {
 }
 
 const alexa = kindWith([
-  { type: 'broker-select', key: 'brokerId', label: 'Account', brokerKind: 'alexa', required: true },
+  {
+    type: 'instance-select',
+    key: 'brokerId',
+    label: 'Account',
+    functionCap: 'broker',
+    kind: 'alexa',
+    required: true,
+  },
   {
     type: 'select',
     key: 'deviceId',
@@ -42,9 +50,9 @@ const alexa = kindWith([
 ])
 
 describe('D981 target form fields', () => {
-  it('reads a broker-select and a discovered select from the server schema', () => {
+  it('reads an instance-select and a discovered select from the server schema', () => {
     const [broker, device] = parseConfigSchema(alexa.configSchema)
-    expect(broker).toMatchObject({ key: 'brokerId', type: 'broker-select', brokerKind: 'alexa' })
+    expect(broker).toMatchObject({ key: 'brokerId', type: 'instance-select', functionCap: 'broker', instanceKind: 'alexa', required: true })
     expect(device).toMatchObject({
       key: 'deviceId',
       type: 'select',
@@ -96,5 +104,45 @@ describe('D981 target form fields', () => {
   it('serializes only declared fields: a Mode the schema no longer declares is never sent', () => {
     const out = serializeConfig(alexa, { brokerId: 'b1', deviceId: 'd1', mode: 'announce' })
     expect(out).toEqual({ brokerId: 'b1', deviceId: 'd1' })
+  })
+})
+
+describe('instance-select link field', () => {
+  const optional = kindWith([
+    {
+      type: 'instance-select',
+      key: 'relayId',
+      label: 'Relay',
+      functionCap: 'broker',
+      kind: 'alexa',
+      required: false,
+      noneLabel: 'Default relay',
+    },
+  ])
+
+  it('carries the cap, kind and the words of the empty choice', () => {
+    expect(parseConfigSchema(optional.configSchema)[0]).toMatchObject({
+      type: 'instance-select',
+      functionCap: 'broker',
+      instanceKind: 'alexa',
+      required: false,
+      noneLabel: 'Default relay',
+    })
+  })
+
+  it('a required link needs an id', () => {
+    expect(validateConfig(alexa, { brokerId: '', deviceId: '' }).missing).toEqual(['brokerId'])
+    expect(validateConfig(alexa, { brokerId: 'b1', deviceId: '' }).ok).toBe(true)
+  })
+
+  it('an optional link allows the empty choice', () => {
+    expect(validateConfig(optional, { relayId: '' })).toEqual({ ok: true, missing: [] })
+    expect(buildInitialConfig(optional)).toEqual({ relayId: '' })
+    expect(serializeConfig(optional, { relayId: 'r1' })).toEqual({ relayId: 'r1' })
+  })
+
+  it('no longer reads the retired broker-select', () => {
+    const old = kindWith([{ type: 'broker-select', key: 'b', label: 'B', brokerKind: 'alexa' }])
+    expect(parseConfigSchema(old.configSchema)).toEqual([])
   })
 })
