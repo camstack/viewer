@@ -6,17 +6,12 @@ import {
   ImageOff,
   Lightbulb,
   PictureInPicture2,
-  Power,
-  Siren,
-  Plug,
-  Activity,
   Clock,
   Heart,
-  type LucideIcon,
 } from '../lib/icons.js'
 import { hapticTap } from '../lib/haptics.js'
 import { useTheme } from '../theme/theme-provider.js'
-import { SPACING, RADIUS, type ColorTokens } from '../theme/tokens.js'
+import { SPACING, RADIUS, withAlpha, type ColorTokens } from '../theme/tokens.js'
 import { FEATURE, type CameraInfo } from '../data/use-cameras.js'
 import { useCameraBadgeRow } from '../data/CameraBadgesProvider.js'
 import { useSnapshot } from '../data/use-snapshot.js'
@@ -41,11 +36,8 @@ import { MotionBorder } from './camera/MotionBorder.js'
 import { CameraStatusDot } from './camera/CameraStatusDot.js'
 import { isLiveEdge, shouldRequestSnapshot, type TileCameraState } from './camera/tile-snapshot-gate.js'
 import { OccupancyBadge } from './camera/OccupancyBadge.js'
-import {
-  useCameraChildrenStates,
-  type ChildDeviceState,
-  type ChildDeviceKind,
-} from '../data/use-children-states.js'
+import { GlassButton } from './ui/GlassButton.js'
+import { GlassGroup } from './ui/GlassSurface.js'
 
 interface CameraCardProps {
   readonly camera: CameraInfo
@@ -132,9 +124,6 @@ export const CameraCard = React.memo(function CameraCard({
   // The camera's own link, same aggregate-first rule as the battery.
   const { data: ownLink = null } = useNetworkLink(camera.id, active && !off && askSelf)
   const networkLink = badges.supported ? badges.row.networkLink : ownLink
-
-  // Child-device states (per accessory) — only while online.
-  const { data: childStates = [] } = useCameraChildrenStates(camera.id, camera.online && active && !off)
 
   // Two questions, not one flag (`tile-snapshot-gate.ts`): what may poll live,
   // and whether to ask for an image. The second one no longer looks at the
@@ -224,7 +213,7 @@ export const CameraCard = React.memo(function CameraCard({
             pointerEvents="none"
             accessibilityLabel={t('v2.cameras.refreshing')}
           >
-            <ActivityIndicator size="small" color="#fff" style={styles.refreshSpinner} />
+            <ActivityIndicator size="small" color={colors.onPicture} style={styles.refreshSpinner} />
           </View>
         ) : null}
 
@@ -257,8 +246,8 @@ export const CameraCard = React.memo(function CameraCard({
                 state two operators read differently in bright sun. */}
             <Heart
               size={13}
-              color={isFavourite ? '#ff4d6d' : '#fff'}
-              fill={isFavourite ? '#ff4d6d' : 'transparent'}
+              color={isFavourite ? colors.danger : colors.onPicture}
+              fill={isFavourite ? colors.danger : 'transparent'}
             />
           </Pressable>
           {showStaleChip ? (
@@ -269,7 +258,7 @@ export const CameraCard = React.memo(function CameraCard({
                 age: formatSnapshotAge(snapshot.ageMs),
               })}
             >
-              <Clock size={10} color="#fff" />
+              <Clock size={10} color={colors.onPicture} />
               <Text style={styles.staleChipText}>{formatSnapshotAge(snapshot.ageMs)}</Text>
             </View>
           ) : null}
@@ -322,11 +311,6 @@ export const CameraCard = React.memo(function CameraCard({
           {camera.name}
         </Text>
         <View style={styles.hints}>
-          {/* Child-device state — one icon PER device (lit/dim by on-state), plus
-              a separate motion icon for on-motion children. No counts. */}
-          {childStates.map((child) => (
-            <ChildStateIcons key={child.id} child={child} colors={colors} />
-          ))}
           {isBattery && battery ? (
             <StatusBadgeButton subject="battery" lines={batteryDetailLines(battery)} controller={status}>
               <BatteryBadge battery={battery} colors={colors} />
@@ -349,79 +333,37 @@ export const CameraCard = React.memo(function CameraCard({
             </StatusBadgeButton>
           ) : null}
         </View>
-        {/* Opens `CameraControlsOverlay`: PTZ (when the camera has it), linked
-            devices, and the function switches. Where an operator now learns a
-            switched-off function moved to (D62) — the badge that used to sit
-            in `hints` above reported the same fact and now lives inside that
-            sheet instead. Nested inside the card's own navigate-`Pressable`,
-            so the tap must not also open the camera. */}
-        {/* Same rule as the controls button below: the card itself navigates,
-            so this tap must not also open the camera. */}
-        <Pressable
-          onPress={(e) => {
-            e.stopPropagation()
-            onOpenOverlay()
-          }}
-          hitSlop={8}
-          accessibilityRole="button"
-          accessibilityLabel={t('v2.cameras.overlayA11y')}
-          style={({ pressed }) => [
-            styles.controlsBtn,
-            pressed && { backgroundColor: colors.surfaceHover },
-          ]}
-        >
-          <PictureInPicture2 size={18} color={colors.foregroundMuted} />
-        </Pressable>
-        <Pressable
-          onPress={(e) => {
-            e.stopPropagation()
-            onOpenControls()
-          }}
-          hitSlop={8}
-          accessibilityRole="button"
-          accessibilityLabel={t('v2.cameras.controlsA11y')}
-          style={({ pressed }) => [
-            styles.controlsBtn,
-            pressed && { backgroundColor: colors.surfaceHover },
-          ]}
-        >
-          <Lightbulb size={18} color={colors.foregroundMuted} />
-        </Pressable>
+        {/* Nested inside the card's own navigate-`Pressable`: a tap here must
+            not also open the camera, hence `stopPropagation`. */}
+        <GlassGroup style={styles.actions}>
+          <GlassButton
+            icon={PictureInPicture2}
+            size={FOOTER_BUTTON_SIZE}
+            label={t('v2.cameras.overlayA11y')}
+            testID="camera-card-overlay"
+            onPress={(e) => {
+              e.stopPropagation()
+              onOpenOverlay()
+            }}
+          />
+          <GlassButton
+            icon={Lightbulb}
+            size={FOOTER_BUTTON_SIZE}
+            label={t('v2.cameras.controlsA11y')}
+            testID="camera-card-controls"
+            onPress={(e) => {
+              e.stopPropagation()
+              onOpenControls()
+            }}
+          />
+        </GlassGroup>
       </View>
     </Pressable>
   )
 })
 
-/** The lucide icon for a child accessory kind. */
-const KIND_ICON: Record<ChildDeviceKind, LucideIcon> = {
-  light: Lightbulb,
-  switch: Power,
-  siren: Siren,
-  other: Plug,
-}
-
-/** Per-device child icons: the accessory's own icon (colored by on/off) and, for
- *  on-motion children, a separate motion icon (colored by armed state). An icon
- *  is dimmed (muted) when inactive, accented when active. No counts/labels. */
-function ChildStateIcons({ child, colors }: { child: ChildDeviceState; colors: ColorTokens }) {
-  const Icon = KIND_ICON[child.kind]
-  const onColor = child.kind === 'siren' ? colors.danger : colors.warning
-  return (
-    <View style={badgeStyles.row}>
-      {child.hasSwitch ? (
-        <Icon size={14} color={child.on ? onColor : colors.foregroundMuted} />
-      ) : null}
-      {child.hasMotion ? (
-        <Activity size={14} color={child.motionOn ? colors.primary : colors.foregroundMuted} />
-      ) : null}
-    </View>
-  )
-}
-
-const badgeStyles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', gap: SPACING.xs },
-  text: { fontSize: 11, fontWeight: '600' },
-})
+/** Diameter of the glass buttons in the card footer. */
+const FOOTER_BUTTON_SIZE = 28
 
 function makeStyles(colors: ColorTokens) {
   return StyleSheet.create({
@@ -448,7 +390,7 @@ function makeStyles(colors: ColorTokens) {
       width: 24,
       height: 24,
       borderRadius: 12,
-      backgroundColor: 'rgba(0,0,0,0.35)',
+      backgroundColor: withAlpha(colors.mediaBlack, 0.35),
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -465,7 +407,7 @@ function makeStyles(colors: ColorTokens) {
       width: 24,
       height: 24,
       borderRadius: 12,
-      backgroundColor: 'rgba(0,0,0,0.35)',
+      backgroundColor: withAlpha(colors.mediaBlack, 0.35),
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -476,9 +418,9 @@ function makeStyles(colors: ColorTokens) {
       paddingHorizontal: 6,
       paddingVertical: 2,
       borderRadius: 8,
-      backgroundColor: 'rgba(0,0,0,0.45)',
+      backgroundColor: withAlpha(colors.mediaBlack, 0.45),
     },
-    staleChipText: { color: '#fff', fontSize: 10, fontWeight: '500' },
+    staleChipText: { color: colors.onPicture, fontSize: 10, fontWeight: '500' },
     overlaySubtleText: { color: colors.foregroundSubtle, fontSize: 12 },
     footer: {
       flexDirection: 'row',
@@ -490,12 +432,6 @@ function makeStyles(colors: ColorTokens) {
     dot: { width: 8, alignItems: 'center' },
     name: { flex: 1, color: colors.foreground, fontSize: 15, fontWeight: '600' },
     hints: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md },
-    controlsBtn: {
-      width: 28,
-      height: 28,
-      borderRadius: RADIUS.md,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
+    actions: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm },
   })
 }

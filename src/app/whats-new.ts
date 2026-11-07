@@ -30,6 +30,14 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.688',
+    date: '2026-11-07',
+    notes: {
+      en: ['Camera cards: PiP and devices are now clear glass buttons; device icons removed.'],
+      it: ['Card camere: PiP e dispositivi sono pulsanti glass chiari; icone dispositivi rimosse.'],
+    },
+  },
+  {
     version: '1.0.687',
     date: '2026-11-07',
     notes: {

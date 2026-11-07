@@ -13,7 +13,7 @@
  * Both fire the standard tap haptic unless `haptic={false}`.
  */
 import React, { useCallback, useEffect, useMemo } from 'react'
-import { Pressable, StyleSheet, type StyleProp, type ViewStyle } from 'react-native'
+import { Pressable, StyleSheet, type GestureResponderEvent, type StyleProp, type ViewStyle } from 'react-native'
 import Animated, { useAnimatedStyle, useSharedValue, type AnimatedStyle } from 'react-native-reanimated'
 
 import { hapticTap } from '../../lib/haptics.js'
@@ -114,7 +114,8 @@ export function GlassPressable({
 export interface GlassButtonProps {
   readonly icon?: LucideIcon
   readonly label: string
-  readonly onPress?: () => void
+  /** Receives the press event, so a button nested in a pressable card can stop it bubbling. */
+  readonly onPress?: (event: GestureResponderEvent) => void
   /** An active state: washed with the `primary` tint, glyph on `primaryFill`. */
   readonly active?: boolean
   readonly disabled?: boolean
@@ -174,9 +175,9 @@ export function GlassButton({
       >
         <Pressable
           testID={testID}
-          onPress={() => {
+          onPress={(e) => {
             if (haptic) hapticTap()
-            onPress?.()
+            onPress?.(e)
           }}
           onPressIn={press.onPressIn}
           onPressOut={press.onPressOut}
