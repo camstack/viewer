@@ -2952,6 +2952,20 @@
         "paused": "In pausa",
         "buffering": "Caricamento",
         "standby": "Standby"
+      },
+      "timedRun": {
+        "refusedTitle": "Impossibile avviare il timer",
+        "overMax": "È più lungo di quanto questo dispositivo possa restare acceso.",
+        "unsupported": "Questo dispositivo non supporta il timer.",
+        "commandFailed": "Il dispositivo non si è acceso.",
+        "quickRun": "Avvia {{duration}} {{unit}}",
+        "cancelWithTime": "Annulla · ancora {{time}}",
+        "unit": {
+          "s": "s",
+          "min": "min"
+        },
+        "cancelFailedTitle": "Impossibile annullare il timer",
+        "cancelFailed": "Il timer è ancora attivo."
       }
     },
     "updates": {

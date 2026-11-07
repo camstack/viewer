@@ -63,6 +63,10 @@ describe('linked-device actions are withheld, read-only rows are kept', () => {
     expect(src).toContain('hasMotionTrigger(device.features) && canActuate')
   })
 
+  it('a timed run starts the device, so it is gated like an actuator', () => {
+    expect(src).toContain('hasTimedRun(device.features) && canActuate')
+  })
+
   it('withholds by rendering nothing, never by disabling', () => {
     expect(src).toContain('showPrimary ? <PrimaryControl device={device} /> : null')
     expect(src).not.toContain('disabled={!canActuate}')

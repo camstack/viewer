@@ -16,6 +16,8 @@ import type { AccessoryDevice } from '../../../data/use-accessories.js'
 import { pickAccessoryControl, hasMotionTrigger, isActuatingControlKind } from './control-registry.js'
 import { useCanActuate } from '../../../hooks/use-user-scope.js'
 import { MotionTriggerToggle } from './MotionTriggerToggle.js'
+import { TimedRunControl } from './TimedRunControl.js'
+import { hasTimedRun } from '../../../data/timed-run.js'
 import {
   SwitchControl, BrightnessControl, LockControl, CoverControl,
   AlarmControl, SensorValueControl, ClimateControl, FanControl, ButtonControl,
@@ -112,22 +114,24 @@ export function AccessoryControl({ device }: AccessoryControlComponentProps) {
   // "On motion" WRITES the accessory's auto-activation — it is an actuator too.
   const showMotion = hasMotionTrigger(device.features) && canActuate
 
-  // No motion-trigger → just the primary control (or nothing for kind 'none').
-  if (!showMotion) return showPrimary ? <PrimaryControl device={device} /> : null
+  // A timed run starts the device, so it is gated like an actuator.
+  const showTimedRun = hasTimedRun(device.features) && canActuate
 
-  // Motion-trigger-only accessory (no controllable primary): the toggle IS the
-  // row content.
-  if (pick.kind === 'none') {
-    return <MotionTriggerToggle deviceId={device.id} online={device.online} />
+  if (!showTimedRun) {
+    // No motion-trigger → just the primary control (or nothing for kind 'none').
+    if (!showMotion) return showPrimary ? <PrimaryControl device={device} /> : null
+    // Motion-trigger-only accessory (no controllable primary): the toggle IS the row.
+    if (pick.kind === 'none') {
+      return <MotionTriggerToggle deviceId={device.id} online={device.online} />
+    }
   }
 
-  // Both: the "On motion" toggle sits alongside the primary control.
+  // Extras sit alongside the primary control; with no controllable primary they ARE the row.
   return (
     <View style={styles.row}>
-      <MotionTriggerToggle deviceId={device.id} online={device.online} />
-      {/* Reached only when `showMotion` held, which already required
-          `canActuate` — so the primary is never withheld here. */}
-      <PrimaryControl device={device} />
+      {showMotion ? <MotionTriggerToggle deviceId={device.id} online={device.online} /> : null}
+      {showTimedRun ? <TimedRunControl deviceId={device.id} online={device.online} /> : null}
+      {showPrimary && pick.kind !== 'none' ? <PrimaryControl device={device} /> : null}
     </View>
   )
 }

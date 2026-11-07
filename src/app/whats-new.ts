@@ -30,6 +30,14 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.689',
+    date: '2026-11-07',
+    notes: {
+      en: ['Heaters and fountains: one-tap timed run, with the time left and cancel.'],
+      it: ['Stufe e fontane: avvio a tempo con un tocco, con tempo residuo e annulla.'],
+    },
+  },
+  {
     version: '1.0.688',
     date: '2026-11-07',
     notes: {

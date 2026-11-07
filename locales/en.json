@@ -2955,6 +2955,20 @@
         "paused": "Paused",
         "buffering": "Buffering",
         "standby": "Standby"
+      },
+      "timedRun": {
+        "refusedTitle": "Could not start the timer",
+        "overMax": "That is longer than this device may run.",
+        "unsupported": "This device cannot run on a timer.",
+        "commandFailed": "The device did not turn on.",
+        "quickRun": "Run {{duration}} {{unit}}",
+        "cancelWithTime": "Cancel · {{time}} left",
+        "unit": {
+          "s": "s",
+          "min": "min"
+        },
+        "cancelFailedTitle": "Could not cancel the timer",
+        "cancelFailed": "The timer is still running."
       }
     },
     "updates": {
