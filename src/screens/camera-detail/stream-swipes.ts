@@ -47,7 +47,14 @@ export interface StreamSwipeInput {
   readonly translationY: number
   readonly velocityY: number
   readonly zoomScale: number
+  /** Did a pinch begin during this touch sequence (`zoom-touch-sequence.ts`)? */
+  readonly pinchSeen: boolean
+  /** Most fingers down at once during this touch sequence. */
+  readonly maxTouches: number
 }
+
+export type SwipeKind = 'back' | 'overlay'
+export type SwipeRefusal = 'pinch-seen' | 'multi-touch'
 
 /** The shared shape of a downward fling. Both outcomes ask exactly this. */
 function isDownwardFling(args: StreamSwipeInput): boolean {
@@ -56,12 +63,29 @@ function isDownwardFling(args: StreamSwipeInput): boolean {
   return args.translationY > SWIPE_DISTANCE && args.velocityY > SWIPE_VELOCITY
 }
 
+/**
+ * Why a downward fling that has the right shape is still not a swipe, or
+ * `null` when it is.
+ *
+ * A pinch that ends near 1x leaves one finger on the glass; any downward drift
+ * of it has the shape of the back fling. So neither fling fires in a touch
+ * where a pinch began, and the one-finger fling additionally requires that no
+ * second finger was ever down.
+ */
+export function swipeRefusal(args: StreamSwipeInput, kind: SwipeKind): SwipeRefusal | null {
+  'worklet'
+  if (!isDownwardFling(args)) return null
+  if (args.pinchSeen) return 'pinch-seen'
+  if (kind === 'back' && args.maxTouches > BACK_SWIPE_POINTERS) return 'multi-touch'
+  return null
+}
+
 export function shouldGoBackOnSwipe(args: StreamSwipeInput): boolean {
   'worklet'
-  return isDownwardFling(args)
+  return isDownwardFling(args) && swipeRefusal(args, 'back') === null
 }
 
 export function shouldOpenOverlayOnSwipe(args: StreamSwipeInput): boolean {
   'worklet'
-  return isDownwardFling(args)
+  return isDownwardFling(args) && swipeRefusal(args, 'overlay') === null
 }

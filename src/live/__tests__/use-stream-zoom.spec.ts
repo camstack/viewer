@@ -306,7 +306,10 @@ describe('useStreamZoom — one result, one viewport', () => {
       act(() => {
         vi.advanceTimersByTime(1000)
       })
+      // The double tap is a NEW touch sequence (a finger lands a second later).
       act(() => {
+        const tracker = (result.current.composeWith() as unknown as StubGesture).__children[2]
+        ;(tracker?.__handlers['onTouchesDown'] as unknown as (e: object) => void)({ numberOfTouches: 1 })
         result.current.doubleTapZoomAt(50, 50)
       })
       rerender()

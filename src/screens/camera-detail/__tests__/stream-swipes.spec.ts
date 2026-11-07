@@ -12,6 +12,7 @@ import {
   OVERLAY_SWIPE_POINTERS,
   shouldGoBackOnSwipe,
   shouldOpenOverlayOnSwipe,
+  swipeRefusal,
   SWIPE_DISTANCE,
   SWIPE_VELOCITY,
   ZOOM_IDLE_SCALE,
@@ -30,27 +31,27 @@ describe('the two downward flings', () => {
   })
 
   it('fires on a fling that travels far and fast enough', () => {
-    const fling = { translationY: FAR, velocityY: FAST, zoomScale: 1 }
+    const fling = { translationY: FAR, velocityY: FAST, zoomScale: 1, pinchSeen: false, maxTouches: 1 }
     expect(shouldGoBackOnSwipe(fling)).toBe(true)
     expect(shouldOpenOverlayOnSwipe(fling)).toBe(true)
   })
 
   it('ignores a slow drag', () => {
     // A slow drag down is how an operator scrolls the page under the picture.
-    const drag = { translationY: FAR, velocityY: 10, zoomScale: 1 }
+    const drag = { translationY: FAR, velocityY: 10, zoomScale: 1, pinchSeen: false, maxTouches: 1 }
     expect(shouldGoBackOnSwipe(drag)).toBe(false)
     expect(shouldOpenOverlayOnSwipe(drag)).toBe(false)
   })
 
   it('ignores an upward fling', () => {
-    const up = { translationY: -FAR, velocityY: -FAST, zoomScale: 1 }
+    const up = { translationY: -FAR, velocityY: -FAST, zoomScale: 1, pinchSeen: false, maxTouches: 1 }
     expect(shouldGoBackOnSwipe(up)).toBe(false)
     expect(shouldOpenOverlayOnSwipe(up)).toBe(false)
   })
 
   it('stands down while the picture is zoomed', () => {
     // Zoomed, that pan belongs to the frame.
-    const zoomed = { translationY: FAR, velocityY: FAST, zoomScale: ZOOM_IDLE_SCALE + 0.1 }
+    const zoomed = { translationY: FAR, velocityY: FAST, zoomScale: ZOOM_IDLE_SCALE + 0.1, pinchSeen: false, maxTouches: 1 }
     expect(shouldGoBackOnSwipe(zoomed)).toBe(false)
     expect(shouldOpenOverlayOnSwipe(zoomed)).toBe(false)
   })
@@ -58,8 +59,34 @@ describe('the two downward flings', () => {
   it('uses the SAME travel and velocity for both', () => {
     // One muscle memory, two outcomes. Different thresholds would make the
     // finger count feel like a coincidence rather than the rule.
-    const marginal = { translationY: SWIPE_DISTANCE - 1, velocityY: FAST, zoomScale: 1 }
+    const marginal = { translationY: SWIPE_DISTANCE - 1, velocityY: FAST, zoomScale: 1, pinchSeen: false, maxTouches: 1 }
     expect(shouldGoBackOnSwipe(marginal)).toBe(false)
     expect(shouldOpenOverlayOnSwipe(marginal)).toBe(false)
+  })
+})
+
+describe('a pinch in the same touch', () => {
+  const fling = { translationY: FAR, velocityY: FAST, zoomScale: 1, pinchSeen: false, maxTouches: 1 }
+
+  it('stops a pinch ending near 1x from navigating back with the finger that stays', () => {
+    const afterPinch = { ...fling, pinchSeen: true }
+    expect(shouldGoBackOnSwipe(fling)).toBe(true)
+    expect(shouldGoBackOnSwipe(afterPinch)).toBe(false)
+    expect(swipeRefusal(afterPinch, 'back')).toBe('pinch-seen')
+  })
+
+  it('stops the overlay swipe too', () => {
+    const two = { ...fling, maxTouches: 2 }
+    expect(shouldOpenOverlayOnSwipe(two)).toBe(true)
+    expect(shouldOpenOverlayOnSwipe({ ...two, pinchSeen: true })).toBe(false)
+  })
+
+  it('keeps the one-finger back swipe to touches that never had a second finger', () => {
+    expect(swipeRefusal({ ...fling, maxTouches: 2 }, 'back')).toBe('multi-touch')
+    expect(swipeRefusal({ ...fling, maxTouches: 2 }, 'overlay')).toBeNull()
+  })
+
+  it('reports nothing for a drag that was never a fling', () => {
+    expect(swipeRefusal({ ...fling, velocityY: 1, pinchSeen: true }, 'back')).toBeNull()
   })
 })

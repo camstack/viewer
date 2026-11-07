@@ -23,6 +23,8 @@
  * can be read on the UI thread inside the tap's own worklet.
  */
 
+import type { TouchSequence } from './zoom-touch-sequence.js'
+
 /**
  * How long a pinch keeps the tap ladder shut.
  *
@@ -47,4 +49,27 @@ export function tapStepAccepted(input: TapStepGateInput): boolean {
   // there would wedge the double tap until wall time caught up.
   if (since < 0) return true
   return since >= TAP_AFTER_PINCH_MS
+}
+
+export type DoubleTapRefusal = 'after-pinch' | 'multi-touch' | 'pinch-seen' | 'pan-seen'
+
+export interface DoubleTapGateInput extends TapStepGateInput {
+  readonly sequence: TouchSequence
+}
+
+/**
+ * Why a double tap must NOT move the zoom, or `null` when it may.
+ *
+ * A double tap is two quick single-finger taps with nothing else happening.
+ * Two fingers down at any point, a pinch or a real pan during the same touch
+ * is a different gesture whose tail merely looks like taps; acting on it reset
+ * the operator's zoom to 1x. The 350 ms clock stays as the last line.
+ */
+export function doubleTapRefusal(input: DoubleTapGateInput): DoubleTapRefusal | null {
+  'worklet'
+  if (input.sequence.pinchSeen) return 'pinch-seen'
+  if (input.sequence.maxTouches > 1) return 'multi-touch'
+  if (input.sequence.panSeen) return 'pan-seen'
+  if (!tapStepAccepted(input)) return 'after-pinch'
+  return null
 }

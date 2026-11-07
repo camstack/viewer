@@ -16,7 +16,7 @@
  */
 import { describe, expect, it } from 'vitest'
 
-import { TAP_AFTER_PINCH_MS, tapStepAccepted } from '../zoom-tap-gate.js'
+import { doubleTapRefusal, TAP_AFTER_PINCH_MS, tapStepAccepted } from '../zoom-tap-gate.js'
 
 describe('tapStepAccepted', () => {
   it('accepts a tap on a screen nobody has pinched', () => {
@@ -54,5 +54,24 @@ describe('tapStepAccepted', () => {
     // past half a second it stops being a debounce and starts being a lockout.
     expect(TAP_AFTER_PINCH_MS).toBeGreaterThanOrEqual(200)
     expect(TAP_AFTER_PINCH_MS).toBeLessThanOrEqual(500)
+  })
+})
+
+describe('doubleTapRefusal', () => {
+  const calm = { pinchSeen: false, panSeen: false, maxTouches: 1, lastTouchMs: 0 }
+  const at = { nowMs: 10_000, lastPinchEndMs: 0 }
+
+  it('lets a plain one-finger double tap through', () => {
+    expect(doubleTapRefusal({ ...at, sequence: calm })).toBeNull()
+  })
+
+  it('refuses when a pinch, a second finger or a pan took part in the touch', () => {
+    expect(doubleTapRefusal({ ...at, sequence: { ...calm, pinchSeen: true } })).toBe('pinch-seen')
+    expect(doubleTapRefusal({ ...at, sequence: { ...calm, maxTouches: 2 } })).toBe('multi-touch')
+    expect(doubleTapRefusal({ ...at, sequence: { ...calm, panSeen: true } })).toBe('pan-seen')
+  })
+
+  it('keeps the post-pinch clock as the last line', () => {
+    expect(doubleTapRefusal({ nowMs: 10_000, lastPinchEndMs: 9_900, sequence: calm })).toBe('after-pinch')
   })
 })

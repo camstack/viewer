@@ -54,12 +54,22 @@
  * screen is compiled by the React Compiler (both bail out on shared-value
  * writes), so the `useMemo` at the bottom is the only memo there is.
  */
-import { useCallback, useMemo } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { clampPan, streamPanExtent, type StreamFit } from './stream-zoom-clamp.js'
 import { focalPan, ZOOM_MAX, ZOOM_MIN, ZOOM_STEPS } from './zoom-steps.js'
 import { coverScale, doubleTapTarget } from '../../shared/zoom/double-tap-zoom.js'
 import { foldGrowth } from './zoom-render.js'
-import { tapStepAccepted } from './zoom-tap-gate.js'
+import { doubleTapRefusal } from './zoom-tap-gate.js'
+import { seedFromLive } from './zoom-seed.js'
+import {
+  EMPTY_TOUCH_SEQUENCE,
+  markPan,
+  markPinch,
+  PAN_SEEN_DISTANCE,
+  touchDown,
+  touchUp,
+  type TouchSequence,
+} from './zoom-touch-sequence.js'
 import {
   beginZoomTrace,
   formatZoomTrace,
@@ -81,6 +91,7 @@ import {
   type SimultaneousGesture,
 } from 'react-native-gesture-handler'
 import {
+  cancelAnimation,
   runOnJS,
   runOnUI,
   useAnimatedStyle,
@@ -151,7 +162,18 @@ export interface StreamZoom {
    *  growth folded in, so the wrapper itself never changes size. */
   readonly videoStyle: AnimatedStyle<ViewStyle>
   /** Animate back to 1× and recenter. Callable from either thread. */
-  readonly resetZoom: () => void
+  readonly resetZoom: (reason?: string) => void
+  /**
+   * What the fingers did during the current touch sequence (pinch seen, pan
+   * seen, most fingers down). The screen's flings read it so a pinch's tail
+   * does not navigate away.
+   */
+  readonly touchSequence: SharedValue<TouchSequence>
+  /**
+   * Debug-only trace line on the `live:zoom` channel, callable from a worklet.
+   * A no-op unless the hook was given `trace`.
+   */
+  readonly traceEvent: (msg: string, data: TraceData) => void
   /**
    * The double tap — a worklet, to be called from the tap gesture's `onEnd`
    * without `runOnJS` (`shared/zoom/double-tap-zoom.ts` decides).
@@ -175,7 +197,7 @@ export interface StreamZoom {
    * become 1279pt wide on a 932pt screen. Driven from a React effect on the
    * window dimensions: the hook cannot see one.
    */
-  readonly snapZoom: () => void
+  readonly snapZoom: (reason?: string) => void
   /** Compose the zoom pinch+pan simultaneously with the caller's gestures. */
   readonly composeWith: (...others: (GestureType | ComposedGesture)[]) => SimultaneousGesture
   /**
@@ -217,6 +239,16 @@ function reportZoomTrace(kind: string, samples: readonly ZoomTraceSample[]): voi
   )
 }
 
+export type TraceData = Readonly<Record<string, number | string | boolean>>
+
+/** Minimum gap (ms) between two `update` trace lines of one gesture. */
+const TRACE_UPDATE_THROTTLE_MS = 200
+
+/** JS side of {@link StreamZoom.traceEvent}: one debug line on the zoom channel. */
+function reportZoomEvent(msg: string, data: TraceData): void {
+  log.debug('live:zoom', msg, data)
+}
+
 const f2 = (n: number): string => {
   'worklet'
   return n.toFixed(2)
@@ -245,6 +277,36 @@ export function useStreamZoom({
    *  on the point that was grabbed. See `focalPan`. */
   const pinchFocalX = useSharedValue(0)
   const pinchFocalY = useSharedValue(0)
+  /** A pinch / pan is between its start and its end (or finalize). */
+  const pinchActive = useSharedValue(false)
+  const panActive = useSharedValue(false)
+  const touchSequence = useSharedValue<TouchSequence>(EMPTY_TOUCH_SEQUENCE)
+  const lastUpdateLogMs = useSharedValue(0)
+
+  // ── Event trace (debug mode only) ───────────────────────────────────────
+  // One JS hop per LINE, and only when `trace` is on: with it off the worklet
+  // returns before `runOnJS` is ever reached.
+  const traceEvent = useCallback(
+    (msg: string, data: TraceData): void => {
+      'worklet'
+      if (!trace) return
+      runOnJS(reportZoomEvent)(msg, data)
+    },
+    [trace],
+  )
+  const snapshot = useCallback(
+    (extra: TraceData): TraceData => {
+      'worklet'
+      return {
+        scale: Math.round(scale.value * 100) / 100,
+        committed: Math.round(committedScale.value * 100) / 100,
+        tx: Math.round(tx.value),
+        ty: Math.round(ty.value),
+        ...extra,
+      }
+    },
+    [scale, committedScale, tx, ty],
+  )
 
   // ── Trace (debug mode only) ─────────────────────────────────────────────
   // Samples accumulate on the UI thread; they cross to JS once, either when
@@ -310,29 +372,64 @@ export function useStreamZoom({
     [traceSample],
   )
 
-  const snapToIdentity = useCallback((): void => {
-    scale.set(1)
-    committedScale.set(1)
-    tx.set(0)
-    ty.set(0)
-    savedTx.set(0)
-    savedTy.set(0)
-  }, [scale, committedScale, tx, ty, savedTx, savedTy])
+  const snapToIdentity = useCallback(
+    (reason = 'snap'): void => {
+      // JS side (an effect calls it): log directly, no hop.
+      if (trace) log.debug('live:zoom', 'zoom snap', snapshot({ reason }))
+      scale.set(1)
+      committedScale.set(1)
+      tx.set(0)
+      ty.set(0)
+      savedTx.set(0)
+      savedTy.set(0)
+    },
+    [trace, snapshot, scale, committedScale, tx, ty, savedTx, savedTy],
+  )
 
-  const resetZoom = useCallback((): void => {
-    'worklet'
-    scale.set(withTiming(1))
-    committedScale.set(1)
-    tx.set(withTiming(0))
-    ty.set(withTiming(0))
-    savedTx.set(0)
-    savedTy.set(0)
-  }, [scale, committedScale, tx, ty, savedTx, savedTy])
+  const resetZoom = useCallback(
+    (reason = 'reset'): void => {
+      'worklet'
+      traceEvent('zoom reset', snapshot({ reason }))
+      scale.set(withTiming(1))
+      committedScale.set(1)
+      tx.set(withTiming(0))
+      ty.set(withTiming(0))
+      savedTx.set(0)
+      savedTy.set(0)
+    },
+    [scale, committedScale, tx, ty, savedTx, savedTy, traceEvent, snapshot],
+  )
 
   // When the last pinch released, on the UI thread's clock. Read by the
   // double tap so a finger bouncing off the glass cannot throw away the zoom
   // the operator had just set by hand (`zoom-tap-gate.ts`).
   const lastPinchEndMs = useSharedValue(0)
+
+  // Counts the fingers of the touch sequence. A Manual recogniser only listens:
+  // it never activates, so it competes with nothing in the Simultaneous.
+  const touchTracker = useMemo(
+    () =>
+      Gesture.Manual()
+        .onTouchesDown(
+          guardWorklet('zoom.touch.down', (e: { numberOfTouches: number }) => {
+            'worklet'
+            touchSequence.set(touchDown(touchSequence.value, e.numberOfTouches, Date.now()))
+          }),
+        )
+        .onTouchesUp(
+          guardWorklet('zoom.touch.up', () => {
+            'worklet'
+            touchSequence.set(touchUp(touchSequence.value, Date.now()))
+          }),
+        )
+        .onTouchesCancelled(
+          guardWorklet('zoom.touch.cancelled', () => {
+            'worklet'
+            touchSequence.set(touchUp(touchSequence.value, Date.now()))
+          }),
+        ),
+    [touchSequence],
+  )
 
   const pinch = useMemo(
     () =>
@@ -340,9 +437,25 @@ export function useStreamZoom({
         .onStart(
           guardWorklet('zoom.pinch.start', (e) => {
             'worklet'
-            pinchStartScale.set(committedScale.value)
+            // Seed from the picture the fingers are holding: a reset or a double
+            // tap commits its target at once while `scale` animates there, and
+            // seeding from the commitment made the frame jump. Stop the
+            // animation where it is so the live value is the start.
+            cancelAnimation(scale)
+            cancelAnimation(tx)
+            cancelAnimation(ty)
+            const seed = seedFromLive({ scale: scale.value, tx: tx.value, ty: ty.value }, MIN_SCALE, MAX_SCALE)
+            pinchStartScale.set(seed.startScale)
+            scale.set(seed.startScale)
+            committedScale.set(seed.startScale)
+            savedTx.set(seed.savedTx)
+            savedTy.set(seed.savedTy)
             pinchFocalX.set(e.focalX)
             pinchFocalY.set(e.focalY)
+            pinchActive.set(true)
+            touchSequence.set(markPinch(touchSequence.value, Date.now()))
+            lastUpdateLogMs.set(0)
+            traceEvent('zoom pinch start', snapshot({ pointers: e.numberOfPointers, startScale: seed.startScale }))
             traceBegin('pinch')
             traceSample('start', { focalX: e.focalX, focalY: e.focalY, pointers: e.numberOfPointers })
           }),
@@ -392,6 +505,11 @@ export function useStreamZoom({
             const clamped = clampPan({ tx: ptx, ty: pty, w, h, aspect: contentAspect, scale: s1, fit })
             tx.set(clamped.x)
             ty.set(clamped.y)
+            const nowMs = Date.now()
+            if (trace && nowMs - lastUpdateLogMs.value >= TRACE_UPDATE_THROTTLE_MS) {
+              lastUpdateLogMs.set(nowMs)
+              traceEvent('zoom pinch update', snapshot({ pointers: e.numberOfPointers, gestureScale: Math.round(e.scale * 100) / 100 }))
+            }
             traceSample('update', {
               pointers: e.numberOfPointers,
               focalX: e.focalX,
@@ -424,6 +542,8 @@ export function useStreamZoom({
               note: boxBefore === h ? undefined : `box ${Math.round(boxBefore)}→${Math.round(h)}`,
             })
             lastPinchEndMs.set(Date.now())
+            pinchActive.set(false)
+            traceEvent('zoom pinch end', snapshot({ pointers: 0 }))
             traceRelease()
             runOnJS(reportZoom)('pinch', {
               viewportW: Math.round(w),
@@ -438,8 +558,30 @@ export function useStreamZoom({
               ty: Math.round(ty.value),
             })
           }),
+        )
+        .onFinalize(
+          guardWorklet('zoom.pinch.finalize', (_e: unknown, success: boolean) => {
+            'worklet'
+            // Only a pinch that STARTED owns the live transform. A cancelled one
+            // (a system gesture, a second recogniser winning) never reaches
+            // `onEnd`, which left committed/saved at the pre-pinch state and the
+            // next gesture jumping back to it.
+            if (!pinchActive.value) return
+            pinchActive.set(false)
+            committedScale.set(scale.value)
+            savedTx.set(tx.value)
+            savedTy.set(ty.value)
+            lastPinchEndMs.set(Date.now())
+            traceEvent('zoom pinch cancel', snapshot({ success }))
+          }),
         ),
     [
+      pinchActive,
+      touchSequence,
+      lastUpdateLogMs,
+      trace,
+      traceEvent,
+      snapshot,
       pinchStartScale,
       committedScale,
       lastPinchEndMs,
@@ -469,6 +611,16 @@ export function useStreamZoom({
           guardWorklet('zoom.pan.start', () => {
             'worklet'
             if (scale.value <= MIN_SCALE) return
+            // Same seed rule as the pinch: the picture's live position.
+            cancelAnimation(scale)
+            cancelAnimation(tx)
+            cancelAnimation(ty)
+            committedScale.set(scale.value)
+            savedTx.set(tx.value)
+            savedTy.set(ty.value)
+            panActive.set(true)
+            lastUpdateLogMs.set(0)
+            traceEvent('zoom pan start', snapshot({ pointers: 1 }))
             traceBegin('pan')
             traceSample('start', {})
           }),
@@ -486,6 +638,17 @@ export function useStreamZoom({
             const clamped = clampPan({ tx: rawX, ty: rawY, w, h, aspect: contentAspect, scale: s, fit })
             tx.set(clamped.x)
             ty.set(clamped.y)
+            if (
+              !touchSequence.value.panSeen &&
+              Math.abs(e.translationX) + Math.abs(e.translationY) > PAN_SEEN_DISTANCE
+            ) {
+              touchSequence.set(markPan(touchSequence.value))
+            }
+            const nowMs = Date.now()
+            if (trace && nowMs - lastUpdateLogMs.value >= TRACE_UPDATE_THROTTLE_MS) {
+              lastUpdateLogMs.set(nowMs)
+              traceEvent('zoom pan update', snapshot({ pointers: 1 }))
+            }
             traceSample('update', { pointers: 1, rawX, rawY, limX, limY })
           }),
         )
@@ -494,6 +657,8 @@ export function useStreamZoom({
             'worklet'
             savedTx.set(tx.value)
             savedTy.set(ty.value)
+            panActive.set(false)
+            traceEvent('zoom pan end', snapshot({ pointers: 0 }))
             const w = viewportWidth
             const h = heightFor(scale.value)
             const { x: limX, y: limY } = streamPanExtent(w, h, contentAspect, scale.value, fit)
@@ -516,8 +681,26 @@ export function useStreamZoom({
               atLimitY: Math.abs(Math.abs(ty.value) - limY) < 1 ? 1 : 0,
             })
           }),
+        )
+        .onFinalize(
+          guardWorklet('zoom.pan.finalize', (_e: unknown, success: boolean) => {
+            'worklet'
+            if (!panActive.value) return
+            panActive.set(false)
+            committedScale.set(scale.value)
+            savedTx.set(tx.value)
+            savedTy.set(ty.value)
+            traceEvent('zoom pan cancel', snapshot({ success }))
+          }),
         ),
     [
+      panActive,
+      touchSequence,
+      lastUpdateLogMs,
+      committedScale,
+      trace,
+      traceEvent,
+      snapshot,
       scale,
       viewportWidth,
       heightFor,
@@ -555,7 +738,15 @@ export function useStreamZoom({
       // A tap in the shadow of a pinch is the hand leaving the glass, not an
       // instruction. Reported 2026-09-21 as "sometimes a pinch ends a notch
       // further forward"; the double tap was acting on a bouncing finger.
-      if (!tapStepAccepted({ nowMs: Date.now(), lastPinchEndMs: lastPinchEndMs.value })) return
+      const refusal = doubleTapRefusal({
+        nowMs: Date.now(),
+        lastPinchEndMs: lastPinchEndMs.value,
+        sequence: touchSequence.value,
+      })
+      if (refusal !== null) {
+        traceEvent('zoom double-tap refused', snapshot({ reason: refusal, maxTouches: touchSequence.value.maxTouches }))
+        return
+      }
       const s0 = scale.value
       const w = viewportWidth
       // The box the tap landed in, and the box the new scale asks for: the
@@ -576,7 +767,7 @@ export function useStreamZoom({
         traceBegin('double-tap')
         traceSample('step', { focalX: x, focalY: y, note: `${f2(s0)}→fit` })
         traceRelease()
-        resetZoom()
+        resetZoom('double-tap')
         return
       }
       const s1 = target.scale
@@ -634,6 +825,9 @@ export function useStreamZoom({
       contentAspect,
       fit,
       resetZoom,
+      touchSequence,
+      traceEvent,
+      snapshot,
       traceBegin,
       traceSample,
       traceRelease,
@@ -642,9 +836,15 @@ export function useStreamZoom({
 
   const composeWith = useCallback(
     (...others: (GestureType | ComposedGesture)[]): SimultaneousGesture =>
-      Gesture.Simultaneous(pinch, pan, ...others),
-    [pinch, pan],
+      Gesture.Simultaneous(pinch, pan, touchTracker, ...others),
+    [pinch, pan, touchTracker],
   )
+
+  // Debug: a rebuilt pinch/pan reconfigures native handlers; one mid-gesture is
+  // the suspect for a pinch that snaps, so say when it happens.
+  useEffect(() => {
+    if (trace) log.debug('live:zoom', 'zoom gestures rebuilt', { width: viewportWidth, fit })
+  }, [pinch, pan, trace, viewportWidth, fit])
 
   return useMemo(
     () => ({
@@ -652,11 +852,24 @@ export function useStreamZoom({
       committedScale,
       videoStyle,
       resetZoom,
+      touchSequence,
+      traceEvent,
       doubleTapZoomAt,
       snapZoom: snapToIdentity,
       composeWith,
       traceBox,
     }),
-    [scale, committedScale, videoStyle, resetZoom, doubleTapZoomAt, snapToIdentity, composeWith, traceBox],
+    [
+      scale,
+      committedScale,
+      videoStyle,
+      resetZoom,
+      touchSequence,
+      traceEvent,
+      doubleTapZoomAt,
+      snapToIdentity,
+      composeWith,
+      traceBox,
+    ],
   )
 }

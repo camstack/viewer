@@ -30,6 +30,14 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.686',
+    date: '2026-11-07',
+    notes: {
+      en: ['Pinch-zoom no longer snaps back or gets stuck.'],
+      it: ['Il pinch-zoom non torna più indietro e non si blocca.'],
+    },
+  },
+  {
     version: '1.0.685',
     date: '2026-11-06',
     notes: {

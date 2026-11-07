@@ -93,7 +93,7 @@
  */
 import type { ServedProfileReport } from '../recording/recording-messages.js'
 import { assertionAfterPlayerChange, shouldAssertClip } from '../clips/clip-assert-on-player.js'
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 
 import { useClipStage, type ClipStagePorts } from '../clips/use-clip-stage.js'
 import { clipStartOnFrame } from '../clips/clip-on-frame.js'
@@ -150,7 +150,9 @@ import {
   OVERLAY_SWIPE_POINTERS,
   shouldGoBackOnSwipe,
   shouldOpenOverlayOnSwipe,
+  swipeRefusal,
 } from './camera-detail/stream-swipes.js'
+import { classifyViewportChange, type WindowSize } from './camera-detail/viewport-change.js'
 import { backToCameras } from '../navigation/back-to-cameras.js'
 import { SideNavRail } from '../navigation/SideNavRail.js'
 import { BottomNavBar } from '../navigation/BottomNavBar.js'
@@ -167,7 +169,7 @@ import { captureFileExtension } from '../live/live-capture-protocol.js'
 import { formatSelectionDuration } from '../recording/export-selection.js'
 import type { LiveCaptureFlow } from '../recording/record-control.js'
 import { useStreamZoom } from '../live/use-stream-zoom.js'
-import { growBoxHeight } from '../live/zoom-render.js'
+import { zoomBoxHeight, type ZoomBoxParams } from './camera-detail/zoom-box.js'
 import { useDeviceCapNames } from '../data/use-device-cap-names.js'
 import { useExportSelection } from '../recording/use-export-selection.js'
 import { useActivityStore } from '../activity/activity-instance.js'
@@ -358,6 +360,9 @@ const NEVER_HIDE = (): void => undefined
 const MAX_HEIGHT_FRACTION = 0.5
 /** Pinch scale at which the box reaches its max height (default→max over 1×→this). */
 const HEIGHT_GROW_SCALE = 2.5
+/** A double tap's two taps stay within this travel (pt) and this gap (ms). */
+const DOUBLE_TAP_MAX_DISTANCE = 24
+const DOUBLE_TAP_MAX_DELAY_MS = 300
 
 /** Resolve name + feature flags + status inputs from the authoritative camera list. */
 function useCameraMeta(deviceId: number): {
@@ -2096,18 +2101,37 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
   const pinchExpandsHeight = settings.stream.pinchExpandsHeight
   const wideStreamW = wideSizes.streamWidth
   const wideStreamH = wideSizes.streamHeight
+  //
+  // The rule's inputs live in ONE shared value and the callback below reads it,
+  // so `zoomBoxHeightFor` is the same function for the life of the screen. As a
+  // `useCallback` over six values, any of them moving (the safe-area frame
+  // jittering `maxHeight`, a settings flip) minted a new rule, which rebuilt the
+  // pinch and the whole gesture tree in the middle of a pinch. Scale 1→
+  // HEIGHT_GROW_SCALE grows the box from 16:9 up to MAX_HEIGHT_FRACTION of the
+  // page (`zoom-box.ts`).
+  const zoomBoxParams = useMemo<ZoomBoxParams>(
+    () => ({
+      fill,
+      winHeight,
+      isWideDetail,
+      wideStreamH,
+      pinchExpandsHeight,
+      defaultHeight,
+      maxHeight,
+      growScale: HEIGHT_GROW_SCALE,
+    }),
+    [fill, winHeight, isWideDetail, wideStreamH, pinchExpandsHeight, defaultHeight, maxHeight],
+  )
+  const zoomBoxShared = useSharedValue<ZoomBoxParams>(zoomBoxParams)
+  useLayoutEffect(() => {
+    zoomBoxShared.set(zoomBoxParams)
+  }, [zoomBoxParams, zoomBoxShared])
   const zoomBoxHeightFor = useCallback(
     (scale: number): number => {
       'worklet'
-      if (fill) return winHeight
-      if (isWideDetail) return wideStreamH
-      if (!pinchExpandsHeight) return defaultHeight
-      // Scale 1→HEIGHT_GROW_SCALE grows the box from 16:9 up to
-      // MAX_HEIGHT_FRACTION of the page; past 16:9 the video (cover) crops its
-      // side edges — the geometric tradeoff of a bigger view on a 16:9 source.
-      return growBoxHeight(scale, { rest: defaultHeight, max: maxHeight, growScale: HEIGHT_GROW_SCALE })
+      return zoomBoxHeight(scale, zoomBoxShared.value)
     },
-    [fill, winHeight, isWideDetail, wideStreamH, pinchExpandsHeight, defaultHeight, maxHeight],
+    [zoomBoxShared],
   )
 
   // Pinch + pan zoom. The screen owns tap/double-tap/one-finger-fling and
@@ -2144,10 +2168,33 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
   // taken BENEATH this transform comes back multiplied by it — which is how the
   // embedded player was told to become 1279pt wide on a 932pt screen, resized
   // its video past the surface, and stalled the stream for seconds.
+  //
+  // Only a REAL change of the box does it: an orientation flip or a move of at
+  // least `VIEWPORT_CHANGE_MIN_PT`. The window comes from the safe-area frame,
+  // and a system bar or the home indicator moving it by a few tens of points
+  // threw the operator's zoom away mid-pinch (`viewport-change.ts`). The
+  // reference only advances when a change is accepted, so slow drift still adds up.
   const snapZoom = zoom.snapZoom
+  const snappedWindow = useRef<WindowSize>({ width: winWidth, height: winHeight })
   useEffect(() => {
-    snapZoom()
-  }, [winWidth, winHeight, snapZoom])
+    const prev = snappedWindow.current
+    const change = classifyViewportChange(prev, { width: winWidth, height: winHeight })
+    if (change === 'none') {
+      if (zoomTraceOn && (prev.width !== winWidth || prev.height !== winHeight)) {
+        log.debug('live:zoom', 'zoom snap skipped — viewport jitter', {
+          oldW: Math.round(prev.width),
+          oldH: Math.round(prev.height),
+          newW: Math.round(winWidth),
+          newH: Math.round(winHeight),
+        })
+      }
+      return
+    }
+    snappedWindow.current = { width: winWidth, height: winHeight }
+    snapZoom(
+      `viewport ${change} ${Math.round(prev.width)}x${Math.round(prev.height)}→${Math.round(winWidth)}x${Math.round(winHeight)}`,
+    )
+  }, [winWidth, winHeight, snapZoom, zoomTraceOn])
 
   // Reset zoom (scale + pan) on every fill transition — entering/leaving
   // landscape or fullscreen. Without this the pinch scale + pan offset measured
@@ -2155,8 +2202,11 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
   // box stays "grown" (the timeline-shrink stays engaged) and the video looks
   // zoomed/panned. `resetZoom` is a stable callback so this fires only on flip.
   const resetZoom = zoom.resetZoom
+  const lastFill = useRef(fill)
   useEffect(() => {
-    resetZoom()
+    if (lastFill.current === fill) return
+    lastFill.current = fill
+    resetZoom(`fill flip → ${fill ? 'fill' : 'stacked'}`)
   }, [fill, resetZoom])
 
   // A zoom does not outlive the camera it was applied to.
@@ -2174,7 +2224,7 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
   // a retained pan is meaningless, and it fires on the way IN, which also
   // covers the return to a screen that was left zoomed.
   useEffect(() => {
-    snapZoom()
+    snapZoom('camera change')
   }, [deviceId, snapZoom])
 
   // The fling does not CLOSE the camera and it does not LEAVE it either: it
@@ -2212,14 +2262,19 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
    * The overlay outlives the route change by construction, which is what makes
    * "overlay e vai indietro" one gesture instead of two.
    */
+  // Read through a ref: a dependency on `playback.state` rebuilt the whole
+  // gesture tree on every playback state change, reconfiguring native handlers
+  // in the middle of a pinch.
+  const playbackStateRef = useRef(playback.state)
+  playbackStateRef.current = playback.state
   const onSwipeToOverlay = useCallback((): void => {
     openOnDemandPlayer({
       deviceId,
-      atMs: resolveReelInstant(selectActiveEpoch(playback.state)),
+      atMs: resolveReelInstant(selectActiveEpoch(playbackStateRef.current)),
     })
     log.info('live:ondemand', 'swipe → on-demand overlay', { deviceId })
     backToCameras(router, forgetLastCamera)
-  }, [deviceId, playback.state, router, forgetLastCamera])
+  }, [deviceId, router, forgetLastCamera])
 
   // The fling-to-PiP handler is GONE (2026-09-13). The PiP disc on the toolbar
   // is the one way to ask, and it is the only one that can work: PiP started
@@ -2243,6 +2298,8 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
     // whole picture. One tap in, one tap out (operator, 2026-10-22).
     const doubleTap = Gesture.Tap()
       .numberOfTaps(2)
+      .maxDistance(DOUBLE_TAP_MAX_DISTANCE)
+      .maxDelay(DOUBLE_TAP_MAX_DELAY_MS)
       .onEnd((e) => {
         // A worklet: every input of the step lives on the UI thread, and the
         // JS thread it used to hop through re-renders on every playhead tick.
@@ -2257,13 +2314,19 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
       .activeOffsetY(40)
       .failOffsetX([-32, 32])
       .onEnd((e) => {
-        if (
-          shouldGoBackOnSwipe({
-            translationY: e.translationY,
-            velocityY: e.velocityY,
-            zoomScale: zoom.scale.value,
-          })
-        ) {
+        const input = {
+          translationY: e.translationY,
+          velocityY: e.velocityY,
+          zoomScale: zoom.scale.value,
+          pinchSeen: zoom.touchSequence.value.pinchSeen,
+          maxTouches: zoom.touchSequence.value.maxTouches,
+        }
+        const refusal = swipeRefusal(input, 'back')
+        if (refusal !== null) {
+          zoom.traceEvent('zoom swipe-back refused', { reason: refusal, maxTouches: input.maxTouches })
+          return
+        }
+        if (shouldGoBackOnSwipe(input)) {
           runOnJS(onSwipeBack)()
         }
       })
@@ -2276,19 +2339,31 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
       .activeOffsetY(40)
       .failOffsetX([-32, 32])
       .onEnd((e) => {
-        if (
-          shouldOpenOverlayOnSwipe({
-            translationY: e.translationY,
-            velocityY: e.velocityY,
-            zoomScale: zoom.scale.value,
-          })
-        ) {
+        const input = {
+          translationY: e.translationY,
+          velocityY: e.velocityY,
+          zoomScale: zoom.scale.value,
+          pinchSeen: zoom.touchSequence.value.pinchSeen,
+          maxTouches: zoom.touchSequence.value.maxTouches,
+        }
+        const refusal = swipeRefusal(input, 'overlay')
+        if (refusal !== null) {
+          zoom.traceEvent('zoom swipe-overlay refused', { reason: refusal, maxTouches: input.maxTouches })
+          return
+        }
+        if (shouldOpenOverlayOnSwipe(input)) {
           runOnJS(onSwipeToOverlay)()
         }
       })
     // Everything runs simultaneously: pinch+pan (zoom), the tap pair, both flings.
     return Gesture.Simultaneous(zoom.composeWith(swipeToOverlay), swipeToBack, taps)
   }, [zoom, onToggleControls, onSwipeBack, onSwipeToOverlay])
+
+  // Debug: the tree is meant to be rebuilt almost never. A rebuild in the
+  // middle of a pinch is the thing this line exists to catch.
+  useEffect(() => {
+    if (zoomTraceOn) log.debug('live:zoom', 'video gesture tree rebuilt', { scale: zoom.scale.value })
+  }, [videoGesture, zoomTraceOn, zoom])
 
   // Pinch-driven height grow is OPT-IN (Settings → Stream, default off). When
   // off, the box stays a clean 16:9 (whole frame, no bars, no crop). When on,
