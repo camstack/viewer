@@ -1727,6 +1727,12 @@
             "cooldown": "Cooldown {{seconds}} s",
             "none": "Defaults"
           },
+          "deliveryModes": {
+            "starts": "Starts",
+            "clears": "Clears",
+            "none": "No delivery moment",
+            "readOnlyHint": "Set from the admin console: this rule speaks at several moments."
+          },
           "deviceList": {
             "all": "All devices",
             "only": "Only these devices ({{count}})",

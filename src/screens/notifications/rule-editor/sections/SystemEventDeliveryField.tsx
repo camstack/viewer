@@ -24,6 +24,7 @@ import { ScheduleField } from '../../../../components/notifications/ConditionFie
 import {
   defaultSummaryDelivery,
   hhmmOfMinute,
+  isModesDelivery,
   minuteOfHhmm,
   NC_SUMMARY_DEFAULT_SEND_TIME,
   NC_SUMMARY_WEEKDAYS,
@@ -40,6 +41,7 @@ import type {
   NcSystemEventDelivery,
   NcSystemEventDeliveryMode,
 } from '../../../../data/notification-center.js'
+import { deliveryModesLine } from '../../../../components/notifications/rule-summary-lines.js'
 import { Hint } from './SectionHint.js'
 
 const KEY = 'v2.nc.rules.editor.systemDelivery'
@@ -51,6 +53,19 @@ export interface SystemEventDeliveryFieldProps {
 
 export function SystemEventDeliveryField({ value, onChange }: SystemEventDeliveryFieldProps) {
   const { t } = useTranslation()
+  const { colors } = useTheme()
+  // A rule that speaks at several moments (D1019) is shown, never edited here:
+  // the legacy two-way control would overwrite it. Nothing is sent back changed.
+  if (value !== undefined && isModesDelivery(value)) {
+    return (
+      <Section title={t(`${KEY}.label`)}>
+        <View testID="rule-delivery-modes" style={{ paddingHorizontal: SPACING.xl, paddingTop: SPACING.md }}>
+          <Text style={{ color: colors.foreground, fontSize: 15 }}>{deliveryModesLine(value, t)}</Text>
+        </View>
+        <Hint text={t('v2.nc.rules.summary.deliveryModes.readOnlyHint')} last />
+      </Section>
+    )
+  }
   const summary = value?.mode === 'summary' ? value : null
   const options: readonly SegmentOption<NcSystemEventDeliveryMode>[] = [
     { value: 'instant', label: t(`${KEY}.instant`) },

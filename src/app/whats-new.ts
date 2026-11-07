@@ -30,6 +30,14 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.687',
+    date: '2026-11-07',
+    notes: {
+      en: ['Notification rules with several delivery moments show correctly.'],
+      it: ['Le regole con più momenti di invio si vedono correttamente.'],
+    },
+  },
+  {
     version: '1.0.686',
     date: '2026-11-07',
     notes: {

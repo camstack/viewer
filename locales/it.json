@@ -1724,6 +1724,12 @@
             "cooldown": "Pausa {{seconds}} s",
             "none": "Predefinite"
           },
+          "deliveryModes": {
+            "starts": "Inizio",
+            "clears": "Fine",
+            "none": "Nessun momento di invio",
+            "readOnlyHint": "Impostato dalla console admin: questa regola parla in più momenti."
+          },
           "deviceList": {
             "all": "Tutti i dispositivi",
             "only": "Solo questi dispositivi ({{count}})",

@@ -70,7 +70,17 @@ export function useNcDryRunRule(): UseMutationResult<readonly NcDryRunRecord[], 
  *  takes `actions` as bindings to shared sequences, a shape this editor's
  *  inline sequences are not — sending them would fail the whole dry run on a
  *  field the dry run never reads. */
-export function withoutActions(rule: NcRuleInput): Omit<NcRuleInput, 'actions'> {
-  const { actions: _actions, ...rest } = rule
-  return rest
+export function withoutActions(rule: NcRuleInput): NcDryRunRule {
+  const { actions: _actions, systemEventDelivery, ...rest } = rule
+  // The combined-moments delivery (D1019) says WHEN a rule speaks, which a dry
+  // run — a verdict on which records match — never reads; the published input
+  // type does not know it yet, so it is left out rather than sent.
+  return systemEventDelivery === undefined || systemEventDelivery.mode === 'modes'
+    ? rest
+    : { ...rest, systemEventDelivery }
+}
+
+/** What a dry run is sent: the draft without actions, and without the modes delivery. */
+export type NcDryRunRule = Omit<NcRuleInput, 'actions' | 'systemEventDelivery'> & {
+  readonly systemEventDelivery?: Exclude<NcRuleInput['systemEventDelivery'], { readonly mode: 'modes' } | undefined>
 }

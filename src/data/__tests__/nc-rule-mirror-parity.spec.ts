@@ -107,7 +107,27 @@ function lines(schema: unknown): string[] {
  * be ABSENT from the published types: the day the release lands, this list
  * fails the suite until the entry is removed, so it cannot outlive its reason.
  */
-const AHEAD_OF_PUBLISHED: readonly string[] = []
+const AHEAD_OF_PUBLISHED: readonly string[] = [
+  // D1019: the `modes` variant of a system rule's delivery (onActivation /
+  // onDeactivation / onSchedule) — the union grows from two members to three.
+  '$.systemEventDelivery?|2: object',
+  '$.systemEventDelivery?|2.mode: literal[modes]',
+  '$.systemEventDelivery?|2.onActivation: boolean',
+  '$.systemEventDelivery?|2.onDeactivation: boolean',
+  '$.systemEventDelivery?|2.onSchedule?: object',
+  '$.systemEventDelivery?|2.onSchedule?.grouping: enum[rule,section]',
+  '$.systemEventDelivery?|2.onSchedule?.schedule: object',
+  '$.systemEventDelivery?|2.onSchedule?.schedule.invert?: boolean',
+  '$.systemEventDelivery?|2.onSchedule?.schedule.timezone?: string',
+  '$.systemEventDelivery?|2.onSchedule?.schedule.windows[]: object',
+  '$.systemEventDelivery?|2.onSchedule?.schedule.windows[].days[]: number',
+  '$.systemEventDelivery?|2.onSchedule?.schedule.windows[].endMinute: number',
+  '$.systemEventDelivery?|2.onSchedule?.schedule.windows[].startMinute: number',
+  '$.systemEventDelivery?: union(3)',
+]
+
+/** Published lines an AHEAD entry REPLACES (the two-member union is now three). */
+const SUPERSEDED_BY_AHEAD: readonly string[] = ['$.systemEventDelivery?: union(2)']
 
 /** Lines one side has and the other lacks — empty both ways is parity. */
 function drift(viewer: unknown, published: unknown): { onlyViewer: string[]; onlyHub: string[] } {
@@ -115,7 +135,7 @@ function drift(viewer: unknown, published: unknown): { onlyViewer: string[]; onl
   const theirs = new Set(lines(published))
   return {
     onlyViewer: [...mine].filter((line) => !theirs.has(line) && !AHEAD_OF_PUBLISHED.includes(line)),
-    onlyHub: [...theirs].filter((line) => !mine.has(line)),
+    onlyHub: [...theirs].filter((line) => !mine.has(line) && !SUPERSEDED_BY_AHEAD.includes(line)),
   }
 }
 
@@ -133,6 +153,9 @@ describe('rule mirrors — every published field, member for member', () => {
     for (const line of AHEAD_OF_PUBLISHED) {
       expect(published.has(line), `${line} is published now — drop it from AHEAD_OF_PUBLISHED`).toBe(false)
       expect(viewer.has(line), `${line} is not in the mirror — the entry is stale`).toBe(true)
+    }
+    for (const line of SUPERSEDED_BY_AHEAD) {
+      expect(published.has(line), `${line} is gone from the published types — drop it from SUPERSEDED_BY_AHEAD`).toBe(true)
     }
   })
 

@@ -49,6 +49,40 @@ export interface NcSummarySendTime {
   readonly minute: number
 }
 
+/** The combined-moments delivery (D1019) — read-only on the phone. */
+export type NcModesDelivery = Extract<NcSystemEventDelivery, { readonly mode: 'modes' }>
+
+/** What a rule's delivery says, whatever shape it is stored in. */
+export interface NcSystemEventDeliveryModes {
+  readonly activation: boolean
+  readonly deactivation: boolean
+  /** The scheduled summary, or `null` when the rule sends none. */
+  readonly schedule: { readonly schedule: NcSchedule; readonly grouping: NcStateSummarySplit } | null
+}
+
+/**
+ * The hub's `systemEventDeliveryModesOf`, mirrored: absent / `instant` speak on
+ * both edges with no summary; the legacy `summary` sends no instant message,
+ * only its schedule; `modes` says it itself.
+ */
+export function systemEventDeliveryModesOf(rule: {
+  readonly systemEventDelivery?: NcSystemEventDelivery | undefined
+}): NcSystemEventDeliveryModes {
+  const delivery = rule.systemEventDelivery
+  if (delivery === undefined || delivery.mode === 'instant') {
+    return { activation: true, deactivation: true, schedule: null }
+  }
+  if (delivery.mode === 'summary') {
+    return { activation: false, deactivation: false, schedule: { schedule: delivery.schedule, grouping: delivery.split ?? 'rule' } }
+  }
+  return { activation: delivery.onActivation, deactivation: delivery.onDeactivation, schedule: delivery.onSchedule ?? null }
+}
+
+/** Is this delivery the combined-moments shape the phone shows but does not edit? */
+export function isModesDelivery(delivery: NcSystemEventDelivery | undefined): delivery is NcModesDelivery {
+  return delivery?.mode === 'modes'
+}
+
 /** A summary rule's delivery — the one variant that carries a schedule. */
 export type NcSummaryDelivery = Extract<NcSystemEventDelivery, { readonly mode: 'summary' }>
 
@@ -128,7 +162,7 @@ export function systemEventDeliveryForSave(
   const delivery = form.systemEventDelivery
   if (delivery === undefined) return {}
   if (form.delivery === 'system-event') return { systemEventDelivery: delivery }
-  return delivery.mode === 'summary' ? { systemEventDelivery: { mode: 'instant' } } : {}
+  return delivery.mode === 'instant' ? {} : { systemEventDelivery: { mode: 'instant' } }
 }
 
 /** Why the save of a summary rule is blocked — each a `v2.nc.rules.editor.problem.*` key. */
@@ -171,7 +205,8 @@ export function summaryFormProblems(
   form: Pick<NcRuleFormState, 'delivery' | 'systemEventDelivery' | 'conditions' | 'actions'>,
   options: { readonly isAdmin?: boolean } = {},
 ): readonly NcSummaryFormProblem[] {
-  if (!isStateSummaryForm(form)) return []
+  const stored = form.systemEventDelivery
+  if (!isStateSummaryForm(form) || stored?.mode !== 'summary') return []
   const { actions } = formToActions(form.actions)
   // The actions mirror IS the hub's shape now (hook bindings to shared
   // sequences), so the hub's own verdict judges them — 'actions-beside-summary'
@@ -179,7 +214,7 @@ export function summaryFormProblems(
   const problems: readonly NcSystemEventDeliveryProblem[] = systemEventDeliveryProblems({
     delivery: form.delivery,
     conditions: form.conditions,
-    ...systemEventDeliveryForSave(form),
+    systemEventDelivery: stored,
     ...(actions !== undefined ? { actions } : {}),
   })
   const out: NcSummaryFormProblem[] = []

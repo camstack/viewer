@@ -272,6 +272,15 @@ export type NcStateSummarySplit = z.infer<typeof NcStateSummarySplitSchema>
 export const NcSystemEventDeliverySchema = z.discriminatedUnion('mode', [
   z.object({ mode: z.literal('instant') }),
   z.object({ mode: z.literal('summary'), schedule: NcScheduleSchema, split: NcStateSummarySplitSchema.optional() }),
+  // A combination of delivery moments (D1019): the shape the hub rewrites every
+  // stored rule to. Parsed, never dropped — a rule whose delivery this mirror
+  // did not know would vanish from the phone (D647).
+  z.object({
+    mode: z.literal('modes'),
+    onActivation: z.boolean(),
+    onDeactivation: z.boolean(),
+    onSchedule: z.object({ schedule: NcScheduleSchema, grouping: NcStateSummarySplitSchema }).optional(),
+  }),
 ])
 export type NcSystemEventDelivery = z.infer<typeof NcSystemEventDeliverySchema>
 

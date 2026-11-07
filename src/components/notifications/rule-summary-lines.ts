@@ -22,6 +22,12 @@ import {
 import { classPickerItems, formScopedConditions } from './rule-scope-form.js'
 import { NC_ADVANCED_CONDITION_IDS } from './rule-editor-sections.js'
 import type { NcTaxonomy } from '../../data/notification-center.js'
+import {
+  summaryDeliveryLabel,
+  systemEventDeliveryModesOf,
+  type NcModesDelivery,
+  type NcTranslate,
+} from './system-event-delivery.js'
 
 /** What the form alone cannot say: target names, and fields the form does not carry. */
 export interface SummaryContext {
@@ -194,6 +200,29 @@ export function sectionSummary(
     case 'advanced':
       return advancedLine(ctx)
   }
+}
+
+const DELIVERY_MODES = `${PREFIX}.deliveryModes`
+
+/** Every key {@link deliveryModesLine} can use — the locale spec walks it. */
+export const NC_DELIVERY_MODES_KEYS: readonly string[] = [
+  `${DELIVERY_MODES}.starts`,
+  `${DELIVERY_MODES}.clears`,
+  `${DELIVERY_MODES}.none`,
+  `${DELIVERY_MODES}.readOnlyHint`,
+]
+
+/**
+ * The read-only line of a rule that speaks at several moments (D1019):
+ * "Starts · Clears · Summary · daily 08:00" — only the moments that are on.
+ */
+export function deliveryModesLine(delivery: NcModesDelivery, t: NcTranslate): string {
+  const modes = systemEventDeliveryModesOf({ systemEventDelivery: delivery })
+  const parts: string[] = []
+  if (modes.activation) parts.push(t(`${DELIVERY_MODES}.starts`))
+  if (modes.deactivation) parts.push(t(`${DELIVERY_MODES}.clears`))
+  if (modes.schedule !== null) parts.push(summaryDeliveryLabel(modes.schedule.schedule, t))
+  return parts.length > 0 ? parts.join(' · ') : t(`${DELIVERY_MODES}.none`)
 }
 
 const DEVICE_LIST = `${PREFIX}.deviceList`
