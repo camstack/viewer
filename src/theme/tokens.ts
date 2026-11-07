@@ -36,6 +36,8 @@ export interface ColorTokens {
    *  Kind paint (the live cursor, the heatmap handle, recording) reads the hub
    *  palette, not this token. */
   live: string
+  /** A starred favourite (the card's heart) — kept apart from `danger`, which reads as an alarm. */
+  favourite: string
   /** Ink on a picture or a kind fill. White in both themes — it does not flip. */
   onPicture: string
   /** Glyph drawn on the video. The dark foreground, kept when the page is light. */
@@ -88,6 +90,7 @@ const dark: ColorTokens = {
   neutralFill: '#44403c',
   neutralOn: '#fafaf9',
   live: '#22d3ee',
+  favourite: '#ff4d6d',
   onPicture: '#ffffff',
   onMedia: '#fafaf9',
   mediaBlack: '#000000',
@@ -132,6 +135,7 @@ const light: ColorTokens = {
   neutralFill: '#57534e',
   neutralOn: '#ffffff',
   live: '#0891b2',
+  favourite: '#ff4d6d',
   onPicture: '#ffffff',
   onMedia: '#fafaf9',
   mediaBlack: '#000000',

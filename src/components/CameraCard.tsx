@@ -246,8 +246,8 @@ export const CameraCard = React.memo(function CameraCard({
                 state two operators read differently in bright sun. */}
             <Heart
               size={13}
-              color={isFavourite ? colors.danger : colors.onPicture}
-              fill={isFavourite ? colors.danger : 'transparent'}
+              color={isFavourite ? colors.favourite : colors.onPicture}
+              fill={isFavourite ? colors.favourite : 'transparent'}
             />
           </Pressable>
           {showStaleChip ? (
