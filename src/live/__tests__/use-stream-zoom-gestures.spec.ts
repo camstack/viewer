@@ -8,6 +8,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { act, renderHook } from '@testing-library/react'
 import { setLogVerbose, useLogStore } from '../../lib/logger.js'
 import { useStreamZoom, type StreamZoom } from '../use-stream-zoom.js'
+import { streamPanExtent } from '../stream-zoom-clamp.js'
 import type { StubGesture } from '../../testing/native-stubs/gesture-handler.js'
 
 const fixedBox = (): number => 242
@@ -217,5 +218,38 @@ describe('debug trace is off by default', () => {
       .join('\n')
     expect(text).toContain('fill flip')
     expect(text).toContain('viewport resize')
+  })
+})
+
+describe('reclampZoom', () => {
+  it('pulls a pan that sits past the new box limit back inside, keeping the zoom', () => {
+    let boxH = 250
+    const { result, rerender } = renderHook(() =>
+      useStreamZoom({
+        contentAspect: 16 / 9,
+        fit: 'contain',
+        viewport: { width: 400, heightFor: () => boxH },
+      }),
+    )
+    act(() => {
+      result.current.scale.value = 3
+      call(panOf(result.current), 'onStart', {})
+      call(panOf(result.current), 'onUpdate', { translationX: 0, translationY: 5000 })
+    })
+    rerender()
+    const before = result.current.videoStyle as unknown as { transform: Record<string, number>[] }
+    const tyBefore = before.transform.find((t) => 'translateY' in t)?.translateY ?? Number.NaN
+    expect(tyBefore).toBeGreaterThan(0)
+    boxH = 600
+    act(() => {
+      result.current.reclampZoom()
+    })
+    rerender()
+    const limit = streamPanExtent(400, 600, 16 / 9, 3, 'contain').y
+    const after = result.current.videoStyle as unknown as { transform: Record<string, number>[] }
+    const tyAfter = after.transform.find((t) => 'translateY' in t)?.translateY ?? Number.NaN
+    expect(Math.abs(tyAfter)).toBeLessThanOrEqual(limit + 1e-6)
+    expect(Math.abs(tyAfter)).toBeLessThan(Math.abs(tyBefore))
+    expect(result.current.scale.value).toBe(3)
   })
 })

@@ -198,6 +198,12 @@ export interface StreamZoom {
    * window dimensions: the hook cannot see one.
    */
   readonly snapZoom: (reason?: string) => void
+  /**
+   * Re-clamp the retained pan to the CURRENT box, instantly. For a viewport
+   * change too small to snap: the zoom stays, but the pan was clamped against
+   * the old box and could sit past the new limit.
+   */
+  readonly reclampZoom: () => void
   /** Compose the zoom pinch+pan simultaneously with the caller's gestures. */
   readonly composeWith: (...others: (GestureType | ComposedGesture)[]) => SimultaneousGesture
   /**
@@ -385,6 +391,23 @@ export function useStreamZoom({
     },
     [trace, snapshot, scale, committedScale, tx, ty, savedTx, savedTy],
   )
+
+  const reclampZoom = useCallback((): void => {
+    // On the UI thread, queued after the box parameters the caller just wrote.
+    runOnUI((): void => {
+      'worklet'
+      const s = scale.value
+      if (s <= MIN_SCALE) return
+      const h = heightFor(s)
+      if (viewportWidth < MIN_VIEWPORT || h < MIN_VIEWPORT) return
+      const c = clampPan({ tx: tx.value, ty: ty.value, w: viewportWidth, h, aspect: contentAspect, scale: s, fit })
+      tx.set(c.x)
+      ty.set(c.y)
+      savedTx.set(c.x)
+      savedTy.set(c.y)
+      traceEvent('zoom reclamp', snapshot({ boxH: Math.round(h) }))
+    })()
+  }, [scale, tx, ty, savedTx, savedTy, heightFor, viewportWidth, contentAspect, fit, traceEvent, snapshot])
 
   const resetZoom = useCallback(
     (reason = 'reset'): void => {
@@ -856,6 +879,7 @@ export function useStreamZoom({
       traceEvent,
       doubleTapZoomAt,
       snapZoom: snapToIdentity,
+      reclampZoom,
       composeWith,
       traceBox,
     }),
@@ -868,6 +892,7 @@ export function useStreamZoom({
       traceEvent,
       doubleTapZoomAt,
       snapToIdentity,
+      reclampZoom,
       composeWith,
       traceBox,
     ],

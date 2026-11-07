@@ -2175,6 +2175,7 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
   // threw the operator's zoom away mid-pinch (`viewport-change.ts`). The
   // reference only advances when a change is accepted, so slow drift still adds up.
   const snapZoom = zoom.snapZoom
+  const reclampZoom = zoom.reclampZoom
   const snappedWindow = useRef<WindowSize>({ width: winWidth, height: winHeight })
   useEffect(() => {
     const prev = snappedWindow.current
@@ -2188,13 +2189,15 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
           newH: Math.round(winHeight),
         })
       }
+      // The zoom stays, but its pan was clamped against the old box.
+      if (prev.width !== winWidth || prev.height !== winHeight) reclampZoom()
       return
     }
     snappedWindow.current = { width: winWidth, height: winHeight }
     snapZoom(
       `viewport ${change} ${Math.round(prev.width)}x${Math.round(prev.height)}→${Math.round(winWidth)}x${Math.round(winHeight)}`,
     )
-  }, [winWidth, winHeight, snapZoom, zoomTraceOn])
+  }, [winWidth, winHeight, snapZoom, reclampZoom, zoomTraceOn])
 
   // Reset zoom (scale + pan) on every fill transition — entering/leaving
   // landscape or fullscreen. Without this the pinch scale + pan offset measured
@@ -2266,7 +2269,9 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
   // gesture tree on every playback state change, reconfiguring native handlers
   // in the middle of a pinch.
   const playbackStateRef = useRef(playback.state)
-  playbackStateRef.current = playback.state
+  useLayoutEffect(() => {
+    playbackStateRef.current = playback.state
+  }, [playback.state])
   const onSwipeToOverlay = useCallback((): void => {
     openOnDemandPlayer({
       deviceId,
