@@ -31,7 +31,11 @@ jobs:
       - name: Native dependencies aligned
         # 1.0.607 crashed at launch: two expo-modules-core copies, the app
         # linked the older one. JS checks cannot see it; this can.
-        run: npx expo install --check && node scripts/check-native-deps.mjs
+        # Offline: graded against the INSTALLED expo's bundledNativeModules.json,
+        # not the newest SDK patch on the registry, which turned every commit
+        # red the day Expo published one. Moving to newer patches is a native
+        # release, decided on purpose.
+        run: EXPO_OFFLINE=1 npx expo install --check && node scripts/check-native-deps.mjs
 
       - name: Run TypeScript type check
         run: npm run ts-check

@@ -170,7 +170,8 @@ RC=0
 
 if [[ "$NATIVE" == "1" ]]; then
   echo "verify:push: native dependencies aligned"
-  if npx expo install --check && node scripts/check-native-deps.mjs; then
+  # Offline = against the installed SDK, like CI (typecheck.yml says why).
+  if EXPO_OFFLINE=1 npx expo install --check && node scripts/check-native-deps.mjs; then
     NATIVE_RESULT="ok"
   else
     NATIVE_RESULT="RED"
