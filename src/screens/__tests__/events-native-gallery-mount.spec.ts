@@ -157,7 +157,8 @@ describe('the native gallery', () => {
     const clock = new Date(NOW - 60_000 - 60_000).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
     expect(container.textContent).toContain(clock)
     // The 12 s track window of these rows would have read 0:12 on the old chip.
-    expect(container.textContent).not.toContain('0:12')
+    // Not preceded by a digit: the clock itself reads "10:12" at ten past ten.
+    expect(container.textContent).not.toMatch(/(^|[^0-9])0:12/)
   })
 
   it('the "?" chip is its OWN button, not nested in the tile\'s', async () => {
