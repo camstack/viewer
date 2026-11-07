@@ -44,12 +44,11 @@ describe('deviceStateInvalidationKeys', () => {
 
   // Measured on the live hub (2026-10-06): 267 `device.state-changed` events in
   // 20 s, 243 of them `audio-metrics` (the dB meter). Every one invalidated the
-  // per-camera children-states fan-out and the badge aggregate, so the Cameras
+  // per-camera child-state fan-out and the badge aggregate, so the Cameras
   // screen re-sent 32 `getChildren` + a badge batch every ~0.5 s through the
   // tunnel for as long as it was open — and nothing those queries read moved.
-  it('a dB tick (audio-metrics) no longer refetches children-states or the badges', () => {
+  it('a dB tick (audio-metrics) no longer refetches the badges', () => {
     const keys = deviceStateInvalidationKeys({ data: { deviceId: 103, capName: 'audio-metrics' } })
-    expect(has(keys, ['v2', 'children-states'])).toBe(false)
     expect(has(keys, ['v2', 'camera-badges'])).toBe(false)
     expect(has(keys, ['v2', 'accessories'])).toBe(false)
     expect(has(keys, ['v2', 'linked-devices'])).toBe(false)
@@ -61,19 +60,10 @@ describe('deviceStateInvalidationKeys', () => {
     expect(has(keys, ['v2', 'device-live-fields'])).toBe(true)
   })
 
-  it('a switch / motion-trigger slice refreshes the child states the card draws', () => {
-    for (const capName of ['switch', 'motion-trigger']) {
-      const keys = deviceStateInvalidationKeys({ data: { deviceId: 9, capName } })
-      expect(has(keys, ['v2', 'children-states'])).toBe(true)
-      expect(has(keys, ['v2', 'camera-badges'])).toBe(false)
-    }
-  })
-
   it('a badge cap slice refreshes the badge aggregate, not the children', () => {
     for (const capName of ['battery', 'recording-archive', 'network-link']) {
       const keys = deviceStateInvalidationKeys({ data: { deviceId: 9, capName } })
       expect(has(keys, ['v2', 'camera-badges'])).toBe(true)
-      expect(has(keys, ['v2', 'children-states'])).toBe(false)
     }
   })
 
@@ -86,7 +76,6 @@ describe('deviceStateInvalidationKeys', () => {
 
   it('an event without a cap name keeps the old broad fan-out (unknown is not "irrelevant")', () => {
     const keys = deviceStateInvalidationKeys({ data: { deviceId: 9 } })
-    expect(has(keys, ['v2', 'children-states'])).toBe(true)
     expect(has(keys, ['v2', 'camera-badges'])).toBe(true)
     expect(has(keys, ['v2', 'device-live-fields'])).toBe(true)
   })

@@ -97,9 +97,6 @@ export function trackLifecycleInvalidationKeys(
  *  subscription further down). */
 const DEVICE_STATE_CHANGED = 'device.state-changed'
 
-/** Caps whose slices `use-children-states` reads off a camera's children. */
-const CHILD_STATE_CAPS: ReadonlySet<string> = new Set(['switch', 'motion-trigger'])
-
 /**
  * Caps that tick at telemetry rate and whose slices only the pinned live
  * readouts draw. `audio-metrics` (the dB meter) was 243 of 267 state events in a
@@ -114,8 +111,7 @@ const BADGE_CAP_SET: ReadonlySet<string> = new Set(BADGE_CAPS)
  * cap whose slice moved.
  *
  * This used to be a static entry: every slice write anywhere invalidated
- * `children-states` (one `getChildren` + a `getStatus` fan-out PER CAMERA on the
- * screen), the badge aggregate, accessories, linked devices, cap status and the
+ * the per-camera child-state fan-out, the badge aggregate, accessories, linked devices, cap status and the
  * live readouts. The hub emits ~13 of these a second, almost all dB ticks, so the
  * 300 ms trailing debounce kept firing and the Cameras screen re-sent 32
  * `getChildren` + a badge batch every ~0.5 s for as long as it was open — the
@@ -132,7 +128,6 @@ export function deviceStateInvalidationKeys(event: unknown): readonly (readonly 
   // Added 2026-08-21 with the demotion of `LIVE_FIELDS_POLL_MS` to
   // `RECONCILE_MS`; without it a chip would move once every five minutes.
   const keys: (readonly string[])[] = [['v2', 'device-live-fields']]
-  if (known === null || CHILD_STATE_CAPS.has(known)) keys.push(['v2', 'children-states'])
   // The badges aggregate carries the slice-backed values (recording mode,
   // battery, link) — a slice write IS the event the dot/moon must follow, or
   // they only move on the aggregate's 5-minute reconcile.
@@ -224,7 +219,7 @@ export function useLiveInvalidation(): void {
 
     // One event does NOT mean one invalidation. `device.state-changed` arrives
     // per device per state slice, so a cold start is a burst: measured 18,924
-    // dispatches of `['v2','children-states']` in 30 s. Two defaults turned that
+    // dispatches of one query key in 30 s. Two defaults turned that
     // into a stall rather than mere waste —
     //
     //   • `invalidateQueries` defaults to `cancelRefetch: true`, so every

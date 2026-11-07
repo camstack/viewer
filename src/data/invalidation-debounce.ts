@@ -8,7 +8,7 @@
  * prefixes and called `queryClient.invalidateQueries` once per event, per key.
  * `device.state-changed` is emitted per device per state slice, so a cold start
  * — every camera provider announcing itself at once — is a burst, not a
- * trickle. Measured on the live system: `['v2','children-states']` was
+ * trickle. Measured on the live system: one query key was
  * dispatched **18,924 times in 30 s**.
  *
  * Two things made that burst expensive rather than merely wasteful:
@@ -29,7 +29,7 @@
  * extending its own wait — which is the correct behaviour here, because the
  * point of the invalidation is to reflect the SETTLED state, not each
  * intermediate one. Different prefixes never share a timer: `cap-status`
- * settling must not be held back by `children-states` still churning.
+ * settling must not be held back by another key still churning.
  *
  * Kept out of the hook so it can be tested without a renderer — this repo has
  * no React test harness (`vitest` runs in the `node` environment), so anything

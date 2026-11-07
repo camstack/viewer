@@ -131,7 +131,6 @@ export const VOLATILE_QUERY_KEYS: readonly QueryKeyPrefix[] = [
   // Battery / recording-mode aggregate behind the card badges.
   ['v2', 'camera-badges'],
   // Accessory children (sirens, floodlights, PIR) and their live slices.
-  ['v2', 'children-states'],
   ['v2', 'accessories'],
   ['v2', 'cap-status'],
   ['v2', 'linked-devices'],
