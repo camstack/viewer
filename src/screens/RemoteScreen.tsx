@@ -12,6 +12,7 @@ import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ScreenHeader } from '../components/ScreenHeader.js'
+import { FullScreenFrame, fullScreenBottomPad } from '../components/FullScreenFrame.js'
 import { EmptyState } from '../components/ui/EmptyState.js'
 import { RemoteKeyPad, REMOTE_SCREEN_MAX_WIDTH } from '../components/camera/remote/RemoteKeyPad.js'
 import { useCanActuate } from '../hooks/use-user-scope.js'
@@ -86,14 +87,14 @@ export function RemoteScreen({ deviceId, deviceName }: RemoteScreenProps): React
   }
 
   return (
-    <View style={[styles.root, { backgroundColor: colors.background }]} testID="remote-screen">
+    <FullScreenFrame testID="remote-screen">
       <ScreenHeader
         title={title}
         subtitle={powerSubtitle(status.data, status.isLoading && status.data == null, t)}
         onBack={() => router.back()}
         bordered
       />
-      <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + SPACING['2xl'] }]}>
+      <ScrollView testID="remote-body" contentContainerStyle={[styles.body, { paddingBottom: fullScreenBottomPad(insets.bottom) }]}>
         {body}
         {failure !== null ? (
           <Text
@@ -105,12 +106,11 @@ export function RemoteScreen({ deviceId, deviceName }: RemoteScreenProps): React
           </Text>
         ) : null}
       </ScrollView>
-    </View>
+    </FullScreenFrame>
   )
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1 },
   body: { padding: SPACING.xl, alignItems: 'center', gap: SPACING.xl },
   failure: {
     alignSelf: 'stretch',

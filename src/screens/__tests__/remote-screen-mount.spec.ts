@@ -164,6 +164,23 @@ describe('RemoteScreen', () => {
     await waitFor(() => expect(screen.getByText('State unknown')).toBeTruthy())
   })
 
+  it('keeps clear of the notch and the home indicator, and never names a guessed state', async () => {
+    mountScreen(screenFor('TV'), { hub: hub() })
+    await screen.findByTestId('remote-key-pw')
+    // The test safe area is 47 pt on top and 34 pt below.
+    const body = screen.getByTestId('remote-body').firstElementChild as HTMLElement
+    expect(parseFloat(getComputedStyle(body).paddingBottom)).toBeGreaterThanOrEqual(34)
+    let node: HTMLElement | null = screen.getByTestId('header-back')
+    let top = 0
+    while (node !== null && top < 47) {
+      top = parseFloat(getComputedStyle(node).paddingTop) || 0
+      node = node.parentElement
+    }
+    expect(top).toBeGreaterThanOrEqual(47)
+    await waitFor(() => expect(screen.getByText('On')).toBeTruthy())
+    expect(screen.queryByText(/assumed/i)).toBeNull()
+  })
+
   it('a device with no remote says so, and a failed list is an error, not "none"', async () => {
     mountScreen(screenFor("TV"), {
       hub: hub({ 'remote.listCommands': { layoutTemplateId: null, power: { mode: 'discrete' }, commands: [] } }),
