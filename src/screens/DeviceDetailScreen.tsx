@@ -9,7 +9,7 @@
  * viewer has no per-device destination for either.
  */
 import React from 'react'
-import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native'
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -36,9 +36,9 @@ import { Timer } from '../lib/icons.js'
 import { BatteryBadge, LinkBadge, PowerBadge } from '../components/device-detail/DeviceBadges.js'
 import { ContactStateLine, RunningStateLine } from '../components/device-detail/StatusLines.js'
 import { ConsumablesList } from '../components/device-detail/ConsumablesList.js'
-import { resolveDeviceSlots, type DeviceSlot, type SlotEntry } from './device-detail/device-slots.js'
+import { isGatedEntry, noAccessSlot, resolveDeviceSlots, type DeviceSlot, type SlotEntry } from './device-detail/device-slots.js'
 import { useTheme } from '../theme/theme-provider.js'
-import { SPACING } from '../theme/tokens.js'
+import { SPACING, TYPOGRAPHY } from '../theme/tokens.js'
 
 export interface DeviceDetailScreenProps {
   readonly deviceId: number
@@ -107,8 +107,24 @@ function entryNode(entry: SlotEntry, ctx: SlotContext): React.JSX.Element | null
   }
 }
 
-function SlotView({ slot, ctx }: { readonly slot: DeviceSlot; readonly ctx: SlotContext }): React.JSX.Element | null {
+function SlotView({
+  slot,
+  ctx,
+  showNoAccess,
+}: {
+  readonly slot: DeviceSlot
+  readonly ctx: SlotContext
+  readonly showNoAccess: boolean
+}): React.JSX.Element | null {
   const { t } = useTranslation()
+  const { colors } = useTheme()
+  if (!ctx.canActuate && slot.entries.length > 0 && slot.entries.every(isGatedEntry)) {
+    return showNoAccess ? (
+      <Text testID="device-no-access" style={[styles.note, { color: colors.foregroundMuted }]}>
+        {t('v2.deviceDetail.noAccess')}
+      </Text>
+    ) : null
+  }
   const nodes = slot.entries.map((entry) => entryNode(entry, ctx))
   switch (slot.slot) {
     case 'header':
@@ -135,8 +151,6 @@ function SlotView({ slot, ctx }: { readonly slot: DeviceSlot; readonly ctx: Slot
         </Section>
       )
     }
-    case 'links':
-      return null
   }
 }
 
@@ -151,7 +165,8 @@ export function DeviceDetailScreen({ deviceId, deviceName, deviceType }: DeviceD
   const device = identity.data
   const caps = bound.data ?? device?.features ?? []
   const name = device?.name ?? (deviceName === '' ? `#${deviceId}` : deviceName)
-  const online = device?.online ?? true
+  // Unanswered identity is not "online": no subtitle, and controls stay disabled (D315).
+  const online = device?.online === true
   const type = device?.type ?? deviceType
   const waiting = (identity.isLoading || bound.isLoading) && device == null && bound.data == null
   const failed = !waiting && device == null && bound.data == null
@@ -163,10 +178,12 @@ export function DeviceDetailScreen({ deviceId, deviceName, deviceType }: DeviceD
     body = <EmptyState icon={SlidersHorizontal} tone="danger" title={t('v2.deviceDetail.unavailable')} testID="device-error" />
   } else {
     const ctx: SlotContext = { deviceId, deviceName: name, deviceType: type, online, caps, canActuate }
+    const slots = resolveDeviceSlots({ type, caps })
+    const lockedAt = canActuate ? null : noAccessSlot(slots)
     body = (
       <>
-        {resolveDeviceSlots({ type, caps }).map((slot) => (
-          <SlotView key={slot.slot} slot={slot} ctx={ctx} />
+        {slots.map((slot) => (
+          <SlotView key={slot.slot} slot={slot} ctx={ctx} showNoAccess={slot.slot === lockedAt} />
         ))}
       </>
     )
@@ -176,7 +193,7 @@ export function DeviceDetailScreen({ deviceId, deviceName, deviceType }: DeviceD
     <FullScreenFrame testID="device-screen">
       <ScreenHeader
         title={name}
-        subtitle={online ? t('v2.deviceDetail.online') : t('v2.deviceDetail.offline')}
+        subtitle={device == null ? undefined : online ? t('v2.deviceDetail.online') : t('v2.deviceDetail.offline')}
         onBack={() => router.back()}
         bordered
       />
@@ -189,6 +206,7 @@ export function DeviceDetailScreen({ deviceId, deviceName, deviceType }: DeviceD
 
 const styles = StyleSheet.create({
   body: { padding: SPACING.xl, gap: SPACING.xl },
+  note: { fontSize: TYPOGRAPHY.size.md },
   badges: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.md },
   primary: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: SPACING.md },
 })

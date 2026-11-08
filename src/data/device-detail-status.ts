@@ -96,6 +96,11 @@ export function useConsumables(deviceId: number, enabled: boolean): UseQueryResu
   return useCapStatusParsed('consumables', deviceId, toConsumables, enabled)
 }
 
+/** A tRPC client proxy is a callable node (typeof 'function'), a plain client an object. */
+function isCallableNode(v: unknown): v is Record<string, unknown> {
+  return v !== null && (typeof v === 'object' || typeof v === 'function')
+}
+
 /** One device's identity (name, type, online, features) — `null` while unanswered or unreadable. */
 export function useDeviceIdentity(deviceId: number): UseQueryResult<AccessoryDevice | null> {
   const { controller, state } = useConnection()
@@ -107,8 +112,10 @@ export function useDeviceIdentity(deviceId: number): UseQueryResult<AccessoryDev
     queryFn: async () => {
       const system = controller.getSystem()
       if (!system) return null
+      const client: unknown = system.trpcClient
+      if (!isCallableNode(client)) return null
       const raw: unknown = await capQuery(
-        system.trpcClient as unknown as Record<string, unknown>,
+        client,
         'deviceManager',
         'listAll',
         { deviceIds: [deviceId] },

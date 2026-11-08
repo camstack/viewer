@@ -35,6 +35,12 @@ vi.mock('react-native-svg', async () => {
   }
 })
 
+const scope = vi.hoisted(() => ({ canActuate: true }))
+vi.mock('../../hooks/use-user-scope.js', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../hooks/use-user-scope.js')>()),
+  useCanActuate: () => scope.canActuate,
+}))
+
 vi.mock('../../connection/ConnectionProvider.js', async () =>
   (await import('../../testing/connection-stub.js')).connectionStubModule(),
 )
@@ -109,7 +115,10 @@ function screenFor(f: Fixture): React.ReactElement {
   return React.createElement(DeviceDetailScreen, { deviceId: f.id, deviceName: f.name, deviceType: f.type })
 }
 
-afterEach(() => cleanup())
+afterEach(() => {
+  cleanup()
+  scope.canActuate = true
+})
 
 describe('DeviceDetailScreen', () => {
   it('a heater: name, power draw, running line, its switch and the armed timer', async () => {
@@ -146,6 +155,22 @@ describe('DeviceDetailScreen', () => {
     expect(await screen.findByText('Mystery')).toBeTruthy()
     await waitFor(() => expect(screen.queryByTestId('device-loading')).toBeNull())
     expect(screen.queryByTestId('device-status-line')).toBeNull()
+  })
+
+  it('a session that may not act says so instead of leaving the controls empty', async () => {
+    scope.canActuate = false
+    mountScreen(screenFor(HEATER), { hub: HEATER.hub })
+    expect(await screen.findByTestId('device-no-access')).toBeTruthy()
+    expect(screen.queryByTestId('device-slot-primary')).toBeNull()
+    expect(screen.queryByLabelText('Stop')).toBeNull()
+  })
+
+  it('while the device is unanswered it is neither online nor offline', async () => {
+    mountScreen(screenFor(HEATER), { hub: { ...HEATER.hub, 'deviceManager.listAll': () => { throw new Error('slow') } } })
+    await screen.findByText('Space heater')
+    await waitFor(() => expect(screen.queryByTestId('device-loading')).toBeNull())
+    expect(screen.queryByText('Online')).toBeNull()
+    expect(screen.queryByText('Offline')).toBeNull()
   })
 
   it('keeps clear of the notch and the home indicator', async () => {

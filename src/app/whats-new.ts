@@ -34,12 +34,12 @@ export const WHATS_NEW: readonly WhatsNewEntry[] = [
     date: '2026-11-08',
     notes: {
       en: [
-        'Device details: tap the arrow on a device row for its status, readings, consumables and timer.',
+        'Device details: tap the arrow on a row for status, readings, consumables, timer.',
         'The full-screen remote no longer sits under the notch or the home indicator.',
         'Removed the "assumed" label from the TV row.',
       ],
       it: [
-        'Dettagli dispositivo: tocca la freccia sulla riga per stato, letture, consumabili e timer.',
+        'Dettagli: tocca la freccia sulla riga per stato, letture, consumabili, timer.',
         'Il telecomando a schermo intero non finisce più sotto il notch o l’indicatore home.',
         'Rimossa l’etichetta «presunto» dalla riga della TV.',
       ],

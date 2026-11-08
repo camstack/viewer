@@ -4379,12 +4379,10 @@
       }
     },
     "deviceDetail": {
-      "open": "Dettagli dispositivo",
       "openFor": "Dettagli di {{device}}",
       "offline": "Offline",
       "online": "Online",
       "battery": "Batteria {{level}}%",
-      "charging": "In carica",
       "link": "Segnale {{signal}}%",
       "linkWired": "Cablato",
       "power": "{{watts}} W",

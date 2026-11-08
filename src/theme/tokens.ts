@@ -218,6 +218,9 @@ export function mediaScrim(colors: Pick<ColorTokens, 'background'>): string {
   return withAlpha(colors.background, MEDIA_SCRIM_ALPHA)
 }
 
+/** Opacity of the dim drawn over live video behind a cell panel. */
+export const BACKDROP_ALPHA = 0.6
+
 /**
  * Typography scale. No custom `fontFamily` — the platform default is kept so we
  * inherit native system font rendering. Sizes/weights only, mirroring the flat

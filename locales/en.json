@@ -4382,12 +4382,10 @@
       }
     },
     "deviceDetail": {
-      "open": "Device details",
       "openFor": "Details of {{device}}",
       "offline": "Offline",
       "online": "Online",
       "battery": "Battery {{level}}%",
-      "charging": "Charging",
       "link": "Signal {{signal}}%",
       "linkWired": "Wired",
       "power": "{{watts}} W",

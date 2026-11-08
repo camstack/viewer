@@ -10,6 +10,7 @@
  * Pure — no React, no I/O.
  */
 import {
+  isActuatingControlKind,
   pickAccessoryControl,
   SENSOR_FEATURES,
   type AccessoryControlPick,
@@ -24,11 +25,10 @@ export type DeviceSlotId =
   | 'readings'
   | 'consumables'
   | 'timer'
-  | 'links'
 
 /** The fixed order of the slots on the screen. */
 export const DEVICE_SLOT_ORDER: readonly DeviceSlotId[] = [
-  'header', 'status', 'primary', 'secondary', 'readings', 'consumables', 'timer', 'links',
+  'header', 'status', 'primary', 'secondary', 'readings', 'consumables', 'timer',
 ]
 
 export type DeviceWidgetId =
@@ -116,4 +116,15 @@ export function resolveDeviceSlots(input: DeviceSlotInput): readonly DeviceSlot[
     const entries = bySlot.get(slot) ?? []
     return slot === 'header' || entries.length > 0 ? [{ slot, entries }] : []
   })
+}
+
+/** True when the entry writes to the device, so a session that may not act on it must not see it. */
+export function isGatedEntry(entry: SlotEntry): boolean {
+  if (entry.widget === 'motion-trigger' || entry.widget === 'timed-run') return true
+  return entry.widget === 'primary-control' && entry.pick !== undefined && isActuatingControlKind(entry.pick.kind)
+}
+
+/** The first slot holding a gated entry: where the "no access" line is drawn, once. */
+export function noAccessSlot(slots: readonly DeviceSlot[]): DeviceSlotId | null {
+  return slots.find((s) => s.entries.some(isGatedEntry))?.slot ?? null
 }

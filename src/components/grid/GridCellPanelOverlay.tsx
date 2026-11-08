@@ -41,7 +41,7 @@ import { useTranslation } from 'react-i18next'
 import { Move, Lightbulb, SlidersHorizontal, ChevronRight, type LucideIcon } from '../../lib/icons.js'
 import { hapticTap } from '../../lib/haptics.js'
 import { useTheme } from '../../theme/theme-provider.js'
-import { SPACING, RADIUS } from '../../theme/tokens.js'
+import { SPACING, RADIUS, BACKDROP_ALPHA, withAlpha } from '../../theme/tokens.js'
 import { TimelinePanelHost } from '../camera/theater/TimelinePanelHost.js'
 import { STREAM_SLOT_Z } from '../camera/theater/stream-slot.js'
 import { PtzControls } from '../camera/PtzControls.js'
@@ -77,7 +77,7 @@ export function GridCellPanelOverlay({
   return (
     <View style={[StyleSheet.absoluteFill, styles.root]} pointerEvents="box-none">
       <Pressable
-        style={[StyleSheet.absoluteFill, styles.backdrop]}
+        style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(colors.background, BACKDROP_ALPHA) }]}
         onPress={onClose}
         accessibilityRole="button"
         accessibilityLabel={t('v2.cameraDetail.close')}
@@ -224,7 +224,6 @@ const styles = StyleSheet.create({
     zIndex: CELL_PANEL_OVERLAY_Z,
     elevation: CELL_PANEL_OVERLAY_Z,
   },
-  backdrop: { backgroundColor: 'rgba(0,0,0,0.6)' }, // ui-check-ok: pre-existing dim over live video, no token for it yet
   center: {
     flex: 1,
     alignItems: 'center',
