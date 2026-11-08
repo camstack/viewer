@@ -39,6 +39,8 @@ export interface MediaPlayerStatus {
   readonly volumeLevel: number | null
   /** Title of what is playing; `null` when there is none. */
   readonly title: string | null
+  /** The current source / input by name; `null` when none is known. */
+  readonly source: string | null
 }
 const MEDIA_STATES: readonly MediaPlayerState[] = ['off', 'on', 'idle', 'playing', 'paused', 'buffering', 'standby']
 function mediaStateOf(v: unknown): MediaPlayerState | undefined {
@@ -49,6 +51,10 @@ function mediaTitleOf(v: unknown): string | null {
   const title = v.title.trim()
   return title === '' ? null : title
 }
+function mediaSourceOf(v: unknown): string | null {
+  const name = isRecord(v) ? v.name : v
+  return typeof name === 'string' && name.trim() !== '' ? name.trim() : null
+}
 /** Normalise a `media-player` status; `null` only when the payload is not a status object. */
 export function parseMediaPlayerStatus(raw: unknown): MediaPlayerStatus | null {
   if (!isRecord(raw)) return null
@@ -56,6 +62,7 @@ export function parseMediaPlayerStatus(raw: unknown): MediaPlayerStatus | null {
     state: mediaStateOf(raw.state),
     volumeLevel: typeof raw.volumeLevel === 'number' && Number.isFinite(raw.volumeLevel) ? raw.volumeLevel : null,
     title: mediaTitleOf(raw.currentMedia),
+    source: mediaSourceOf(raw.source),
   }
 }
 export function useMediaPlayerStatus(deviceId: number, enabled: boolean): UseQueryResult<MediaPlayerStatus | null> {

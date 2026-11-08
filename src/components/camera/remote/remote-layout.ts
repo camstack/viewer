@@ -40,12 +40,22 @@ export interface RemoteLayout {
   readonly groups: readonly RemoteLayoutGroup[]
 }
 
+/** The role of the widget key that opens the source picker. It is not a command: no bound role backs it. */
+export const SOURCE_SELECT_ROLE = 'source_select'
+
+/** A source the operator declared: a channel by number (`digits`) or an input by key sequence. */
+export type RemoteSource =
+  | { readonly kind: 'digits'; readonly id: string; readonly name: string; readonly number: string }
+  | { readonly kind: 'sequence'; readonly id: string; readonly name: string; readonly steps: readonly string[] }
+
 /** The answer of `remote.listCommands`: the layout it points at and the roles a press can reach. */
 export interface RemoteCommandList {
   readonly layoutTemplateId: string | null
   readonly roles: readonly string[]
   /** The command's own name by role, when the hub gave one (a custom key's "Red"). */
   readonly names: ReadonlyMap<string, string>
+  /** The declared sources; empty when the hub sent none (or an older hub sent the field not at all). */
+  readonly sources: readonly RemoteSource[]
 }
 
 function isRecord(v: unknown): v is Record<string, unknown> {
@@ -119,7 +129,72 @@ export function parseRemoteCommandList(raw: unknown): RemoteCommandList | null {
     if (name !== undefined) names.set(entry.role, name)
   }
   const id = raw.layoutTemplateId
-  return { layoutTemplateId: typeof id === 'string' && id !== '' ? id : null, roles, names }
+  return {
+    layoutTemplateId: typeof id === 'string' && id !== '' ? id : null,
+    roles,
+    names,
+    sources: parseRemoteSources(raw.sources),
+  }
+}
+
+function parseSource(raw: unknown): RemoteSource | null {
+  if (!isRecord(raw)) return null
+  const { id, name } = raw
+  if (typeof id !== 'string' || typeof name !== 'string' || name.trim() === '') return null
+  if (raw.kind === 'digits') {
+    return typeof raw.number === 'string' && raw.number !== '' ? { kind: 'digits', id, name, number: raw.number } : null
+  }
+  if (raw.kind === 'sequence') {
+    if (!Array.isArray(raw.steps)) return null
+    const steps = raw.steps.filter((s): s is string => typeof s === 'string')
+    return steps.length > 0 ? { kind: 'sequence', id, name, steps } : null
+  }
+  return null
+}
+
+/** The declared sources out of a `listCommands` answer; anything malformed is left out, absent is none. */
+export function parseRemoteSources(raw: unknown): readonly RemoteSource[] {
+  if (!Array.isArray(raw)) return []
+  return raw.map(parseSource).filter((s): s is RemoteSource => s !== null)
+}
+
+/** Whether a layout key is the source picker widget. */
+export function isSourceSelect(button: RemoteLayoutButton): boolean {
+  return button.role === SOURCE_SELECT_ROLE
+}
+
+/**
+ * Whether the source picker key is drawn. `commands` undefined/null is the remote not having answered
+ * (unknown): nothing is drawn, and nothing is claimed either. Declared sources are the only reason to draw it.
+ */
+export function sourceKeyVisible(commands: Pick<RemoteCommandList, 'sources'> | null | undefined): boolean {
+  return commands != null && commands.sources.length > 0
+}
+
+export interface SourceSections {
+  /** `digits` sources, in channel-number order. */
+  readonly channels: readonly Extract<RemoteSource, { kind: 'digits' }>[]
+  /** `sequence` sources, in declared order. */
+  readonly inputs: readonly Extract<RemoteSource, { kind: 'sequence' }>[]
+}
+
+/** The picker's two sections: Channels (number + name) and Inputs (sequences). */
+export function sourceSections(sources: readonly RemoteSource[]): SourceSections {
+  const channels: Extract<RemoteSource, { kind: 'digits' }>[] = []
+  const inputs: Extract<RemoteSource, { kind: 'sequence' }>[] = []
+  for (const source of sources) {
+    if (source.kind === 'digits') channels.push(source)
+    else inputs.push(source)
+  }
+  channels.sort((a, b) => Number(a.number) - Number(b.number))
+  return { channels, inputs }
+}
+
+const SOURCES_LABEL: Readonly<Record<VocabLocale, string>> = { en: 'Sources', it: 'Sorgenti' }
+
+/** The source picker key's printed name when the current source is unknown. */
+export function sourceKeyFallbackLabel(locale: VocabLocale): string {
+  return SOURCES_LABEL[locale]
 }
 
 /** The payload of the remote template `templateId` out of a `template.list` answer. */
@@ -138,6 +213,7 @@ export function vocabLocale(language: string | undefined): VocabLocale {
 
 /** A key's name: its own label, else the shared vocabulary's name for its role in `locale`. */
 export function keyName(button: RemoteLayoutButton, locale: VocabLocale): string {
+  if (isSourceSelect(button)) return button.label ?? sourceKeyFallbackLabel(locale)
   return button.label ?? remoteRoleLabel(button.role, locale)
 }
 

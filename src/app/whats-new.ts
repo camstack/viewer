@@ -41,6 +41,7 @@ export const WHATS_NEW: readonly WhatsNewEntry[] = [
         'Remote: coloured A–D keys, and the sheet no longer runs under the status bar.',
         'The stove shows its on/off switch again, next to the timed run.',
         'Heaters now have a flame icon.',
+        'TV remote: a Sources key picks a declared channel or input.',
       ],
       it: [
         'Dettagli: tocca la freccia sulla riga per stato, letture, consumabili, timer.',
@@ -50,6 +51,7 @@ export const WHATS_NEW: readonly WhatsNewEntry[] = [
         'Telecomando: tasti A–D colorati, e il pannello non finisce più sotto la barra di stato.',
         'La stufa mostra di nuovo l’interruttore, accanto al timer di accensione.',
         'I riscaldatori hanno ora l’icona della fiamma.',
+        'Telecomando TV: un tasto Sorgenti sceglie un canale o un input dichiarato.',
       ],
     },
   },

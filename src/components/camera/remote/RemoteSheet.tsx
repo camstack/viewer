@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next'
 import { Gamepad2, Maximize2 } from '../../../lib/icons.js'
 import { SheetHeader, SheetIconButton } from '../../ui/SheetHeader.js'
 import { SheetModal } from '../../ui/SheetModal.js'
+import { useMediaPlayerStatus } from '../../../data/use-accessory-controls-ext.js'
 import { remoteFailureText, useRemoteCommands, useRemoteLayout, useRemotePress } from '../../../data/use-remote.js'
 import { fullScreenBottomPad } from '../../FullScreenFrame.js'
 import { remoteRoute } from '../../../remote/remote-route.js'
@@ -39,7 +40,8 @@ export function RemoteSheet({ deviceId, deviceName, onClose }: RemoteSheetProps)
   const commands = useRemoteCommands(deviceId, true)
   const templateId = commands.data?.layoutTemplateId ?? null
   const layout = useRemoteLayout(templateId, true)
-  const { press, failure, detail } = useRemotePress(deviceId)
+  const { press, selectSource, failure, detail } = useRemotePress(deviceId)
+  const status = useMediaPlayerStatus(deviceId, true)
   const bound = new Set(commands.data?.roles ?? [])
   const answered = !commands.isLoading && !layout.isLoading
   return (
@@ -78,6 +80,9 @@ export function RemoteSheet({ deviceId, deviceName, onClose }: RemoteSheetProps)
             bound={bound}
             names={commands.data?.names}
             maxWidth={REMOTE_SHEET_MAX_WIDTH}
+            sources={commands.data?.sources}
+            currentSource={status.data?.source ?? null}
+            onSelectSource={(name) => void selectSource(name)}
             onPress={(role) => void press(role)}
           />
         ) : answered ? (

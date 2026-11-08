@@ -4375,7 +4375,18 @@
         "no-remote": "Questo dispositivo non ha un telecomando.",
         "unbound-role": "Questo tasto non ha ancora un comando.",
         "action-failed": "Impossibile inviare il comando.",
-        "unreachable": "L'hub non ha risposto. Riprova."
+        "unreachable": "L'hub non ha risposto. Riprova.",
+        "unknown-source": "Questa sorgente non è più dichiarata.",
+        "unbound-step": "Un tasto di questa sorgente non ha ancora un comando.",
+        "undeclared-channel": "Quel canale non è dichiarato.",
+        "press-timeout": "La TV non ha ricevuto i tasti in tempo.",
+        "not-routed": "Questo telecomando non gestisce quella sorgente."
+      },
+      "sources": {
+        "title": "Sorgenti",
+        "channels": "Canali",
+        "inputs": "Ingressi",
+        "current": "Sorgente attuale: {{name}}"
       }
     },
     "deviceDetail": {

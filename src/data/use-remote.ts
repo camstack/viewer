@@ -79,20 +79,40 @@ export function useRemoteLayout(
 }
 
 /** A press that went nowhere, as the hub typed it. */
-export type RemotePressFailure = 'no-remote' | 'unbound-role' | 'action-failed' | 'unreachable'
+export type RemotePressFailure =
+  | 'no-remote'
+  | 'unbound-role'
+  | 'action-failed'
+  | 'unknown-source'
+  | 'unbound-step'
+  | 'undeclared-channel'
+  | 'press-timeout'
+  | 'not-routed'
+  | 'unreachable'
 
-const REFUSALS: readonly RemotePressFailure[] = ['no-remote', 'unbound-role', 'action-failed']
+const REFUSALS: readonly RemotePressFailure[] = [
+  'no-remote',
+  'unbound-role',
+  'action-failed',
+  'unknown-source',
+  'unbound-step',
+  'undeclared-channel',
+  'press-timeout',
+]
 
 /** The failure of a `remote.sendCommand` answer, or `null` when it was sent or skipped. */
 export function pressFailureOf(raw: unknown): RemotePressFailure | null {
   if (!isRecord(raw)) return 'unreachable'
   if (raw.status === 'sent' || raw.status === 'skipped') return null
+  if (raw.status === 'not-routed') return 'not-routed'
   if (raw.status === 'refused') return REFUSALS.find((r) => r === raw.reason) ?? 'action-failed'
   return 'unreachable'
 }
 
 export interface RemotePress {
   readonly press: (role: string) => Promise<void>
+  /** Pick a declared source by its name (`remote.sendMediaCommand` `selectSource`). */
+  readonly selectSource: (name: string) => Promise<void>
   readonly failure: RemotePressFailure | null
   /** The hub's own words for this failure, when it sent any. */
   readonly detail: string | null
@@ -117,8 +137,8 @@ export function useRemotePress(deviceId: number): RemotePress {
   const { controller } = useConnection()
   const [failure, setFailure] = useState<RemotePressFailure | null>(null)
   const [detail, setDetail] = useState<string | null>(null)
-  const press = useCallback(
-    async (role: string): Promise<void> => {
+  const send = useCallback(
+    async (method: 'sendCommand' | 'sendMediaCommand', input: Record<string, unknown>): Promise<void> => {
       const system = controller.getSystem()
       if (!system) {
         setFailure('unreachable')
@@ -129,8 +149,8 @@ export function useRemotePress(deviceId: number): RemotePress {
         const raw = await capMutateOrThrow(
           system.trpcClient as unknown as Record<string, unknown>,
           'remote',
-          'sendCommand',
-          { deviceId, role, repeat: 1 },
+          method,
+          { deviceId, ...input },
         )
         const next = pressFailureOf(raw)
         setFailure(next)
@@ -142,5 +162,10 @@ export function useRemotePress(deviceId: number): RemotePress {
     },
     [controller, deviceId],
   )
-  return { press, failure, detail }
+  const press = useCallback((role: string): Promise<void> => send('sendCommand', { role, repeat: 1 }), [send])
+  const selectSource = useCallback(
+    (name: string): Promise<void> => send('sendMediaCommand', { command: 'selectSource', source: name, repeat: 1 }),
+    [send],
+  )
+  return { press, selectSource, failure, detail }
 }

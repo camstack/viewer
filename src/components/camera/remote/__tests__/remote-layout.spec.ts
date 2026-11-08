@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import {
+  isSourceSelect,
+  parseRemoteSources,
+  sourceKeyVisible,
+  sourceSections,
+  type RemoteLayoutButton,
   colourKeyOf,
   keyIcon,
   keyLegend,
@@ -51,13 +56,14 @@ describe('parseRemoteCommandList', () => {
         power: { mode: 'toggle' },
         commands: [{ role: 'power', custom: false }, { role: 'custom:netflix', custom: true }],
       }),
-    ).toEqual({ layoutTemplateId: 'tpl', roles: ['power', 'custom:netflix'], names: new Map() })
+    ).toEqual({ layoutTemplateId: 'tpl', roles: ['power', 'custom:netflix'], names: new Map(), sources: [] })
   })
   it('has no layout when none is linked, and is null when unreadable', () => {
     expect(parseRemoteCommandList({ layoutTemplateId: null, commands: [] })).toEqual({
       layoutTemplateId: null,
       roles: [],
       names: new Map(),
+      sources: [],
     })
     expect(parseRemoteCommandList('nope')).toBeNull()
     expect(parseRemoteCommandList({ layoutTemplateId: null })).toBeNull()
@@ -147,5 +153,45 @@ describe('row geometry', () => {
     expect([...slimRows(parsed)]).toEqual([1])
     expect(totalRows(parsed, 0.4)).toBeCloseTo(2.4)
     expect(rowSpanBox(parsed, 2, 1, 0.4)).toEqual({ top: 1.4, height: 1 })
+  })
+})
+
+const SRC_KEY: RemoteLayoutButton = { id: 's', role: 'source_select', row: 0, col: 0, rowSpan: 1, colSpan: 2 }
+
+describe('remote sources', () => {
+  const raw = [
+    { kind: 'digits', id: 'rai-2', name: 'Rai 2', number: '2' },
+    { kind: 'digits', id: 'rai-1', name: 'Rai 1', number: '1' },
+    { kind: 'sequence', id: 'hdmi', name: 'HDMI 1', steps: ['source', 'down', 'ok'] },
+  ]
+
+  it('parses both kinds and drops what is malformed', () => {
+    expect(parseRemoteSources([...raw, { kind: 'digits', id: 'x', name: 'X' }, { kind: 'sequence', id: 'y', name: 'Y', steps: [] }, 7])).toHaveLength(3)
+  })
+
+  it('an absent or non-array sources field is none, not an error', () => {
+    expect(parseRemoteSources(undefined)).toEqual([])
+    expect(parseRemoteCommandList({ commands: [], layoutTemplateId: null })?.sources).toEqual([])
+    expect(parseRemoteCommandList({ commands: [], sources: raw })?.sources).toHaveLength(3)
+  })
+
+  it('splits into Channels (by number) and Inputs', () => {
+    const { channels, inputs } = sourceSections(parseRemoteSources(raw))
+    expect(channels.map((c) => c.number)).toEqual(['1', '2'])
+    expect(inputs.map((i) => i.name)).toEqual(['HDMI 1'])
+  })
+
+  it('the key shows only with declared sources; unanswered and none both draw nothing', () => {
+    expect(sourceKeyVisible(undefined)).toBe(false)
+    expect(sourceKeyVisible(null)).toBe(false)
+    expect(sourceKeyVisible({ sources: [] })).toBe(false)
+    expect(sourceKeyVisible({ sources: parseRemoteSources(raw) })).toBe(true)
+  })
+
+  it('names the role locally, in both languages, and honours a layout label', () => {
+    expect(isSourceSelect(SRC_KEY)).toBe(true)
+    expect(keyName(SRC_KEY, 'en')).toBe('Sources')
+    expect(keyName(SRC_KEY, 'it')).toBe('Sorgenti')
+    expect(keyName({ ...SRC_KEY, label: 'Input' }, 'en')).toBe('Input')
   })
 })

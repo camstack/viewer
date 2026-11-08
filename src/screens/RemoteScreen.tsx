@@ -49,7 +49,7 @@ export function RemoteScreen({ deviceId, deviceName }: RemoteScreenProps): React
   const templateId = commands.data?.layoutTemplateId ?? null
   const layout = useRemoteLayout(templateId, true, true)
   const status = useMediaPlayerStatus(deviceId, true)
-  const { press, failure, detail } = useRemotePress(deviceId)
+  const { press, selectSource, failure, detail } = useRemotePress(deviceId)
   const bound = new Set(commands.data?.roles ?? [])
   const waiting =
     commands.isLoading || (templateId !== null && layout.isLoading && layout.data == null)
@@ -82,6 +82,9 @@ export function RemoteScreen({ deviceId, deviceName }: RemoteScreenProps): React
         bound={bound}
         names={commands.data?.names}
         maxWidth={REMOTE_SCREEN_MAX_WIDTH}
+        sources={commands.data?.sources}
+        currentSource={status.data?.source ?? null}
+        onSelectSource={(name) => void selectSource(name)}
         onPress={(role) => void press(role)}
       />
     )

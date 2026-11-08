@@ -4378,7 +4378,18 @@
         "no-remote": "This device has no remote.",
         "unbound-role": "That button has no command yet.",
         "action-failed": "The command could not be sent.",
-        "unreachable": "The hub did not answer. Try again."
+        "unreachable": "The hub did not answer. Try again.",
+        "unknown-source": "That source is no longer declared.",
+        "unbound-step": "A key of this source has no command yet.",
+        "undeclared-channel": "That channel is not declared.",
+        "press-timeout": "The TV did not take the keys in time.",
+        "not-routed": "This remote does not handle that source."
+      },
+      "sources": {
+        "title": "Sources",
+        "channels": "Channels",
+        "inputs": "Inputs",
+        "current": "Current source: {{name}}"
       }
     },
     "deviceDetail": {

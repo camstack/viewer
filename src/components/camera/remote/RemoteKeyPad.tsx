@@ -5,9 +5,10 @@
  * has no command for is an outline and does nothing. Group titles are never
  * drawn — a group is a frame or a gap.
  */
-import React from 'react'
+import React, { useState } from 'react'
 import { Pressable, StyleSheet, Text, View, type DimensionValue } from 'react-native'
 import { useTranslation } from 'react-i18next'
+import { Tv } from '../../../lib/icons.js'
 import { CatalogIcon } from '../../CatalogIcon.js'
 import { hapticTap } from '../../../lib/haptics.js'
 import { useTheme } from '../../../theme/theme-provider.js'
@@ -15,6 +16,7 @@ import { RADIUS, SPACING, TYPOGRAPHY, withAlpha, type ColorTokens } from '../../
 import {
   colourKeyOf,
   isBound,
+  isSourceSelect,
   isDividerFrame,
   keyIcon,
   keyLegend,
@@ -26,7 +28,9 @@ import {
   type RemoteLayout,
   type RemoteLayoutButton,
   type RemoteLayoutGroup,
+  type RemoteSource,
 } from './remote-layout.js'
+import { SourcePickerSheet } from './SourcePickerSheet.js'
 
 /** Height of one full grid row, pt. */
 const ROW_HEIGHT = 44
@@ -46,6 +50,15 @@ export interface RemoteKeyPadProps {
   readonly maxWidth: number
   /** Command names by role (`RemoteCommandList.names`), for the colour keys. */
   readonly names?: ReadonlyMap<string, string>
+  /**
+   * The declared sources (`RemoteCommandList.sources`); `undefined` while the remote has not answered.
+   * A `source_select` key is drawn only when there is at least one.
+   */
+  readonly sources?: readonly RemoteSource[]
+  /** The current source's name, when known. */
+  readonly currentSource?: string | null
+  /** A pick in the source picker: the declared source's name. */
+  readonly onSelectSource?: (name: string) => void
 }
 
 interface KeyLook {
@@ -162,6 +175,61 @@ function barColour(key: ColourKey, colors: ColorTokens): string {
   }
 }
 
+interface SourceKeyProps {
+  readonly layout: RemoteLayout
+  readonly button: RemoteLayoutButton
+  readonly sources: readonly RemoteSource[]
+  readonly current: string | null
+  readonly onSelect: (name: string) => void
+}
+
+/** The source picker widget: a selector spanning its cell, current source on it; a tap opens the picker. */
+function SourceSelectKey({ layout, button, sources, current, onSelect }: SourceKeyProps): React.JSX.Element {
+  const { colors } = useTheme()
+  const { i18n } = useTranslation()
+  const [open, setOpen] = useState(false)
+  const name = current ?? keyName(button, vocabLocale(i18n.language))
+  return (
+    <View style={[cellStyle(layout, button), styles.cell]}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={name}
+        testID={`remote-key-${button.id}`}
+        onPress={() => {
+          hapticTap()
+          setOpen(true)
+        }}
+        style={({ pressed }) => [
+          styles.key,
+          styles.keyFill,
+          styles.sourceKey,
+          {
+            backgroundColor: pressed ? colors.surfaceHover : colors.surface,
+            borderColor: colors.border,
+            borderRadius: RADIUS.lg,
+          },
+        ]}
+      >
+        <Tv size={ICON_SIZE} color={colors.foreground} />
+        <Text numberOfLines={1} style={[styles.sourceName, { color: colors.foreground }]}>
+          {name}
+        </Text>
+      </Pressable>
+      {open ? (
+        <SourcePickerSheet
+          sources={sources}
+          current={current}
+          onClose={() => setOpen(false)}
+          onPick={(source) => {
+            setOpen(false)
+            onSelect(source.name)
+          }}
+        />
+      ) : null}
+    </View>
+  )
+}
+
 function Key({ layout, button, bound, commandName, onPress }: KeyProps): React.JSX.Element {
   const { colors } = useTheme()
   const { i18n } = useTranslation()
@@ -226,7 +294,7 @@ function Key({ layout, button, bound, commandName, onPress }: KeyProps): React.J
   )
 }
 
-export function RemoteKeyPad({ layout, bound, onPress, maxWidth, names }: RemoteKeyPadProps): React.JSX.Element {
+export function RemoteKeyPad({ layout, bound, onPress, maxWidth, names, sources, currentSource, onSelectSource }: RemoteKeyPadProps): React.JSX.Element {
   return (
     <View
       testID="remote-grid"
@@ -235,7 +303,22 @@ export function RemoteKeyPad({ layout, bound, onPress, maxWidth, names }: Remote
       {layout.groups.map((group) => (
         <GroupFrame key={group.id} layout={layout} group={group} />
       ))}
-      {layout.buttons.map((button) => (
+      {layout.buttons.map((button) => {
+        if (!isSourceSelect(button)) return null
+        // No declared sources, or not answered yet: an empty cell, never a dead button.
+        if (sources === undefined || sources.length === 0 || onSelectSource === undefined) return null
+        return (
+          <SourceSelectKey
+            key={button.id}
+            layout={layout}
+            button={button}
+            sources={sources}
+            current={currentSource ?? null}
+            onSelect={onSelectSource}
+          />
+        )
+      })}
+      {layout.buttons.filter((b) => !isSourceSelect(b)).map((button) => (
         <Key key={button.id} layout={layout} button={button} bound={isBound(button, bound)} commandName={names?.get(button.role)} onPress={onPress} />
       ))}
     </View>
@@ -260,5 +343,7 @@ const styles = StyleSheet.create({
   },
   keyFill: { flex: 1, width: '100%' },
   keyRound: { aspectRatio: 1, height: '100%' },
+  sourceKey: { flexDirection: 'row', gap: SPACING.sm, paddingHorizontal: SPACING.md },
+  sourceName: { flexShrink: 1, fontSize: TYPOGRAPHY.size.sm, fontWeight: TYPOGRAPHY.weight.medium },
   keyText: { fontSize: TYPOGRAPHY.size.xs, fontWeight: TYPOGRAPHY.weight.medium },
 })

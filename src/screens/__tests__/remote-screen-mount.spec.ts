@@ -81,6 +81,7 @@ const LAYOUT = {
     { id: 'd2', ...r(7, 1), role: 'digit_2', label: '2', groupId: 'num' },
     { id: 'd3', ...r(7, 2), role: 'digit_3', label: '3', groupId: 'num' },
     { id: 'mu', ...r(8, 3), role: 'mute', icon: 'volume-x' },
+    { id: 'src', ...r(8, 0, 1, 2), role: 'source_select' },
   ],
   groups: [
     { id: 'div1', componentId: 'core:divider', frame: 'divider', ...r(1, 0, 1, 4), title: 'Navigation' },
@@ -108,6 +109,32 @@ function hub(extra: Record<string, unknown> = {}): Record<string, unknown> {
 
 function sends(): readonly unknown[] {
   return hubCalls().filter((c) => c.path === 'remote.sendCommand').map((c) => c.input)
+}
+
+const SOURCES = [
+  { kind: 'digits', id: 'rai-1', name: 'Rai 1', number: '1' },
+  { kind: 'digits', id: 'rai-2', name: 'Rai 2', number: '2' },
+  { kind: 'digits', id: 'la7', name: 'La7', number: '7' },
+  { kind: 'sequence', id: 'hdmi-1', name: 'HDMI 1', steps: ['source', 'down', 'ok'] },
+  { kind: 'sequence', id: 'console', name: 'Console', steps: ['source', 'down', 'down', 'ok'] },
+]
+
+function sourceHub(extra: Record<string, unknown> = {}): Record<string, unknown> {
+  return hub({
+    'remote.listCommands': {
+      layoutTemplateId: 'tpl',
+      power: { mode: 'discrete' },
+      commands: BOUND.map((role) => ({ role, custom: role.startsWith('custom:') })),
+      sources: SOURCES,
+    },
+    'mediaPlayer.getStatus': { state: 'on', assumedFields: [], source: 'Rai 2' },
+    'remote.sendMediaCommand': { status: 'sent', sends: 3 },
+    ...extra,
+  })
+}
+
+function mediaSends(): readonly unknown[] {
+  return hubCalls().filter((c) => c.path === 'remote.sendMediaCommand').map((c) => c.input)
 }
 
 afterEach(() => cleanup())
@@ -141,6 +168,41 @@ function colourHub(): Record<string, unknown> {
     'template.list': [{ id: 'tpl', kind: 'remote', name: 'TV', payload: COLOUR_LAYOUT }],
   })
 }
+
+describe('RemoteScreen source key', () => {
+  it('with no declared sources the key is not drawn at all', async () => {
+    mountScreen(screenFor('TV'), { hub: hub() })
+    await screen.findByTestId('remote-key-pw')
+    expect(screen.queryByTestId('remote-key-src')).toBeNull()
+  })
+
+  it('shows the current source; a pick sends selectSource by name and closes the sheet', async () => {
+    mountScreen(screenFor('TV'), { hub: sourceHub() })
+    const key = await screen.findByTestId('remote-key-src')
+    await waitFor(() => expect(key.textContent).toContain('Rai 2'))
+    fireEvent.click(key)
+    expect(await screen.findByTestId('remote-sources-channels')).toBeTruthy()
+    expect(screen.getByTestId('remote-sources-inputs')).toBeTruthy()
+    fireEvent.click(screen.getByTestId('remote-source-hdmi-1'))
+    await waitFor(() => expect(mediaSends()).toEqual([{ deviceId: 5, command: 'selectSource', source: 'HDMI 1', repeat: 1 }]))
+    await waitFor(() => expect(screen.queryByTestId('remote-source-sheet')).toBeNull())
+    expect(sends()).toEqual([])
+  })
+
+  it('says "Sources" when the current one is unknown', async () => {
+    mountScreen(screenFor('TV'), { hub: sourceHub({ 'mediaPlayer.getStatus': { state: 'on', assumedFields: [] } }) })
+    expect((await screen.findByTestId('remote-key-src')).textContent).toContain('Sources')
+  })
+
+  it('a typed refusal is shown in words', async () => {
+    mountScreen(screenFor('TV'), {
+      hub: sourceHub({ 'remote.sendMediaCommand': { status: 'refused', reason: 'unbound-step', step: { index: 2, role: 'down' } } }),
+    })
+    fireEvent.click(await screen.findByTestId('remote-key-src'))
+    fireEvent.click(await screen.findByTestId('remote-source-console'))
+    expect((await screen.findByTestId('remote-failure')).textContent).toContain('A key of this source has no command yet.')
+  })
+})
 
 describe('RemoteScreen', () => {
   it('colour keys wear their standard colour as a bar, whichever way they are named', async () => {
@@ -275,7 +337,9 @@ describe.skipIf(SHOTS === undefined)('remote shots', () => {
               layoutTemplateId: 'tpl',
               power: { mode: 'discrete' },
               commands: [...BOUND.map((role) => ({ role, custom: role.startsWith('custom:') })), ...COLOUR_COMMANDS],
+              sources: SOURCES,
             },
+            'mediaPlayer.getStatus': { state: 'on', assumedFields: [], source: 'Rai 2' },
             'template.list': [{ id: 'tpl', kind: 'remote', name: 'TV', payload: { ...LAYOUT, rows: 10, buttons: [...LAYOUT.buttons, ...colourRow] } }],
           }),
         })
@@ -284,6 +348,9 @@ describe.skipIf(SHOTS === undefined)('remote shots', () => {
         await waitFor(() => expect(screen.getByText('On')).toBeTruthy())
         fs.mkdirSync(SHOTS!, { recursive: true })
         fs.writeFileSync(path.join(SHOTS!, `remote-${size}-${mode}.html`), snapshotHtml())
+        fireEvent.click(screen.getByTestId('remote-key-src'))
+        await screen.findByTestId('remote-sources-inputs')
+        fs.writeFileSync(path.join(SHOTS!, `remote-picker-${size}-${mode}.html`), snapshotHtml())
       })
     }
   }
