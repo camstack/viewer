@@ -242,7 +242,7 @@ describe('useStreamZoom — one result, one viewport', () => {
     expect(transformOf(result.current, fixedBox).scale).toBe(2)
   })
 
-  it('double tap from the whole picture in a cover box: the fallback step, anchored; again: back to fit', () => {
+  it('double tap from the whole picture in a cover box: the fallback step, anchored; again: one rung further, never back', () => {
     const { result, rerender } = mount(growingBox)
     // Plain call: under the stub a worklet is a function, and on the device it
     // is what the tap gesture's `onEnd` calls without `runOnJS`. A cover box
@@ -259,13 +259,12 @@ describe('useStreamZoom — one result, one viewport', () => {
     const want = cornerGrowPan(1, 2)
     expect(t.tx).toBeCloseTo(want.x, 6)
     expect(t.ty).toBeCloseTo(want.y, 6)
-    // Zoomed in by any amount: the next double tap is the whole picture.
+    // Zoomed in: the next double tap climbs a rung and never resets (#466).
     act(() => {
       result.current.doubleTapZoomAt(0, 0)
     })
     rerender()
-    expect(result.current.committedScale.value).toBe(1)
-    expect(transformOf(result.current, growingBox)).toEqual({ scale: 1, tx: 0, ty: 0 })
+    expect(result.current.committedScale.value).toBe(3)
   })
 
   it('double tap from the whole picture in a letterboxing box: the scale that fills it, at the tap', () => {
@@ -292,7 +291,7 @@ describe('useStreamZoom — one result, one viewport', () => {
     expect(t.ty).not.toBe(0)
   })
 
-  it('double tap after a pinch (any scale above the minimum) returns to fit', () => {
+  it('double tap after a pinch (any scale above the minimum) climbs a rung and never resets', () => {
     vi.useFakeTimers()
     try {
       const { result, rerender } = mount(fixedBox)
@@ -313,8 +312,8 @@ describe('useStreamZoom — one result, one viewport', () => {
         result.current.doubleTapZoomAt(50, 50)
       })
       rerender()
-      expect(result.current.committedScale.value).toBe(1)
-      expect(transformOf(result.current, fixedBox)).toEqual({ scale: 1, tx: 0, ty: 0 })
+      expect(result.current.committedScale.value).toBe(2)
+      expect(transformOf(result.current, fixedBox).scale).toBe(2)
     } finally {
       vi.useRealTimers()
     }

@@ -1,11 +1,12 @@
 /**
  * The tile's double tap follows the app's rule (`shared/zoom/double-tap-zoom.ts`,
- * operator 2026-10-22): from the whole picture it zooms in until the video
- * fills the tile, the tapped point held still; from any zoom it goes back to
- * the whole picture. It used to only reset, which at rest did nothing.
+ * operator 2026-11-08): from the whole picture it zooms in until the video
+ * fills the tile, the tapped point held still; from a zoom it climbs a rung and
+ * NEVER goes back. The one explicit reset is a long press on the zoomed picture.
  */
 import { cleanup, fireEvent, render } from '@testing-library/react'
-import { afterEach, describe, expect, it } from 'vitest'
+import { act } from 'react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { ZoomPan } from '../ZoomPan'
 
@@ -63,11 +64,49 @@ describe('ZoomPan double tap', () => {
     expect(outer.style.touchAction).toBe('none')
   })
 
-  it('from any zoom: back to the whole picture', () => {
+  it('from a zoom: one rung further in, never back to the whole picture', () => {
     const { outer, inner } = mountTile()
     doubleTap(outer, 100, 75)
     doubleTap(outer, 300, 200)
-    expect(transformOf(inner)).toEqual({ tx: 0, ty: 0, scale: 1 })
-    expect(outer.style.touchAction).toBe('pan-y')
+    expect(transformOf(inner).scale).toBe(2)
+    doubleTap(outer, 300, 200)
+    expect(transformOf(inner).scale).toBe(3)
+    doubleTap(outer, 300, 200)
+    doubleTap(outer, 300, 200)
+    expect(transformOf(inner).scale).toBe(4)
+    expect(outer.style.touchAction).toBe('none')
+  })
+
+  it('a long press on a zoomed picture is the reset; a short press or a drag is not', () => {
+    vi.useFakeTimers()
+    try {
+      const { outer, inner } = mountTile()
+      doubleTap(outer, 100, 75)
+      fireEvent(outer, pointer('pointerdown', 150, 100))
+      act(() => {
+        vi.advanceTimersByTime(300)
+      })
+      fireEvent(outer, pointer('pointerup', 150, 100))
+      act(() => {
+        vi.advanceTimersByTime(1000)
+      })
+      expect(transformOf(inner).scale).toBeGreaterThan(1)
+      fireEvent(outer, pointer('pointerdown', 150, 100))
+      fireEvent(outer, pointer('pointermove', 190, 100))
+      act(() => {
+        vi.advanceTimersByTime(1000)
+      })
+      fireEvent(outer, pointer('pointerup', 190, 100))
+      expect(transformOf(inner).scale).toBeGreaterThan(1)
+      fireEvent(outer, pointer('pointerdown', 150, 100))
+      act(() => {
+        vi.advanceTimersByTime(700)
+      })
+      fireEvent(outer, pointer('pointerup', 150, 100))
+      expect(transformOf(inner)).toEqual({ tx: 0, ty: 0, scale: 1 })
+      expect(outer.style.touchAction).toBe('pan-y')
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })

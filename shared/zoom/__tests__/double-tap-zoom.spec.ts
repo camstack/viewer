@@ -59,10 +59,17 @@ describe('doubleTapTarget', () => {
     expect(doubleTapTarget({ ...base, current: 1, cover: 5.2 })).toEqual({ kind: 'zoom', scale: 4 })
   })
 
-  it('zoomed in by any amount → back to fit, whatever the cover scale', () => {
-    for (const current of [1.05, 1.22, 2, 2.6, 4]) {
-      expect(doubleTapTarget({ ...base, current, cover: 1.22 })).toEqual({ kind: 'fit' })
-      expect(doubleTapTarget({ ...base, current, cover: 1 })).toEqual({ kind: 'fit' })
+  it('zoomed in is NEVER sent back to fit: it climbs one rung, then holds', () => {
+    expect(doubleTapTarget({ ...base, current: 1.22, cover: 1.22 })).toEqual({ kind: 'zoom', scale: 2 })
+    expect(doubleTapTarget({ ...base, current: 2, cover: 1 })).toEqual({ kind: 'zoom', scale: 3 })
+    expect(doubleTapTarget({ ...base, current: 2.6, cover: 1 })).toEqual({ kind: 'zoom', scale: 3 })
+    expect(doubleTapTarget({ ...base, current: 3.5, cover: 1 })).toEqual({ kind: 'zoom', scale: 4 })
+    expect(doubleTapTarget({ ...base, current: 4, cover: 1.22 })).toEqual({ kind: 'hold' })
+  })
+
+  it('no input ever yields a reset', () => {
+    for (const current of [1, 1.05, 1.22, 2, 2.6, 3.9, 4, 7]) {
+      expect(doubleTapTarget({ ...base, current, cover: 1.22 }).kind).not.toBe('fit')
     }
   })
 

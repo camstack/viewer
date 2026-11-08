@@ -41,8 +41,8 @@
  *                         own tap / double-tap / fling gestures;
  *   - `doubleTapZoomAt` — the double tap, a worklet (call it from the tap's
  *                         `onEnd` directly): whole picture → fill the player,
- *                         anything else → whole picture;
- *   - `resetZoom`       — animate back to 1× (fill transitions);
+ *                         anything else → one rung further in, never out;
+ *   - `resetZoom`       — animate back to 1× (the long press, fill transitions);
  *   - `snapZoom`        — drop the transform instantly (window changes — the
  *                         hook cannot see one, the screen drives it);
  *   - `traceBox`        — the height the screen actually drew, into the trace.
@@ -182,8 +182,9 @@ export interface StreamZoom {
    * letterbox or pillarbox bars), or to the first fixed step when the picture
    * already fills it, anchored on the TAP: a zoom about the centre walks the
    * thing being inspected off screen — the operator taps the doorway and the
-   * doorway is what must stay put. Above the whole picture, by any amount, it
-   * goes back to it, pan reset. Coordinates are viewport-relative (a tap
+   * doorway is what must stay put. Above the whole picture it climbs one more
+   * rung, and at the top it holds: it never zooms out (the explicit reset is
+   * the long press, `resetZoom`). Coordinates are viewport-relative (a tap
    * gesture's `x`/`y`).
    */
   readonly doubleTapZoomAt: (x: number, y: number) => void
@@ -783,14 +784,11 @@ export function useStreamZoom({
         cover: coverScale({ viewportWidth: w, viewportHeight: h0, contentAspect, fit }),
         fallbackStep: ZOOM_STEPS[0] ?? 2,
       })
-      // Back to the whole picture is a reset, and reset already recentres.
-      // Anchoring it on the tap would be meaningless: at 1x there is no pan to
-      // hold anything with.
-      if (target.kind === 'fit' || w < MIN_VIEWPORT || h0 < MIN_VIEWPORT) {
-        traceBegin('double-tap')
-        traceSample('step', { focalX: x, focalY: y, note: `${f2(s0)}→fit` })
-        traceRelease()
-        resetZoom('double-tap')
+      // A double tap never throws the zoom away (planning#466): at the top
+      // rung there is nothing further to do, and the explicit reset is the
+      // long press (`resetZoom`, driven by the screen).
+      if (target.kind === 'hold' || w < MIN_VIEWPORT || h0 < MIN_VIEWPORT) {
+        traceEvent('zoom double-tap held', snapshot({ scale: s0 }))
         return
       }
       const s1 = target.scale
@@ -847,7 +845,6 @@ export function useStreamZoom({
       savedTy,
       contentAspect,
       fit,
-      resetZoom,
       touchSequence,
       traceEvent,
       snapshot,

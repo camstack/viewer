@@ -4,15 +4,17 @@
  * WKWebView. One-finger drag pans only while zoomed; two fingers pinch; a clean
  * single tap calls `onTap` (the tile uses it to toggle its control overlay); a
  * double tap from the whole picture zooms in until the video fills the tile
- * (no bars), anchored on the tap, and from any zoom returns to the whole
- * picture — the same rule as the app's player (`shared/zoom/double-tap-zoom.ts`).
+ * (no bars), anchored on the tap, and from a zoom climbs one rung further in
+ * (it never zooms out). The zoom stays until the operator resets it with a long
+ * press on the zoomed picture — the same rule as the app's player
+ * (`shared/zoom/double-tap-zoom.ts`).
  *
  * Transform is written straight to the inner element's style (via a ref) so a
  * drag doesn't re-render React on every move.
  */
 import { useRef, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
 import { clampPan, containBox } from './zoom-clamp'
-import { coverScale, doubleTapTarget } from '../../../shared/zoom/double-tap-zoom'
+import { coverScale, doubleTapTarget, LONG_PRESS_RESET_MS } from '../../../shared/zoom/double-tap-zoom'
 
 const MAX_SCALE = 4
 /** The double tap's step when the picture already fills the tile. Same as the app's first step. */
@@ -68,6 +70,11 @@ export function ZoomPan({ children, onTap }: { children: ReactNode; onTap: () =>
   } | null>(null)
   const drag = useRef<{ x: number; y: number; tx: number; ty: number; moved: boolean } | null>(null)
   const lastTap = useRef(0)
+  const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const cancelPress = (): void => {
+    if (pressTimer.current !== null) clearTimeout(pressTimer.current)
+    pressTimer.current = null
+  }
 
   const apply = (): void => {
     const el = innerRef.current
@@ -124,14 +131,16 @@ export function ZoomPan({ children, onTap }: { children: ReactNode; onTap: () =>
       }),
       fallbackStep: DOUBLE_TAP_FALLBACK_STEP,
     })
-    if (target.kind === 'fit') {
-      reset()
-      return
-    }
+    if (target.kind === 'hold') return
     const s = target.scale
+    const s0 = scale.current
+    // The tapped point stays put: from an untranslated 1x this is
+    // `(tap - centre) * (1 - s)`; from a pan it carries the current offset.
+    const ax = clientX - r.left - r.width / 2
+    const ay = clientY - r.top - r.height / 2
+    tx.current = ax - (ax - tx.current) * (s / s0)
+    ty.current = ay - (ay - ty.current) * (s / s0)
     scale.current = s
-    tx.current = (clientX - r.left - r.width / 2) * (1 - s)
-    ty.current = (clientY - r.top - r.height / 2) * (1 - s)
     clamp()
     apply()
   }
@@ -159,8 +168,19 @@ export function ZoomPan({ children, onTap }: { children: ReactNode; onTap: () =>
       }
       drag.current = null
     } else if (pointers.current.size === 1) {
-      drag.current = { x: e.clientX, y: e.clientY, tx: tx.current, ty: ty.current, moved: false }
+      const d = { x: e.clientX, y: e.clientY, tx: tx.current, ty: ty.current, moved: false }
+      drag.current = d
+      // The explicit reset: a still finger held on a zoomed picture.
+      if (scale.current > 1) {
+        cancelPress()
+        pressTimer.current = setTimeout(() => {
+          pressTimer.current = null
+          d.moved = true
+          reset()
+        }, LONG_PRESS_RESET_MS)
+      }
     }
+    if (pointers.current.size >= 2) cancelPress()
   }
 
   const onPointerMove = (e: ReactPointerEvent<HTMLDivElement>): void => {
@@ -192,7 +212,10 @@ export function ZoomPan({ children, onTap }: { children: ReactNode; onTap: () =>
     if (pointers.current.size === 1 && d) {
       const dx = e.clientX - d.x
       const dy = e.clientY - d.y
-      if (Math.abs(dx) > TAP_MOVE_TOL || Math.abs(dy) > TAP_MOVE_TOL) d.moved = true
+      if (Math.abs(dx) > TAP_MOVE_TOL || Math.abs(dy) > TAP_MOVE_TOL) {
+        d.moved = true
+        cancelPress()
+      }
       if (scale.current > 1) {
         tx.current = d.tx + dx
         ty.current = d.ty + dy
@@ -203,6 +226,7 @@ export function ZoomPan({ children, onTap }: { children: ReactNode; onTap: () =>
   }
 
   const onPointerUp = (e: ReactPointerEvent<HTMLDivElement>): void => {
+    cancelPress()
     const wasSingle = pointers.current.size === 1
     const d = drag.current
     pointers.current.delete(e.pointerId)
