@@ -68,7 +68,9 @@ function node(segments: readonly string[]): unknown {
   return new Proxy(target, {
     get(_t, prop): unknown {
       if (typeof prop !== 'string') return undefined
-      if (prop === 'query' || prop === 'mutate') {
+      // `<router>.query` with nothing before the router is a PROCEDURE named query
+      // (`deviceHistory.query`), not the call: procedures sit one level below a router.
+      if ((prop === 'query' || prop === 'mutate') && segments.length >= 2) {
         const kind: HubCall['kind'] = prop === 'query' ? 'query' : 'mutate'
         return (input?: unknown) => invoke(segments.join('.'), kind, input)
       }

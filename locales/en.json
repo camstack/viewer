@@ -4416,6 +4416,36 @@
         "ambient-light-sensor": "Light",
         "numeric-sensor": "Value",
         "enum-sensor": "State"
+      },
+      "tabs": {
+        "overview": "Overview",
+        "history": "History",
+        "transitions": "Transitions"
+      },
+      "transitions": {
+        "soon": "Transitions are coming soon"
+      },
+      "history": {
+        "window": {
+          "24h": "24 h",
+          "7d": "7 days",
+          "30d": "30 days"
+        },
+        "ago": {
+          "24h": "24 h ago",
+          "7d": "7 days ago",
+          "30d": "30 days ago"
+        },
+        "now": "now",
+        "on": "On",
+        "off": "Off",
+        "runs": "Runs",
+        "noRuns": "No runs in this window",
+        "empty": "No data in this window",
+        "failed": "Could not load this series",
+        "unavailable": "History is unavailable",
+        "none": "This device keeps no history yet",
+        "range": "Min {{min}} · Max {{max}}"
       }
     }
   },

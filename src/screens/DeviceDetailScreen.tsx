@@ -5,10 +5,11 @@
  * button on an accessory row, with the same chrome as the remote
  * ({@link FullScreenFrame}, `ScreenHeader`). What it shows is decided by the
  * caps the device is bound to ({@link resolveDeviceSlots}), never by its type;
- * an empty slot is not drawn. History and Settings links are omitted: the
- * viewer has no per-device destination for either.
+ * an empty slot is not drawn. Two tabs: Overview (the slots, with the primary
+ * control large, like the remote) and History (the device's series and runs);
+ * Transitions is built but not offered yet ({@link deviceTabs}).
  */
-import React from 'react'
+import React, { useState } from 'react'
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
@@ -24,7 +25,11 @@ import { useDeviceBoundCaps } from '../data/use-device-bound-caps.js'
 import { useDeviceIdentity } from '../data/device-detail-status.js'
 import { hasTimedRun } from '../data/timed-run.js'
 import { isActuatingControlKind } from '../components/camera/accessory-controls/control-registry.js'
-import { PrimaryControl } from '../components/camera/accessory-controls/AccessoryControl.js'
+import { PrimaryStage } from '../components/device-detail/PrimaryStage.js'
+import { HistoryTab } from '../components/device-detail/HistoryTab.js'
+import { SegmentedControl } from '../components/ui/SegmentedControl.js'
+import { deviceTabs, type DeviceTabId } from './device-detail/device-tabs.js'
+import { History as HistoryIcon } from '../lib/icons.js'
 import { MotionTriggerToggle } from '../components/camera/accessory-controls/MotionTriggerToggle.js'
 import { SensorValueControl } from '../components/camera/accessory-controls/controls.js'
 import {
@@ -93,7 +98,7 @@ function entryNode(entry: SlotEntry, ctx: SlotContext): React.JSX.Element | null
       if (entry.pick === undefined) return null
       if (!ctx.canActuate && isActuatingControlKind(entry.pick.kind)) return null
       const device = { id: ctx.deviceId, name: ctx.deviceName, type: ctx.deviceType, online: ctx.online, features: ctx.caps }
-      return <PrimaryControl key={entry.cap} device={device} pick={entry.pick} />
+      return <PrimaryStage key={entry.cap} device={device} pick={entry.pick} />
     }
     case 'main-reading':
     case 'reading':
@@ -134,7 +139,7 @@ function SlotView({
     case 'consumables':
       return <View testID="device-slot-consumables">{nodes}</View>
     case 'primary':
-      return <View style={styles.primary} testID="device-slot-primary">{nodes}</View>
+      return <View style={styles.stage} testID="device-slot-primary">{nodes}</View>
     case 'secondary':
     case 'readings':
     case 'timer': {
@@ -154,12 +159,18 @@ function SlotView({
   }
 }
 
+function TransitionsTab(): React.JSX.Element {
+  const { t } = useTranslation()
+  return <EmptyState icon={HistoryIcon} title={t('v2.deviceDetail.transitions.soon')} fill={false} testID="device-tab-transitions" />
+}
+
 export function DeviceDetailScreen({ deviceId, deviceName, deviceType }: DeviceDetailScreenProps): React.JSX.Element {
   const { t } = useTranslation()
   const { colors } = useTheme()
   const router = useRouter()
   const insets = useSafeAreaInsets()
   const canActuate = useCanActuate()
+  const [tab, setTab] = useState<DeviceTabId>('overview')
   const identity = useDeviceIdentity(deviceId)
   const bound = useDeviceBoundCaps(deviceId)
   const device = identity.data
@@ -171,16 +182,16 @@ export function DeviceDetailScreen({ deviceId, deviceName, deviceType }: DeviceD
   const waiting = (identity.isLoading || bound.isLoading) && device == null && bound.data == null
   const failed = !waiting && device == null && bound.data == null
 
-  let body: React.JSX.Element
+  let overview: React.JSX.Element
   if (waiting) {
-    body = <ActivityIndicator color={colors.foregroundMuted} testID="device-loading" />
+    overview = <ActivityIndicator color={colors.foregroundMuted} testID="device-loading" />
   } else if (failed) {
-    body = <EmptyState icon={SlidersHorizontal} tone="danger" title={t('v2.deviceDetail.unavailable')} testID="device-error" />
+    overview = <EmptyState icon={SlidersHorizontal} tone="danger" title={t('v2.deviceDetail.unavailable')} testID="device-error" />
   } else {
     const ctx: SlotContext = { deviceId, deviceName: name, deviceType: type, online, caps, canActuate }
     const slots = resolveDeviceSlots({ type, caps })
     const lockedAt = canActuate ? null : noAccessSlot(slots)
-    body = (
+    overview = (
       <>
         {slots.map((slot) => (
           <SlotView key={slot.slot} slot={slot} ctx={ctx} showNoAccess={slot.slot === lockedAt} />
@@ -188,6 +199,12 @@ export function DeviceDetailScreen({ deviceId, deviceName, deviceType }: DeviceD
       </>
     )
   }
+
+  // History and Transitions read by device id alone, so they need no identity.
+  const body =
+    tab === 'history' ? <HistoryTab deviceId={deviceId} deviceType={type} />
+    : tab === 'transitions' ? <TransitionsTab />
+    : overview
 
   return (
     <FullScreenFrame testID="device-screen">
@@ -197,6 +214,13 @@ export function DeviceDetailScreen({ deviceId, deviceName, deviceType }: DeviceD
         onBack={() => router.back()}
         bordered
       />
+      <View style={styles.tabs}>
+        <SegmentedControl
+          options={deviceTabs().map((id) => ({ value: id, label: t(`v2.deviceDetail.tabs.${id}`) }))}
+          value={tab}
+          onChange={setTab}
+        />
+      </View>
       <ScrollView testID="device-body" contentContainerStyle={[styles.body, { paddingBottom: fullScreenBottomPad(insets.bottom) }]}>
         {body}
       </ScrollView>
@@ -205,8 +229,10 @@ export function DeviceDetailScreen({ deviceId, deviceName, deviceType }: DeviceD
 }
 
 const styles = StyleSheet.create({
-  body: { padding: SPACING.xl, gap: SPACING.xl },
+  body: { flexGrow: 1, padding: SPACING.xl, gap: SPACING.xl },
   note: { fontSize: TYPOGRAPHY.size.md },
+  stage: { flexGrow: 1 },
+  tabs: { paddingHorizontal: SPACING.xl, paddingTop: SPACING.lg },
   badges: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.md },
   primary: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: SPACING.md },
 })

@@ -97,7 +97,7 @@ export function useConsumables(deviceId: number, enabled: boolean): UseQueryResu
 }
 
 /** A tRPC client proxy is a callable node (typeof 'function'), a plain client an object. */
-function isCallableNode(v: unknown): v is Record<string, unknown> {
+export function isCallableNode(v: unknown): v is Record<string, unknown> {
   return v !== null && (typeof v === 'object' || typeof v === 'function')
 }
 

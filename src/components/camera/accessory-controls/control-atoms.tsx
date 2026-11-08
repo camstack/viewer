@@ -44,7 +44,7 @@ export type ControlHaptic = 'tap' | 'action'
 
 /** Play the press feedback for a control weight. The ONE place the accessory
  *  atoms decide this, so all ~26 call sites stay consistent by construction. */
-function fireControlHaptic(weight: ControlHaptic): void {
+export function fireControlHaptic(weight: ControlHaptic): void {
   if (weight === 'action') hapticAction()
   else hapticTap()
 }

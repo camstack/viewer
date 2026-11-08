@@ -37,11 +37,13 @@ export const WHATS_NEW: readonly WhatsNewEntry[] = [
         'Device details: tap the arrow on a row for status, readings, consumables, timer.',
         'The full-screen remote no longer sits under the notch or the home indicator.',
         'Removed the "assumed" label from the TV row.',
+        'Device details: a large main control and a History tab with 24 h, 7 d, 30 d charts.',
       ],
       it: [
         'Dettagli: tocca la freccia sulla riga per stato, letture, consumabili, timer.',
         'Il telecomando a schermo intero non finisce più sotto il notch o l’indicatore home.',
         'Rimossa l’etichetta «presunto» dalla riga della TV.',
+        'Dettagli: comando grande e scheda Storico con grafici a 24 h, 7 g, 30 g.',
       ],
     },
   },
