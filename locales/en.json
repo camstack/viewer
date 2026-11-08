@@ -1519,7 +1519,9 @@
             "summaryActions": "a summary never matches an event, so its actions would never run — remove them (Actions)",
             "summaryNoSendTime": "a summary needs at least one send time (Conditions)",
             "summaryDegenerateWindow": "a send time has no day, or its window starts and ends on the same minute — it would never be sent (Conditions)",
-            "summaryActionsByAdmin": "this rule has actions an administrator added; a summary never runs them, so an administrator must remove them before it can be a summary"
+            "summaryActionsByAdmin": "this rule has actions an administrator added; a summary never runs them, so an administrator must remove them before it can be a summary",
+            "noMode": "choose when the rule speaks: when it starts, when it clears, or on a schedule (Conditions)",
+            "noInstantKind": "none of the selected events ever clears — choose \"when it starts\" or \"on a schedule\" (Conditions)"
           },
           "mediaBlurb": {
             "sound": "A sound owns no frame, so the picture is a photograph of the camera taken at the moment of the match — the whole scene, never a crop. The GIF and the clip are cut around the same instant, from the camera.",
@@ -2113,6 +2115,8 @@
         "readOnly": "Created by an administrator. You can see it here but not change it."
       },
       "templateVars": {
+        "sensor": "Sensor",
+        "cause": "Cause",
         "nodeName": "Node name",
         "offlineFor": "Offline for",
         "device": "Device",

@@ -172,6 +172,8 @@ export const NC_SUMMARY_FORM_PROBLEMS = [
   'summaryDegenerateWindow',
   'summaryActions',
   'summaryActionsByAdmin',
+  'noMode',
+  'noInstantKind',
 ] as const
 export type NcSummaryFormProblem = (typeof NC_SUMMARY_FORM_PROBLEMS)[number]
 
@@ -187,6 +189,10 @@ function problemOf(problem: NcSystemEventDeliveryProblem, isAdmin: boolean): NcS
     // told who can remove them, never pointed at a screen they do not have.
     case 'actions-beside-summary':
       return isAdmin ? 'summaryActions' : 'summaryActionsByAdmin'
+    case 'no-mode':
+      return 'noMode'
+    case 'no-instant-kind':
+      return 'noInstantKind'
     // Never reached from this editor: a save sends `instant` off a system
     // trigger, and never sends the active-hours schedule beside a summary.
     case 'not-a-system-rule':

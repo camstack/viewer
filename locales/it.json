@@ -1516,7 +1516,9 @@
             "summaryActions": "un riepilogo non corrisponde mai a un evento, quindi le sue azioni non verrebbero mai eseguite — rimuovile (Azioni)",
             "summaryNoSendTime": "un riepilogo richiede almeno un orario di invio (Condizioni)",
             "summaryDegenerateWindow": "un orario di invio non ha giorni, oppure la sua finestra inizia e finisce nello stesso minuto — non verrebbe mai inviato (Condizioni)",
-            "summaryActionsByAdmin": "questa regola ha azioni aggiunte da un amministratore; un riepilogo non le esegue mai, quindi un amministratore deve rimuoverle prima che possa diventare un riepilogo"
+            "summaryActionsByAdmin": "questa regola ha azioni aggiunte da un amministratore; un riepilogo non le esegue mai, quindi un amministratore deve rimuoverle prima che possa diventare un riepilogo",
+            "noMode": "scegli quando la regola parla: quando inizia, quando rientra, oppure a un orario (Condizioni)",
+            "noInstantKind": "nessuno degli eventi scelti rientra mai — scegli \"quando inizia\" oppure \"a un orario\" (Condizioni)"
           },
           "mediaBlurb": {
             "sound": "Un suono non ha un fotogramma: l'immagine è una foto della telecamera scattata nel momento della corrispondenza — tutta la scena, mai un ritaglio. La GIF e la clip sono tagliate attorno allo stesso istante, dalla telecamera.",
@@ -2110,6 +2112,8 @@
         "readOnly": "Creato da un amministratore. Qui puoi vederlo ma non modificarlo."
       },
       "templateVars": {
+        "sensor": "Sensore",
+        "cause": "Causa",
         "nodeName": "Nome del nodo",
         "offlineFor": "Offline da",
         "device": "Dispositivo",

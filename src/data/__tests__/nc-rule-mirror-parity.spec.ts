@@ -107,27 +107,10 @@ function lines(schema: unknown): string[] {
  * be ABSENT from the published types: the day the release lands, this list
  * fails the suite until the entry is removed, so it cannot outlive its reason.
  */
-const AHEAD_OF_PUBLISHED: readonly string[] = [
-  // D1019: the `modes` variant of a system rule's delivery (onActivation /
-  // onDeactivation / onSchedule) — the union grows from two members to three.
-  '$.systemEventDelivery?|2: object',
-  '$.systemEventDelivery?|2.mode: literal[modes]',
-  '$.systemEventDelivery?|2.onActivation: boolean',
-  '$.systemEventDelivery?|2.onDeactivation: boolean',
-  '$.systemEventDelivery?|2.onSchedule?: object',
-  '$.systemEventDelivery?|2.onSchedule?.grouping: enum[rule,section]',
-  '$.systemEventDelivery?|2.onSchedule?.schedule: object',
-  '$.systemEventDelivery?|2.onSchedule?.schedule.invert?: boolean',
-  '$.systemEventDelivery?|2.onSchedule?.schedule.timezone?: string',
-  '$.systemEventDelivery?|2.onSchedule?.schedule.windows[]: object',
-  '$.systemEventDelivery?|2.onSchedule?.schedule.windows[].days[]: number',
-  '$.systemEventDelivery?|2.onSchedule?.schedule.windows[].endMinute: number',
-  '$.systemEventDelivery?|2.onSchedule?.schedule.windows[].startMinute: number',
-  '$.systemEventDelivery?: union(3)',
-]
+const AHEAD_OF_PUBLISHED: readonly string[] = []
 
-/** Published lines an AHEAD entry REPLACES (the two-member union is now three). */
-const SUPERSEDED_BY_AHEAD: readonly string[] = ['$.systemEventDelivery?: union(2)']
+/** Published lines an AHEAD entry REPLACES. */
+const SUPERSEDED_BY_AHEAD: readonly string[] = []
 
 /** Lines one side has and the other lacks — empty both ways is parity. */
 function drift(viewer: unknown, published: unknown): { onlyViewer: string[]; onlyHub: string[] } {
