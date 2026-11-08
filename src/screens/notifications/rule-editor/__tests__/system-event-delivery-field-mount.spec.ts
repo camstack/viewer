@@ -9,7 +9,7 @@
  * here the moment Summary is chosen.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { act, cleanup, fireEvent, screen as dom } from '@testing-library/react'
+import { act, cleanup, fireEvent, screen as dom, within } from '@testing-library/react'
 import React, { useState } from 'react'
 
 import { mountScreen } from '../../../../testing/mount.js'
@@ -24,12 +24,16 @@ afterEach(() => {
   cleanup()
 })
 
-function mountField(initial: NcSystemEventDelivery | undefined): { readonly seen: NcSystemEventDelivery[] } {
+function mountField(
+  initial: NcSystemEventDelivery | undefined,
+  kinds: readonly string[] = ['device-offline'],
+): { readonly seen: NcSystemEventDelivery[] } {
   const seen: NcSystemEventDelivery[] = []
   function Stateful() {
     const [value, setValue] = useState<NcSystemEventDelivery | undefined>(initial)
     return React.createElement(SystemEventDeliveryField, {
       value,
+      kinds,
       onChange: (next: NcSystemEventDelivery) => {
         seen.push(next)
         setValue(next)
@@ -40,6 +44,12 @@ function mountField(initial: NcSystemEventDelivery | undefined): { readonly seen
   return { seen }
 }
 
+/** The switch of one delivery moment — the test id sits on its host. */
+function momentSwitch(moment: string): HTMLElement {
+  const host = dom.getByTestId(`rule-delivery-${moment}`)
+  return host.getAttribute('role') === 'switch' ? host : within(host).getByRole('switch')
+}
+
 async function press(text: string): Promise<void> {
   await act(async () => {
     fireEvent.click(dom.getByText(text))
@@ -47,34 +57,75 @@ async function press(text: string): Promise<void> {
 }
 
 describe('SystemEventDeliveryField', () => {
-  it('Instant by default; Summary starts at every day 08:00, and back to Instant', async () => {
+  it('absent reads as start + resolve on, no summary; the summary switch starts every day 08:00', async () => {
     const { seen } = mountField(undefined)
-    expect(await dom.findByText('A notification for each event, as it happens.')).toBeTruthy()
-    await press('Summary')
-    expect(seen.at(-1)).toEqual({
-      mode: 'summary',
-      schedule: { windows: [{ days: [0, 1, 2, 3, 4, 5, 6], startMinute: 479, endMinute: 480 }] },
+    expect(await dom.findByTestId('rule-delivery-activation')).toBeTruthy()
+    expect(dom.queryByTestId('rule-delivery-time-0')).toBeNull()
+    await act(async () => {
+      fireEvent.click(momentSwitch('schedule'))
     })
-    const input = dom.getByTestId('rule-delivery-time-input-0')
-    expect(input).toHaveProperty('value', '08:00')
-    await press('Instant')
-    expect(seen.at(-1)).toEqual({ mode: 'instant' })
+    expect(seen.at(-1)).toEqual({
+      mode: 'modes',
+      onActivation: true,
+      onDeactivation: true,
+      onSchedule: {
+        schedule: { windows: [{ days: [0, 1, 2, 3, 4, 5, 6], startMinute: 479, endMinute: 480 }] },
+        grouping: 'section',
+      },
+    })
+    expect(dom.getByTestId('rule-delivery-time-input-0')).toHaveProperty('value', '08:00')
+  })
+
+  it('hides "when it resolves" for kinds with no recovery edge', async () => {
+    mountField(undefined, ['addon-update-available'])
+    await dom.findByTestId('rule-delivery-activation')
+    expect(dom.queryByTestId('rule-delivery-deactivation')).toBeNull()
+  })
+
+  it('refuses to switch off the last moment', async () => {
+    const { seen } = mountField({ mode: 'modes', onActivation: true, onDeactivation: false })
+    await dom.findByTestId('rule-delivery-activation')
+    await act(async () => {
+      fireEvent.click(momentSwitch('activation'))
+    })
+    expect(seen).toHaveLength(0)
+    expect(dom.getByText('At least one moment must stay on.')).toBeTruthy()
+  })
+
+  it('a legacy summary shows only the summary on, and keeps its schedule when another moment is added', async () => {
+    const schedule = { windows: [{ days: [1, 2, 3, 4, 5], startMinute: 479, endMinute: 480 }] }
+    const { seen } = mountField({ mode: 'summary', schedule, split: 'section' })
+    expect(await dom.findByTestId('rule-delivery-time-0')).toBeTruthy()
+    await act(async () => {
+      fireEvent.click(momentSwitch('activation'))
+    })
+    expect(seen.at(-1)).toEqual({
+      mode: 'modes',
+      onActivation: true,
+      onDeactivation: false,
+      onSchedule: { schedule, grouping: 'section' },
+    })
   })
 
   it('edits a send time, refuses a non-time, and adds a second one', async () => {
     const { seen } = mountField({
-      mode: 'summary',
-      schedule: { windows: [{ days: [1, 2, 3, 4, 5], startMinute: 479, endMinute: 480 }] },
+      mode: 'modes',
+      onActivation: false,
+      onDeactivation: false,
+      onSchedule: {
+        schedule: { windows: [{ days: [1, 2, 3, 4, 5], startMinute: 479, endMinute: 480 }] },
+        grouping: 'rule',
+      },
     })
     const input = await dom.findByTestId('rule-delivery-time-input-0')
     await act(async () => {
       fireEvent.change(input, { target: { value: '19:30' } })
       fireEvent.blur(input)
     })
-    expect(seen.at(-1)).toEqual({
-      mode: 'summary',
-      schedule: { windows: [{ days: [1, 2, 3, 4, 5], startMinute: 1169, endMinute: 1170 }] },
-    })
+    const edited = seen.at(-1)
+    expect(edited?.mode === 'modes' ? edited.onSchedule?.schedule.windows : []).toEqual([
+      { days: [1, 2, 3, 4, 5], startMinute: 1169, endMinute: 1170 },
+    ])
     const count = seen.length
     const again = dom.getByTestId('rule-delivery-time-input-0')
     await act(async () => {
@@ -83,19 +134,19 @@ describe('SystemEventDeliveryField', () => {
     })
     expect(seen).toHaveLength(count)
     expect(dom.getByTestId('rule-delivery-time-input-0')).toHaveProperty('value', '19:30')
-
     await act(async () => {
       fireEvent.click(dom.getByTestId('rule-delivery-add-time'))
     })
     const last = seen.at(-1)
-    expect(last?.mode === 'summary' ? last.schedule.windows : []).toHaveLength(2)
-    expect(dom.getByTestId('rule-delivery-time-1')).toBeTruthy()
+    expect(last?.mode === 'modes' ? last.onSchedule?.schedule.windows : []).toHaveLength(2)
   })
 
-  it('keeps at least one send time, and at least one day on each', async () => {
+  it('keeps at least one day on each send time', async () => {
     const { seen } = mountField({
-      mode: 'summary',
-      schedule: { windows: [{ days: [1], startMinute: 479, endMinute: 480 }] },
+      mode: 'modes',
+      onActivation: true,
+      onDeactivation: true,
+      onSchedule: { schedule: { windows: [{ days: [1], startMinute: 479, endMinute: 480 }] }, grouping: 'rule' },
     })
     await dom.findByTestId('rule-delivery-time-0')
     expect(dom.queryByLabelText('Remove send time')).toBeNull()
@@ -109,35 +160,25 @@ describe('SystemEventDeliveryField', () => {
       schedule: { windows: [{ days: [1], startMinute: 540, endMinute: 1080 }] },
     })
     expect(await dom.findByTestId('rule-delivery-custom')).toBeTruthy()
-    expect(dom.getByText('Custom schedule: the summary is sent when each window below ENDS.')).toBeTruthy()
     expect(dom.queryByTestId('rule-delivery-add-time')).toBeNull()
   })
 
   it('D698: one per category is picked, and a send-time edit KEEPS it', async () => {
     const { seen } = mountField({
-      mode: 'summary',
-      schedule: { windows: [{ days: [1, 2, 3, 4, 5], startMinute: 479, endMinute: 480 }] },
+      mode: 'modes',
+      onActivation: true,
+      onDeactivation: true,
+      onSchedule: { schedule: { windows: [{ days: [1, 2, 3, 4, 5], startMinute: 479, endMinute: 480 }] }, grouping: 'rule' },
     })
     await press('One per category')
-    expect(seen.at(-1)).toEqual({
-      mode: 'summary',
-      schedule: { windows: [{ days: [1, 2, 3, 4, 5], startMinute: 479, endMinute: 480 }] },
-      split: 'section',
-    })
+    const picked = seen.at(-1)
+    expect(picked?.mode === 'modes' ? picked.onSchedule?.grouping : null).toBe('section')
     const input = dom.getByTestId('rule-delivery-time-input-0')
     await act(async () => {
       fireEvent.change(input, { target: { value: '19:30' } })
       fireEvent.blur(input)
     })
-    expect(seen.at(-1)).toEqual({
-      mode: 'summary',
-      schedule: { windows: [{ days: [1, 2, 3, 4, 5], startMinute: 1169, endMinute: 1170 }] },
-      split: 'section',
-    })
-    await press('One message')
-    expect(seen.at(-1)).toEqual({
-      mode: 'summary',
-      schedule: { windows: [{ days: [1, 2, 3, 4, 5], startMinute: 1169, endMinute: 1170 }] },
-    })
+    const after = seen.at(-1)
+    expect(after?.mode === 'modes' ? after.onSchedule?.grouping : null).toBe('section')
   })
 })

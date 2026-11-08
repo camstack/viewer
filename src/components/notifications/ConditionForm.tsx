@@ -65,6 +65,7 @@ import type {
   NcTaxonomy,
 } from '../../data/notification-center.js'
 import { SectionLabel } from '../ui/SectionLabel.js'
+import { conditionDescriptionText } from './condition-description.js'
 
 /** The scope axes this form draws, bound to the editor's drafts (D641). */
 export interface ConditionFormScopes {
@@ -80,7 +81,9 @@ export interface ConditionFormScopes {
  * 2026-10-01: the minimum confidence is a property of the DETECTION, so it
  * sits with the object classes, not under "Quality".
  */
-const VIEWER_GROUP_OF: Readonly<Record<string, string>> = { minConfidence: 'class' }
+const VIEWER_GROUP_OF: Readonly<Record<string, string>> = {
+  minConfidence: 'class',
+}
 
 /** The group a descriptor is drawn under. */
 function viewerGroupOf(descriptor: NcConditionDescriptor): string {
@@ -169,7 +172,7 @@ export function ConditionForm({
   alarmActions,
   summary = false,
 }: ConditionFormProps) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { colors } = useTheme()
 
   const setField: SetConditionField = (key, value) => {
@@ -182,14 +185,11 @@ export function ConditionForm({
     onConditionsChange(next)
   }
 
-  const authorable = catalog.filter((descriptor) =>
-    conditionVisibleForKind(descriptor, delivery, kind),
-  )
+  const authorable = catalog.filter((descriptor) => conditionVisibleForKind(descriptor, delivery, kind))
   const visible = (includeDescriptor ? authorable.filter(includeDescriptor) : authorable).filter(
     (descriptor) =>
       // The exclude half is drawn INSIDE its axis's one field, never as a row.
-      scopeDescriptorRole(descriptor.id)?.kind !== 'merged' &&
-      conditionSupportedByRule(descriptor.id, conditions),
+      scopeDescriptorRole(descriptor.id)?.kind !== 'merged' && conditionSupportedByRule(descriptor.id, conditions),
   )
   // The class lists live in the scope draft while the rule is edited (D641):
   // the occupancy drop warning reads them from there, or it would go silent.
@@ -211,7 +211,13 @@ export function ConditionForm({
     // hint belongs only to the unfiltered surface.
     if (includeDescriptor) return null
     return (
-      <Text style={{ color: colors.foregroundSubtle, fontSize: 13, paddingHorizontal: SPACING.xs }}>
+      <Text
+        style={{
+          color: colors.foregroundSubtle,
+          fontSize: 13,
+          paddingHorizontal: SPACING.xs,
+        }}
+      >
         {t('v2.nc.rules.editor.noConditions')}
       </Text>
     )
@@ -229,7 +235,14 @@ export function ConditionForm({
           {group.id === 'occupancy' && droppedClasses.length > 0 ? (
             // Said BEFORE the save, not discovered after it: these values are
             // about to be dropped because they can only make the rule silent.
-            <Text style={{ color: colors.warning, fontSize: 11, lineHeight: 15, paddingHorizontal: SPACING.xs }}>
+            <Text
+              style={{
+                color: colors.warning,
+                fontSize: 11,
+                lineHeight: 15,
+                paddingHorizontal: SPACING.xs,
+              }}
+            >
               {t('v2.nc.rules.editor.occupancy.classesDropped', {
                 classes: droppedClasses.join(', '),
               })}
@@ -239,37 +252,55 @@ export function ConditionForm({
               kind-composed filter above already removed the ones the trigger or
               the kind cannot use, so there is no disabled row and no "not for
               this trigger" hint to render. */}
-          {group.descriptors.map((descriptor) => (
-            <View key={descriptor.id} style={{ gap: SPACING.sm }}>
-              <Text style={{ color: colors.foreground, fontSize: 14, fontWeight: '500' }}>
-                {t(`v2.nc.rules.editor.condition.${descriptor.id}`, {
-                  defaultValue: descriptor.label,
-                })}
-              </Text>
-              {scopeDescriptorRole(descriptor.id) !== null ? (
-                <ScopeFieldFor descriptor={descriptor} scopes={scopes} taxonomy={taxonomy} />
-              ) : (
-                <ConditionField
-                  descriptor={descriptor}
-                  conditions={conditions}
-                  savedConditions={savedConditions}
-                  schedule={schedule}
-                  taxonomy={taxonomy}
-                  onFieldChange={setField}
-                  onScheduleChange={onScheduleChange}
-                  systemFamily={systemFamily}
-                  deviceIds={deviceIds}
-                  alarmActions={alarmActions}
-                  summary={summary}
-                />
-              )}
-              {descriptor.description && !QUIET_DESCRIPTIONS.has(descriptor.id) ? (
-                <Text style={{ color: colors.foregroundSubtle, fontSize: 11, lineHeight: 15 }}>
-                  {descriptor.description}
+          {group.descriptors.map((descriptor) => {
+            // The hub's description is English schema text: only OUR translation is drawn.
+            const hint = QUIET_DESCRIPTIONS.has(descriptor.id)
+              ? null
+              : conditionDescriptionText(descriptor, (key) => (i18n.exists(key) ? t(key) : undefined))
+            return (
+              <View key={descriptor.id} style={{ gap: SPACING.sm }}>
+                <Text
+                  style={{
+                    color: colors.foreground,
+                    fontSize: 14,
+                    fontWeight: '500',
+                  }}
+                >
+                  {t(`v2.nc.rules.editor.condition.${descriptor.id}`, {
+                    defaultValue: descriptor.label,
+                  })}
                 </Text>
-              ) : null}
-            </View>
-          ))}
+                {scopeDescriptorRole(descriptor.id) !== null ? (
+                  <ScopeFieldFor descriptor={descriptor} scopes={scopes} taxonomy={taxonomy} />
+                ) : (
+                  <ConditionField
+                    descriptor={descriptor}
+                    conditions={conditions}
+                    savedConditions={savedConditions}
+                    schedule={schedule}
+                    taxonomy={taxonomy}
+                    onFieldChange={setField}
+                    onScheduleChange={onScheduleChange}
+                    systemFamily={systemFamily}
+                    deviceIds={deviceIds}
+                    alarmActions={alarmActions}
+                    summary={summary}
+                  />
+                )}
+                {hint !== null ? (
+                  <Text
+                    style={{
+                      color: colors.foregroundSubtle,
+                      fontSize: 11,
+                      lineHeight: 15,
+                    }}
+                  >
+                    {hint}
+                  </Text>
+                ) : null}
+              </View>
+            )
+          })}
         </View>
       ))}
     </View>

@@ -1,16 +1,19 @@
 /**
- * SystemEventDeliveryField — the Delivery control of a `device-events` /
- * `system` rule (D647): Instant (a notification per event) or Summary (the
- * current state of the rule's kinds, at set times; nothing sent when there is
- * nothing to report).
+ * SystemEventDeliveryField — WHEN a `device-events` / `system` rule speaks
+ * (D647, D1019): three independent moments, each a switch — when the condition
+ * STARTS, when it is RESOLVED, and a scheduled SUMMARY (the current state of
+ * the rule's kinds, at set times; nothing sent when there is nothing to
+ * report).
  *
- * The admin's `NotificationSystemEventDelivery.tsx`, on the phone: the same two
- * choices, the same default (every day at 08:00), the same guards — a summary
- * keeps at least one send time and every send time at least one day — and a
- * stored schedule that is not a list of send times is shown as its windows,
- * with the rule it follows said out loud. The pure half is
+ * The admin's `NotificationSystemEventDelivery.tsx`, on the phone: the same
+ * moments, the same default send time (every day at 08:00), the same guards —
+ * at least one moment stays on, a summary keeps at least one send time and
+ * every send time at least one day. Every shape a rule can be stored in
+ * (absent, `instant`, `summary`, `modes`) is READ through
+ * `systemEventDeliveryModesOf` and written back as `modes`. A stored schedule
+ * that is not a list of send times is shown as its windows. The pure half is
  * `system-event-delivery.ts`. Rendered for nothing else: the alarm stays
- * instant and a `mixed` rule is read-only.
+ * instant and a `mixed` rule has no summary.
  */
 import React, { useState } from 'react'
 import { Pressable, Text, TextInput, View } from 'react-native'
@@ -20,82 +23,108 @@ import { useTheme } from '../../../../theme/theme-provider.js'
 import { RADIUS, SPACING } from '../../../../theme/tokens.js'
 import { Section } from '../../../../components/ui/Section.js'
 import { SegmentedControl, type SegmentOption } from '../../../../components/ui/SegmentedControl.js'
+import { ToggleRow } from '../../../../components/ui/ToggleRow.js'
 import { ScheduleField } from '../../../../components/notifications/ConditionField.js'
 import {
-  defaultSummaryDelivery,
   hhmmOfMinute,
-  isModesDelivery,
   minuteOfHhmm,
   NC_SUMMARY_DEFAULT_SEND_TIME,
   NC_SUMMARY_WEEKDAYS,
   scheduleForSendTimes,
   sendTimesOfSchedule,
-  summarySplitOf,
-  withSummarySchedule,
-  withSummarySplit,
-  type NcSummaryDelivery,
+  resolveMomentOffered,
+  systemEventMomentsOf,
+  withDeliveryMoment,
+  withScheduledSummary,
+  type NcDeliveryMoment,
+  type NcScheduledSummary,
   type NcSummarySendTime,
 } from '../../../../components/notifications/system-event-delivery.js'
-import type {
-  NcStateSummarySplit,
-  NcSystemEventDelivery,
-  NcSystemEventDeliveryMode,
-} from '../../../../data/notification-center.js'
-import { deliveryModesLine } from '../../../../components/notifications/rule-summary-lines.js'
+import type { NcStateSummarySplit, NcSystemEventDelivery } from '../../../../data/notification-center.js'
 import { Hint } from './SectionHint.js'
+import { ScheduleTimeZoneField } from './ScheduleTimeZoneField.js'
 
 const KEY = 'v2.nc.rules.editor.systemDelivery'
 
 export interface SystemEventDeliveryFieldProps {
   readonly value: NcSystemEventDelivery | undefined
   readonly onChange: (next: NcSystemEventDelivery) => void
+  /** The rule's selected system-event kinds — they decide whether "when it resolves" exists. */
+  readonly kinds: readonly string[]
 }
 
-export function SystemEventDeliveryField({ value, onChange }: SystemEventDeliveryFieldProps) {
+const MOMENTS: readonly {
+  readonly moment: NcDeliveryMoment
+  readonly labelKey: string
+  readonly hintKey: string
+}[] = [
+  {
+    moment: 'activation',
+    labelKey: `${KEY}.onActivation`,
+    hintKey: `${KEY}.onActivationHint`,
+  },
+  {
+    moment: 'deactivation',
+    labelKey: `${KEY}.onDeactivation`,
+    hintKey: `${KEY}.onDeactivationHint`,
+  },
+  {
+    moment: 'schedule',
+    labelKey: `${KEY}.onSchedule`,
+    hintKey: `${KEY}.onScheduleHint`,
+  },
+]
+
+export function SystemEventDeliveryField({ value, onChange, kinds }: SystemEventDeliveryFieldProps) {
   const { t } = useTranslation()
-  const { colors } = useTheme()
-  // A rule that speaks at several moments (D1019) is shown, never edited here:
-  // the legacy two-way control would overwrite it. Nothing is sent back changed.
-  if (value !== undefined && isModesDelivery(value)) {
-    return (
-      <Section title={t(`${KEY}.label`)}>
-        <View testID="rule-delivery-modes" style={{ paddingHorizontal: SPACING.xl, paddingTop: SPACING.md }}>
-          <Text style={{ color: colors.foreground, fontSize: 15 }}>{deliveryModesLine(value, t)}</Text>
-        </View>
-        <Hint text={t('v2.nc.rules.summary.deliveryModes.readOnlyHint')} last />
-      </Section>
-    )
+  const modes = systemEventMomentsOf({ systemEventDelivery: value, kinds })
+  const isOn = (moment: NcDeliveryMoment): boolean =>
+    moment === 'schedule' ? modes.schedule !== null : moment === 'activation' ? modes.activation : modes.deactivation
+  const toggle = (moment: NcDeliveryMoment, on: boolean): void => {
+    const next = withDeliveryMoment(value, moment, on, kinds)
+    // Refused (the last moment): nothing changes, and the hint below says why.
+    if (next !== undefined && next !== value) onChange(next)
   }
-  const summary = value?.mode === 'summary' ? value : null
-  const options: readonly SegmentOption<NcSystemEventDeliveryMode>[] = [
-    { value: 'instant', label: t(`${KEY}.instant`) },
-    { value: 'summary', label: t(`${KEY}.summary`) },
-  ]
-  const choose = (mode: NcSystemEventDeliveryMode): void => {
-    if (mode === (summary === null ? 'instant' : 'summary')) return
-    onChange(mode === 'summary' ? defaultSummaryDelivery() : { mode: 'instant' })
-  }
+  const scheduled = modes.schedule
+  const summaryOf = (next: NcScheduledSummary): void => onChange(withScheduledSummary(value, next, kinds))
   return (
-    <Section title={t(`${KEY}.label`)}>
-      <View testID="rule-delivery" style={{ paddingHorizontal: SPACING.xl, paddingTop: SPACING.md }}>
-        <SegmentedControl<NcSystemEventDeliveryMode>
-          options={options}
-          value={summary === null ? 'instant' : 'summary'}
-          onChange={choose}
+    <View style={{ gap: SPACING.xl }}>
+      <Section title={t(`${KEY}.label`)}>
+        <View testID="rule-delivery">
+          {MOMENTS.filter(
+            ({ moment }) => moment !== 'deactivation' || modes.deactivation || resolveMomentOffered(kinds),
+          ).map(({ moment, labelKey, hintKey }) => (
+            <ToggleRow
+              key={moment}
+              label={t(labelKey)}
+              description={t(hintKey)}
+              value={isOn(moment)}
+              onValueChange={(on) => toggle(moment, on)}
+              switchTestID={`rule-delivery-${moment}`}
+              last={moment === 'schedule' && modes.schedule === null}
+            />
+          ))}
+        </View>
+        {modes.schedule === null ? (
+          <Hint text={t(`${KEY}.atLeastOne`)} last />
+        ) : (
+          <SummarySchedule value={modes.schedule} onChange={summaryOf} />
+        )}
+      </Section>
+      {/* The zone the send times are read in — only once there ARE send times. */}
+      {scheduled !== null ? (
+        <ScheduleTimeZoneField
+          schedule={scheduled.schedule}
+          onChange={(next) => summaryOf({ ...scheduled, schedule: next })}
         />
-      </View>
-      {summary === null ? (
-        <Hint text={t(`${KEY}.instantHint`)} last />
-      ) : (
-        <SummarySchedule value={summary} onChange={onChange} />
-      )}
-    </Section>
+      ) : null}
+    </View>
   )
 }
 
 interface SummaryScheduleProps {
-  readonly value: NcSummaryDelivery
-  readonly onChange: (next: NcSystemEventDelivery) => void
+  readonly value: NcScheduledSummary
+  readonly onChange: (next: NcScheduledSummary) => void
 }
 
 function SummarySchedule({ value, onChange }: SummaryScheduleProps) {
@@ -105,7 +134,7 @@ function SummarySchedule({ value, onChange }: SummaryScheduleProps) {
   const timezone = value.schedule.timezone
   const commit = (next: readonly NcSummarySendTime[]): void => {
     if (next.length === 0) return // a summary needs at least one send time
-    onChange(withSummarySchedule(value, scheduleForSendTimes(next, timezone)))
+    onChange({ ...value, schedule: scheduleForSendTimes(next, timezone) })
   }
   // One message, or one notification per category (D698).
   const splitOptions: readonly SegmentOption<NcStateSummarySplit>[] = [
@@ -117,14 +146,20 @@ function SummarySchedule({ value, onChange }: SummaryScheduleProps) {
       <Hint text={t(`${KEY}.summaryHint`)} />
       {times === null ? (
         <View testID="rule-delivery-custom" style={{ gap: SPACING.sm, paddingHorizontal: SPACING.xl }}>
-          <Text style={{ color: colors.foregroundSubtle, fontSize: 12, lineHeight: 17 }}>
+          <Text
+            style={{
+              color: colors.foregroundSubtle,
+              fontSize: 12,
+              lineHeight: 17,
+            }}
+          >
             {t(`${KEY}.customSchedule`)}
           </Text>
           <ScheduleField
             value={value.schedule}
             onChange={(next) => {
               // Removing the last window would leave a summary never sent.
-              if (next !== undefined) onChange(withSummarySchedule(value, next))
+              if (next !== undefined) onChange({ ...value, schedule: next })
             }}
           />
         </View>
@@ -156,7 +191,13 @@ function SummarySchedule({ value, onChange }: SummaryScheduleProps) {
             }}
           >
             <Plus size={14} color={colors.foregroundMuted} />
-            <Text style={{ color: colors.foregroundMuted, fontSize: 13, fontWeight: '600' }}>
+            <Text
+              style={{
+                color: colors.foregroundMuted,
+                fontSize: 13,
+                fontWeight: '600',
+              }}
+            >
               {t(`${KEY}.addTime`)}
             </Text>
           </Pressable>
@@ -165,9 +206,9 @@ function SummarySchedule({ value, onChange }: SummaryScheduleProps) {
       <View testID="rule-delivery-split" style={{ paddingHorizontal: SPACING.xl, paddingTop: SPACING.sm }}>
         <SegmentedControl<NcStateSummarySplit>
           options={splitOptions}
-          value={summarySplitOf(value)}
-          onChange={(split) => {
-            if (split !== summarySplitOf(value)) onChange(withSummarySplit(value, split))
+          value={value.grouping}
+          onChange={(grouping) => {
+            if (grouping !== value.grouping) onChange({ ...value, grouping })
           }}
         />
       </View>
@@ -201,7 +242,13 @@ function SendTimeRow({ time, index, onChange, onRemove }: SendTimeRowProps) {
   return (
     <View
       testID={`rule-delivery-time-${String(index)}`}
-      style={{ gap: SPACING.sm, borderWidth: 1, borderColor: colors.border, borderRadius: RADIUS.md, padding: SPACING.md }}
+      style={{
+        gap: SPACING.sm,
+        borderWidth: 1,
+        borderColor: colors.border,
+        borderRadius: RADIUS.md,
+        padding: SPACING.md,
+      }}
     >
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.md }}>
         <Text style={{ color: colors.foregroundSubtle, fontSize: 13 }}>{t(`${KEY}.sendAt`)}</Text>
@@ -257,7 +304,13 @@ function SendTimeRow({ time, index, onChange, onRemove }: SendTimeRowProps) {
                 backgroundColor: on ? colors.primary : colors.surfaceHover,
               }}
             >
-              <Text style={{ color: on ? colors.primaryForeground : colors.foregroundSubtle, fontSize: 11, fontWeight: '600' }}>
+              <Text
+                style={{
+                  color: on ? colors.primaryForeground : colors.foregroundSubtle,
+                  fontSize: 11,
+                  fontWeight: '600',
+                }}
+              >
                 {t(d.labelKey)}
               </Text>
             </Pressable>

@@ -1618,11 +1618,8 @@
           "sensorsEmptyWidens": "Nessun sensore selezionato: la regola varrà per TUTTI i sensori.",
           "sensorsUnavailable": "L'hub non ha restituito i suoi sensori — quelli selezionati sono elencati per id, così puoi ancora rimuoverli.",
           "systemDelivery": {
-            "label": "Invio",
-            "instant": "Immediato",
-            "summary": "Riepilogo",
-            "instantHint": "Una notifica per ogni evento, nel momento in cui accade.",
-            "summaryHint": "Nessun invio per singolo evento. A ogni orario qui sotto arriva una sola notifica con ciò che è ancora vero per i tipi e i filtri di questa regola — batterie scariche, consumabili, dispositivi o stream offline, aggiornamenti disponibili. Se non c’è nulla da segnalare, non viene inviato nulla.",
+            "label": "Quando invia",
+            "summaryHint": "A ogni orario qui sotto arriva una sola notifica con ciò che è ancora vero per i tipi e i filtri di questa regola — batterie scariche, consumabili, dispositivi o stream offline, aggiornamenti disponibili. Se non c’è nulla da segnalare, non viene inviato nulla.",
             "customSchedule": "Pianificazione personalizzata: il riepilogo viene inviato quando FINISCE ciascuna finestra qui sotto.",
             "addTime": "Aggiungi un orario di invio",
             "removeTime": "Rimuovi orario di invio",
@@ -1631,7 +1628,14 @@
             "splitRule": "Un solo messaggio",
             "splitSection": "Uno per categoria",
             "splitHint": "Uno per categoria invia una notifica separata per ogni categoria con qualcosa da segnalare — batterie, consumabili, dispositivi offline… Richiede un hub aggiornato; uno più vecchio invia un solo messaggio.",
-            "splitBodyWarning": "Inviato uno per categoria: questo testo non contiene {{token}}, quindi nelle notifiche delle altre categorie l’hub aggiunge {{token}} (le righe di quella categoria)."
+            "splitBodyWarning": "Inviato uno per categoria: questo testo non contiene {{token}}, quindi nelle notifiche delle altre categorie l’hub aggiunge {{token}} (le righe di quella categoria).",
+            "onActivation": "Quando inizia",
+            "onActivationHint": "Una notifica appena la condizione comincia.",
+            "onDeactivation": "Quando si risolve",
+            "onDeactivationHint": "Una notifica quando la condizione rientra.",
+            "onSchedule": "Riepilogo programmato",
+            "onScheduleHint": "Una notifica a orari fissi con ciò che è ancora vero.",
+            "atLeastOne": "Almeno un momento deve restare attivo."
           },
           "summaryNotKept": "Questo hub non supporta ancora i riepiloghi pianificati, quindi la regola è stata salvata come Immediata. Aggiorna il server, poi reimposta il riepilogo.",
           "advancedConditionsTitle": "Rilevamento",
@@ -1651,7 +1655,13 @@
           "showTriggerZoneLabel": "Disegna la zona che ha attivato la regola",
           "showTriggerZoneHint": "Evidenzia la zona sulla scena. Non viene disegnata su un ritaglio del soggetto.",
           "showSubjectPathLabel": "Mostra il percorso del soggetto",
-          "showSubjectPathHint": "Disegna la linea percorsa dal soggetto fino al momento della foto. Su un ritaglio, solo la parte al suo interno."
+          "showSubjectPathHint": "Disegna la linea percorsa dal soggetto fino al momento della foto. Su un ritaglio, solo la parte al suo interno.",
+          "conditionHint": {
+            "minDwellSeconds": "Per quanti secondi il soggetto è rimasto in vista. Vale per le regole che scattano alla fine di una traccia.",
+            "packagePhase": "Consegnato, ritirato, oppure entrambi.",
+            "customZones": "Zone disegnate da te: una rilevazione che ne tocca una corrisponde.",
+            "schedule": "I giorni e le ore in cui la regola è attiva. Vuoto significa sempre attiva."
+          }
         },
         "kind": {
           "all": "Tutte",

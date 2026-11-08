@@ -33,8 +33,16 @@ export const WHATS_NEW: readonly WhatsNewEntry[] = [
     version: '1.0.691',
     date: '2026-11-08',
     notes: {
-      en: ['Timed run: while running, Stop, the time left and Restart sit in one group.'],
-      it: ['Avvio a tempo: durante l’esecuzione Ferma, tempo residuo e Riavvia sono in un unico gruppo.'],
+      en: [
+        'Timed run: while running, Stop, the time left and Restart sit in one group.',
+        'System-event rules: choose when they send (start, resolve, scheduled summary) in Notification.',
+        'Fixed a raw English hint under Schedule in the rule editor.',
+      ],
+      it: [
+        'Avvio a tempo: durante l’esecuzione Ferma, tempo residuo e Riavvia sono in un unico gruppo.',
+        'Regole di sistema: scegli quando inviano (inizio, risoluzione, riepilogo) in Notifica.',
+        'Corretto un suggerimento in inglese sotto Programmazione nell’editor delle regole.',
+      ],
     },
   },
   {

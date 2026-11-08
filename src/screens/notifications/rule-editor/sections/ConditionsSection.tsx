@@ -33,12 +33,7 @@ import { formScopedDeviceIds, ruleScopeExceptOffered } from '../../../../compone
 import { ruleScopeList, type RuleScopeDraft } from '../../../../components/notifications/rule-scope-model.js'
 import type { ConditionFormScopes } from '../../../../components/notifications/ConditionForm.js'
 import type { NcRuleFormState } from '../../../../components/notifications/rule-editor.js'
-import {
-  isStateSummaryForm,
-  summaryDeliveryOffered,
-  withSummarySchedule,
-} from '../../../../components/notifications/system-event-delivery.js'
-import { SystemEventDeliveryField } from './SystemEventDeliveryField.js'
+import { isStateSummaryForm } from '../../../../components/notifications/system-event-delivery.js'
 import { SectionLabel } from '../../../../components/ui/SectionLabel.js'
 
 /** The form's scope drafts over string ids — the ones this section binds. */
@@ -132,33 +127,22 @@ export function ConditionsSection({ draft, patch, kind, catalog, rule }: RuleSec
     <View style={{ gap: SPACING.lg }} testID="rule-conditions-section">
       <SectionLabel inset>{t(editorSectionLabelKey('conditions', kind))}</SectionLabel>
       {blurb.length > 0 ? (
-        <Text style={{ color: colors.foregroundSubtle, fontSize: 12, lineHeight: 17, paddingHorizontal: SPACING.xs }}>
+        <Text
+          style={{
+            color: colors.foregroundSubtle,
+            fontSize: 12,
+            lineHeight: 17,
+            paddingHorizontal: SPACING.xs,
+          }}
+        >
           {blurb}
         </Text>
       ) : null}
       {conditionForm}
 
-      {summaryDeliveryOffered(kind) ? (
-        <SystemEventDeliveryField
-          value={form.systemEventDelivery}
-          onChange={(next) => patch({ systemEventDelivery: next })}
-        />
-      ) : null}
-
-      {/* The zone the windows are read in — only once there ARE windows: the
-          summary's send times on a summary rule, the active hours otherwise. */}
-      {form.systemEventDelivery?.mode === 'summary' && summary ? (
-        <ScheduleTimeZoneField
-          schedule={form.systemEventDelivery.schedule}
-          onChange={(next) => {
-            // The zone edit keeps the split (D698): rebuilding the delivery
-            // from `{ mode, schedule }` would drop it.
-            if (form.systemEventDelivery?.mode === 'summary') {
-              patch({ systemEventDelivery: withSummarySchedule(form.systemEventDelivery, next) })
-            }
-          }}
-        />
-      ) : form.schedule !== undefined ? (
+      {/* The zone the active-hours windows are read in. A scheduled-summary
+          rule ignores them; its send-time zone lives with its delivery. */}
+      {!summary && form.schedule !== undefined ? (
         <ScheduleTimeZoneField schedule={form.schedule} onChange={(next) => patch({ schedule: next })} />
       ) : null}
 

@@ -301,8 +301,8 @@ describe('what the editor offers and refuses (the hub verdict, said before the s
     expect(summaryBodyWarning({ ...form, systemEventDelivery: { mode: 'instant' }, templateBody: 'x' })).toBe(false)
   })
 
-  it('the Conditions section claims the delivery', () => {
-    expect(NC_VIEWER_SECTION_FIELDS.conditions).toContain('systemEventDelivery')
+  it('the Notification section claims the delivery', () => {
+    expect(NC_VIEWER_SECTION_FIELDS.notification).toContain('systemEventDelivery')
   })
 })
 

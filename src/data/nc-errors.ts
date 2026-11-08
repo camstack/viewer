@@ -106,7 +106,10 @@ export class NcSummaryNotKeptError extends NcLocalizedError {
   readonly rule: NcRule
 
   constructor(rule: NcRule) {
-    super(NC_SUMMARY_NOT_KEPT_KEY, `hub did not keep systemEventDelivery: summary on rule ${rule.id} (the hub is too old to keep a summary)`)
+    super(
+      NC_SUMMARY_NOT_KEPT_KEY,
+      `hub did not keep systemEventDelivery: summary on rule ${rule.id} (the hub is too old to keep a summary)`,
+    )
     this.name = 'NcSummaryNotKeptError'
     this.rule = rule
   }
@@ -117,9 +120,18 @@ export interface NcSummaryDeliveryView {
   readonly systemEventDelivery?: NcSystemEventDelivery | undefined
 }
 
+/** Does this delivery send a scheduled summary, in either stored shape (`summary`, or `modes` with `onSchedule`)? */
+function sendsScheduledSummary(delivery: NcSystemEventDelivery | undefined): boolean {
+  return delivery?.mode === 'summary' || (delivery?.mode === 'modes' && delivery.onSchedule !== undefined)
+}
+
 /** Throw when a summary was sent and the rule the hub RETURNED is not one. */
 export function assertSummaryDeliveryLanded(sent: NcSummaryDeliveryView, saved: NcRule): void {
-  if (sent.systemEventDelivery?.mode === 'summary' && saved.systemEventDelivery?.mode !== 'summary') {
+  const sentSummary = sendsScheduledSummary(sent.systemEventDelivery)
+  const savedSummary = sendsScheduledSummary(saved.systemEventDelivery)
+  // A hub that does not know the delivery hands back an instant rule: the
+  // summary the operator asked for (alone or beside the instant moments) is gone.
+  if (sentSummary && !savedSummary) {
     throw new NcSummaryNotKeptError(saved)
   }
 }
