@@ -91,6 +91,7 @@ export function GridCellPanelOverlay({
               cameraName={cameraName}
               hasPtz={hasPtz}
               onSelect={onSelect}
+              onClose={onClose}
             />
           </TimelinePanelHost>
         </View>
@@ -104,10 +105,11 @@ interface PanelBodyProps {
   readonly cameraName: string
   readonly hasPtz: boolean
   readonly onSelect: (kind: GridCellPanelKind) => void
+  readonly onClose: () => void
 }
 
 /** Route the open panel to the component that already implements it. */
-function PanelBody({ panel, cameraName, hasPtz, onSelect }: PanelBodyProps): React.JSX.Element {
+function PanelBody({ panel, cameraName, hasPtz, onSelect, onClose }: PanelBodyProps): React.JSX.Element {
   switch (panel.kind) {
     case 'ptz':
       // Centred in the card: the pad is short and the frame is the same tall
@@ -121,7 +123,7 @@ function PanelBody({ panel, cameraName, hasPtz, onSelect }: PanelBodyProps): Rea
       // This host IS the single-camera screen's linked-devices panel (the
       // shelf route), and on the wall it is one cell — one camera either way,
       // so the panel's "+" (a LOCAL addition) is never ambiguous.
-      return <CameraAccessoryPanel deviceId={panel.deviceId} cameraName={cameraName} />
+      return <CameraAccessoryPanel deviceId={panel.deviceId} cameraName={cameraName} onClose={onClose} />
     case 'viewOptions':
       return <CellViewOptions deviceId={panel.deviceId} />
     case 'actions':
@@ -222,7 +224,7 @@ const styles = StyleSheet.create({
     zIndex: CELL_PANEL_OVERLAY_Z,
     elevation: CELL_PANEL_OVERLAY_Z,
   },
-  backdrop: { backgroundColor: 'rgba(0,0,0,0.6)' },
+  backdrop: { backgroundColor: 'rgba(0,0,0,0.6)' }, // ui-check-ok: pre-existing dim over live video, no token for it yet
   center: {
     flex: 1,
     alignItems: 'center',

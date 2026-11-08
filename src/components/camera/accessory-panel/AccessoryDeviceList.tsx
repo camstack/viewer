@@ -47,6 +47,7 @@ export interface AccessoryDeviceListProps {
   readonly deviceId: number
   readonly cameraName: string
   readonly editing: boolean
+  readonly onClose?: () => void
 }
 
 interface IconTarget {
@@ -59,6 +60,7 @@ export function AccessoryDeviceList({
   deviceId,
   cameraName,
   editing,
+  onClose,
 }: AccessoryDeviceListProps): React.JSX.Element {
   const { t } = useTranslation()
   const { colors } = useTheme()
@@ -166,6 +168,7 @@ export function AccessoryDeviceList({
           onMove={(target, delta) => actions.move(target.device.id, delta)}
           onToggleHidden={(target) => actions.setHidden(target.device.id, !target.hidden)}
           onRemove={(target) => actions.remove(target.device.id)}
+          onClose={onClose}
         />
       ))}
       {addRow}

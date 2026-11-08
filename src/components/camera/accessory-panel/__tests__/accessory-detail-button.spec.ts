@@ -28,12 +28,28 @@ afterEach(() => cleanup())
 describe('the row opens the device detail', () => {
   it('pushes /device/<id> with the name and type', async () => {
     mountScreen(
-      React.createElement(AccessoryDeviceList, { deviceId: 101, cameraName: 'Front door', editing: false }),
+      React.createElement(AccessoryDeviceList, { deviceId: 101, cameraName: 'Front door', editing: false}),
       { hub: HUB },
     )
     fireEvent.click(await screen.findByLabelText('Details of Faretto'))
     await waitFor(() => expect(routerCalls().some((c) => c.kind === 'push')).toBe(true))
     expect(routerCalls().find((c) => c.kind === 'push')?.target).toBe('/device/900?name=Faretto&type=light')
+  })
+
+  it('closes the hosting sheet BEFORE the route is pushed', async () => {
+    const seen: string[] = []
+    mountScreen(
+      React.createElement(AccessoryDeviceList, {
+        deviceId: 101,
+        cameraName: 'Front door',
+        editing: false,
+        onClose: () => { seen.push(`close(pushes=${routerCalls().filter((c) => c.kind === 'push').length})`) },
+      }),
+      { hub: HUB },
+    )
+    fireEvent.click(await screen.findByLabelText('Details of Faretto'))
+    await waitFor(() => expect(routerCalls().some((c) => c.kind === 'push')).toBe(true))
+    expect(seen).toEqual(['close(pushes=0)'])
   })
 
   it('is not offered while editing the list', async () => {

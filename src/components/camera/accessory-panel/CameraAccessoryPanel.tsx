@@ -44,9 +44,11 @@ export interface CameraAccessoryPanelProps {
   /** The camera's display name — the picker's subtitle. A host that cannot
    *  name the camera passes what it has; the panel never invents one. */
   readonly cameraName: string
+  /** Closes the hosting sheet; called before a row opens a full-screen route. */
+  readonly onClose?: () => void
 }
 
-export function CameraAccessoryPanel({ deviceId, cameraName }: CameraAccessoryPanelProps): React.JSX.Element {
+export function CameraAccessoryPanel({ deviceId, cameraName, onClose }: CameraAccessoryPanelProps): React.JSX.Element {
   const { t } = useTranslation()
   const { colors } = useTheme()
   const isAdmin = useIsAdmin()
@@ -83,7 +85,7 @@ export function CameraAccessoryPanel({ deviceId, cameraName }: CameraAccessoryPa
           )}
         </Pressable>
       </View>
-      <AccessoryDeviceList deviceId={deviceId} cameraName={cameraName} editing={editing} />
+      <AccessoryDeviceList deviceId={deviceId} cameraName={cameraName} editing={editing} onClose={onClose} />
 
       {isAdmin ? (
         <CameraSwitchGroup deviceId={deviceId} />

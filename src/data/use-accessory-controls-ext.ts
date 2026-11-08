@@ -35,8 +35,6 @@ export type MediaPlayerState = 'off' | 'on' | 'idle' | 'playing' | 'paused' | 'b
 export interface MediaPlayerStatus {
   /** The reported state; `undefined` when the hub sent none the viewer knows — never drawn as idle. */
   readonly state: MediaPlayerState | undefined
-  /** `state` is the driver's own bookkeeping (infrared has no feedback), not a reading. */
-  readonly stateAssumed: boolean
   /** 0..100, or `null` when the device reports none — never 0. */
   readonly volumeLevel: number | null
   /** Title of what is playing; `null` when there is none. */
@@ -45,12 +43,6 @@ export interface MediaPlayerStatus {
 const MEDIA_STATES: readonly MediaPlayerState[] = ['off', 'on', 'idle', 'playing', 'paused', 'buffering', 'standby']
 function mediaStateOf(v: unknown): MediaPlayerState | undefined {
   return typeof v === 'string' ? MEDIA_STATES.find((s) => s === v) : undefined
-}
-/** An `assumed` source guesses `state` unless a field list says it guesses only others. */
-function stateIsAssumed(raw: Record<string, unknown>): boolean {
-  if (raw.stateSource !== 'assumed') return false
-  const fields = Array.isArray(raw.assumedFields) ? raw.assumedFields : []
-  return fields.length === 0 || fields.includes('state')
 }
 function mediaTitleOf(v: unknown): string | null {
   if (!isRecord(v) || typeof v.title !== 'string') return null
@@ -62,7 +54,6 @@ export function parseMediaPlayerStatus(raw: unknown): MediaPlayerStatus | null {
   if (!isRecord(raw)) return null
   return {
     state: mediaStateOf(raw.state),
-    stateAssumed: stateIsAssumed(raw),
     volumeLevel: typeof raw.volumeLevel === 'number' && Number.isFinite(raw.volumeLevel) ? raw.volumeLevel : null,
     title: mediaTitleOf(raw.currentMedia),
   }

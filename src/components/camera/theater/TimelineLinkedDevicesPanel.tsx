@@ -25,7 +25,7 @@ export function TimelineLinkedDevicesPanel({
 }: TimelineLinkedDevicesPanelProps): React.JSX.Element {
   return (
     <TimelinePanelHost title={cameraName} onClose={onClose}>
-      <CameraAccessoryPanel deviceId={deviceId} cameraName={cameraName} />
+      <CameraAccessoryPanel deviceId={deviceId} cameraName={cameraName} onClose={onClose} />
     </TimelinePanelHost>
   )
 }

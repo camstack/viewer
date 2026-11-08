@@ -75,6 +75,8 @@ export interface AccessoryRowProps {
   readonly onMove: (row: AccessoryPanelRow, delta: -1 | 1) => void
   readonly onToggleHidden: (row: AccessoryPanelRow) => void
   readonly onRemove: (row: AccessoryPanelRow) => void
+  /** Closes the hosting sheet before the detail route is pushed (the remote's order). */
+  readonly onClose?: () => void
 }
 
 const ICON_SIZE = 18
@@ -114,6 +116,7 @@ export const AccessoryRow = memo(function AccessoryRow({
   onMove,
   onToggleHidden,
   onRemove,
+  onClose,
 }: AccessoryRowProps): React.JSX.Element {
   const { t } = useTranslation()
   const { colors } = useTheme()
@@ -179,6 +182,7 @@ export const AccessoryRow = memo(function AccessoryRow({
         <Pressable
           onPress={() => {
             hapticTap()
+            onClose?.()
             router.push(deviceRoute(row.device.id, row.label, row.device.type))
           }}
           hitSlop={6}

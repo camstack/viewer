@@ -26,14 +26,6 @@ describe('parseMediaPlayerStatus', () => {
     expect(parseMediaPlayerStatus({})?.state).toBeUndefined()
     expect(parseMediaPlayerStatus(null)).toBeNull()
   })
-  it('an assumed state is flagged; a reported one is not', () => {
-    expect(parseMediaPlayerStatus(infrared)?.stateAssumed).toBe(true)
-    expect(parseMediaPlayerStatus({ ...infrared, stateSource: 'reported' })?.stateAssumed).toBe(false)
-    // guessed fields that do not include the state: the state is a reading
-    expect(parseMediaPlayerStatus({ ...infrared, assumedFields: ['isMuted'] })?.stateAssumed).toBe(false)
-    // an older slice (assumed, no field list) guesses the whole state
-    expect(parseMediaPlayerStatus({ ...infrared, assumedFields: undefined })?.stateAssumed).toBe(true)
-  })
   it('a missing volume level is null, not 0', () => {
     expect(parseMediaPlayerStatus(infrared)?.volumeLevel).toBeNull()
     expect(parseMediaPlayerStatus({ ...infrared, volumeLevel: 35 })?.volumeLevel).toBe(35)
