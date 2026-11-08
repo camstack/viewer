@@ -41,12 +41,23 @@ describe('a timed-run device is drawn', () => {
     expect(rowIds([heater(5391, ['timed-run'])], [heater(5392, ['timed-run'])])).toEqual([5391, 5392])
   })
 
-  it('still drops a heater without the feature', () => {
-    expect(rowIds([heater(5393, [])], [heater(5394, ['switch'])])).toEqual([])
+  it('still drops a heater with no actuating cap', () => {
+    expect(rowIds([heater(5393, [])], [heater(5394, ['battery'])])).toEqual([])
+  })
+
+  it('keeps a heater that binds a plain switch', () => {
+    expect(rowIds([heater(5395, ['switch'])])).toEqual([5395])
   })
 
   it('the picker predicate agrees', () => {
     expect(accessoryActuates(heater(1, ['timed-run']))).toBe(true)
     expect(accessoryActuates(heater(2, []))).toBe(false)
+  })
+})
+
+describe('heater icon', () => {
+  it('a heater wears the flame glyph', async () => {
+    const { iconKeyForDeviceType } = await import('../accessory-icon-keys.js')
+    expect(iconKeyForDeviceType('heater')).toBe('flame')
   })
 })

@@ -216,6 +216,14 @@ const CONTROL_BY_DEVICE_TYPE = {
   [DeviceType.PetFountain]: 'none',
 } as const satisfies Record<DeviceType, AccessoryControlKind>
 
+/** Appliance types whose on/off is the plain `switch` cap they bind. */
+const APPLIANCE_TYPES: ReadonlySet<string> = new Set([
+  DeviceType.Heater,
+  DeviceType.Washer,
+  DeviceType.Dryer,
+  DeviceType.Dishwasher,
+])
+
 /** Resolve a raw device-type string to its base control kind via the guarded
  *  map, else `'none'` for an unknown future type. */
 function baseControlKind(type: string): AccessoryControlKind {
@@ -237,6 +245,11 @@ function baseControlKind(type: string): AccessoryControlKind {
 export function pickAccessoryControl(device: AccessoryControlInput): AccessoryControlPick {
   const set = new Set(device.features)
   const base = baseControlKind(device.type)
+  // An appliance has no control of its own, but it binds a plain `switch`
+  // (a stove forwarded to a smart plug): that switch is its on/off.
+  if (base === 'none' && APPLIANCE_TYPES.has(device.type) && set.has('switch')) {
+    return { kind: 'switch' }
+  }
   if (base === 'switch') {
     // A dimmable light exposes both switch + brightness; the brightness control
     // subsumes on/off. (Sirens / plain switches never advertise `brightness`.)

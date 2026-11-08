@@ -203,3 +203,17 @@ describe('isActuatingControlKind', () => {
     expect(isActuatingControlKind(pick('sensor', ['temperature-sensor']).kind)).toBe(false)
   })
 })
+
+describe('appliance types that bind a plain switch', () => {
+  it('a heater with switch + timed-run gets the switch as its primary control', () => {
+    expect(pick('heater', ['switch', 'timed-run'])).toEqual({ kind: 'switch' })
+  })
+  it('washer, dryer and dishwasher with a switch get the switch too', () => {
+    for (const type of ['washer', 'dryer', 'dishwasher']) {
+      expect(pick(type, ['switch'])).toEqual({ kind: 'switch' })
+    }
+  })
+  it('a heater without a switch cap keeps no primary control', () => {
+    expect(pick('heater', ['timed-run'])).toEqual({ kind: 'none' })
+  })
+})

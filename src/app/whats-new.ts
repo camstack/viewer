@@ -39,6 +39,8 @@ export const WHATS_NEW: readonly WhatsNewEntry[] = [
         'Removed the "assumed" label from the TV row.',
         'Device details: a large main control and a History tab with 24 h, 7 d, 30 d charts.',
         'Remote: coloured A–D keys, and the sheet no longer runs under the status bar.',
+        'The stove shows its on/off switch again, next to the timed run.',
+        'Heaters now have a flame icon.',
       ],
       it: [
         'Dettagli: tocca la freccia sulla riga per stato, letture, consumabili, timer.',
@@ -46,6 +48,8 @@ export const WHATS_NEW: readonly WhatsNewEntry[] = [
         'Rimossa l’etichetta «presunto» dalla riga della TV.',
         'Dettagli: comando grande e scheda Storico con grafici a 24 h, 7 g, 30 g.',
         'Telecomando: tasti A–D colorati, e il pannello non finisce più sotto la barra di stato.',
+        'La stufa mostra di nuovo l’interruttore, accanto al timer di accensione.',
+        'I riscaldatori hanno ora l’icona della fiamma.',
       ],
     },
   },

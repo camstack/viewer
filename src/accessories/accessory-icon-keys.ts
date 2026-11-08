@@ -39,6 +39,7 @@ const ICON_BY_DEVICE_TYPE: Readonly<Record<string, AccessoryIconKey>> = {
   switch: 'toggle-right',
   thermostat: 'thermometer',
   'water-heater': 'thermometer',
+  heater: 'flame',
   humidifier: 'thermometer',
   sensor: 'activity',
   presence: 'activity',
