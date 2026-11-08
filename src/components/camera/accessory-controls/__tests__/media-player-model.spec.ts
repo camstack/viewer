@@ -5,7 +5,6 @@ import {
   mediaPlayerFeatureFlags,
   powerCommandFor,
   powerOf,
-  showsAssumedMark,
   titleText,
   volumeLevelText,
   volumeViewOf,
@@ -62,11 +61,8 @@ describe('what is drawn', () => {
     expect(isPlaying('idle')).toBe(false)
     expect(isPlaying('buffering')).toBe(true)
   })
-  it('the assumed mark needs a shown, guessed state; unknown values draw nothing', () => {
+  it('unknown values draw nothing', () => {
     const s = (over: object) => parseMediaPlayerStatus({ ...infrared, ...over })
-    expect(showsAssumedMark(s({}))).toBe(true)
-    expect(showsAssumedMark(s({ state: 'wat' }))).toBe(false)
-    expect(showsAssumedMark(null)).toBe(false)
     expect(volumeLevelText(s({}))).toBeNull()
     expect(volumeLevelText(s({ volumeLevel: 0 }))).toBe('0%')
     expect(titleText(s({}))).toBeNull()

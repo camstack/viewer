@@ -3,10 +3,9 @@
  * device's declared features — never from a vendor. Pure, so it can be pinned
  * without rendering.
  *
- * Three honesty rules, from the infrared TV (a media-player backed by the
+ * Two honesty rules, from the infrared TV (a media-player backed by the
  * `remote` extension, no feedback):
  *  - an unknown state is `unknown`, never idle, and never "off";
- *  - an assumed value is marked as a guess;
  *  - a volume with steps and no level is two buttons, never a slider with a
  *    made-up position, and an unknown level is not drawn as 0.
  */
@@ -53,11 +52,6 @@ export function powerCommandFor(power: PowerView): 'turnOn' | 'turnOff' | null {
   if (power === 'on') return 'turnOff'
   if (power === 'off' || power === 'standby') return 'turnOn'
   return null
-}
-
-/** Whether the assumed mark is drawn: only when the state is shown and is a guess. */
-export function showsAssumedMark(status: MediaPlayerStatus | null | undefined): boolean {
-  return status?.state !== undefined && status.stateAssumed
 }
 
 /** The volume level as text, or `null` when the device reported none (never "0%"). */

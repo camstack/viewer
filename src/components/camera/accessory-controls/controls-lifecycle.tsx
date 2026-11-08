@@ -15,12 +15,12 @@ import React, { useCallback, useState } from 'react'
 import { View, Text, StyleSheet } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { Play, Pause, Square, SkipBack, SkipForward, House, MapPin, Utensils, Power, PowerOff, Gamepad2, Minus, Plus } from '../../../lib/icons.js'
-import { RADIUS, SPACING, TYPOGRAPHY } from '../../../theme/tokens.js'
+import { SPACING, TYPOGRAPHY } from '../../../theme/tokens.js'
 import { useTheme } from '../../../theme/theme-provider.js'
 import { useRemoteCommands } from '../../../data/use-remote.js'
 import { RemoteSheet } from '../remote/RemoteSheet.js'
 import {
-  isPlaying, mediaPlayerFeatureFlags, powerOf, showsAssumedMark, titleText, volumeLevelText, volumeViewOf,
+  isPlaying, mediaPlayerFeatureFlags, powerOf, titleText, volumeLevelText, volumeViewOf,
 } from './media-player-model.js'
 import { useCapMutator } from '../../../data/use-accessory-controls.js'
 import {
@@ -104,14 +104,6 @@ export function MediaPlayerControl({ deviceId, online, features, deviceName }: M
         <Text numberOfLines={1} style={[styles.stateText, { color: state === undefined ? colors.foregroundSubtle : colors.foreground }]}>
           {state === undefined ? t('v2.accessories.stateUnknown') : t(`v2.accessories.mediaState.${state}`)}
         </Text>
-        {showsAssumedMark(status.data) ? (
-          <Text
-            accessibilityLabel={t('v2.accessories.assumedHint')}
-            style={[styles.assumed, { color: colors.foregroundSubtle, borderColor: colors.border }]}
-          >
-            {t('v2.accessories.assumed')}
-          </Text>
-        ) : null}
         {title !== null ? <Text numberOfLines={1} style={[styles.stateText, { color: colors.foregroundMuted }]}>{title}</Text> : null}
         {volume !== null ? <Text style={[styles.stateText, { color: colors.foregroundMuted }]}>{volume}</Text> : null}
       </View>
@@ -224,11 +216,4 @@ const styles = StyleSheet.create({
   cluster: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm },
   readout: { flexShrink: 1, flexDirection: 'row', alignItems: 'center', gap: SPACING.sm },
   stateText: { flexShrink: 1, fontSize: TYPOGRAPHY.size.sm, fontWeight: TYPOGRAPHY.weight.medium },
-  assumed: {
-    fontSize: TYPOGRAPHY.size.xs,
-    borderWidth: 1,
-    borderStyle: 'dashed',
-    borderRadius: RADIUS.sm,
-    paddingHorizontal: SPACING.sm,
-  },
 })

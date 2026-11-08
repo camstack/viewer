@@ -17,7 +17,6 @@ import { RemoteKeyPad, REMOTE_SCREEN_MAX_WIDTH } from '../components/camera/remo
 import { useCanActuate } from '../hooks/use-user-scope.js'
 import { remoteFailureText, useRemoteCommands, useRemoteLayout, useRemotePress } from '../data/use-remote.js'
 import { useMediaPlayerStatus, type MediaPlayerStatus } from '../data/use-accessory-controls-ext.js'
-import { showsAssumedMark } from '../components/camera/accessory-controls/media-player-model.js'
 import { Gamepad2 } from '../lib/icons.js'
 import { useTheme } from '../theme/theme-provider.js'
 import { RADIUS, SPACING, TYPOGRAPHY } from '../theme/tokens.js'
@@ -36,8 +35,7 @@ function powerSubtitle(
 ): string | undefined {
   if (loading) return undefined
   if (status?.state === undefined) return t('v2.accessories.stateUnknown')
-  const name = t(`v2.accessories.mediaState.${status.state}`)
-  return showsAssumedMark(status) ? `${name} · ${t('v2.accessories.assumed')}` : name
+  return t(`v2.accessories.mediaState.${status.state}`)
 }
 
 export function RemoteScreen({ deviceId, deviceName }: RemoteScreenProps): React.JSX.Element {

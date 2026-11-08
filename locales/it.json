@@ -2956,8 +2956,6 @@
       "powerOff": "Spegni",
       "remote": "Telecomando",
       "stateUnknown": "Stato sconosciuto",
-      "assumed": "presunto",
-      "assumedHint": "Nessun riscontro dal dispositivo: è l'ultimo comando inviato.",
       "mediaState": {
         "off": "Spento",
         "on": "Acceso",

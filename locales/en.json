@@ -2959,8 +2959,6 @@
       "powerOff": "Turn off",
       "remote": "Remote",
       "stateUnknown": "State unknown",
-      "assumed": "assumed",
-      "assumedHint": "No feedback from the device: this is what was last sent.",
       "mediaState": {
         "off": "Off",
         "on": "On",

@@ -60,10 +60,10 @@ function mountIr(over: Record<string, unknown> = {}) {
 }
 
 describe('infrared TV', () => {
-  it('marks the state as assumed and offers power, volume steps and the remote', async () => {
+  it('offers power, volume steps and the remote', async () => {
     mountIr()
     expect(await screen.findByText('On')).toBeTruthy()
-    expect(screen.getByText('assumed')).toBeTruthy()
+    expect(screen.queryByText('assumed')).toBeNull()
     expect(screen.getByLabelText('Volume up')).toBeTruthy()
     expect(screen.getByLabelText('Volume down')).toBeTruthy()
     expect(screen.getByLabelText('Turn off')).toBeTruthy()
