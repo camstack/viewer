@@ -32,7 +32,8 @@ import {
   NC_SUMMARY_WEEKDAYS,
   scheduleForSendTimes,
   sendTimesOfSchedule,
-  systemEventDeliveryModesOf,
+  resolveMomentOffered,
+  systemEventMomentsOf,
   withDeliveryMoment,
   withScheduledSummary,
   type NcDeliveryMoment,
@@ -48,6 +49,8 @@ const KEY = 'v2.nc.rules.editor.systemDelivery'
 export interface SystemEventDeliveryFieldProps {
   readonly value: NcSystemEventDelivery | undefined
   readonly onChange: (next: NcSystemEventDelivery) => void
+  /** The rule's selected system-event kinds — they decide whether "when it resolves" exists. */
+  readonly kinds: readonly string[]
 }
 
 const MOMENTS: readonly {
@@ -72,23 +75,25 @@ const MOMENTS: readonly {
   },
 ]
 
-export function SystemEventDeliveryField({ value, onChange }: SystemEventDeliveryFieldProps) {
+export function SystemEventDeliveryField({ value, onChange, kinds }: SystemEventDeliveryFieldProps) {
   const { t } = useTranslation()
-  const modes = systemEventDeliveryModesOf({ systemEventDelivery: value })
+  const modes = systemEventMomentsOf({ systemEventDelivery: value, kinds })
   const isOn = (moment: NcDeliveryMoment): boolean =>
     moment === 'schedule' ? modes.schedule !== null : moment === 'activation' ? modes.activation : modes.deactivation
   const toggle = (moment: NcDeliveryMoment, on: boolean): void => {
-    const next = withDeliveryMoment(value, moment, on)
+    const next = withDeliveryMoment(value, moment, on, kinds)
     // Refused (the last moment): nothing changes, and the hint below says why.
     if (next !== undefined && next !== value) onChange(next)
   }
   const scheduled = modes.schedule
-  const summaryOf = (next: NcScheduledSummary): void => onChange(withScheduledSummary(value, next))
+  const summaryOf = (next: NcScheduledSummary): void => onChange(withScheduledSummary(value, next, kinds))
   return (
     <View style={{ gap: SPACING.xl }}>
       <Section title={t(`${KEY}.label`)}>
         <View testID="rule-delivery">
-          {MOMENTS.map(({ moment, labelKey, hintKey }) => (
+          {MOMENTS.filter(
+            ({ moment }) => moment !== 'deactivation' || modes.deactivation || resolveMomentOffered(kinds),
+          ).map(({ moment, labelKey, hintKey }) => (
             <ToggleRow
               key={moment}
               label={t(labelKey)}

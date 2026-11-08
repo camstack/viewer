@@ -74,6 +74,7 @@ export function NotificationSection({ draft, patch, kind }: RuleSectionProps) {
       {summaryDeliveryOffered(kind) ? (
         <SystemEventDeliveryField
           value={form.systemEventDelivery}
+          kinds={form.conditions.systemEvent?.kinds ?? []}
           onChange={(next) => patch({ systemEventDelivery: next })}
         />
       ) : null}

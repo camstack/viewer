@@ -24,12 +24,16 @@ afterEach(() => {
   cleanup()
 })
 
-function mountField(initial: NcSystemEventDelivery | undefined): { readonly seen: NcSystemEventDelivery[] } {
+function mountField(
+  initial: NcSystemEventDelivery | undefined,
+  kinds: readonly string[] = ['device-offline'],
+): { readonly seen: NcSystemEventDelivery[] } {
   const seen: NcSystemEventDelivery[] = []
   function Stateful() {
     const [value, setValue] = useState<NcSystemEventDelivery | undefined>(initial)
     return React.createElement(SystemEventDeliveryField, {
       value,
+      kinds,
       onChange: (next: NcSystemEventDelivery) => {
         seen.push(next)
         setValue(next)
@@ -66,10 +70,16 @@ describe('SystemEventDeliveryField', () => {
       onDeactivation: true,
       onSchedule: {
         schedule: { windows: [{ days: [0, 1, 2, 3, 4, 5, 6], startMinute: 479, endMinute: 480 }] },
-        grouping: 'rule',
+        grouping: 'section',
       },
     })
     expect(dom.getByTestId('rule-delivery-time-input-0')).toHaveProperty('value', '08:00')
+  })
+
+  it('hides "when it resolves" for kinds with no recovery edge', async () => {
+    mountField(undefined, ['addon-update-available'])
+    await dom.findByTestId('rule-delivery-activation')
+    expect(dom.queryByTestId('rule-delivery-deactivation')).toBeNull()
   })
 
   it('refuses to switch off the last moment', async () => {
