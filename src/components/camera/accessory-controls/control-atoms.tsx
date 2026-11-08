@@ -97,6 +97,11 @@ export interface OptionPickerProps {
   readonly onSelect: (value: string) => void
   readonly disabled?: boolean
   readonly icon?: LucideIcon
+  /**
+   * A selection that means "off" (a climate mode `off`): the pill stays neutral.
+   * Only an "on" selection takes the accent, on every device type.
+   */
+  readonly neutralValue?: string
 }
 
 /**
@@ -110,10 +115,11 @@ export function OptionPicker({
   onSelect,
   disabled,
   icon: Icon,
+  neutralValue,
 }: OptionPickerProps) {
   const { colors } = useTheme()
   const [open, setOpen] = useState(false)
-  const active = selected !== null && selected !== ''
+  const active = selected !== null && selected !== '' && selected !== neutralValue
   const selectedLabel = active ? options.find((option) => option.value === selected)?.label ?? selected : label
 
   return (

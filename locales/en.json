@@ -4458,6 +4458,12 @@
         "none": "This device keeps no history yet",
         "range": "Min {{min}} · Max {{max}}"
       }
+    },
+    "hero": {
+      "remote": "Remote",
+      "stepDown": "Decrease {{name}}",
+      "stepUp": "Increase {{name}}",
+      "confirmOffWhileRunning": "The device is running. Turn it off anyway?"
     }
   },
   "prototype": {

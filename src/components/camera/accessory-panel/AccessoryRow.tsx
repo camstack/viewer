@@ -1,8 +1,8 @@
 /**
  * AccessoryRow — one device of the camera accessory panel.
  *
- * VIEW: icon + name + location caption + the registry-picked control, exactly
- * the row `DevicesPanel` drew. EDIT: the same identity, but the control gives
+ * VIEW: the hub's row model (`HeroRowBody`): scene tile, name, one status line,
+ * the one primary control, the trailing fact, chevron. EDIT: the same identity, but the control gives
  * way to the local operations — tap the icon to change it, TYPE IN the name to
  * rename, ↑/↓ to reorder, eye to hide or show, and for a LOCAL addition a
  * bin to remove it. A server-linked device has no bin: the viewer does not
@@ -52,7 +52,7 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useRouter } from 'expo-router'
 
-import { ArrowDown, ArrowUp, ChevronRight, Eye, EyeOff, Trash2 } from '../../../lib/icons.js'
+import { ArrowDown, ArrowUp, Eye, EyeOff, Trash2 } from '../../../lib/icons.js'
 import { useTheme } from '../../../theme/theme-provider.js'
 import { SPACING } from '../../../theme/tokens.js'
 import { hapticTap } from '../../../lib/haptics.js'
@@ -60,6 +60,8 @@ import type { AccessoryPanelRow } from '../../../accessories/accessory-panel-row
 import { useTimelineScale } from '../theater/TimelineScaleProvider.js'
 import { AccessoryControl } from '../accessory-controls/AccessoryControl.js'
 import { CatalogIcon } from '../../CatalogIcon.js'
+import { HeroRowBody } from '../../../hero/HeroRowBody.js'
+import type { HeroRowModel } from '@camstack/types'
 import { deviceRoute } from '../../../remote/device-route.js'
 
 export interface AccessoryRowProps {
@@ -77,6 +79,14 @@ export interface AccessoryRowProps {
   readonly onRemove: (row: AccessoryPanelRow) => void
   /** Closes the hosting sheet before the detail route is pushed (the remote's order). */
   readonly onClose?: () => void
+  /**
+   * The hub's row model for this device (`hero-layout.getRowModels`, one batch
+   * for the whole list): `undefined` until the batch answers, `null` when the
+   * hub has no row for it. VIEW mode draws only from it.
+   */
+  readonly model?: HeroRowModel | null
+  /** An icon the operator picked on this phone, if any. */
+  readonly customIcon?: string | null
 }
 
 const ICON_SIZE = 18
@@ -117,6 +127,8 @@ export const AccessoryRow = memo(function AccessoryRow({
   onToggleHidden,
   onRemove,
   onClose,
+  model,
+  customIcon = null,
 }: AccessoryRowProps): React.JSX.Element {
   const { t } = useTranslation()
   const { colors } = useTheme()
@@ -148,6 +160,14 @@ export const AccessoryRow = memo(function AccessoryRow({
     if (draft !== row.label) onRename(row, draft)
   }, [draft, row, onRename])
 
+  const captionText = [
+    row.device.location,
+    row.origin === 'local' ? t('v2.accessoryPanel.localBadge') : null,
+    row.hidden ? t('v2.accessoryPanel.hiddenBadge') : null,
+  ]
+    .filter((part): part is string => part !== null)
+    .join(' · ')
+
   const caption =
     row.device.location !== null || row.origin === 'local' || row.hidden ? (
       <Text
@@ -166,34 +186,20 @@ export const AccessoryRow = memo(function AccessoryRow({
 
   if (!editing) {
     return (
-      <View style={[styles.row, { borderBottomColor: colors.borderSubtle }]}>
-        <View style={[styles.iconWrap, { backgroundColor: colors.backgroundElevated }]}>
-          <CatalogIcon iconKey={row.iconKey} size={ICON_SIZE} color={accent} />
-        </View>
-        <View style={styles.label}>
-          <Text style={[styles.name, { fontSize: ui.font.sm, color: nameColor }]} numberOfLines={1}>
-            {row.label}
-          </Text>
-          {caption}
-        </View>
-        <View style={styles.control}>
-          <AccessoryControl device={row.device} />
-        </View>
-        <Pressable
-          onPress={() => {
-            hapticTap()
-            onClose?.()
-            router.push(deviceRoute(row.device.id, row.label, row.device.type))
-          }}
-          hitSlop={6}
-          accessibilityRole="button"
-          accessibilityLabel={t('v2.deviceDetail.openFor', vars)}
-          testID={`accessory-detail-${row.device.id}`}
-          style={styles.detailButton}
-        >
-          <ChevronRight size={18} color={colors.foregroundSubtle} />
-        </Pressable>
-      </View>
+      <HeroRowBody
+        deviceId={row.device.id}
+        name={row.label}
+        online={row.device.online}
+        model={model}
+        customIcon={customIcon}
+        caption={captionText}
+        fallbackControl={<AccessoryControl device={row.device} />}
+        openLabel={t('v2.deviceDetail.openFor', vars)}
+        onOpen={() => {
+          onClose?.()
+          router.push(deviceRoute(row.device.id, row.label, row.device.type))
+        }}
+      />
     )
   }
 
@@ -316,7 +322,6 @@ const styles = StyleSheet.create({
   name: { fontSize: 14, fontWeight: '500' },
   caption: { fontSize: 11 },
   control: { flexShrink: 0 },
-  detailButton: { width: 30, height: 30, alignItems: 'center', justifyContent: 'center' },
   editActions: { flexDirection: 'row', alignItems: 'center', gap: SPACING.xs, flexShrink: 0 },
   editButton: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
 })

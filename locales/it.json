@@ -4455,6 +4455,12 @@
         "none": "Questo dispositivo non ha ancora uno storico",
         "range": "Min {{min}} · Max {{max}}"
       }
+    },
+    "hero": {
+      "remote": "Telecomando",
+      "stepDown": "Diminuisci {{name}}",
+      "stepUp": "Aumenta {{name}}",
+      "confirmOffWhileRunning": "Il dispositivo è in funzione. Spegnerlo comunque?"
     }
   },
   "prototype": {

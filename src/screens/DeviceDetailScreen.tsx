@@ -42,6 +42,10 @@ import { BatteryBadge, LinkBadge, PowerBadge } from '../components/device-detail
 import { ContactStateLine, RunningStateLine } from '../components/device-detail/StatusLines.js'
 import { ConsumablesList } from '../components/device-detail/ConsumablesList.js'
 import { isGatedEntry, noAccessSlot, resolveDeviceSlots, type DeviceSlot, type SlotEntry } from './device-detail/device-slots.js'
+import { HeroCard } from '../hero/HeroCard.js'
+import { heroCardView } from '../hero/hero-card-view.js'
+import { heroLocale } from '../hero/hero-view.js'
+import { useHeroModel } from '../hero/use-hero.js'
 import { useTheme } from '../theme/theme-provider.js'
 import { SPACING, TYPOGRAPHY } from '../theme/tokens.js'
 
@@ -165,7 +169,7 @@ function TransitionsTab(): React.JSX.Element {
 }
 
 export function DeviceDetailScreen({ deviceId, deviceName, deviceType }: DeviceDetailScreenProps): React.JSX.Element {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { colors } = useTheme()
   const router = useRouter()
   const insets = useSafeAreaInsets()
@@ -173,6 +177,7 @@ export function DeviceDetailScreen({ deviceId, deviceName, deviceType }: DeviceD
   const [tab, setTab] = useState<DeviceTabId>('overview')
   const identity = useDeviceIdentity(deviceId)
   const bound = useDeviceBoundCaps(deviceId)
+  const hero = useHeroModel(deviceId, canActuate).data ?? null
   const device = identity.data
   const caps = bound.data ?? device?.features ?? []
   const name = device?.name ?? (deviceName === '' ? `#${deviceId}` : deviceName)
@@ -189,10 +194,18 @@ export function DeviceDetailScreen({ deviceId, deviceName, deviceType }: DeviceD
     overview = <EmptyState icon={SlidersHorizontal} tone="danger" title={t('v2.deviceDetail.unavailable')} testID="device-error" />
   } else {
     const ctx: SlotContext = { deviceId, deviceName: name, deviceType: type, online, caps, canActuate }
-    const slots = resolveDeviceSlots({ type, caps })
+    // The hero card is the detail's face. The legacy primary stage stays only
+    // for a device whose hero draws no control of its own (a cap the model does
+    // not cover yet) and never for a media player, whose remote is a button on
+    // the card, not the body of the screen.
+    const heroDrawsControls = hero !== null && heroCardView(hero, heroLocale(i18n.language)).hasControls
+    const slots = resolveDeviceSlots({ type, caps }).filter(
+      (slot) => slot.slot !== 'primary' || hero === null || (!heroDrawsControls && !slot.entries.some((e) => e.pick?.kind === 'media-player')),
+    )
     const lockedAt = canActuate ? null : noAccessSlot(slots)
     overview = (
       <>
+        {hero !== null ? <HeroCard model={hero} deviceName={name} online={online} /> : null}
         {slots.map((slot) => (
           <SlotView key={slot.slot} slot={slot} ctx={ctx} showNoAccess={slot.slot === lockedAt} />
         ))}

@@ -35,6 +35,8 @@ import { Plus } from '../../../lib/icons.js'
 import { useTheme } from '../../../theme/theme-provider.js'
 import { SPACING } from '../../../theme/tokens.js'
 import { useCameras } from '../../../data/use-cameras.js'
+import { useCanActuate } from '../../../hooks/use-user-scope.js'
+import { useHeroRowModels } from '../../../hero/use-hero.js'
 import { useAccessoryPanel } from '../../../accessories/use-accessory-panel.js'
 import type { AccessoryPanelRow } from '../../../accessories/accessory-panel-rows.js'
 import type { AccessoryIconKey } from '../../../accessories/accessory-icon-keys.js'
@@ -66,6 +68,9 @@ export function AccessoryDeviceList({
   const { colors } = useTheme()
   const ui = useTimelineScale()
   const { rows, loading, serverIds, prefs, actions } = useAccessoryPanel(deviceId, editing)
+  // ONE request for every row of the list (the hub's hero model, projected).
+  const canActuate = useCanActuate()
+  const rowModels = useHeroRowModels(rows.map((r) => r.device.id), canActuate)
   // The camera's location seeds the picker's suggestions. `includeHidden`: a
   // hidden camera still has a room.
   const { data: cameras = [] } = useCameras({ includeHidden: true })
@@ -169,6 +174,8 @@ export function AccessoryDeviceList({
           onToggleHidden={(target) => actions.setHidden(target.device.id, !target.hidden)}
           onRemove={(target) => actions.remove(target.device.id)}
           onClose={onClose}
+          model={rowModels.data === undefined ? undefined : (rowModels.data.byId.get(row.device.id) ?? null)}
+          customIcon={prefs.byId[row.device.id]?.icon ?? null}
         />
       ))}
       {addRow}

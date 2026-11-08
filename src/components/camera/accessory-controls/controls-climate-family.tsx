@@ -89,6 +89,7 @@ export function HumidifierControl({ deviceId, online }: AccessoryControlProps) {
         <OptionPicker
           label={t('v2.accessories.mode')}
           selected={mode}
+          neutralValue="off"
           options={modeOptions}
           disabled={disabled}
           onSelect={(next) => void setMode(next)}
@@ -173,6 +174,7 @@ export function WaterHeaterControl({ deviceId, online }: AccessoryControlProps) 
         <OptionPicker
           label={t('v2.accessories.mode')}
           selected={operationMode}
+          neutralValue="off"
           options={modeOptions}
           disabled={disabled}
           onSelect={(next) => void setOperationMode(next)}

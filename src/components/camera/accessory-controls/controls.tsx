@@ -377,6 +377,7 @@ export function ClimateControl({ deviceId, online }: AccessoryControlProps) {
       <OptionPicker
         label={t('v2.accessories.mode')}
         selected={mode}
+        neutralValue="off"
         options={modeOptions}
         disabled={!online || mutator.pending}
         onSelect={(next) => void setMode(next)}
