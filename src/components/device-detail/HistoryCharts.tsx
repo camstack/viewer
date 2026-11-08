@@ -3,7 +3,7 @@
  * viewBox that scales to the plot's width: state bands for boolean / enum
  * series and for device runs, a line for gauge / counter series. Every chart
  * has value labels on the y axis (lines), time labels on the x axis, and a
- * cursor — hover with a mouse, touch or drag on a phone — that snaps a
+ * cursor — hover with a mouse, horizontal drag on a phone — that snaps a
  * crosshair and a tooltip with the time and the value. Colours are theme
  * tokens; every chart carries an `accessibilityLabel` that says what it shows.
  */
@@ -16,6 +16,7 @@ import type { ColorTokens } from '../../theme/tokens.js'
 import { RADIUS, SPACING, TYPOGRAPHY } from '../../theme/tokens.js'
 import {
   bandAt,
+  claimsHorizontalDrag,
   formatSeriesValue,
   nearestPoint,
   timeAt,
@@ -95,8 +96,9 @@ function useAxisTime(windowId: HistoryWindowId): { readonly tick: (t: number) =>
 
 /**
  * One plot: the y labels in a left gutter, the marks, the time labels under
- * it, and the cursor. Gestures: a mouse hovers, a finger touches or drags
- * (a vertical drag is handed back to the scroll view).
+ * it, and the cursor. Gestures: a mouse hovers (the tooltip stays until the
+ * pointer leaves); a finger drags horizontally (a vertical drag is the page's
+ * and scrolls; the tooltip clears on release).
  */
 function ChartBody({ children, height, label, testID, window, windowId, yLabels, readoutAt }: {
   readonly children: React.ReactNode
@@ -122,11 +124,14 @@ function ChartBody({ children, height, label, testID, window, windowId, yLabels,
   const responder = useMemo(
     () =>
       PanResponder.create({
-        onStartShouldSetPanResponder: () => true,
-        onMoveShouldSetPanResponder: () => true,
-        onPanResponderTerminationRequest: () => true,
+        // A touch is the page's until it moves horizontally: a vertical drag
+        // must scroll, so nothing is claimed at the start.
+        onStartShouldSetPanResponder: () => false,
+        onMoveShouldSetPanResponder: (_e, g) => claimsHorizontalDrag(g.dx, g.dy),
+        onPanResponderTerminationRequest: () => false,
         onPanResponderGrant: (e) => fromX(e.nativeEvent.locationX),
         onPanResponderMove: (e) => fromX(e.nativeEvent.locationX),
+        onPanResponderRelease: () => setCursor(null),
         onPanResponderTerminate: () => setCursor(null),
       }),
     [],

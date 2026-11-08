@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   bandAt,
+  claimsHorizontalDrag,
   formatSeriesValue,
   historyWindow,
   nearestPoint,
@@ -152,5 +153,19 @@ describe('chart axes and cursor', () => {
     expect(formatSeriesValue(21.46, '°C')).toBe('21.5 °C')
     expect(formatSeriesValue(1234.6, 'W')).toBe('1235 W')
     expect(formatSeriesValue(3, null)).toBe('3')
+  })
+})
+
+describe('claimsHorizontalDrag', () => {
+  it('claims a drag only when the horizontal travel dominates', () => {
+    expect(claimsHorizontalDrag(12, 3)).toBe(true)
+    expect(claimsHorizontalDrag(-12, 3)).toBe(true)
+    expect(claimsHorizontalDrag(3, 12)).toBe(false)
+    expect(claimsHorizontalDrag(0, 8)).toBe(false)
+  })
+
+  it('leaves a diagonal tie and a still finger to the page', () => {
+    expect(claimsHorizontalDrag(5, 5)).toBe(false)
+    expect(claimsHorizontalDrag(0, 0)).toBe(false)
   })
 })

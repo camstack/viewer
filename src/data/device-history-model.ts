@@ -313,3 +313,12 @@ export function formatSeriesValue(v: number, unit: string | null): string {
   const text = Math.abs(v) >= 100 ? String(Math.round(v)) : String(Math.round(v * 10) / 10)
   return unit === null ? text : `${text} ${unit}`
 }
+
+/**
+ * Whether a touch drag belongs to the chart's cursor rather than to the page:
+ * only when the horizontal travel dominates. A vertical (or diagonal-vertical)
+ * drag is the page scrolling and is never claimed.
+ */
+export function claimsHorizontalDrag(dx: number, dy: number): boolean {
+  return Math.abs(dx) > Math.abs(dy)
+}
