@@ -30,6 +30,14 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.691',
+    date: '2026-11-08',
+    notes: {
+      en: ['Timed run: while running, Stop, the time left and Restart sit in one group.'],
+      it: ['Avvio a tempo: durante l’esecuzione Ferma, tempo residuo e Riavvia sono in un unico gruppo.'],
+    },
+  },
+  {
     version: '1.0.690',
     date: '2026-11-08',
     notes: {

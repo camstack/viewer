@@ -2963,7 +2963,8 @@
         "unsupported": "Questo dispositivo non supporta il timer.",
         "commandFailed": "Il dispositivo non si è acceso.",
         "quickRun": "Avvia {{duration}} {{unit}}",
-        "cancelWithTime": "Annulla · ancora {{time}}",
+        "stop": "Ferma",
+        "restart": "Riavvia",
         "unit": {
           "s": "s",
           "min": "min"

@@ -51,17 +51,42 @@ describe('TimedRunControl', () => {
     view.unmount()
   })
 
-  it('armed: shows the time left and cancel forgets the pending off', async () => {
+  it('armed: the start pill is replaced by Stop, the time left and Restart', async () => {
     mount({
       'timedRun.getStatus': {
         activeUntil: Date.now() + 723_000, requestedBy: 'u', quickRun: { duration: 30, unit: 'min' }, lastFetchedAt: 1,
       },
       'timedRun.cancel': undefined,
     })
-    const btn = await dom.findByRole('button', { name: /^Cancel · 12:0\d left$/ })
-    await act(async () => { fireEvent.click(btn) })
+    await dom.findByText(/^12:0\d$/)
+    expect(dom.queryByRole('button', { name: 'Run 30 min' })).toBeNull()
+    await act(async () => { fireEvent.click(await dom.findByRole('button', { name: 'Stop' })) })
     await vi.waitFor(() => expect(calls('timedRun.cancel')).toEqual([{ deviceId: DEVICE }]))
     expect(calls('timedRun.runFor')).toEqual([])
+  })
+
+  it('armed: Restart runs the quick run again from now', async () => {
+    mount({
+      'timedRun.getStatus': {
+        activeUntil: Date.now() + 120_000, requestedBy: 'u', quickRun: { duration: 30, unit: 'min' }, lastFetchedAt: 1,
+      },
+      'timedRun.runFor': { ok: true, activeUntil: 1 },
+    })
+    await act(async () => { fireEvent.click(await dom.findByRole('button', { name: 'Restart' })) })
+    await vi.waitFor(() => expect(calls('timedRun.runFor')).toEqual([{ deviceId: DEVICE, duration: 30, unit: 'min' }]))
+    expect(calls('timedRun.cancel')).toEqual([])
+  })
+
+  it('a Restart the hub refuses is said in a notice', async () => {
+    setTestPlatform('web')
+    mount({
+      'timedRun.getStatus': {
+        activeUntil: Date.now() + 120_000, requestedBy: 'u', quickRun: { duration: 30, unit: 'min' }, lastFetchedAt: 1,
+      },
+      'timedRun.runFor': { ok: false, reason: 'command-failed' },
+    })
+    await act(async () => { fireEvent.click(await dom.findByRole('button', { name: 'Restart' })) })
+    await dom.findByText('The device did not turn on.')
   })
 
   it('a cancel the hub throws on is said in a notice', async () => {
@@ -72,7 +97,7 @@ describe('TimedRunControl', () => {
       },
       'timedRun.cancel': () => { throw new Error('boom') },
     })
-    await act(async () => { fireEvent.click(await dom.findByRole('button', { name: /^Cancel · / })) })
+    await act(async () => { fireEvent.click(await dom.findByRole('button', { name: 'Stop' })) })
     await dom.findByText('The timer is still running.')
   })
 

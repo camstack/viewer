@@ -2966,7 +2966,8 @@
         "unsupported": "This device cannot run on a timer.",
         "commandFailed": "The device did not turn on.",
         "quickRun": "Run {{duration}} {{unit}}",
-        "cancelWithTime": "Cancel · {{time}} left",
+        "stop": "Stop",
+        "restart": "Restart",
         "unit": {
           "s": "s",
           "min": "min"
