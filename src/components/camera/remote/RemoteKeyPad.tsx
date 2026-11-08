@@ -17,6 +17,7 @@ import {
   colourKeyOf,
   isBound,
   isSourceSelect,
+  sourceKeyVisible,
   isDividerFrame,
   keyIcon,
   keyLegend,
@@ -306,7 +307,7 @@ export function RemoteKeyPad({ layout, bound, onPress, maxWidth, names, sources,
       {layout.buttons.map((button) => {
         if (!isSourceSelect(button)) return null
         // No declared sources, or not answered yet: an empty cell, never a dead button.
-        if (sources === undefined || sources.length === 0 || onSelectSource === undefined) return null
+        if (sources === undefined || !sourceKeyVisible({ sources }) || onSelectSource === undefined) return null
         return (
           <SourceSelectKey
             key={button.id}
