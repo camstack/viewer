@@ -125,10 +125,10 @@ const COLOUR_LAYOUT = {
 }
 
 const COLOUR_COMMANDS = [
-  { role: 'custom:color_a', custom: true, name: 'A' },
-  { role: 'custom:color_b', custom: true, name: 'B' },
-  { role: 'custom:k_yellow', custom: true, name: 'Yellow' },
-  { role: 'custom:k_blue', custom: true, name: 'Blue' },
+  { role: 'custom:color_a', custom: true, label: 'A' },
+  { role: 'custom:color_b', custom: true, label: 'B' },
+  { role: 'custom:k_yellow', custom: true, label: 'Yellow' },
+  { role: 'custom:k_blue', custom: true, label: 'Blue' },
 ]
 
 function colourHub(): Record<string, unknown> {
