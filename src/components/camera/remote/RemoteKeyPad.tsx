@@ -5,12 +5,13 @@
  * has no command for is an outline and does nothing. Group titles are never
  * drawn — a group is a frame or a gap.
  */
-import React, { useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Pressable, StyleSheet, Text, View, type DimensionValue } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { Tv } from '../../../lib/icons.js'
 import { CatalogIcon } from '../../CatalogIcon.js'
 import { hapticTap } from '../../../lib/haptics.js'
+import { createHoldRepeater, isRepeatableRole } from './remote-hold-repeat.js'
 import { useTheme } from '../../../theme/theme-provider.js'
 import { RADIUS, SPACING, TYPOGRAPHY, withAlpha, type ColorTokens } from '../../../theme/tokens.js'
 import {
@@ -47,7 +48,8 @@ export const REMOTE_SCREEN_MAX_WIDTH = 420
 export interface RemoteKeyPadProps {
   readonly layout: RemoteLayout
   readonly bound: ReadonlySet<string>
-  readonly onPress: (role: string) => void
+  /** Sends the key; resolves `true` when the hub took it (a held key keeps repeating only while it does). */
+  readonly onPress: (role: string) => Promise<boolean>
   readonly maxWidth: number
   /** Command names by role (`RemoteCommandList.names`), for the colour keys. */
   readonly names?: ReadonlyMap<string, string>
@@ -164,7 +166,8 @@ interface KeyProps {
   readonly button: RemoteLayoutButton
   readonly bound: boolean
   readonly commandName?: string
-  readonly onPress: (role: string) => void
+  /** Sends the key; resolves `true` when the hub took it (a held key keeps repeating only while it does). */
+  readonly onPress: (role: string) => Promise<boolean>
 }
 
 function barColour(key: ColourKey, colors: ColorTokens): string {
@@ -238,6 +241,16 @@ function Key({ layout, button, bound, commandName, onPress }: KeyProps): React.J
   const name = keyName(button, vocabLocale(i18n.language))
   const legend = keyLegend(button)
   const colourKey = button.tone === undefined ? colourKeyOf(button, commandName) : null
+  const repeatable = isRepeatableRole(button.role)
+  const repeater = useMemo(
+    () => createHoldRepeater({ send: () => onPress(button.role), onRepeat: hapticTap }),
+    [onPress, button.role],
+  )
+  // Release, unmount and a key that stops being bound all end a repeat.
+  useEffect(() => () => repeater.pressOut(), [repeater])
+  useEffect(() => {
+    if (!bound) repeater.pressOut()
+  }, [bound, repeater])
   const round = button.shape === 'round'
   const radius = button.shape === 'pill' || round ? RADIUS.pill : button.shape === 'rect' ? RADIUS.sm : RADIUS.lg
   return (
@@ -248,9 +261,13 @@ function Key({ layout, button, bound, commandName, onPress }: KeyProps): React.J
         accessibilityState={{ disabled: !bound }}
         testID={`remote-key-${button.id}`}
         disabled={!bound}
+        onPressIn={repeatable ? repeater.pressIn : undefined}
+        onPressOut={repeatable ? repeater.pressOut : undefined}
         onPress={() => {
+          // A press that became a hold has already sent; its release is not a tap.
+          if (repeatable && repeater.held()) return
           hapticTap()
-          onPress(button.role)
+          void onPress(button.role)
         }}
         style={({ pressed }) => [
           styles.key,

@@ -9,7 +9,7 @@ import { ScrollView, StyleSheet, Text, useWindowDimensions } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
-import { Gamepad2, Maximize2 } from '../../../lib/icons.js'
+import { RemoteControl, Maximize2 } from '../../../lib/icons.js'
 import { SheetHeader, SheetIconButton } from '../../ui/SheetHeader.js'
 import { SheetModal } from '../../ui/SheetModal.js'
 import { useMediaPlayerStatus } from '../../../data/use-accessory-controls-ext.js'
@@ -55,7 +55,7 @@ export function RemoteSheet({ deviceId, deviceName, onClose }: RemoteSheetProps)
     >
       <SheetHeader
         title={t('v2.remote.title', { name: deviceName })}
-        icon={Gamepad2}
+        icon={RemoteControl}
         onClose={onClose}
         actions={
           <SheetIconButton
@@ -83,7 +83,7 @@ export function RemoteSheet({ deviceId, deviceName, onClose }: RemoteSheetProps)
             sources={commands.data?.sources}
             currentSource={status.data?.source ?? null}
             onSelectSource={(name) => void selectSource(name)}
-            onPress={(role) => void press(role)}
+            onPress={press}
           />
         ) : answered ? (
           <Text style={[styles.note, { color: colors.foregroundMuted }]}>{t('v2.remote.noLayout')}</Text>

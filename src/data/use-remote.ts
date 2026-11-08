@@ -110,7 +110,8 @@ export function pressFailureOf(raw: unknown): RemotePressFailure | null {
 }
 
 export interface RemotePress {
-  readonly press: (role: string) => Promise<void>
+  /** Resolves `true` when the hub took the key; a refusal or an unreachable hub is `false` (and sets `failure`). */
+  readonly press: (role: string) => Promise<boolean>
   /** Pick a declared source by its name (`remote.sendMediaCommand` `selectSource`). */
   readonly selectSource: (name: string) => Promise<void>
   readonly failure: RemotePressFailure | null
@@ -138,12 +139,12 @@ export function useRemotePress(deviceId: number): RemotePress {
   const [failure, setFailure] = useState<RemotePressFailure | null>(null)
   const [detail, setDetail] = useState<string | null>(null)
   const send = useCallback(
-    async (method: 'sendCommand' | 'sendMediaCommand', input: Record<string, unknown>): Promise<void> => {
+    async (method: 'sendCommand' | 'sendMediaCommand', input: Record<string, unknown>): Promise<boolean> => {
       const system = controller.getSystem()
       if (!system) {
         setFailure('unreachable')
         setDetail(null)
-        return
+        return false
       }
       try {
         const raw = await capMutateOrThrow(
@@ -155,16 +156,20 @@ export function useRemotePress(deviceId: number): RemotePress {
         const next = pressFailureOf(raw)
         setFailure(next)
         setDetail(next === null ? null : detailOf(raw))
+        return next === null
       } catch (e: unknown) {
         setFailure('unreachable')
         setDetail(thrownMessage(e))
+        return false
       }
     },
     [controller, deviceId],
   )
-  const press = useCallback((role: string): Promise<void> => send('sendCommand', { role, repeat: 1 }), [send])
+  const press = useCallback((role: string): Promise<boolean> => send('sendCommand', { role, repeat: 1 }), [send])
   const selectSource = useCallback(
-    (name: string): Promise<void> => send('sendMediaCommand', { command: 'selectSource', source: name, repeat: 1 }),
+    async (name: string): Promise<void> => {
+      await send('sendMediaCommand', { command: 'selectSource', source: name, repeat: 1 })
+    },
     [send],
   )
   return { press, selectSource, failure, detail }

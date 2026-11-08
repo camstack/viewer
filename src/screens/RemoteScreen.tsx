@@ -18,7 +18,7 @@ import { RemoteKeyPad, REMOTE_SCREEN_MAX_WIDTH } from '../components/camera/remo
 import { useCanActuate } from '../hooks/use-user-scope.js'
 import { remoteFailureText, useRemoteCommands, useRemoteLayout, useRemotePress } from '../data/use-remote.js'
 import { useMediaPlayerStatus, type MediaPlayerStatus } from '../data/use-accessory-controls-ext.js'
-import { Gamepad2 } from '../lib/icons.js'
+import { RemoteControl } from '../lib/icons.js'
 import { useTheme } from '../theme/theme-provider.js'
 import { RADIUS, SPACING, TYPOGRAPHY } from '../theme/tokens.js'
 
@@ -58,7 +58,7 @@ export function RemoteScreen({ deviceId, deviceName }: RemoteScreenProps): React
 
   let body: React.JSX.Element
   if (!canActuate) {
-    body = <EmptyState icon={Gamepad2} title={t('v2.access.notForYourAccount')} testID="remote-no-access" />
+    body = <EmptyState icon={RemoteControl} title={t('v2.access.notForYourAccount')} testID="remote-no-access" />
   } else if (waiting) {
     body = <ActivityIndicator color={colors.foregroundMuted} testID="remote-loading" />
   } else if (failed !== null) {
@@ -72,9 +72,9 @@ export function RemoteScreen({ deviceId, deviceName }: RemoteScreenProps): React
       />
     )
   } else if (commands.data == null || commands.data.roles.length === 0) {
-    body = <EmptyState icon={Gamepad2} title={t('v2.remote.failure.no-remote')} testID="remote-none" />
+    body = <EmptyState icon={RemoteControl} title={t('v2.remote.failure.no-remote')} testID="remote-none" />
   } else if (layout.data == null) {
-    body = <EmptyState icon={Gamepad2} title={t('v2.remote.noLayout')} testID="remote-no-layout" />
+    body = <EmptyState icon={RemoteControl} title={t('v2.remote.noLayout')} testID="remote-no-layout" />
   } else {
     body = (
       <RemoteKeyPad
@@ -85,7 +85,7 @@ export function RemoteScreen({ deviceId, deviceName }: RemoteScreenProps): React
         sources={commands.data?.sources}
         currentSource={status.data?.source ?? null}
         onSelectSource={(name) => void selectSource(name)}
-        onPress={(role) => void press(role)}
+        onPress={press}
       />
     )
   }

@@ -14,7 +14,7 @@
 import React, { useCallback, useState } from 'react'
 import { View, Text, StyleSheet } from 'react-native'
 import { useTranslation } from 'react-i18next'
-import { Play, Pause, Square, SkipBack, SkipForward, House, MapPin, Utensils, Power, PowerOff, Gamepad2, Minus, Plus } from '../../../lib/icons.js'
+import { Play, Pause, Square, SkipBack, SkipForward, House, MapPin, Utensils, Power, PowerOff, RemoteControl, Minus, Plus } from '../../../lib/icons.js'
 import { SPACING, TYPOGRAPHY } from '../../../theme/tokens.js'
 import { useTheme } from '../../../theme/theme-provider.js'
 import { useRemoteCommands } from '../../../data/use-remote.js'
@@ -114,7 +114,7 @@ export function MediaPlayerControl({ deviceId, online, features, deviceName }: M
         <IconButton icon={Power} label={t('v2.accessories.powerOn')} disabled={disabled} onPress={() => void run('turnOn')} />
       ) : null}
       {volumeButtons}
-      <IconButton icon={Gamepad2} label={t('v2.accessories.remote')} disabled={!online} onPress={() => setRemoteOpen(true)} />
+      <IconButton icon={RemoteControl} label={t('v2.accessories.remote')} disabled={!online} onPress={() => setRemoteOpen(true)} />
       {remoteOpen ? (
         <RemoteSheet deviceId={deviceId} deviceName={deviceName ?? ''} onClose={() => setRemoteOpen(false)} />
       ) : null}

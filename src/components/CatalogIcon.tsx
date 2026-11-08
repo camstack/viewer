@@ -33,7 +33,7 @@ const SHAPE = {
   rect: Rect,
 } as const
 
-function drawNode(node: IconNode): React.ReactNode[] {
+export function drawNode(node: IconNode): React.ReactNode[] {
   return node.map(([tag, attrs], index) => {
     const Shape = SHAPE[tag]
     return <Shape key={index} {...attrs} />

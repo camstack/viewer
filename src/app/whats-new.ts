@@ -30,6 +30,20 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.693',
+    date: '2026-11-08',
+    notes: {
+      en: [
+        'The remote now has its own remote-control icon.',
+        'Hold an arrow, volume or channel key and it keeps repeating, like a real remote.',
+      ],
+      it: [
+        'Il telecomando ha una sua icona di telecomando.',
+        'Tieni premuta una freccia o il volume e si ripete, come un telecomando vero.',
+      ],
+    },
+  },
+  {
     version: '1.0.692',
     date: '2026-11-08',
     notes: {
