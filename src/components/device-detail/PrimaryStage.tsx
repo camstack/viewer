@@ -71,7 +71,7 @@ function RemoteStage({ device, pick }: { readonly device: AccessoryDevice; reado
   if (roles.length === 0 || layout.data == null) return <PrimaryControl device={device} pick={pick} />
   return (
     <View style={styles.remote} testID="device-remote">
-      <RemoteKeyPad layout={layout.data} bound={new Set(roles)} maxWidth={REMOTE_SCREEN_MAX_WIDTH} onPress={(role) => void press(role)} />
+      <RemoteKeyPad layout={layout.data} bound={new Set(roles)} names={commands.data?.names} maxWidth={REMOTE_SCREEN_MAX_WIDTH} onPress={(role) => void press(role)} />
       {failure !== null ? (
         <Text accessibilityRole="alert" testID="device-remote-failure" style={[styles.failure, { color: colors.danger, borderColor: colors.danger }]}>
           {remoteFailureText(t(`v2.remote.failure.${failure}`), detail)}

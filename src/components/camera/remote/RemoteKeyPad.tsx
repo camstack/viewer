@@ -13,6 +13,7 @@ import { hapticTap } from '../../../lib/haptics.js'
 import { useTheme } from '../../../theme/theme-provider.js'
 import { RADIUS, SPACING, TYPOGRAPHY, withAlpha, type ColorTokens } from '../../../theme/tokens.js'
 import {
+  colourKeyOf,
   isBound,
   isDividerFrame,
   keyIcon,
@@ -21,6 +22,7 @@ import {
   vocabLocale,
   rowSpanBox,
   totalRows,
+  type ColourKey,
   type RemoteLayout,
   type RemoteLayoutButton,
   type RemoteLayoutGroup,
@@ -42,6 +44,8 @@ export interface RemoteKeyPadProps {
   readonly bound: ReadonlySet<string>
   readonly onPress: (role: string) => void
   readonly maxWidth: number
+  /** Command names by role (`RemoteCommandList.names`), for the colour keys. */
+  readonly names?: ReadonlyMap<string, string>
 }
 
 interface KeyLook {
@@ -145,15 +149,26 @@ interface KeyProps {
   readonly layout: RemoteLayout
   readonly button: RemoteLayoutButton
   readonly bound: boolean
+  readonly commandName?: string
   readonly onPress: (role: string) => void
 }
 
-function Key({ layout, button, bound, onPress }: KeyProps): React.JSX.Element {
+function barColour(key: ColourKey, colors: ColorTokens): string {
+  switch (key) {
+    case 'red': return colors.remoteKeyRed
+    case 'green': return colors.remoteKeyGreen
+    case 'yellow': return colors.remoteKeyYellow
+    case 'blue': return colors.remoteKeyBlue
+  }
+}
+
+function Key({ layout, button, bound, commandName, onPress }: KeyProps): React.JSX.Element {
   const { colors } = useTheme()
   const { i18n } = useTranslation()
   const look = keyLook(button.tone, bound, colors)
   const name = keyName(button, vocabLocale(i18n.language))
   const legend = keyLegend(button)
+  const colourKey = button.tone === undefined ? colourKeyOf(button, commandName) : null
   const round = button.shape === 'round'
   const radius = button.shape === 'pill' || round ? RADIUS.pill : button.shape === 'rect' ? RADIUS.sm : RADIUS.lg
   return (
@@ -178,24 +193,40 @@ function Key({ layout, button, bound, onPress }: KeyProps): React.JSX.Element {
           },
         ]}
       >
-        {legend === undefined ? (
-          <CatalogIcon iconKey={keyIcon(button)} size={ICON_SIZE} color={look.foreground} />
+        {colourKey !== null ? (
+          // The bar stands for the colour, so the key prints its name above it, not the generic glyph.
+          <Text numberOfLines={1} style={[styles.keyText, styles.colourKeyText, { color: look.foreground }]}>
+            {button.label ?? commandName ?? name}
+          </Text>
         ) : (
-          <Text numberOfLines={1} style={[styles.keyText, { color: look.foreground }]}>
-            {legend}
-          </Text>
+          <>
+          {legend === undefined ? (
+            <CatalogIcon iconKey={keyIcon(button)} size={ICON_SIZE} color={look.foreground} />
+          ) : (
+            <Text numberOfLines={1} style={[styles.keyText, { color: look.foreground }]}>
+              {legend}
+            </Text>
+          )}
+          {button.label !== undefined && button.label !== legend ? (
+            <Text numberOfLines={1} style={[styles.keyText, { color: look.foreground }]}>
+              {name}
+            </Text>
+          ) : null}
+          </>
         )}
-        {button.label !== undefined && button.label !== legend ? (
-          <Text numberOfLines={1} style={[styles.keyText, { color: look.foreground }]}>
-            {name}
-          </Text>
-        ) : null}
+        {colourKey === null ? null : (
+          <View
+            testID={`remote-key-${button.id}-colour-${colourKey}`}
+            pointerEvents="none"
+            style={[styles.colourBar, { backgroundColor: barColour(colourKey, colors), opacity: bound ? 1 : 0.45 }]}
+          />
+        )}
       </Pressable>
     </View>
   )
 }
 
-export function RemoteKeyPad({ layout, bound, onPress, maxWidth }: RemoteKeyPadProps): React.JSX.Element {
+export function RemoteKeyPad({ layout, bound, onPress, maxWidth, names }: RemoteKeyPadProps): React.JSX.Element {
   return (
     <View
       testID="remote-grid"
@@ -205,13 +236,15 @@ export function RemoteKeyPad({ layout, bound, onPress, maxWidth }: RemoteKeyPadP
         <GroupFrame key={group.id} layout={layout} group={group} />
       ))}
       {layout.buttons.map((button) => (
-        <Key key={button.id} layout={layout} button={button} bound={isBound(button, bound)} onPress={onPress} />
+        <Key key={button.id} layout={layout} button={button} bound={isBound(button, bound)} commandName={names?.get(button.role)} onPress={onPress} />
       ))}
     </View>
   )
 }
 
 const styles = StyleSheet.create({
+  colourKeyText: { paddingBottom: SPACING.md },
+  colourBar: { position: 'absolute', left: SPACING.lg, right: SPACING.lg, bottom: SPACING.sm, height: 4, borderRadius: RADIUS.pill },
   grid: { width: '100%', alignSelf: 'center' },
   frame: { borderWidth: 1 },
   inert: { pointerEvents: 'none' },

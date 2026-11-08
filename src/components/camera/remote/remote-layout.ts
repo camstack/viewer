@@ -44,6 +44,8 @@ export interface RemoteLayout {
 export interface RemoteCommandList {
   readonly layoutTemplateId: string | null
   readonly roles: readonly string[]
+  /** The command's own name by role, when the hub gave one (a custom key's "Red"). */
+  readonly names: ReadonlyMap<string, string>
 }
 
 function isRecord(v: unknown): v is Record<string, unknown> {
@@ -109,11 +111,15 @@ export function parseRemoteLayout(payload: unknown): RemoteLayout | null {
 export function parseRemoteCommandList(raw: unknown): RemoteCommandList | null {
   if (!isRecord(raw) || !Array.isArray(raw.commands)) return null
   const roles: string[] = []
+  const names = new Map<string, string>()
   for (const entry of raw.commands) {
-    if (isRecord(entry) && typeof entry.role === 'string') roles.push(entry.role)
+    if (!isRecord(entry) || typeof entry.role !== 'string') continue
+    roles.push(entry.role)
+    const name = optString(entry.name) ?? optString(entry.label)
+    if (name !== undefined) names.set(entry.role, name)
   }
   const id = raw.layoutTemplateId
-  return { layoutTemplateId: typeof id === 'string' && id !== '' ? id : null, roles }
+  return { layoutTemplateId: typeof id === 'string' && id !== '' ? id : null, roles, names }
 }
 
 /** The payload of the remote template `templateId` out of a `template.list` answer. */
@@ -188,4 +194,29 @@ export function rowSpanBox(
 /** The height of the whole grid in full-row units. */
 export function totalRows(layout: RemoteLayout, slimUnit: number): number {
   return rowSpanBox(layout, 0, layout.rows, slimUnit).height
+}
+
+export type ColourKey = 'red' | 'green' | 'yellow' | 'blue'
+
+const COLOUR_BY_NAME: Readonly<Record<string, ColourKey>> = {
+  a: 'red', b: 'green', c: 'yellow', d: 'blue',
+  red: 'red', green: 'green', yellow: 'yellow', blue: 'blue',
+}
+const COLOUR_KEY_ID = /^colou?r[_-]?([abcd])$/i
+
+/**
+ * The standard colour a custom key stands for: its key is `color_a`..`color_d`,
+ * or its name (the layout label, else the command's own name) is A-D or
+ * Red / Green / Yellow / Blue, in any case. A = red, B = green, C = yellow,
+ * D = blue. Only a custom key qualifies: a built-in role is never recoloured.
+ */
+export function colourKeyOf(button: RemoteLayoutButton, commandName?: string): ColourKey | null {
+  if (!button.role.startsWith('custom:')) return null
+  const id = COLOUR_KEY_ID.exec(button.role.slice('custom:'.length))
+  if (id !== null) return COLOUR_BY_NAME[id[1]!.toLowerCase()] ?? null
+  for (const name of [button.label, commandName]) {
+    const hit = name === undefined ? undefined : COLOUR_BY_NAME[name.trim().toLowerCase()]
+    if (hit !== undefined) return hit
+  }
+  return null
 }

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  colourKeyOf,
   keyIcon,
   keyLegend,
   keyName,
@@ -50,15 +51,46 @@ describe('parseRemoteCommandList', () => {
         power: { mode: 'toggle' },
         commands: [{ role: 'power', custom: false }, { role: 'custom:netflix', custom: true }],
       }),
-    ).toEqual({ layoutTemplateId: 'tpl', roles: ['power', 'custom:netflix'] })
+    ).toEqual({ layoutTemplateId: 'tpl', roles: ['power', 'custom:netflix'], names: new Map() })
   })
   it('has no layout when none is linked, and is null when unreadable', () => {
     expect(parseRemoteCommandList({ layoutTemplateId: null, commands: [] })).toEqual({
       layoutTemplateId: null,
       roles: [],
+      names: new Map(),
     })
     expect(parseRemoteCommandList('nope')).toBeNull()
     expect(parseRemoteCommandList({ layoutTemplateId: null })).toBeNull()
+  })
+})
+
+describe('parseRemoteCommandList names', () => {
+  it('keeps the name of a command by role', () => {
+    const list = parseRemoteCommandList({
+      layoutTemplateId: null,
+      commands: [{ role: 'custom:x', name: 'Red' }, { role: 'custom:y', label: 'Blue' }, { role: 'power' }],
+    })
+    expect(list?.names).toEqual(new Map([['custom:x', 'Red'], ['custom:y', 'Blue']]))
+  })
+})
+
+describe('colourKeyOf', () => {
+  const key = (role: string, label?: string) => ({ ...button('k', role, 0, 0), ...(label === undefined ? {} : { label }) })
+  it('maps the colour key ids A-D to red, green, yellow, blue', () => {
+    expect(['color_a', 'color_b', 'color_c', 'color_d'].map((id) => colourKeyOf(key(`custom:${id}`)))).toEqual(['red', 'green', 'yellow', 'blue'])
+    expect(colourKeyOf(key('custom:Colour-B'))).toBe('green')
+  })
+  it('maps the names A-D and Red/Green/Yellow/Blue, any case, from the label or the command name', () => {
+    expect(colourKeyOf(key('custom:k1', 'a'))).toBe('red')
+    expect(colourKeyOf(key('custom:k2', ' D '))).toBe('blue')
+    expect(colourKeyOf(key('custom:k3', 'GREEN'))).toBe('green')
+    expect(colourKeyOf(key('custom:k4'), 'Yellow')).toBe('yellow')
+  })
+  it('leaves every other key alone, a built-in role included', () => {
+    expect(colourKeyOf(key('custom:netflix', 'Netflix'))).toBeNull()
+    expect(colourKeyOf(key('custom:color_e'))).toBeNull()
+    expect(colourKeyOf(key('power', 'Red'))).toBeNull()
+    expect(colourKeyOf(key('custom:k', 'AB'))).toBeNull()
   })
 })
 

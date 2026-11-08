@@ -58,6 +58,11 @@ export interface ColorTokens {
   eventsText: string
   eventsMuted: string
   eventsChip: string
+  /** The standard colour keys of a TV remote (A red, B green, C yellow, D blue). */
+  remoteKeyRed: string
+  remoteKeyGreen: string
+  remoteKeyYellow: string
+  remoteKeyBlue: string
 }
 
 const dark: ColorTokens = {
@@ -103,6 +108,10 @@ const dark: ColorTokens = {
   eventsText: '#fafafa',
   eventsMuted: '#a1a1aa',
   eventsChip: '#3f3f46',
+  remoteKeyRed: '#ef4444',
+  remoteKeyGreen: '#22c55e',
+  remoteKeyYellow: '#eab308',
+  remoteKeyBlue: '#3b82f6',
 }
 
 const light: ColorTokens = {
@@ -148,6 +157,10 @@ const light: ColorTokens = {
   eventsText: '#18181b',
   eventsMuted: '#71717a',
   eventsChip: '#d4d4d8',
+  remoteKeyRed: '#dc2626',
+  remoteKeyGreen: '#16a34a',
+  remoteKeyYellow: '#ca8a04',
+  remoteKeyBlue: '#2563eb',
 }
 
 /** `pill` is a full-round end cap (any box shorter than 2 * 999). */

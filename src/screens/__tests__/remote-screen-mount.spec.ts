@@ -112,7 +112,51 @@ function sends(): readonly unknown[] {
 
 afterEach(() => cleanup())
 
+const COLOUR_LAYOUT = {
+  columns: 4,
+  rows: 1,
+  buttons: [
+    { id: 'ca', ...r(0, 0), role: 'custom:color_a', label: 'A', shape: 'rounded' },
+    { id: 'cb', ...r(0, 1), role: 'custom:color_b', label: 'B', shape: 'rounded' },
+    { id: 'cy', ...r(0, 2), role: 'custom:k_yellow', shape: 'rounded' },
+    { id: 'cd', ...r(0, 3), role: 'custom:k_blue', label: 'Blue', shape: 'rounded' },
+  ],
+  groups: [],
+}
+
+const COLOUR_COMMANDS = [
+  { role: 'custom:color_a', custom: true, name: 'A' },
+  { role: 'custom:color_b', custom: true, name: 'B' },
+  { role: 'custom:k_yellow', custom: true, name: 'Yellow' },
+  { role: 'custom:k_blue', custom: true, name: 'Blue' },
+]
+
+function colourHub(): Record<string, unknown> {
+  return hub({
+    'remote.listCommands': {
+      layoutTemplateId: 'tpl',
+      power: { mode: 'discrete' },
+      commands: COLOUR_COMMANDS,
+    },
+    'template.list': [{ id: 'tpl', kind: 'remote', name: 'TV', payload: COLOUR_LAYOUT }],
+  })
+}
+
 describe('RemoteScreen', () => {
+  it('colour keys wear their standard colour as a bar, whichever way they are named', async () => {
+    mountScreen(screenFor('TV'), { hub: colourHub() })
+    expect(await screen.findByTestId('remote-key-ca-colour-red')).toBeTruthy()
+    expect(screen.getByTestId('remote-key-cb-colour-green')).toBeTruthy()
+    expect(screen.getByTestId('remote-key-cy-colour-yellow')).toBeTruthy()
+    expect(screen.getByTestId('remote-key-cd-colour-blue')).toBeTruthy()
+    expect(screen.getByText('A')).toBeTruthy()
+    // an ordinary custom key and a toned one get no bar
+    cleanup()
+    mountScreen(screenFor('TV'), { hub: hub() })
+    await screen.findByTestId('remote-key-nf')
+    expect(document.querySelector('[data-testid*="-colour-"]')).toBeNull()
+  })
+
   it('draws the saved layout, with no group title anywhere', async () => {
     mountScreen(screenFor("Living room TV"), { hub: hub() })
     await screen.findByTestId('remote-key-pw')
@@ -224,8 +268,19 @@ describe.skipIf(SHOTS === undefined)('remote shots', () => {
         Object.defineProperty(document.documentElement, 'clientHeight', { configurable: true, value: 844 })
         window.dispatchEvent(new Event('resize'))
         await AsyncStorage.setItem(THEME_STORAGE_KEY, mode)
-        mountScreen(screenFor('Living room TV'), { hub: hub() })
+        const colourRow = COLOUR_LAYOUT.buttons.map((b) => ({ ...b, ...r(9, b.col) }))
+        mountScreen(screenFor('Living room TV'), {
+          hub: hub({
+            'remote.listCommands': {
+              layoutTemplateId: 'tpl',
+              power: { mode: 'discrete' },
+              commands: [...BOUND.map((role) => ({ role, custom: role.startsWith('custom:') })), ...COLOUR_COMMANDS],
+            },
+            'template.list': [{ id: 'tpl', kind: 'remote', name: 'TV', payload: { ...LAYOUT, rows: 10, buttons: [...LAYOUT.buttons, ...colourRow] } }],
+          }),
+        })
         await screen.findByTestId('remote-key-pw')
+        await screen.findByTestId('remote-key-ca-colour-red')
         await waitFor(() => expect(screen.getByText('On')).toBeTruthy())
         fs.mkdirSync(SHOTS!, { recursive: true })
         fs.writeFileSync(path.join(SHOTS!, `remote-${size}-${mode}.html`), snapshotHtml())

@@ -80,6 +80,7 @@ export function RemoteScreen({ deviceId, deviceName }: RemoteScreenProps): React
       <RemoteKeyPad
         layout={layout.data}
         bound={bound}
+        names={commands.data?.names}
         maxWidth={REMOTE_SCREEN_MAX_WIDTH}
         onPress={(role) => void press(role)}
       />
