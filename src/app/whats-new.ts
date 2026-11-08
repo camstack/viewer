@@ -30,6 +30,24 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.694',
+    date: '2026-11-08',
+    notes: {
+      en: [
+        'Device rows show one power button that looks off when the device is off.',
+        'A TV opens its device card first; the remote is one tap away.',
+        'Double tap zooms in on the spot, double tap again to go back; zoom no longer resets.',
+        'History charts have a legend, axis values and a tooltip that follows your finger.',
+      ],
+      it: [
+        'Le righe dei dispositivi hanno un solo pulsante di accensione, spento quando è spento.',
+        'La TV apre prima la sua scheda; il telecomando è a un tocco.',
+        'Doppio tap zooma sul punto, di nuovo per tornare; lo zoom non si resetta più.',
+        'I grafici hanno legenda, valori sugli assi e un tooltip che segue il dito.',
+      ],
+    },
+  },
+  {
     version: '1.0.693',
     date: '2026-11-08',
     notes: {
