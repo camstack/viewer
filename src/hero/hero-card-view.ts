@@ -63,3 +63,28 @@ export function heroCardView(model: HeroModel, locale: HeroLocale): HeroCardView
     hasControls: power !== null || rows.some((r) => r.controls.length > 0),
   }
 }
+
+/**
+ * Does the hero card already draw the control a legacy primary pick would? Only
+ * the two it models: a switch is covered by the power button, a media player by
+ * the remote button. Every other pick (climate, lock, cover, brightness ...) is
+ * a cap the hero does not cover yet, so its legacy control stays.
+ */
+export function heroCoversPrimary(kind: string, view: HeroCardView): boolean {
+  if (kind === 'switch') return view.power !== null
+  if (kind === 'media-player') return view.remote
+  return false
+}
+
+/** The slots the detail still draws under the hero card: a primary entry the card covers is dropped, an emptied primary slot with it. */
+export function slotsUnderHero<S extends { readonly slot: string; readonly entries: readonly { readonly pick?: { readonly kind: string } }[] }>(
+  slots: readonly S[],
+  view: HeroCardView | null,
+): S[] {
+  if (view === null) return [...slots]
+  return slots
+    .map((slot) =>
+      slot.slot !== 'primary' ? slot : { ...slot, entries: slot.entries.filter((e) => e.pick === undefined || !heroCoversPrimary(e.pick.kind, view)) },
+    )
+    .filter((slot) => slot.slot !== 'primary' || slot.entries.length > 0)
+}

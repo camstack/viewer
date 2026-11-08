@@ -43,7 +43,7 @@ import { ContactStateLine, RunningStateLine } from '../components/device-detail/
 import { ConsumablesList } from '../components/device-detail/ConsumablesList.js'
 import { isGatedEntry, noAccessSlot, resolveDeviceSlots, type DeviceSlot, type SlotEntry } from './device-detail/device-slots.js'
 import { HeroCard } from '../hero/HeroCard.js'
-import { heroCardView } from '../hero/hero-card-view.js'
+import { heroCardView, slotsUnderHero } from '../hero/hero-card-view.js'
 import { heroLocale } from '../hero/hero-view.js'
 import { useHeroModel } from '../hero/use-hero.js'
 import { useTheme } from '../theme/theme-provider.js'
@@ -194,14 +194,11 @@ export function DeviceDetailScreen({ deviceId, deviceName, deviceType }: DeviceD
     overview = <EmptyState icon={SlidersHorizontal} tone="danger" title={t('v2.deviceDetail.unavailable')} testID="device-error" />
   } else {
     const ctx: SlotContext = { deviceId, deviceName: name, deviceType: type, online, caps, canActuate }
-    // The hero card is the detail's face. The legacy primary stage stays only
-    // for a device whose hero draws no control of its own (a cap the model does
-    // not cover yet) and never for a media player, whose remote is a button on
-    // the card, not the body of the screen.
-    const heroDrawsControls = hero !== null && heroCardView(hero, heroLocale(i18n.language)).hasControls
-    const slots = resolveDeviceSlots({ type, caps }).filter(
-      (slot) => slot.slot !== 'primary' || hero === null || (!heroDrawsControls && !slot.entries.some((e) => e.pick?.kind === 'media-player')),
-    )
+    // The hero card is the detail's face. A legacy primary control is dropped
+    // only when the card draws that very control (power for a switch, the
+    // remote button for a media player); every other pick stays (D315).
+    const heroView = hero === null ? null : heroCardView(hero, heroLocale(i18n.language))
+    const slots = slotsUnderHero(resolveDeviceSlots({ type, caps }), heroView)
     const lockedAt = canActuate ? null : noAccessSlot(slots)
     overview = (
       <>

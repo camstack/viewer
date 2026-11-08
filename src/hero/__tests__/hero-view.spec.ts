@@ -9,6 +9,7 @@ import {
   nextOption,
   powerLook,
   powerPaint,
+  rowModelFor,
   rowView,
   statusLineText,
   stepTarget,
@@ -139,5 +140,18 @@ describe('boundaries', () => {
     expect(parsed[0]).toBe(good)
     expect(parsed[1]).toBeNull()
     expect(parsed[2]).toBeNull()
+  })
+})
+
+describe('rowModelFor: only a model is a model (D315)', () => {
+  const model = rowModel(null)
+  it('pending or failed batch gives no model, so the legacy row is drawn', () => {
+    expect(rowModelFor(undefined, 3)).toBeNull()
+  })
+  it('a device the hub has no row for gives no model', () => {
+    expect(rowModelFor(new Map([[4, model]]), 3)).toBeNull()
+  })
+  it('a real model is returned', () => {
+    expect(rowModelFor(new Map([[3, model]]), 3)).toBe(model)
   })
 })

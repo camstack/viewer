@@ -96,7 +96,6 @@ export function HeroCard({ model, deviceName, online }: HeroCardProps): React.JS
           <PillButton
             label={t('v2.hero.remote')}
             icon={RemoteControl}
-            disabled={!online}
             onPress={() => router.push(remoteRoute(model.deviceId, deviceName))}
           />
         </View>

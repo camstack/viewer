@@ -3,9 +3,9 @@
  * else: scene tile, name, ONE status line, the primary control, the trailing
  * fact (tablet width and up, like the web row), chevron.
  *
- * `model` is `undefined` while the batch has not answered and `null` when the
- * hub has no row for the device; both draw the identity with no control (a
- * control is never guessed from the device type).
+ * `model` is always a real model (D315): a pending or failed batch, or a hub
+ * with no row for the device, draws the legacy row instead. A model whose
+ * `primary` is null (a cap the hero does not cover yet) draws `fallbackControl`.
  */
 import React from 'react'
 import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native'
@@ -29,7 +29,8 @@ export interface HeroRowBodyProps {
   /** What the row is called: the operator's local name, else the hub's (never the model's own). */
   readonly name: string
   readonly online: boolean
-  readonly model: HeroRowModel | null | undefined
+  /** A real model: a row without one is the legacy row, drawn by the caller. */
+  readonly model: HeroRowModel
   /** An icon the operator picked on this phone; replaces the state icon, keeps the tone. */
   readonly customIcon?: string | null
   /** Shown under the name while the model has no status line (location, badges). */
@@ -52,15 +53,15 @@ export function HeroRowBody({ deviceId, name, online, model, customIcon = null, 
   const { width } = useWindowDimensions()
   const caller = useHeroCaller(deviceId)
   const locale = heroLocale(i18n.language)
-  const view = model == null ? null : rowView(model, locale)
-  const status = view !== null && view.status !== '' ? view.status : (caption ?? '')
-  const showFact = view?.trailing != null && width >= ROW_FACT_MIN_WIDTH
+  const view = rowView(model, locale)
+  const status = view.status
+  const showFact = view.trailing !== null && width >= ROW_FACT_MIN_WIDTH
   return (
     <View style={[styles.row, { borderBottomColor: colors.borderSubtle }]} testID={`hero-row-${deviceId}`}>
       <HeroSceneTile
-        icon={customIcon ?? view?.icon ?? 'power'}
-        tone={view?.tone ?? 'muted'}
-        muted={!online || view?.muted === true}
+        icon={customIcon ?? view.icon}
+        tone={view.tone}
+        muted={!online || view.muted}
         testID={`hero-row-scene-${deviceId}`}
       />
       <View style={styles.label}>
@@ -72,15 +73,20 @@ export function HeroRowBody({ deviceId, name, online, model, customIcon = null, 
             {status}
           </Text>
         ) : null}
+        {caption !== null && caption !== '' ? (
+          <Text testID={`hero-row-caption-${deviceId}`} style={[styles.caption, { color: colors.foregroundSubtle }]} numberOfLines={1}>
+            {caption}
+          </Text>
+        ) : null}
       </View>
-      {model?.primary != null ? (
+      {model.primary !== null ? (
         <View style={styles.control}>
           <HeroControlView control={model.primary} locale={locale} caller={caller} online={online} />
         </View>
-      ) : fallbackControl !== null && model !== undefined ? (
+      ) : fallbackControl !== null ? (
         <View style={styles.control}>{fallbackControl}</View>
       ) : null}
-      {showFact && view?.trailing != null ? (
+      {showFact && view.trailing !== null ? (
         <View style={styles.fact} testID={`hero-row-fact-${deviceId}`}>
           {view.trailing.icon !== null ? (
             <CatalogIcon iconKey={view.trailing.icon} size={14} color={toneColor(view.trailing.tone, colors)} />
@@ -119,6 +125,7 @@ const styles = StyleSheet.create({
   label: { flex: 1, minWidth: 0, gap: 2 },
   name: { fontSize: TYPOGRAPHY.size.md, fontWeight: TYPOGRAPHY.weight.medium },
   status: { fontSize: TYPOGRAPHY.size.sm },
+  caption: { fontSize: TYPOGRAPHY.size.xs },
   control: { flexShrink: 0 },
   fact: { flexDirection: 'row', alignItems: 'center', gap: SPACING.xs, flexShrink: 0, maxWidth: 120 },
   factText: { fontSize: TYPOGRAPHY.size.sm },

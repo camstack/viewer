@@ -104,6 +104,11 @@ export interface OptionPickerProps {
   readonly neutralValue?: string
 }
 
+/** An option picker is accented only for a real choice: not empty, not the neutral (off) value. */
+export function isOptionActive(selected: string | null, neutralValue?: string): selected is string {
+  return selected !== null && selected !== '' && selected !== neutralValue
+}
+
 /**
  * Small pill that opens a modal list of options. Mirrors the web viewer's select
  * affordance, but stays compact in the accessory row.
@@ -119,7 +124,7 @@ export function OptionPicker({
 }: OptionPickerProps) {
   const { colors } = useTheme()
   const [open, setOpen] = useState(false)
-  const active = selected !== null && selected !== '' && selected !== neutralValue
+  const active = isOptionActive(selected, neutralValue)
   const selectedLabel = active ? options.find((option) => option.value === selected)?.label ?? selected : label
 
   return (

@@ -11,12 +11,13 @@
  * same cap method the old per-type control called. After a call the hero
  * queries are invalidated so the state is read back, not assumed.
  */
-import { useCallback, useMemo } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query'
 import type { HeroAction, HeroModel, HeroRowModel } from '@camstack/types'
 import { useConnection } from '../connection/ConnectionProvider.js'
 import { capQuery } from '../data/cap-query.js'
 import { useCapMutator } from '../data/use-accessory-controls.js'
+import { log } from '../lib/logger.js'
 import { RECONCILE_MS } from '../data/reconcile.js'
 import { parseHeroModel, parseHeroRowModels } from './hero-parse.js'
 import { capRouterKey } from './hero-view.js'
@@ -45,7 +46,7 @@ export function useHeroRowModels(
 ): UseQueryResult<HeroRowModels> {
   const { controller, state } = useConnection()
   const ids = useMemo(() => rowIdsKey(deviceIds), [deviceIds])
-  return useQuery<HeroRowModels>({
+  const query = useQuery<HeroRowModels>({
     queryKey: [...HERO_QUERY_ROOT, 'rows', ids, canActuate],
     enabled: state === 'connected' && ids.length > 0,
     staleTime: RECONCILE_MS,
@@ -54,7 +55,7 @@ export function useHeroRowModels(
       const system = controller.getSystem()
       if (!system) return EMPTY_ROWS
       const raw = await capQuery(
-        system.trpcClient as unknown as Record<string, unknown>,
+        system.trpcClient as Record<string, unknown>,
         HERO_CAP_KEY,
         'getRowModels',
         { deviceIds: ids, canActuate },
@@ -69,6 +70,13 @@ export function useHeroRowModels(
       return { byId }
     },
   })
+  // A failed batch is not an empty one: the rows fall back to the legacy row,
+  // and the failure is said once, not swallowed.
+  const failed = query.isError
+  useEffect(() => {
+    if (failed) log.warn('hero', 'getRowModels failed; rows use the legacy control', { rows: ids.length })
+  }, [failed, ids.length])
+  return query
 }
 
 /** The full hero model of one device; `null` when the hub does not know it. */
@@ -83,7 +91,7 @@ export function useHeroModel(deviceId: number, canActuate: boolean): UseQueryRes
       const system = controller.getSystem()
       if (!system) return null
       const raw = await capQuery(
-        system.trpcClient as unknown as Record<string, unknown>,
+        system.trpcClient as Record<string, unknown>,
         HERO_CAP_KEY,
         'getHeroModel',
         { deviceId, canActuate },

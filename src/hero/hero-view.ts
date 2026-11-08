@@ -197,3 +197,12 @@ export function rowView(model: HeroRowModel, locale: HeroLocale): RowView {
 export function capRouterKey(cap: string): string {
   return cap.replace(/-([a-z0-9])/g, (_, c: string) => c.toUpperCase())
 }
+
+/**
+ * The row model to draw for a device: only a real model. A pending or failed
+ * batch (`byId` undefined) and a hub with no row for the device both give
+ * `null`, and the caller draws the legacy row (D315).
+ */
+export function rowModelFor(byId: ReadonlyMap<number, HeroRowModel> | undefined, deviceId: number): HeroRowModel | null {
+  return byId?.get(deviceId) ?? null
+}

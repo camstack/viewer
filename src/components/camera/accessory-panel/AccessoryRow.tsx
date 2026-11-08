@@ -1,8 +1,8 @@
 /**
  * AccessoryRow — one device of the camera accessory panel.
  *
- * VIEW: the hub's row model (`HeroRowBody`): scene tile, name, one status line,
- * the one primary control, the trailing fact, chevron. EDIT: the same identity, but the control gives
+ * VIEW: the hub's row model (`HeroRowBody`) when there is one, else the legacy
+ * row (icon, name, caption, registry control). EDIT: the same identity, but the control gives
  * way to the local operations — tap the icon to change it, TYPE IN the name to
  * rename, ↑/↓ to reorder, eye to hide or show, and for a LOCAL addition a
  * bin to remove it. A server-linked device has no bin: the viewer does not
@@ -52,7 +52,7 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useRouter } from 'expo-router'
 
-import { ArrowDown, ArrowUp, Eye, EyeOff, Trash2 } from '../../../lib/icons.js'
+import { ArrowDown, ArrowUp, ChevronRight, Eye, EyeOff, Trash2 } from '../../../lib/icons.js'
 import { useTheme } from '../../../theme/theme-provider.js'
 import { SPACING } from '../../../theme/tokens.js'
 import { hapticTap } from '../../../lib/haptics.js'
@@ -81,8 +81,8 @@ export interface AccessoryRowProps {
   readonly onClose?: () => void
   /**
    * The hub's row model for this device (`hero-layout.getRowModels`, one batch
-   * for the whole list): `undefined` until the batch answers, `null` when the
-   * hub has no row for it. VIEW mode draws only from it.
+   * for the whole list). Only a model draws the hero row; `undefined` (pending
+   * or failed batch) and `null` (the hub has none) draw the legacy row.
    */
   readonly model?: HeroRowModel | null
   /** An icon the operator picked on this phone, if any. */
@@ -184,7 +184,12 @@ export const AccessoryRow = memo(function AccessoryRow({
       </Text>
     ) : null
 
-  if (!editing) {
+  const openDetail = (): void => {
+    onClose?.()
+    router.push(deviceRoute(row.device.id, row.label, row.device.type))
+  }
+
+  if (!editing && model != null) {
     return (
       <HeroRowBody
         deviceId={row.device.id}
@@ -195,11 +200,42 @@ export const AccessoryRow = memo(function AccessoryRow({
         caption={captionText}
         fallbackControl={<AccessoryControl device={row.device} />}
         openLabel={t('v2.deviceDetail.openFor', vars)}
-        onOpen={() => {
-          onClose?.()
-          router.push(deviceRoute(row.device.id, row.label, row.device.type))
-        }}
+        onOpen={openDetail}
       />
+    )
+  }
+
+  // No model (the batch is pending, failed, or the hub has none for this
+  // device): the row as it always was, never a guessed one (D315).
+  if (!editing) {
+    return (
+      <View style={[styles.row, { borderBottomColor: colors.borderSubtle }]}>
+        <View style={[styles.iconWrap, { backgroundColor: colors.backgroundElevated }]}>
+          <CatalogIcon iconKey={row.iconKey} size={ICON_SIZE} color={accent} />
+        </View>
+        <View style={styles.label}>
+          <Text style={[styles.name, { fontSize: ui.font.sm, color: nameColor }]} numberOfLines={1}>
+            {row.label}
+          </Text>
+          {caption}
+        </View>
+        <View style={styles.control}>
+          <AccessoryControl device={row.device} />
+        </View>
+        <Pressable
+          onPress={() => {
+            hapticTap()
+            openDetail()
+          }}
+          hitSlop={6}
+          accessibilityRole="button"
+          accessibilityLabel={t('v2.deviceDetail.openFor', vars)}
+          testID={`accessory-detail-${row.device.id}`}
+          style={styles.detailButton}
+        >
+          <ChevronRight size={18} color={colors.foregroundSubtle} />
+        </Pressable>
+      </View>
     )
   }
 
@@ -321,6 +357,7 @@ const styles = StyleSheet.create({
   nameInput: { paddingVertical: 0 },
   name: { fontSize: 14, fontWeight: '500' },
   caption: { fontSize: 11 },
+  detailButton: { width: 30, height: 30, alignItems: 'center', justifyContent: 'center' },
   control: { flexShrink: 0 },
   editActions: { flexDirection: 'row', alignItems: 'center', gap: SPACING.xs, flexShrink: 0 },
   editButton: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },

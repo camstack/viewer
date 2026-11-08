@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { HeroAction, HeroModel } from '@camstack/types'
-import { heroCardView } from '../hero-card-view.js'
+import { heroCardView, slotsUnderHero } from '../hero-card-view.js'
 
 const action = (id: string): HeroAction => ({
   id, label: { en: id, it: id }, icon: 'power', call: { cap: 'media-player', method: id, args: {} }, emphasis: 'normal', confirm: null,
@@ -37,5 +37,33 @@ describe('heroCardView: the TV detail opens the hero, the remote is a button on 
 
   it('a device without a remote offers no button', () => {
     expect(heroCardView(tv({ remote: null }), 'en').remote).toBe(false)
+  })
+})
+
+describe('slotsUnderHero: a legacy primary control goes only when the card draws it', () => {
+  const slot = (kinds: string[]) => ({ slot: 'primary', entries: kinds.map((kind) => ({ pick: { kind } })) })
+  const header = { slot: 'header', entries: [] }
+
+  it('an AC keeps its mode and temperature while the hero draws power', () => {
+    const view = heroCardView(tv({ type: 'switch' }), 'en')
+    const kept = slotsUnderHero([header, slot(['climate'])], view)
+    expect(kept.map((s) => s.slot)).toEqual(['header', 'primary'])
+  })
+
+  it('a switch pick is dropped when the card has a power button, kept when it has none', () => {
+    const withPower = heroCardView(tv(), 'en')
+    expect(slotsUnderHero([slot(['switch'])], withPower)).toEqual([])
+    const noPower = heroCardView(tv({ ownPower: null }), 'en')
+    expect(slotsUnderHero([slot(['switch'])], noPower)).toHaveLength(1)
+  })
+
+  it('a TV with remote:null, or the remote gated, keeps its remote', () => {
+    expect(slotsUnderHero([slot(['media-player'])], heroCardView(tv({ remote: null }), 'en'))).toHaveLength(1)
+    expect(slotsUnderHero([slot(['media-player'])], heroCardView(tv({ gated: ['remote'] }), 'en'))).toHaveLength(1)
+    expect(slotsUnderHero([slot(['media-player'])], heroCardView(tv(), 'en'))).toEqual([])
+  })
+
+  it('no hero model leaves every slot as it was', () => {
+    expect(slotsUnderHero([slot(['switch', 'climate'])], null)).toHaveLength(1)
   })
 })

@@ -37,6 +37,7 @@ import { SPACING } from '../../../theme/tokens.js'
 import { useCameras } from '../../../data/use-cameras.js'
 import { useCanActuate } from '../../../hooks/use-user-scope.js'
 import { useHeroRowModels } from '../../../hero/use-hero.js'
+import { rowModelFor } from '../../../hero/hero-view.js'
 import { useAccessoryPanel } from '../../../accessories/use-accessory-panel.js'
 import type { AccessoryPanelRow } from '../../../accessories/accessory-panel-rows.js'
 import type { AccessoryIconKey } from '../../../accessories/accessory-icon-keys.js'
@@ -174,7 +175,7 @@ export function AccessoryDeviceList({
           onToggleHidden={(target) => actions.setHidden(target.device.id, !target.hidden)}
           onRemove={(target) => actions.remove(target.device.id)}
           onClose={onClose}
-          model={rowModels.data === undefined ? undefined : (rowModels.data.byId.get(row.device.id) ?? null)}
+          model={rowModelFor(rowModels.data?.byId, row.device.id)}
           customIcon={prefs.byId[row.device.id]?.icon ?? null}
         />
       ))}
