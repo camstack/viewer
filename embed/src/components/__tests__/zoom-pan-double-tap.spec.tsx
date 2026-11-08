@@ -1,12 +1,11 @@
 /**
- * The tile's double tap follows the app's rule (`shared/zoom/double-tap-zoom.ts`,
- * operator 2026-11-08): from the whole picture it zooms in until the video
- * fills the tile, the tapped point held still; from a zoom it climbs a rung and
- * NEVER goes back. The one explicit reset is a long press on the zoomed picture.
+ * The tile's double tap is the classic gallery (`shared/zoom/double-tap-zoom.ts`,
+ * operator 2026-11-08): from the whole picture it zooms to FULL zoom with the
+ * tapped point held still; from any other scale it goes back to the whole
+ * picture.
  */
 import { cleanup, fireEvent, render } from '@testing-library/react'
-import { act } from 'react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 
 import { ZoomPan } from '../ZoomPan'
 
@@ -51,62 +50,34 @@ function transformOf(inner: HTMLElement): { tx: number; ty: number; scale: numbe
 }
 
 describe('ZoomPan double tap', () => {
-  it('from the whole picture: in to the scale that fills the tile, at the tap', () => {
+  it('from the whole picture: full zoom (4x), the tapped point held still', () => {
     const { outer, inner } = mountTile()
     doubleTap(outer, 100, 75)
     const t = transformOf(inner)
-    const cover = (16 / 9) / (4 / 3)
-    expect(t.scale).toBeCloseTo(cover, 6)
-    // At cover the picture exactly fills the height: no vertical travel. The
-    // horizontal anchor holds the tapped point still: (100 - 200) * (1 - s).
-    expect(t.ty).toBeCloseTo(0, 6)
-    expect(t.tx).toBeCloseTo((100 - 200) * (1 - cover), 6)
+    expect(t.scale).toBe(4)
     expect(outer.style.touchAction).toBe('none')
+    // The horizontal anchor holds the tapped point still (before the clamp's limit).
+    expect(t.tx).toBeCloseTo(Math.max(-(400 * 4 - 400) / 2, Math.min((400 * 4 - 400) / 2, (100 - 200) * (1 - 4))), 6)
   })
 
-  it('from a zoom: one rung further in, never back to the whole picture', () => {
+  it('from any other scale: back to the whole picture, not a further rung', () => {
     const { outer, inner } = mountTile()
     doubleTap(outer, 100, 75)
     doubleTap(outer, 300, 200)
-    expect(transformOf(inner).scale).toBe(2)
-    doubleTap(outer, 300, 200)
-    expect(transformOf(inner).scale).toBe(3)
-    doubleTap(outer, 300, 200)
-    doubleTap(outer, 300, 200)
-    expect(transformOf(inner).scale).toBe(4)
-    expect(outer.style.touchAction).toBe('none')
+    expect(transformOf(inner)).toEqual({ tx: 0, ty: 0, scale: 1 })
+    expect(outer.style.touchAction).toBe('pan-y')
   })
 
-  it('a long press on a zoomed picture is the reset; a short press or a drag is not', () => {
-    vi.useFakeTimers()
-    try {
-      const { outer, inner } = mountTile()
-      doubleTap(outer, 100, 75)
-      fireEvent(outer, pointer('pointerdown', 150, 100))
-      act(() => {
-        vi.advanceTimersByTime(300)
-      })
-      fireEvent(outer, pointer('pointerup', 150, 100))
-      act(() => {
-        vi.advanceTimersByTime(1000)
-      })
-      expect(transformOf(inner).scale).toBeGreaterThan(1)
-      fireEvent(outer, pointer('pointerdown', 150, 100))
-      fireEvent(outer, pointer('pointermove', 190, 100))
-      act(() => {
-        vi.advanceTimersByTime(1000)
-      })
-      fireEvent(outer, pointer('pointerup', 190, 100))
-      expect(transformOf(inner).scale).toBeGreaterThan(1)
-      fireEvent(outer, pointer('pointerdown', 150, 100))
-      act(() => {
-        vi.advanceTimersByTime(700)
-      })
-      fireEvent(outer, pointer('pointerup', 150, 100))
-      expect(transformOf(inner)).toEqual({ tx: 0, ty: 0, scale: 1 })
-      expect(outer.style.touchAction).toBe('pan-y')
-    } finally {
-      vi.useRealTimers()
-    }
+  it('a held finger does nothing: there is no long-press reset', () => {
+    const { outer, inner } = mountTile()
+    doubleTap(outer, 100, 75)
+    fireEvent(outer, pointer('pointerdown', 150, 100))
+    return new Promise<void>((resolve) => {
+      setTimeout(() => {
+        fireEvent(outer, pointer('pointerup', 150, 100))
+        expect(transformOf(inner).scale).toBe(4)
+        resolve()
+      }, 700)
+    })
   })
 })

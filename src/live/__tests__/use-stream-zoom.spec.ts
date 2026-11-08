@@ -242,33 +242,31 @@ describe('useStreamZoom — one result, one viewport', () => {
     expect(transformOf(result.current, fixedBox).scale).toBe(2)
   })
 
-  it('double tap from the whole picture in a cover box: the fallback step, anchored; again: one rung further, never back', () => {
+  it('double tap from the whole picture: FULL zoom (the max), anchored; again: back to fit', () => {
     const { result, rerender } = mount(growingBox)
     // Plain call: under the stub a worklet is a function, and on the device it
-    // is what the tap gesture's `onEnd` calls without `runOnJS`. A cover box
-    // already fills the player, so there are no bars to remove: the first
-    // fixed step instead.
+    // is what the tap gesture's `onEnd` calls without `runOnJS`.
     act(() => {
       result.current.doubleTapZoomAt(0, 0)
     })
     rerender()
-    expect(result.current.committedScale.value).toBe(2)
+    expect(result.current.committedScale.value).toBe(4)
     const t = transformOf(result.current, growingBox)
-    expect(t.scale).toBe(2)
+    expect(t.scale).toBe(4)
     // Anchored on the tap (top-left corner), across the growth the step causes.
-    const want = cornerGrowPan(1, 2)
+    const want = cornerGrowPan(1, 4)
     expect(t.tx).toBeCloseTo(want.x, 6)
     expect(t.ty).toBeCloseTo(want.y, 6)
-    // Zoomed in: the next double tap climbs a rung and never resets (#466).
+    // Anywhere above the minimum: the next double tap is the whole picture.
     act(() => {
       result.current.doubleTapZoomAt(0, 0)
     })
     rerender()
-    expect(result.current.committedScale.value).toBe(3)
+    expect(result.current.committedScale.value).toBe(1)
+    expect(transformOf(result.current, growingBox)).toEqual({ scale: 1, tx: 0, ty: 0 })
   })
 
-  it('double tap from the whole picture in a letterboxing box: the scale that fills it, at the tap', () => {
-    // 400×150 box, 16:9 picture: pillarboxed; filling it takes (400/150)/(16/9) = 1.5.
+  it('double tap in a letterboxing box also goes to full zoom, not to the scale that fills it', () => {
     const wideBox = (): number => 150
     const { result, rerender } = renderHook(() =>
       useStreamZoom({ contentAspect: ASPECT, fit: 'contain', viewport: { width: WIDTH, heightFor: wideBox } }),
@@ -277,21 +275,10 @@ describe('useStreamZoom — one result, one viewport', () => {
       result.current.doubleTapZoomAt(300, 40)
     })
     rerender()
-    const cover = WIDTH / 150 / ASPECT
-    expect(result.current.committedScale.value).toBeCloseTo(cover, 9)
-    const t = transformOf(result.current, wideBox)
-    const lim = streamPanExtent(WIDTH, 150, ASPECT, cover, 'contain')
-    const anchored = (tap: number, center: number): number =>
-      focalPan({ focalNow: tap, focalStart: tap, center, panStart: 0, scaleStart: 1, scaleAfter: cover })
-    // At cover the picture exactly fills the width: no horizontal travel, so
-    // the anchor is clamped to the centre on x and honoured on y.
-    expect(lim.x).toBeCloseTo(0, 6)
-    expect(t.tx).toBeCloseTo(0, 6)
-    expect(t.ty).toBeCloseTo(Math.max(-lim.y, Math.min(lim.y, anchored(40, 75))), 6)
-    expect(t.ty).not.toBe(0)
+    expect(result.current.committedScale.value).toBe(4)
   })
 
-  it('double tap after a pinch (any scale above the minimum) climbs a rung and never resets', () => {
+  it('double tap after a pinch (any scale above the minimum) returns to fit', () => {
     vi.useFakeTimers()
     try {
       const { result, rerender } = mount(fixedBox)
@@ -312,8 +299,8 @@ describe('useStreamZoom — one result, one viewport', () => {
         result.current.doubleTapZoomAt(50, 50)
       })
       rerender()
-      expect(result.current.committedScale.value).toBe(2)
-      expect(transformOf(result.current, fixedBox).scale).toBe(2)
+      expect(result.current.committedScale.value).toBe(1)
+      expect(transformOf(result.current, fixedBox)).toEqual({ scale: 1, tx: 0, ty: 0 })
     } finally {
       vi.useRealTimers()
     }

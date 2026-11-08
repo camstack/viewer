@@ -170,7 +170,6 @@ import { formatSelectionDuration } from '../recording/export-selection.js'
 import type { LiveCaptureFlow } from '../recording/record-control.js'
 import { useStreamZoom } from '../live/use-stream-zoom.js'
 import { zoomBoxHeight, type ZoomBoxParams } from './camera-detail/zoom-box.js'
-import { DOUBLE_TAP_EPSILON as DOUBLE_TAP_ZOOMED_EPSILON, LONG_PRESS_RESET_MS } from '../../shared/zoom/double-tap-zoom.js'
 import { useDeviceCapNames } from '../data/use-device-cap-names.js'
 import { useExportSelection } from '../recording/use-export-selection.js'
 import { useActivityStore } from '../activity/activity-instance.js'
@@ -361,8 +360,6 @@ const NEVER_HIDE = (): void => undefined
 const MAX_HEIGHT_FRACTION = 0.5
 /** Pinch scale at which the box reaches its max height (default→max over 1×→this). */
 const HEIGHT_GROW_SCALE = 2.5
-/** A long press that drifts further than this is a pan, not the reset. */
-const LONG_PRESS_RESET_MAX_DISTANCE = 12
 /** A double tap's two taps stay within this travel (pt) and this gap (ms). */
 const DOUBLE_TAP_MAX_DISTANCE = 24
 const DOUBLE_TAP_MAX_DELAY_MS = 300
@@ -2308,10 +2305,9 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
       .onEnd(() => {
         runOnJS(onToggleControls)()
       })
-    // Double tap, anchored on the TAP: from the whole picture it zooms in until
-    // the video fills the player (no bars); from a zoom it climbs one rung and
-    // at the top it holds. It NEVER zooms out: the zoom stays where the
-    // operator left it (planning#466, 2026-11-08).
+    // Double tap, classic gallery (operator, 2026-11-08): from the whole
+    // picture it zooms to full zoom centred on the TAP; from any other scale it
+    // returns to the whole picture.
     const doubleTap = Gesture.Tap()
       .numberOfTaps(2)
       .maxDistance(DOUBLE_TAP_MAX_DISTANCE)
@@ -2322,14 +2318,6 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
         zoom.doubleTapZoomAt(e.x, e.y)
       })
     const taps = Gesture.Exclusive(doubleTap, singleTap)
-    // The ONE explicit reset: a still finger held on a zoomed picture. Pinching
-    // all the way out also lands on 1x, and nothing else lets go of the zoom.
-    const longPressReset = Gesture.LongPress()
-      .minDuration(LONG_PRESS_RESET_MS)
-      .maxDistance(LONG_PRESS_RESET_MAX_DISTANCE)
-      .onStart(() => {
-        if (zoom.scale.value > DOUBLE_TAP_ZOOMED_EPSILON) zoom.resetZoom('long-press')
-      })
     // ONE-finger downward fling → leave the screen. Nothing else: the operator
     // removed the finger-PiP, so this is the plain back affordance.
     const swipeToBack = Gesture.Pan()
@@ -2380,7 +2368,7 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
         }
       })
     // Everything runs simultaneously: pinch+pan (zoom), the tap pair, both flings.
-    return Gesture.Simultaneous(zoom.composeWith(swipeToOverlay), swipeToBack, taps, longPressReset)
+    return Gesture.Simultaneous(zoom.composeWith(swipeToOverlay), swipeToBack, taps)
   }, [zoom, onToggleControls, onSwipeBack, onSwipeToOverlay])
 
   // Debug: the tree is meant to be rebuilt almost never. A rebuild in the
