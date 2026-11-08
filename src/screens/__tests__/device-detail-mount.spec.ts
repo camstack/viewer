@@ -289,7 +289,8 @@ describe('DeviceDetailScreen', () => {
         .map((c) => (c.input as { to: number; from: number }).to - (c.input as { to: number; from: number }).from)
       expect(spans).toContain(7 * 24 * HOUR)
     })
-    expect((await screen.findAllByText('7 days ago')).length).toBeGreaterThan(0)
+    // The charts redraw over the new window (the time labels need a measured plot, which jsdom has not).
+    expect((await screen.findAllByTestId(/^history-series-.*-chart$/)).length).toBeGreaterThan(0)
   })
 
   it('History: a washer shows its runs as bands, and an enum by its states', async () => {

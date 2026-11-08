@@ -4439,14 +4439,10 @@
           "7d": "7 giorni",
           "30d": "30 giorni"
         },
-        "ago": {
-          "24h": "24 h fa",
-          "7d": "7 giorni fa",
-          "30d": "30 giorni fa"
-        },
         "now": "ora",
         "on": "Acceso",
         "off": "Spento",
+        "run": "Ciclo",
         "runs": "Cicli",
         "noRuns": "Nessun ciclo in questo periodo",
         "empty": "Nessun dato in questo periodo",

@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import {
+  bandAt,
+  formatSeriesValue,
   historyWindow,
+  nearestPoint,
+  timeAt,
+  timeTicks,
+  valueTicks,
   lineSegments,
   stateBands,
   toRunBands,
@@ -109,5 +115,42 @@ describe('toRunBands', () => {
       { from: WIN.from, to: NOW - 22 * H, outcome: 'completed', open: false },
       { from: NOW - 2 * H, to: NOW, outcome: null, open: true },
     ])
+  })
+})
+
+describe('chart axes and cursor', () => {
+  it('value ticks run from the max (top) to the min and include both ends', () => {
+    const t = valueTicks({ min: 10, max: 30 }, 3)
+    expect(t.map((x) => x.value)).toEqual([30, 20, 10])
+    expect(t.map((x) => x.frac)).toEqual([0, 0.5, 1])
+  })
+
+  it('time ticks span the window and timeAt is the inverse of xAt', () => {
+    const t = timeTicks(WIN, 5)
+    expect(t).toHaveLength(5)
+    expect(t[0]?.value).toBe(WIN.from)
+    expect(t[4]?.value).toBe(WIN.to)
+    expect(xAt(timeAt(0.25, WIN), WIN, 1000)).toBeCloseTo(250, 6)
+    expect(timeAt(2, WIN)).toBe(WIN.to)
+    expect(timeAt(Number.NaN, WIN)).toBe(WIN.from)
+  })
+
+  it('the nearest point wins across segments; none gives null', () => {
+    const segs = [[{ t: 0, v: 1 }, { t: 10, v: 2 }], [{ t: 30, v: 3 }]]
+    expect(nearestPoint(segs, 12)).toEqual({ t: 10, v: 2 })
+    expect(nearestPoint(segs, 26)).toEqual({ t: 30, v: 3 })
+    expect(nearestPoint([], 5)).toBeNull()
+  })
+
+  it('bandAt finds the band holding the instant, null in a gap', () => {
+    const bands = [{ from: 0, to: 10, label: 'on' }, { from: 20, to: 30, label: 'off' }]
+    expect(bandAt(bands, 5)?.label).toBe('on')
+    expect(bandAt(bands, 15)).toBeNull()
+  })
+
+  it('formats a reading with its unit', () => {
+    expect(formatSeriesValue(21.46, '°C')).toBe('21.5 °C')
+    expect(formatSeriesValue(1234.6, 'W')).toBe('1235 W')
+    expect(formatSeriesValue(3, null)).toBe('3')
   })
 })

@@ -4442,14 +4442,10 @@
           "7d": "7 days",
           "30d": "30 days"
         },
-        "ago": {
-          "24h": "24 h ago",
-          "7d": "7 days ago",
-          "30d": "30 days ago"
-        },
         "now": "now",
         "on": "On",
         "off": "Off",
+        "run": "Run",
         "runs": "Runs",
         "noRuns": "No runs in this window",
         "empty": "No data in this window",

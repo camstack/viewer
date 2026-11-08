@@ -253,3 +253,63 @@ export function toRunBands(raw: unknown, window: HistoryWindow): readonly RunBan
   }
   return out.sort((a, b) => a.from - b.from)
 }
+
+/** An axis tick: where it sits (0..1 across the axis) and the value it names. */
+export interface AxisTick {
+  readonly frac: number
+  readonly value: number
+}
+
+/**
+ * `count` evenly spaced y ticks from the range's min to its max (the chart is
+ * drawn between those two, so the ends are honest bounds, never "nice" numbers
+ * the line does not reach). `frac` 0 is the max, at the top.
+ */
+export function valueTicks(range: ValueRange, count: number): readonly AxisTick[] {
+  const n = Math.max(2, Math.floor(count))
+  const ticks: AxisTick[] = []
+  for (let i = 0; i < n; i += 1) {
+    const f = i / (n - 1)
+    ticks.push({ frac: f, value: range.max - f * (range.max - range.min) })
+  }
+  return ticks
+}
+
+/** `count` evenly spaced x ticks across the window; `value` is the instant. */
+export function timeTicks(window: HistoryWindow, count: number): readonly AxisTick[] {
+  const n = Math.max(2, Math.floor(count))
+  const ticks: AxisTick[] = []
+  for (let i = 0; i < n; i += 1) {
+    const f = i / (n - 1)
+    ticks.push({ frac: f, value: window.from + f * (window.to - window.from) })
+  }
+  return ticks
+}
+
+/** The instant at `frac` (0..1, clamped) across the window — the inverse of `xAt`. */
+export function timeAt(frac: number, window: HistoryWindow): number {
+  const f = Math.min(1, Math.max(0, Number.isFinite(frac) ? frac : 0))
+  return window.from + f * (window.to - window.from)
+}
+
+/** The point closest in time to `t` over every segment, or null when there is none. */
+export function nearestPoint(segments: readonly (readonly LinePoint[])[], t: number): LinePoint | null {
+  let best: LinePoint | null = null
+  for (const seg of segments) {
+    for (const p of seg) {
+      if (best === null || Math.abs(p.t - t) < Math.abs(best.t - t)) best = p
+    }
+  }
+  return best
+}
+
+/** The band that holds `t`, or null in a gap. */
+export function bandAt(bands: readonly StateBand[], t: number): StateBand | null {
+  return bands.find((b) => t >= b.from && t <= b.to) ?? null
+}
+
+/** A reading with its unit, rounded the way the range line prints it. */
+export function formatSeriesValue(v: number, unit: string | null): string {
+  const text = Math.abs(v) >= 100 ? String(Math.round(v)) : String(Math.round(v * 10) / 10)
+  return unit === null ? text : `${text} ${unit}`
+}

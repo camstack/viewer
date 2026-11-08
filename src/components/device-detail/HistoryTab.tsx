@@ -18,6 +18,7 @@ import {
   lineSegments,
   stateBands,
   valueRange,
+  formatSeriesValue,
   type HistoryWindow,
   type HistoryWindowId,
 } from '../../data/device-history-model.js'
@@ -28,16 +29,11 @@ import {
   useSeriesReadings,
   type SeriesReading,
 } from '../../data/use-device-history.js'
-import { BandLegend, BandsChart, LineChart, RunsChart, TimeAxis, distinctLabels } from './HistoryCharts.js'
+import { BandLegend, BandsChart, LineChart, LineLegend, RunsChart, distinctLabels } from './HistoryCharts.js'
 
 export interface HistoryTabProps {
   readonly deviceId: number
   readonly deviceType: string
-}
-
-function formatValue(v: number, unit: string | null): string {
-  const text = Math.abs(v) >= 100 ? String(Math.round(v)) : String(Math.round(v * 10) / 10)
-  return unit === null ? text : `${text} ${unit}`
 }
 
 function SeriesBlock({ reading, window, windowId }: {
@@ -63,8 +59,7 @@ function SeriesBlock({ reading, window, windowId }: {
     const names: Record<string, string> = { on: t('v2.deviceDetail.history.on'), off: t('v2.deviceDetail.history.off') }
     chart = bands.length === 0 ? note(t('v2.deviceDetail.history.empty'), `${testID}-empty`) : (
       <>
-        <BandsChart bands={bands} window={window} order={order} label={title} testID={`${testID}-chart`} />
-        <TimeAxis windowId={windowId} />
+        <BandsChart bands={bands} window={window} windowId={windowId} order={order} names={names} label={title} testID={`${testID}-chart`} />
         <BandLegend labels={distinctLabels(bands)} order={order} names={names} />
       </>
     )
@@ -73,10 +68,10 @@ function SeriesBlock({ reading, window, windowId }: {
     const range = valueRange(segments)
     chart = range === null ? note(t('v2.deviceDetail.history.empty'), `${testID}-empty`) : (
       <>
-        <LineChart segments={segments} window={window} label={title} testID={`${testID}-chart`} />
-        <TimeAxis windowId={windowId} />
+        <LineChart segments={segments} window={window} windowId={windowId} unit={info.unit} label={title} testID={`${testID}-chart`} />
+        <LineLegend name={title} />
         <Text style={[styles.note, { color: colors.foregroundMuted }]} testID={`${testID}-range`}>
-          {t('v2.deviceDetail.history.range', { min: formatValue(range.min, info.unit), max: formatValue(range.max, info.unit) })}
+          {t('v2.deviceDetail.history.range', { min: formatSeriesValue(range.min, info.unit), max: formatSeriesValue(range.max, info.unit) })}
         </Text>
       </>
     )
@@ -105,8 +100,7 @@ function RunsBlock({ deviceId, window, windowId }: {
         <Text testID="history-runs-empty" style={[styles.note, { color: colors.foregroundMuted }]}>{t('v2.deviceDetail.history.noRuns')}</Text>
       ) : (
         <>
-          <RunsChart runs={runs.data} window={window} label={t('v2.deviceDetail.history.runs')} testID="history-runs-chart" />
-          <TimeAxis windowId={windowId} />
+          <RunsChart runs={runs.data} window={window} windowId={windowId} label={t('v2.deviceDetail.history.runs')} runLabel={t('v2.deviceDetail.history.run')} testID="history-runs-chart" />
         </>
       )}
     </View>
