@@ -30,6 +30,20 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.691',
+    date: '2026-11-08',
+    notes: {
+      en: [
+        'System-event rules: choose when they send (start, resolve, scheduled summary) in Notification.',
+        'Fixed a raw English hint under Schedule in the rule editor.',
+      ],
+      it: [
+        'Regole di sistema: scegli quando inviano (inizio, risoluzione, riepilogo) in Notifica.',
+        'Corretto un suggerimento in inglese sotto Programmazione nell’editor delle regole.',
+      ],
+    },
+  },
+  {
     version: '1.0.690',
     date: '2026-11-08',
     notes: {

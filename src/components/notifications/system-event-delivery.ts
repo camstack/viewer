@@ -57,7 +57,10 @@ export interface NcSystemEventDeliveryModes {
   readonly activation: boolean
   readonly deactivation: boolean
   /** The scheduled summary, or `null` when the rule sends none. */
-  readonly schedule: { readonly schedule: NcSchedule; readonly grouping: NcStateSummarySplit } | null
+  readonly schedule: {
+    readonly schedule: NcSchedule
+    readonly grouping: NcStateSummarySplit
+  } | null
 }
 
 /**
@@ -73,14 +76,87 @@ export function systemEventDeliveryModesOf(rule: {
     return { activation: true, deactivation: true, schedule: null }
   }
   if (delivery.mode === 'summary') {
-    return { activation: false, deactivation: false, schedule: { schedule: delivery.schedule, grouping: delivery.split ?? 'rule' } }
+    return {
+      activation: false,
+      deactivation: false,
+      schedule: {
+        schedule: delivery.schedule,
+        grouping: delivery.split ?? 'rule',
+      },
+    }
   }
-  return { activation: delivery.onActivation, deactivation: delivery.onDeactivation, schedule: delivery.onSchedule ?? null }
+  return {
+    activation: delivery.onActivation,
+    deactivation: delivery.onDeactivation,
+    schedule: delivery.onSchedule ?? null,
+  }
 }
 
-/** Is this delivery the combined-moments shape the phone shows but does not edit? */
+/** Is this delivery the combined-moments shape (D1019) — the only one the editor writes? */
 export function isModesDelivery(delivery: NcSystemEventDelivery | undefined): delivery is NcModesDelivery {
   return delivery?.mode === 'modes'
+}
+
+/** The three moments a system-event rule can speak at (D1019). */
+export type NcDeliveryMoment = 'activation' | 'deactivation' | 'schedule'
+
+/** The scheduled summary of a delivery — its schedule and how it is grouped. */
+export type NcScheduledSummary = NonNullable<NcSystemEventDeliveryModes['schedule']>
+
+/** The stored `modes` shape for a set of moments — what the admin editor writes. */
+export function modesDeliveryOf(modes: NcSystemEventDeliveryModes): NcModesDelivery {
+  return {
+    mode: 'modes',
+    onActivation: modes.activation,
+    onDeactivation: modes.deactivation,
+    ...(modes.schedule !== null ? { onSchedule: modes.schedule } : {}),
+  }
+}
+
+/**
+ * The delivery with ONE moment switched on or off, whatever shape it was
+ * stored in (absent / `instant` / `summary` are read through
+ * {@link systemEventDeliveryModesOf}, and written back as `modes`).
+ *
+ * A switch that would leave every moment off is REFUSED: the same delivery
+ * comes back, because a rule that never speaks is the hub's `no-mode` refusal
+ * and a dead end for the operator. Switching the scheduled summary on starts
+ * it every day at 08:00, one message — the admin's default.
+ */
+export function withDeliveryMoment(
+  value: NcSystemEventDelivery | undefined,
+  moment: NcDeliveryMoment,
+  on: boolean,
+): NcSystemEventDelivery | undefined {
+  const modes = systemEventDeliveryModesOf({ systemEventDelivery: value })
+  const next: NcSystemEventDeliveryModes =
+    moment === 'schedule'
+      ? {
+          ...modes,
+          schedule: on
+            ? (modes.schedule ?? {
+                schedule: scheduleForSendTimes([NC_SUMMARY_DEFAULT_SEND_TIME]),
+                grouping: 'rule',
+              })
+            : null,
+        }
+      : {
+          ...modes,
+          [moment === 'activation' ? 'activation' : 'deactivation']: on,
+        }
+  if (!next.activation && !next.deactivation && next.schedule === null) return value
+  return modesDeliveryOf(next)
+}
+
+/** The delivery with a new scheduled summary (schedule and/or grouping); the other moments KEPT. */
+export function withScheduledSummary(
+  value: NcSystemEventDelivery | undefined,
+  schedule: NcScheduledSummary,
+): NcModesDelivery {
+  return modesDeliveryOf({
+    ...systemEventDeliveryModesOf({ systemEventDelivery: value }),
+    schedule,
+  })
 }
 
 /** A summary rule's delivery — the one variant that carries a schedule. */
@@ -90,7 +166,10 @@ const DAY_MINUTES = 1440
 const EVERY_DAY: readonly number[] = [0, 1, 2, 3, 4, 5, 6]
 
 /** A new send time: every day at 08:00 — the admin's default. */
-export const NC_SUMMARY_DEFAULT_SEND_TIME: NcSummarySendTime = { days: EVERY_DAY, minute: 8 * 60 }
+export const NC_SUMMARY_DEFAULT_SEND_TIME: NcSummarySendTime = {
+  days: EVERY_DAY,
+  minute: 8 * 60,
+}
 
 function sortedDays(days: readonly number[]): number[] {
   return [...days].sort((a, b) => a - b)
@@ -123,7 +202,10 @@ export function sendTimesOfSchedule(schedule: NcSchedule): readonly NcSummarySen
 
 /** The delivery a switch to Summary starts on: one send time, every day at 08:00. */
 export function defaultSummaryDelivery(): NcSummaryDelivery {
-  return { mode: 'summary', schedule: scheduleForSendTimes([NC_SUMMARY_DEFAULT_SEND_TIME]) }
+  return {
+    mode: 'summary',
+    schedule: scheduleForSendTimes([NC_SUMMARY_DEFAULT_SEND_TIME]),
+  }
 }
 
 /** Does this rule kind offer the Delivery control? The alarm stays instant; `mixed` is read-only. */
@@ -138,9 +220,18 @@ export interface NcDeliveryFormSlice {
   readonly systemEventDelivery?: NcSystemEventDelivery | undefined
 }
 
-/** Is this form a scheduled STATE SUMMARY? Absent and `instant` are the same answer. */
+/**
+ * Is this form a scheduled STATE SUMMARY — a rule that speaks ONLY on its
+ * schedule, with no message per event (the hub's `isScheduleOnlySystemRule`)?
+ * Absent and `instant` are the same answer, and so is a `modes` rule that
+ * also speaks when a condition starts or clears.
+ */
 export function isStateSummaryForm(form: NcDeliveryFormSlice): boolean {
-  return form.delivery === 'system-event' && form.systemEventDelivery?.mode === 'summary'
+  if (form.delivery !== 'system-event') return false
+  const modes = systemEventDeliveryModesOf({
+    systemEventDelivery: form.systemEventDelivery,
+  })
+  return modes.schedule !== null && !modes.activation && !modes.deactivation
 }
 
 /** The summary's schedule, or `null` for any rule that is not a summary system rule. */
@@ -156,9 +247,9 @@ export function summaryScheduleOf(rule: NcDeliveryFormSlice): NcSchedule | null 
  * survive the hub's merge and the save be refused as `not-a-system-rule`.
  * Absent stays absent: a rule authored before D647 round-trips without the key.
  */
-export function systemEventDeliveryForSave(
-  form: NcDeliveryFormSlice,
-): { readonly systemEventDelivery?: NcSystemEventDelivery } {
+export function systemEventDeliveryForSave(form: NcDeliveryFormSlice): {
+  readonly systemEventDelivery?: NcSystemEventDelivery
+} {
   const delivery = form.systemEventDelivery
   if (delivery === undefined) return {}
   if (form.delivery === 'system-event') return { systemEventDelivery: delivery }
@@ -212,7 +303,9 @@ export function summaryFormProblems(
   options: { readonly isAdmin?: boolean } = {},
 ): readonly NcSummaryFormProblem[] {
   const stored = form.systemEventDelivery
-  if (!isStateSummaryForm(form) || stored?.mode !== 'summary') return []
+  // The hub judges every non-instant delivery (`summary` and `modes`); an
+  // absent or `instant` one is never refused.
+  if (form.delivery !== 'system-event' || stored === undefined || stored.mode === 'instant') return []
   const { actions } = formToActions(form.actions)
   // The actions mirror IS the hub's shape now (hook bindings to shared
   // sequences), so the hub's own verdict judges them — 'actions-beside-summary'
@@ -248,7 +341,9 @@ export function hubKeepsSummaryDelivery(served: readonly NcTemplateVarDescriptor
  * A custom body that names none of the summary's content would send a summary
  * with nothing in it, so the hub appends `{{summaryText}}` to it.
  */
-export function summaryBodyWarning(form: Pick<NcRuleFormState, 'delivery' | 'systemEventDelivery' | 'templateBody'>): boolean {
+export function summaryBodyWarning(
+  form: Pick<NcRuleFormState, 'delivery' | 'systemEventDelivery' | 'templateBody'>,
+): boolean {
   return isStateSummaryForm(form) && !templateCarriesSummary(form.templateBody)
 }
 
@@ -279,8 +374,11 @@ export function withSummarySplit(value: NcSummaryDelivery, split: NcStateSummary
 export function summarySplitBodyWarning(
   form: Pick<NcRuleFormState, 'delivery' | 'systemEventDelivery' | 'templateBody'>,
 ): boolean {
-  const delivery = form.systemEventDelivery
-  if (!isStateSummaryForm(form) || delivery?.mode !== 'summary' || summarySplitOf(delivery) !== 'section') return false
+  if (!isStateSummaryForm(form)) return false
+  const summary = systemEventDeliveryModesOf({
+    systemEventDelivery: form.systemEventDelivery,
+  }).schedule
+  if (summary?.grouping !== 'section') return false
   const body = form.templateBody
   return body.trim().length > 0 && templateCarriesSummary(body) && !/\{\{\s*summaryText\s*\}\}/.test(body)
 }
@@ -300,7 +398,10 @@ export const NC_SUMMARY_SPLIT_KEYS: readonly string[] = [
 const LABEL = 'v2.nc.rules.summaryDelivery'
 
 /** The weekday word keys, in the editor's Monday-first order. */
-export const NC_SUMMARY_WEEKDAYS: readonly { readonly value: number; readonly labelKey: string }[] = [
+export const NC_SUMMARY_WEEKDAYS: readonly {
+  readonly value: number
+  readonly labelKey: string
+}[] = [
   { value: 1, labelKey: 'v2.nc.rules.editor.weekday.mon' },
   { value: 2, labelKey: 'v2.nc.rules.editor.weekday.tue' },
   { value: 3, labelKey: 'v2.nc.rules.editor.weekday.wed' },
@@ -368,7 +469,13 @@ export function summaryDeliveryLabel(schedule: NcSchedule, t: NcTranslate): stri
     else group.minutes.push(time.minute)
   }
   const when = groups
-    .map((g) => `${daysPhrase(g.days, t)} ${[...g.minutes].sort((a, b) => a - b).map(hhmmOfMinute).join(', ')}`)
+    .map(
+      (g) =>
+        `${daysPhrase(g.days, t)} ${[...g.minutes]
+          .sort((a, b) => a - b)
+          .map(hhmmOfMinute)
+          .join(', ')}`,
+    )
     .join('; ')
   return t(`${LABEL}.label`, { when })
 }
@@ -378,7 +485,9 @@ export function summaryDeliveryLabel(schedule: NcSchedule, t: NcTranslate): stri
 /** The part of a history row that says whether it is a state summary. */
 export interface NcHistoryRowSlice {
   readonly recordId: string
-  readonly subject: { readonly systemEvent?: { readonly data: Readonly<Record<string, unknown>> } }
+  readonly subject: {
+    readonly systemEvent?: { readonly data: Readonly<Record<string, unknown>> }
+  }
 }
 
 /**
@@ -389,4 +498,3 @@ export interface NcHistoryRowSlice {
 export function isStateSummaryHistoryRow(entry: NcHistoryRowSlice): boolean {
   return entry.subject.systemEvent?.data['stateSummary'] === true || entry.recordId.startsWith('state-summary:')
 }
-

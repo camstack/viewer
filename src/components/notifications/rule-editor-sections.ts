@@ -51,9 +51,8 @@ export const NC_VIEWER_SECTION_FIELDS: Readonly<
     'zoneScope',
     'identityScope',
     'labelScope',
-    'systemEventDelivery',
   ],
-  notification: ['priority', 'media', 'templateTitle', 'templateBody'],
+  notification: ['priority', 'media', 'templateTitle', 'templateBody', 'systemEventDelivery'],
   actions: ['actions'],
   advanced: ['cooldownSec', 'snoozeOptions', 'snoozeAllowGlobal', 'askVerdict', 'confirm'],
 }

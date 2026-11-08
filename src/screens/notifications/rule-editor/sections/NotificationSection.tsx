@@ -28,9 +28,11 @@ import { MediaPolicyFields } from './MediaPolicyFields.js'
 import {
   isStateSummaryForm,
   summaryBodyWarning,
+  summaryDeliveryOffered,
   summarySplitBodyWarning,
 } from '../../../../components/notifications/system-event-delivery.js'
 import { Hint } from './SectionHint.js'
+import { SystemEventDeliveryField } from './SystemEventDeliveryField.js'
 import type { RuleSectionProps } from './section-props.js'
 
 export function NotificationSection({ draft, patch, kind }: RuleSectionProps) {
@@ -66,6 +68,15 @@ export function NotificationSection({ draft, patch, kind }: RuleSectionProps) {
           last
         />
       </Section>
+
+      {/* When a system rule speaks: its start, its resolution, a scheduled
+          summary. Offered for the families that may summarise only. */}
+      {summaryDeliveryOffered(kind) ? (
+        <SystemEventDeliveryField
+          value={form.systemEventDelivery}
+          onChange={(next) => patch({ systemEventDelivery: next })}
+        />
+      ) : null}
 
       {/* A subject that freezes no frame gets no media controls: `formToInput`
           writes `image: 'none'` for it either way. */}
@@ -111,9 +122,21 @@ export function NotificationSection({ draft, patch, kind }: RuleSectionProps) {
           last={!summaryBodyWarning(form) && !summarySplitBodyWarning(form)}
           testID="rule-template-body"
         />
-        {summaryBodyWarning(form) ? <Hint text={t('v2.nc.rules.editor.systemDelivery.bodyWarning', { token: '{{summaryText}}' })} last /> : null}
+        {summaryBodyWarning(form) ? (
+          <Hint
+            text={t('v2.nc.rules.editor.systemDelivery.bodyWarning', {
+              token: '{{summaryText}}',
+            })}
+            last
+          />
+        ) : null}
         {summarySplitBodyWarning(form) ? (
-          <Hint text={t('v2.nc.rules.editor.systemDelivery.splitBodyWarning', { token: '{{summaryText}}' })} last />
+          <Hint
+            text={t('v2.nc.rules.editor.systemDelivery.splitBodyWarning', {
+              token: '{{summaryText}}',
+            })}
+            last
+          />
         ) : null}
         <TemplatePreview context={templateContext('body')} title={form.templateTitle} body={form.templateBody} />
       </Section>
