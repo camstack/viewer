@@ -30,6 +30,14 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.690',
+    date: '2026-11-08',
+    notes: {
+      en: ["Stoves now show the one-tap timed run in the camera's accessories."],
+      it: ['Le stufe mostrano ora l’avvio a tempo con un tocco negli accessori della camera.'],
+    },
+  },
+  {
     version: '1.0.689',
     date: '2026-11-07',
     notes: {

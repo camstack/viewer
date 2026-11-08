@@ -18,6 +18,7 @@ import {
   pickAccessoryControl,
 } from '../components/camera/accessory-controls/control-registry.js'
 import { stripParentName } from '../components/camera/strip-parent-name.js'
+import { hasTimedRun } from '../data/timed-run.js'
 import { useCameras } from '../data/use-cameras.js'
 import { useLinkedDevices, type LinkedPanelDevice } from '../data/use-linked-devices.js'
 import { EMPTY_ROLE_ICONS, useRoleIconDefaults } from '../data/use-role-display-defaults.js'
@@ -64,8 +65,11 @@ export interface AccessoryPanelState {
 /** Stable empty list so an unanswered server read does not churn the memo. */
 const NO_SERVER_DEVICES: readonly LinkedPanelDevice[] = Object.freeze([])
 
-/** The control registry's verdict, bound to the rule's device shape. */
+/** The control registry's verdict, bound to the rule's device shape. A device
+ *  that advertises `timed-run` is drawn whatever its type: its one-tap run is
+ *  the control. The panel filter and the add picker both ask this. */
 export function accessoryActuates(device: AccessoryPanelDevice): boolean {
+  if (hasTimedRun(device.features)) return true
   return isActuatingControlKind(
     pickAccessoryControl({ type: device.type, features: device.features }).kind,
   )
