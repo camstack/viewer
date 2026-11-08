@@ -13,7 +13,9 @@ import React from 'react'
 import { View, StyleSheet } from 'react-native'
 import { SPACING } from '../../../theme/tokens.js'
 import type { AccessoryDevice } from '../../../data/use-accessories.js'
-import { pickAccessoryControl, hasMotionTrigger, isActuatingControlKind } from './control-registry.js'
+import {
+  pickAccessoryControl, hasMotionTrigger, isActuatingControlKind, type AccessoryControlPick,
+} from './control-registry.js'
 import { useCanActuate } from '../../../hooks/use-user-scope.js'
 import { MotionTriggerToggle } from './MotionTriggerToggle.js'
 import { TimedRunControl } from './TimedRunControl.js'
@@ -36,8 +38,11 @@ export interface AccessoryControlComponentProps {
 
 /** Render the primary control for a pick. Returns null for `kind: 'none'` or a
  *  sensor pick missing its feature — the row may still show a motion chip. */
-function PrimaryControl({ device }: AccessoryControlComponentProps): React.ReactElement | null {
-  const pick = pickAccessoryControl(device)
+export function PrimaryControl({
+  device,
+  pick: given,
+}: AccessoryControlComponentProps & { readonly pick?: AccessoryControlPick }): React.ReactElement | null {
+  const pick = given ?? pickAccessoryControl(device)
   const common = { deviceId: device.id, online: device.online }
   switch (pick.kind) {
     case 'cover':

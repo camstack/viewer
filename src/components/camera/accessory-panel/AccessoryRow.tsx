@@ -50,8 +50,9 @@
 import React, { memo, useCallback, useState } from 'react'
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
+import { useRouter } from 'expo-router'
 
-import { ArrowDown, ArrowUp, Eye, EyeOff, Trash2 } from '../../../lib/icons.js'
+import { ArrowDown, ArrowUp, ChevronRight, Eye, EyeOff, Trash2 } from '../../../lib/icons.js'
 import { useTheme } from '../../../theme/theme-provider.js'
 import { SPACING } from '../../../theme/tokens.js'
 import { hapticTap } from '../../../lib/haptics.js'
@@ -59,6 +60,7 @@ import type { AccessoryPanelRow } from '../../../accessories/accessory-panel-row
 import { useTimelineScale } from '../theater/TimelineScaleProvider.js'
 import { AccessoryControl } from '../accessory-controls/AccessoryControl.js'
 import { CatalogIcon } from '../../CatalogIcon.js'
+import { deviceRoute } from '../../../remote/device-route.js'
 
 export interface AccessoryRowProps {
   readonly row: AccessoryPanelRow
@@ -116,6 +118,7 @@ export const AccessoryRow = memo(function AccessoryRow({
   const { t } = useTranslation()
   const { colors } = useTheme()
   const ui = useTimelineScale()
+  const router = useRouter()
   const muted = row.hidden || !row.device.online
   const accent = muted ? colors.foregroundSubtle : colors.primary
   const nameColor = row.hidden ? colors.foregroundSubtle : colors.foreground
@@ -173,6 +176,19 @@ export const AccessoryRow = memo(function AccessoryRow({
         <View style={styles.control}>
           <AccessoryControl device={row.device} />
         </View>
+        <Pressable
+          onPress={() => {
+            hapticTap()
+            router.push(deviceRoute(row.device.id, row.label, row.device.type))
+          }}
+          hitSlop={6}
+          accessibilityRole="button"
+          accessibilityLabel={t('v2.deviceDetail.openFor', vars)}
+          testID={`accessory-detail-${row.device.id}`}
+          style={styles.detailButton}
+        >
+          <ChevronRight size={18} color={colors.foregroundSubtle} />
+        </Pressable>
       </View>
     )
   }
@@ -296,6 +312,7 @@ const styles = StyleSheet.create({
   name: { fontSize: 14, fontWeight: '500' },
   caption: { fontSize: 11 },
   control: { flexShrink: 0 },
+  detailButton: { width: 30, height: 30, alignItems: 'center', justifyContent: 'center' },
   editActions: { flexDirection: 'row', alignItems: 'center', gap: SPACING.xs, flexShrink: 0 },
   editButton: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
 })

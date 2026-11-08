@@ -4380,6 +4380,45 @@
         "action-failed": "The command could not be sent.",
         "unreachable": "The hub did not answer. Try again."
       }
+    },
+    "deviceDetail": {
+      "open": "Device details",
+      "openFor": "Details of {{device}}",
+      "offline": "Offline",
+      "online": "Online",
+      "battery": "Battery {{level}}%",
+      "charging": "Charging",
+      "link": "Signal {{signal}}%",
+      "linkWired": "Wired",
+      "power": "{{watts}} W",
+      "runningFor": "Running for {{duration}}",
+      "idleFor": "Idle for {{duration}}",
+      "running": "Running",
+      "idle": "Idle",
+      "stateUnknown": "State unknown",
+      "contactOpen": "Open for {{duration}}",
+      "contactClosed": "Closed for {{duration}}",
+      "contactOpenNow": "Open",
+      "contactClosedNow": "Closed",
+      "consumables": "Consumables",
+      "consumableLow": "Running low",
+      "consumableEmpty": "Empty",
+      "consumableReplace": "Replace",
+      "sections": {
+        "readings": "Readings",
+        "secondary": "Options",
+        "timer": "Timer",
+        "consumables": "Consumables"
+      },
+      "noAccess": "This account cannot control this device.",
+      "unavailable": "This device could not be read.",
+      "reading": {
+        "temperature-sensor": "Temperature",
+        "humidity-sensor": "Humidity",
+        "ambient-light-sensor": "Light",
+        "numeric-sensor": "Value",
+        "enum-sensor": "State"
+      }
     }
   },
   "prototype": {

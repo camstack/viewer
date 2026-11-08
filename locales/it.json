@@ -4377,6 +4377,45 @@
         "action-failed": "Impossibile inviare il comando.",
         "unreachable": "L'hub non ha risposto. Riprova."
       }
+    },
+    "deviceDetail": {
+      "open": "Dettagli dispositivo",
+      "openFor": "Dettagli di {{device}}",
+      "offline": "Offline",
+      "online": "Online",
+      "battery": "Batteria {{level}}%",
+      "charging": "In carica",
+      "link": "Segnale {{signal}}%",
+      "linkWired": "Cablato",
+      "power": "{{watts}} W",
+      "runningFor": "In funzione da {{duration}}",
+      "idleFor": "Ferma da {{duration}}",
+      "running": "In funzione",
+      "idle": "Ferma",
+      "stateUnknown": "Stato sconosciuto",
+      "contactOpen": "Aperta da {{duration}}",
+      "contactClosed": "Chiusa da {{duration}}",
+      "contactOpenNow": "Aperta",
+      "contactClosedNow": "Chiusa",
+      "consumables": "Consumabili",
+      "consumableLow": "In esaurimento",
+      "consumableEmpty": "Esaurito",
+      "consumableReplace": "Da sostituire",
+      "sections": {
+        "readings": "Letture",
+        "secondary": "Opzioni",
+        "timer": "Timer",
+        "consumables": "Consumabili"
+      },
+      "noAccess": "Questo account non può controllare il dispositivo.",
+      "unavailable": "Impossibile leggere il dispositivo.",
+      "reading": {
+        "temperature-sensor": "Temperatura",
+        "humidity-sensor": "Umidità",
+        "ambient-light-sensor": "Luce",
+        "numeric-sensor": "Valore",
+        "enum-sensor": "Stato"
+      }
     }
   },
   "prototype": {

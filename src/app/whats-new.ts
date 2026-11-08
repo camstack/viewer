@@ -30,6 +30,22 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.692',
+    date: '2026-11-08',
+    notes: {
+      en: [
+        'Device details: tap the arrow on a device row for its status, readings, consumables and timer.',
+        'The full-screen remote no longer sits under the notch or the home indicator.',
+        'Removed the "assumed" label from the TV row.',
+      ],
+      it: [
+        'Dettagli dispositivo: tocca la freccia sulla riga per stato, letture, consumabili e timer.',
+        'Il telecomando a schermo intero non finisce più sotto il notch o l’indicatore home.',
+        'Rimossa l’etichetta «presunto» dalla riga della TV.',
+      ],
+    },
+  },
+  {
     version: '1.0.691',
     date: '2026-11-08',
     notes: {
