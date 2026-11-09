@@ -1,57 +1,39 @@
 /**
- * A hero row keeps the shortcut cluster of the types whose legacy row drew one
- * (a cover's up / stop / down): the hub's row model carries ONE contextual
- * control, which replaced the three icon buttons.
+ * Which devices keep their legacy inline control on a hero row. Every kind with
+ * an interactive control does; read-only kinds draw the hub's model; and any
+ * device with motion-trigger or timed-run keeps the control that carries them.
  */
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { heroRowKeepsShortcuts } from '../control-registry.js'
+import { MOTION_TRIGGER_FEATURE } from '../control-registry.js'
 
 const keeps = (type: string, features: readonly string[] = []): boolean =>
   heroRowKeepsShortcuts({ type, features })
 
 describe('heroRowKeepsShortcuts, per device kind', () => {
   it.each([
-    ['cover', []],
-    ['valve', []],
-    ['light', ['brightness']],
-    ['fan', []],
-    ['lock', []],
-    ['alarm-panel', []],
-    ['climate', []],
-    ['media-player', []],
-    ['vacuum', []],
-    ['lawn-mower', []],
-    ['pet-feeder', []],
-    ['humidifier', []],
-    ['water-heater', []],
-  ])('%s keeps its legacy inline control on a hero row', (type, features) => {
+    ['cover', []], ['valve', []], ['light', ['brightness']], ['light', []], ['switch', []], ['siren', []],
+    ['fan', []], ['lock', []], ['alarm-panel', []], ['climate', []], ['media-player', []],
+    ['vacuum', []], ['lawn-mower', []], ['pet-feeder', []], ['humidifier', []], ['water-heater', []],
+    ['button', []],
+  ])('%s keeps its legacy inline control', (type, features) => {
     expect(keeps(type, features)).toBe(true)
   })
 
-  it.each([
-    ['switch', []],
-    ['siren', []],
-    ['light', []],
-    ['button', []],
-    ['camera', []],
-  ])('%s keeps the hero primary control', (type, features) => {
-    expect(keeps(type, features)).toBe(false)
+  it.each([['camera'], ['hub'], ['container']])('%s (no control) draws the hub model', (type) => {
+    expect(keeps(type)).toBe(false)
+  })
+
+  it('a read-only sensor draws the hub model', () => {
+    expect(keeps('sensor', ['temperature-sensor'])).toBe(false)
   })
 })
 
-describe('the hero row draws the shortcuts instead of the model primary', () => {
-  const root = join(process.cwd(), 'src')
-  const body = readFileSync(join(root, 'hero', 'HeroRowBody.tsx'), 'utf8')
-  const row = readFileSync(join(root, 'components', 'camera', 'accessory-panel', 'AccessoryRow.tsx'), 'utf8')
-
-  it('HeroRowBody tests the shortcuts before model.primary', () => {
-    expect(body.indexOf('shortcuts !== null')).toBeGreaterThan(-1)
-    expect(body.indexOf('shortcuts !== null')).toBeLessThan(body.indexOf('model.primary !== null'))
+describe('extra features keep the row control for every kind', () => {
+  it.each(['switch', 'siren', 'camera', 'sensor', 'hub'])('%s with timed-run', (type) => {
+    expect(keeps(type, ['timed-run'])).toBe(true)
   })
-
-  it('AccessoryRow hands the registry control to the hero row for those kinds', () => {
-    expect(row).toContain('shortcuts={heroRowKeepsShortcuts(row.device) ?')
+  it.each(['switch', 'camera', 'sensor'])('%s with motion-trigger', (type) => {
+    expect(keeps(type, [MOTION_TRIGGER_FEATURE])).toBe(true)
   })
 })

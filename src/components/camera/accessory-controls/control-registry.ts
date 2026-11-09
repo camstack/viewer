@@ -34,6 +34,7 @@
  */
 
 import { DeviceType } from '@camstack/types/client'
+import { TIMED_RUN_FEATURE } from '../../../data/timed-run.js'
 
 /** Identifier of the control kind a row should render. `'none'` = no control. */
 export type AccessoryControlKind =
@@ -263,19 +264,22 @@ export function pickAccessoryControl(device: AccessoryControlInput): AccessoryCo
 }
 
 /**
- * Control kinds whose legacy inline control is a cluster, picker or multi-state
- * control that the hub's single row-model control (`model.primary`) cannot
- * express. A hero row keeps the registry control for them. Not listed, so the
- * model's primary is equivalent: `switch` and `button` (one pill) and the
- * read-only kinds (`sensor`, `update`, `weather`, `image`, `input`,
- * `event-emitter`, `none`), whose value the status line already carries.
- * Pure: same input, same output.
+ * Kinds whose legacy inline control is READ-ONLY (a value, a picture, the last
+ * event): the hub's row model (status line, trailing fact) says the same thing,
+ * so a hero row draws the model. Every other kind had an interactive control
+ * and keeps it.
  */
-const HERO_ROW_SHORTCUT_KINDS: ReadonlySet<AccessoryControlKind> = new Set<AccessoryControlKind>([
-  'cover', 'valve', 'brightness', 'fan', 'lock', 'alarm', 'climate', 'media-player',
-  'vacuum', 'lawn-mower', 'pet-feeder', 'humidifier', 'water-heater',
+const HERO_ROW_READ_ONLY_KINDS: ReadonlySet<AccessoryControlKind> = new Set<AccessoryControlKind>([
+  'none', 'sensor', 'weather', 'image', 'event-emitter',
 ])
 
+/**
+ * Does a hero row keep the registry control of this device? True for every kind
+ * with an interactive control, and for ANY device that advertises motion-trigger
+ * or timed-run (their toggle / quick-run pill sit in the row whatever the kind).
+ * Pure: same input, same output.
+ */
 export function heroRowKeepsShortcuts(device: AccessoryControlInput): boolean {
-  return HERO_ROW_SHORTCUT_KINDS.has(pickAccessoryControl(device).kind)
+  if (hasMotionTrigger(device.features) || device.features.includes(TIMED_RUN_FEATURE)) return true
+  return !HERO_ROW_READ_ONLY_KINDS.has(pickAccessoryControl(device).kind)
 }
