@@ -30,6 +30,14 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.695',
+    date: '2026-11-09',
+    notes: {
+      en: ['Device rows show their quick controls again (shutters, lights, media, vacuums and more).'],
+      it: ['Le righe dei dispositivi mostrano di nuovo i comandi rapidi (tapparelle, luci, media, robot e altro).'],
+    },
+  },
+  {
     version: '1.0.694',
     date: '2026-11-08',
     notes: {
