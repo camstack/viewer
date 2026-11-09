@@ -60,6 +60,7 @@ import type { AccessoryPanelRow } from '../../../accessories/accessory-panel-row
 import { useTimelineScale } from '../theater/TimelineScaleProvider.js'
 import { AccessoryControl } from '../accessory-controls/AccessoryControl.js'
 import { CatalogIcon } from '../../CatalogIcon.js'
+import { heroRowKeepsShortcuts } from '../accessory-controls/control-registry.js'
 import { HeroRowBody } from '../../../hero/HeroRowBody.js'
 import type { HeroRowModel } from '@camstack/types'
 import { deviceRoute } from '../../../remote/device-route.js'
@@ -199,6 +200,7 @@ export const AccessoryRow = memo(function AccessoryRow({
         customIcon={customIcon}
         caption={captionText}
         fallbackControl={<AccessoryControl device={row.device} />}
+        shortcuts={heroRowKeepsShortcuts(row.device) ? <AccessoryControl device={row.device} /> : null}
         openLabel={t('v2.deviceDetail.openFor', vars)}
         onOpen={openDetail}
       />

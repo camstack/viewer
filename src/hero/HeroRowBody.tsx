@@ -43,11 +43,16 @@ export interface HeroRowBodyProps {
    * it goes away as each cap gains a hero contribution.
    */
   readonly fallbackControl?: React.ReactNode
+  /**
+   * A shortcut cluster (a cover's up / stop / down) drawn in the control zone
+   * INSTEAD of the model's single primary control, which cannot express it.
+   */
+  readonly shortcuts?: React.ReactNode
   readonly onOpen: () => void
   readonly openLabel: string
 }
 
-export function HeroRowBody({ deviceId, name, online, model, customIcon = null, caption = null, fallbackControl = null, onOpen, openLabel }: HeroRowBodyProps): React.JSX.Element {
+export function HeroRowBody({ deviceId, name, online, model, customIcon = null, caption = null, fallbackControl = null, shortcuts = null, onOpen, openLabel }: HeroRowBodyProps): React.JSX.Element {
   const { i18n } = useTranslation()
   const { colors } = useTheme()
   const { width } = useWindowDimensions()
@@ -79,7 +84,11 @@ export function HeroRowBody({ deviceId, name, online, model, customIcon = null, 
           </Text>
         ) : null}
       </View>
-      {model.primary !== null ? (
+      {shortcuts !== null ? (
+        <View style={styles.control} testID={`hero-row-shortcuts-${deviceId}`}>
+          {shortcuts}
+        </View>
+      ) : model.primary !== null ? (
         <View style={styles.control}>
           <HeroControlView control={model.primary} locale={locale} caller={caller} online={online} />
         </View>

@@ -261,3 +261,15 @@ export function pickAccessoryControl(device: AccessoryControlInput): AccessoryCo
   }
   return { kind: base }
 }
+
+/**
+ * Control kinds whose inline control is a SHORTCUT CLUSTER of icon buttons
+ * (a cover or valve: up / stop / down). The hub's row model offers one
+ * contextual control for these, which would replace the cluster, so a hero row
+ * keeps the registry control for them. Pure: same input, same output.
+ */
+const HERO_ROW_SHORTCUT_KINDS: ReadonlySet<AccessoryControlKind> = new Set<AccessoryControlKind>(['cover', 'valve'])
+
+export function heroRowKeepsShortcuts(device: AccessoryControlInput): boolean {
+  return HERO_ROW_SHORTCUT_KINDS.has(pickAccessoryControl(device).kind)
+}
