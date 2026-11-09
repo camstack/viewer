@@ -15,19 +15,25 @@ describe('heroRowKeepsShortcuts, per device kind', () => {
   it.each([
     ['cover', []],
     ['valve', []],
-  ])('%s keeps its icon-button cluster on a hero row', (type, features) => {
+    ['light', ['brightness']],
+    ['fan', []],
+    ['lock', []],
+    ['alarm-panel', []],
+    ['climate', []],
+    ['media-player', []],
+    ['vacuum', []],
+    ['lawn-mower', []],
+    ['pet-feeder', []],
+    ['humidifier', []],
+    ['water-heater', []],
+  ])('%s keeps its legacy inline control on a hero row', (type, features) => {
     expect(keeps(type, features)).toBe(true)
   })
 
   it.each([
     ['switch', []],
+    ['siren', []],
     ['light', []],
-    ['light', ['brightness']],
-    ['lock', []],
-    ['climate', []],
-    ['fan', []],
-    ['media-player', []],
-    ['alarm-panel', []],
     ['button', []],
     ['camera', []],
   ])('%s keeps the hero primary control', (type, features) => {
