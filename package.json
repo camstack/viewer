@@ -142,6 +142,7 @@
     "react-native-webview": "13.16.1",
     "react-native-worklets": "0.10.1",
     "readable-stream": "^4.7.0",
+    "simple-icons": "16.36.0",
     "socket.io-client": "^4.8.3",
     "superjson": "^2.2.6",
     "zod": "^4.4.3",

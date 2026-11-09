@@ -10,6 +10,7 @@
  */
 
 import { remoteRoleIcon, remoteRoleLabel, remoteRoleLegend, type VocabLocale } from '@camstack/types/client'
+import { resolveAppBrand, type AppBrand } from './app-brand-icons.js'
 
 export interface RemoteLayoutButton {
   readonly id: string
@@ -214,12 +215,28 @@ export function vocabLocale(language: string | undefined): VocabLocale {
 /** A key's name: its own label, else the shared vocabulary's name for its role in `locale`. */
 export function keyName(button: RemoteLayoutButton, locale: VocabLocale): string {
   if (isSourceSelect(button)) return button.label ?? sourceKeyFallbackLabel(locale)
-  return button.label ?? remoteRoleLabel(button.role, locale)
+  return button.label ?? resolveAppBrand(button.icon)?.label ?? remoteRoleLabel(button.role, locale)
 }
 
 /** A key's glyph: the layout's own icon, else the vocabulary's (a custom or unknown role wears the circle). */
 export function keyIcon(button: RemoteLayoutButton): string {
   return button.icon ?? remoteRoleIcon(button.role)
+}
+
+/** The app brand a key's `app:<key>` icon names, or undefined (not an app key, or a brand the registry lacks). */
+export function keyBrand(button: RemoteLayoutButton): AppBrand | undefined {
+  return resolveAppBrand(button.icon)
+}
+
+/**
+ * The catalog glyph a key draws, or undefined when it draws none: an app key
+ * draws its brand mark, and a custom key that has a name but no icon of its own
+ * prints that name alone rather than a generic circle.
+ */
+export function keyGlyph(button: RemoteLayoutButton): string | undefined {
+  if (keyBrand(button) !== undefined) return undefined
+  if (button.icon === undefined && button.label !== undefined && button.role.startsWith('custom:')) return undefined
+  return keyIcon(button)
 }
 
 /** Text printed on a key instead of a glyph (a digit), or `undefined`. */

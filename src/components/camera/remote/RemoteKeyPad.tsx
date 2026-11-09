@@ -8,6 +8,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Pressable, StyleSheet, Text, View, type DimensionValue } from 'react-native'
 import { useTranslation } from 'react-i18next'
+import Svg, { Path } from 'react-native-svg'
 import { Tv } from '../../../lib/icons.js'
 import { CatalogIcon } from '../../CatalogIcon.js'
 import { hapticTap } from '../../../lib/haptics.js'
@@ -20,7 +21,8 @@ import {
   isSourceSelect,
   sourceKeyVisible,
   isDividerFrame,
-  keyIcon,
+  keyBrand,
+  keyGlyph,
   keyLegend,
   keyName,
   vocabLocale,
@@ -32,6 +34,7 @@ import {
   type RemoteLayoutGroup,
   type RemoteSource,
 } from './remote-layout.js'
+import type { AppBrand } from './app-brand-icons.js'
 import { SourcePickerSheet } from './SourcePickerSheet.js'
 
 /** Height of one full grid row, pt. */
@@ -234,12 +237,26 @@ function SourceSelectKey({ layout, button, sources, current, onSelect }: SourceK
   )
 }
 
+/** An app brand's mark in the key's foreground; a lettermark brand prints its letters. */
+function BrandMark({ brand, color }: { readonly brand: AppBrand; readonly color: string }): React.JSX.Element {
+  if (brand.mark.kind === 'lettermark') {
+    return <Text style={[styles.keyText, { color }]}>{brand.mark.text}</Text>
+  }
+  return (
+    <Svg width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24" fill={color}>
+      <Path d={brand.mark.path} />
+    </Svg>
+  )
+}
+
 function Key({ layout, button, bound, commandName, onPress }: KeyProps): React.JSX.Element {
   const { colors } = useTheme()
   const { i18n } = useTranslation()
   const look = keyLook(button.tone, bound, colors)
   const name = keyName(button, vocabLocale(i18n.language))
   const legend = keyLegend(button)
+  const brand = keyBrand(button)
+  const glyph = keyGlyph(button)
   const colourKey = button.tone === undefined ? colourKeyOf(button, commandName) : null
   const repeatable = isRepeatableRole(button.role)
   const repeater = useMemo(
@@ -286,12 +303,14 @@ function Key({ layout, button, bound, commandName, onPress }: KeyProps): React.J
           </Text>
         ) : (
           <>
-          {legend === undefined ? (
-            <CatalogIcon iconKey={keyIcon(button)} size={ICON_SIZE} color={look.foreground} />
-          ) : (
+          {brand !== undefined ? (
+            <BrandMark brand={brand} color={look.foreground} />
+          ) : legend !== undefined ? (
             <Text numberOfLines={1} style={[styles.keyText, { color: look.foreground }]}>
               {legend}
             </Text>
+          ) : glyph === undefined ? null : (
+            <CatalogIcon iconKey={glyph} size={ICON_SIZE} color={look.foreground} />
           )}
           {button.label !== undefined && button.label !== legend ? (
             <Text numberOfLines={1} style={[styles.keyText, { color: look.foreground }]}>

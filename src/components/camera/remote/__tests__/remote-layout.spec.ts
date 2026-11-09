@@ -6,6 +6,8 @@ import {
   sourceSections,
   type RemoteLayoutButton,
   colourKeyOf,
+  keyBrand,
+  keyGlyph,
   keyIcon,
   keyLegend,
   keyName,
@@ -193,5 +195,28 @@ describe('remote sources', () => {
     expect(keyName(SRC_KEY, 'en')).toBe('Sources')
     expect(keyName(SRC_KEY, 'it')).toBe('Sorgenti')
     expect(keyName({ ...SRC_KEY, label: 'Input' }, 'en')).toBe('Input')
+  })
+})
+
+describe('app brand keys and unnamed-icon keys (#477)', () => {
+  const netflix = { ...button('n', 'custom:app_netflix', 0, 0), icon: 'app:netflix' }
+  it('an app: icon resolves to its brand, named for the screen reader', () => {
+    expect(keyBrand(netflix)?.key).toBe('netflix')
+    expect(keyName(netflix, 'it')).toBe('Netflix')
+    expect(keyGlyph(netflix)).toBeUndefined()
+  })
+  it('a brand outside the registry resolves to nothing', () => {
+    expect(keyBrand({ ...netflix, icon: 'app:unknown-brand' })).toBeUndefined()
+    expect(keyBrand(button('p', 'power', 0, 0))).toBeUndefined()
+  })
+  it('a lettermark brand is still a brand', () => {
+    expect(keyBrand({ ...netflix, icon: 'app:primevideo' })?.mark.kind).toBe('lettermark')
+  })
+  it('a named custom key with no icon draws no glyph, only its legend', () => {
+    expect(keyGlyph({ ...button('t', 'custom:ttx_mix', 0, 0), label: 'TTX/MIX' })).toBeUndefined()
+  })
+  it('a custom key with an icon of its own, and a known role, keep their glyph', () => {
+    expect(keyGlyph({ ...button('t', 'custom:settings', 0, 0), label: 'Settings', icon: 'settings' })).toBe('settings')
+    expect(keyGlyph(button('p', 'power', 0, 0))).toBe(keyIcon(button('p', 'power', 0, 0)))
   })
 })
