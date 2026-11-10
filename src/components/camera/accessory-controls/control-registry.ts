@@ -215,6 +215,8 @@ const CONTROL_BY_DEVICE_TYPE = {
   // Its pump is the `pet-fountain` cap (setPump), not the `switch` cap the
   // switch control drives; no viewer row for it yet.
   [DeviceType.PetFountain]: 'none',
+  // A heat pump is a container: Circuit N and Hot water are the controls.
+  [DeviceType.HeatPump]: 'none',
 } as const satisfies Record<DeviceType, AccessoryControlKind>
 
 /** Appliance types whose on/off is the plain `switch` cap they bind. */

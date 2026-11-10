@@ -43,6 +43,7 @@ const rowModel = (primary: HeroControl | null, over: Partial<HeroRowModel> = {})
   scene: { id: 'tv', mode: null, level: null },
   statusLine: [{ en: 'On', it: 'Acceso' }],
   primary,
+  timedRun: null,
   trailing: null,
   ...over,
 })

@@ -2287,7 +2287,8 @@
         "dryer": "Dryer",
         "heater": "Heater",
         "gateway": "Gateway",
-        "pet-fountain": "Pet fountain"
+        "pet-fountain": "Pet fountain",
+        "heat-pump": "Heat pump"
       },
       "prune": {
         "device": "Disabled on {{date}}: its last device (#{{id}}) was deleted.",

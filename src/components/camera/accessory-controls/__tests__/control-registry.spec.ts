@@ -110,6 +110,8 @@ describe('DeviceType parity', () => {
   const STRUCTURAL: readonly string[] = [
     'camera', 'hub', 'generic', 'container', 'notifier', 'script',
     'automation', 'gateway',
+    // A heat pump is a container: its circuits and hot water are the controls.
+    'heat-pump',
   ]
   // Controllable, but the viewer has no row for it yet (its page is the hub's).
   const NO_VIEWER_CONTROL_YET: readonly string[] = ['dishwasher', 'washer', 'dryer', 'heater', 'pet-fountain']

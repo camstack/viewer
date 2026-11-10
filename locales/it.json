@@ -2284,7 +2284,8 @@
         "dryer": "Asciugatrice",
         "heater": "Riscaldatore",
         "gateway": "Gateway",
-        "pet-fountain": "Fontana per animali"
+        "pet-fountain": "Fontana per animali",
+        "heat-pump": "Pompa di calore"
       },
       "prune": {
         "device": "Disattivata il {{date}}: il suo ultimo dispositivo (#{{id}}) è stato eliminato.",

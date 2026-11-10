@@ -30,6 +30,20 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.696',
+    date: '2026-11-10',
+    notes: {
+      en: [
+        'A heat pump shows its own name, not one of its circuits.',
+        'Heat pumps can be picked as a device type in notification rules.',
+      ],
+      it: [
+        'Una pompa di calore mostra il suo nome, non quello di un circuito.',
+        'Le pompe di calore si possono scegliere come tipo nelle regole di notifica.',
+      ],
+    },
+  },
+  {
     version: '1.0.695',
     date: '2026-11-09',
     notes: {

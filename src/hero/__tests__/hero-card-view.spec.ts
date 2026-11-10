@@ -15,6 +15,7 @@ const tv = (over: Partial<HeroModel> = {}): HeroModel => ({
   title: { en: 'On', it: 'Acceso' },
   badges: [], remote: { commands: 12 }, consumables: null, consumption: null,
   ownPower: { source: 'media-player', on: true, assumed: true, turnOn: action('turnOn'), turnOff: action('turnOff') },
+  historyLabel: { en: 'History', it: 'Storico' },
   timedRun: null, powerSupply: null, rows: [], gated: [], provenance: [],
   ...over,
 })

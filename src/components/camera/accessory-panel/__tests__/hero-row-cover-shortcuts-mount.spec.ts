@@ -42,6 +42,7 @@ const model = (type: string): HeroRowModel => ({
   scene: { id: 'cover', mode: null, level: null },
   statusLine: [{ en: 'Status', it: 'Status' }],
   primary: modelPill,
+  timedRun: null,
   trailing: null,
 })
 
