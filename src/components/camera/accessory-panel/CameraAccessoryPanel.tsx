@@ -19,6 +19,9 @@
  *    Server-linked devices keep following the hub; local additions are
  *    independent; customisations apply to both. Nothing writes the hub's
  *    link set.
+ *  - **Power source**, between the two: one row, only when the camera has a
+ *    power source linked — the switch's state and power on / power off /
+ *    restart, for whoever can reach the camera (`PowerSourceRow`).
  *  - **Camera functions** (D62): the live `CameraSwitchGroup` for an admin —
  *    it is `admin`-gated by design and this host does not touch that gate —
  *    and, for a non-admin, the `SwitchedOffBadge` that used to sit on the
@@ -38,6 +41,7 @@ import { useSwitchedOffMap } from '../../../data/use-camera-switches.js'
 import { CameraSwitchGroup } from '../CameraSwitchGroup.js'
 import { SwitchedOffBadge } from '../SwitchedOffBadge.js'
 import { AccessoryDeviceList } from './AccessoryDeviceList.js'
+import { PowerSourceRow } from './PowerSourceRow.js'
 
 export interface CameraAccessoryPanelProps {
   readonly deviceId: number
@@ -86,6 +90,8 @@ export function CameraAccessoryPanel({ deviceId, cameraName, onClose }: CameraAc
         </Pressable>
       </View>
       <AccessoryDeviceList deviceId={deviceId} cameraName={cameraName} editing={editing} onClose={onClose} />
+
+      <PowerSourceRow deviceId={deviceId} />
 
       {isAdmin ? (
         <CameraSwitchGroup deviceId={deviceId} />

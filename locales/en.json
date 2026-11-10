@@ -4420,6 +4420,32 @@
       "stepDown": "Decrease {{name}}",
       "stepUp": "Increase {{name}}",
       "confirmOffWhileRunning": "The device is running. Turn it off anyway?"
+    },
+    "powerSource": {
+      "label": "Power · {{state}}",
+      "state": {
+        "on": "on",
+        "off": "off",
+        "unknown": "unknown",
+        "restarting": "restarting"
+      },
+      "powerOn": "Power on",
+      "powerOff": "Power off",
+      "restart": "Restart",
+      "restartTitle": "Restart this device?",
+      "restartMessage": "Its power is cut for a few seconds and then restored. A live view drops while it restarts.",
+      "accepted": "Done.",
+      "failed": "Could not reach the hub. Try again.",
+      "unreadable": "The power source could not be read.",
+      "refused": {
+        "switchOffline": "The power switch is offline.",
+        "switchUnknown": "The power switch has not reported its state yet.",
+        "switchMissing": "The linked power switch cannot be found.",
+        "restartInProgress": "A restart is already running.",
+        "switchCallFailed": "The power switch did not answer.",
+        "noPowerSource": "No power source is linked.",
+        "generic": "The request was refused."
+      }
     }
   },
   "prototype": {

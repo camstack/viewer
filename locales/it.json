@@ -4417,6 +4417,32 @@
       "stepDown": "Diminuisci {{name}}",
       "stepUp": "Aumenta {{name}}",
       "confirmOffWhileRunning": "Il dispositivo è in funzione. Spegnerlo comunque?"
+    },
+    "powerSource": {
+      "label": "Alimentazione · {{state}}",
+      "state": {
+        "on": "accesa",
+        "off": "spenta",
+        "unknown": "sconosciuta",
+        "restarting": "riavvio in corso"
+      },
+      "powerOn": "Accendi",
+      "powerOff": "Spegni",
+      "restart": "Riavvia",
+      "restartTitle": "Riavviare questo dispositivo?",
+      "restartMessage": "L'alimentazione viene tolta per qualche secondo e poi ripristinata. La diretta si interrompe durante il riavvio.",
+      "accepted": "Fatto.",
+      "failed": "Impossibile raggiungere l'hub. Riprova.",
+      "unreadable": "Impossibile leggere la sorgente di alimentazione.",
+      "refused": {
+        "switchOffline": "L'interruttore è offline.",
+        "switchUnknown": "L'interruttore non ha ancora riportato il suo stato.",
+        "switchMissing": "L'interruttore collegato non si trova.",
+        "restartInProgress": "Un riavvio è già in corso.",
+        "switchCallFailed": "L'interruttore non ha risposto.",
+        "noPowerSource": "Nessuna sorgente di alimentazione collegata.",
+        "generic": "La richiesta è stata rifiutata."
+      }
     }
   },
   "prototype": {
