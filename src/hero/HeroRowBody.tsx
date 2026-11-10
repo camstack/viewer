@@ -18,6 +18,8 @@ import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-na
 import { useTranslation } from 'react-i18next'
 import type { HeroRowModel } from '@camstack/types'
 import { CatalogIcon } from '../components/CatalogIcon.js'
+import { OfflineBadge } from '../components/device/OfflineBadge.js'
+import { isDeviceOffline } from '../components/device/device-reachability.js'
 import { hapticTap } from '../lib/haptics.js'
 import { ChevronRight } from '../lib/icons.js'
 import { useTheme } from '../theme/theme-provider.js'
@@ -68,6 +70,7 @@ export function HeroRowBody({ deviceId, name, online, model, customIcon = null, 
   const caller = useHeroCaller(deviceId)
   const locale = heroLocale(i18n.language)
   const view = rowView(model, locale)
+  const offline = isDeviceOffline(online)
   const showFact = view.trailing !== null && width >= ROW_FACT_MIN_WIDTH
   return (
     <View style={[styles.row, { borderBottomColor: colors.borderSubtle }]} testID={`hero-row-${deviceId}`}>
@@ -78,6 +81,9 @@ export function HeroRowBody({ deviceId, name, online, model, customIcon = null, 
         testID={`hero-row-scene-${deviceId}`}
       />
       <View style={styles.label} accessibilityLabel={name}>
+        {/* The row carries no status line; offline is the one state it names, so a
+            device the hub cannot reach never reads as a switched-off one. */}
+        {offline ? <OfflineBadge online={online} testID={`device-offline-${deviceId}`} /> : null}
         {caption !== null && caption !== '' ? (
           <Text testID={`hero-row-caption-${deviceId}`} style={[styles.caption, { color: colors.foregroundSubtle }]} numberOfLines={1}>
             {caption}

@@ -43,6 +43,7 @@ import { ContactStateLine, RunningStateLine } from '../components/device-detail/
 import { ConsumablesList } from '../components/device-detail/ConsumablesList.js'
 import { isGatedEntry, noAccessSlot, resolveDeviceSlots, type DeviceSlot, type SlotEntry } from './device-detail/device-slots.js'
 import { HeroCard } from '../hero/HeroCard.js'
+import { OfflineBadge } from '../components/device/OfflineBadge.js'
 import { heroCardView, slotsUnderHero } from '../hero/hero-card-view.js'
 import { heroLocale } from '../hero/hero-view.js'
 import { useHeroModel } from '../hero/use-hero.js'
@@ -202,6 +203,7 @@ export function DeviceDetailScreen({ deviceId, deviceName, deviceType }: DeviceD
     const lockedAt = canActuate ? null : noAccessSlot(slots)
     overview = (
       <>
+        <OfflineBadge online={device?.online} testID="device-offline-badge" />
         {hero !== null ? <HeroCard model={hero} deviceName={name} online={online} /> : null}
         {slots.map((slot) => (
           <SlotView key={slot.slot} slot={slot} ctx={ctx} showNoAccess={slot.slot === lockedAt} />

@@ -60,6 +60,8 @@ import type { AccessoryPanelRow } from '../../../accessories/accessory-panel-row
 import { useTimelineScale } from '../theater/TimelineScaleProvider.js'
 import { AccessoryControl } from '../accessory-controls/AccessoryControl.js'
 import { CatalogIcon } from '../../CatalogIcon.js'
+import { OfflineBadge } from '../../device/OfflineBadge.js'
+import { isDeviceOffline } from '../../device/device-reachability.js'
 import { heroRowKeepsShortcuts } from '../accessory-controls/control-registry.js'
 import { HeroRowBody } from '../../../hero/HeroRowBody.js'
 import type { HeroRowModel } from '@camstack/types'
@@ -137,7 +139,8 @@ export const AccessoryRow = memo(function AccessoryRow({
   const router = useRouter()
   const muted = row.hidden || !row.device.online
   const accent = muted ? colors.foregroundSubtle : colors.primary
-  const nameColor = row.hidden ? colors.foregroundSubtle : colors.foreground
+  const offline = isDeviceOffline(row.device.online)
+  const nameColor = row.hidden ? colors.foregroundSubtle : offline ? colors.foregroundMuted : colors.foreground
   const vars = { device: row.label }
 
   // The field's own text while it is being typed. Local so a keystroke does
@@ -168,6 +171,10 @@ export const AccessoryRow = memo(function AccessoryRow({
   ]
     .filter((part): part is string => part !== null)
     .join(' · ')
+
+  const offlineBadge = offline ? (
+    <OfflineBadge online={row.device.online} testID={`device-offline-${row.device.id}`} />
+  ) : null
 
   const caption =
     row.device.location !== null || row.origin === 'local' || row.hidden ? (
@@ -219,6 +226,7 @@ export const AccessoryRow = memo(function AccessoryRow({
           <Text style={[styles.name, { fontSize: ui.font.sm, color: nameColor }]} numberOfLines={1}>
             {row.label}
           </Text>
+          {offlineBadge}
           {caption}
         </View>
         <View style={styles.control}>
@@ -274,6 +282,7 @@ export const AccessoryRow = memo(function AccessoryRow({
             { ...ACCESSORY_NAME_EDIT_AFFORDANCE, borderBottomColor: colors.primary },
           ]}
         />
+        {offlineBadge}
         {caption}
       </View>
       <View style={styles.editActions}>
