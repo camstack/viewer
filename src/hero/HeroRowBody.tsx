@@ -1,13 +1,12 @@
 /**
  * HeroRowBody — a device row built from `hero-layout.getRowModels` and nothing
- * else: scene tile, the primary control, the trailing fact (tablet width and
- * up, like the web row), chevron. A location caption sits in the flexible
- * middle when the caller has one.
+ * else: scene tile, name, the location caption, the primary control, the
+ * trailing fact (tablet width and up, like the web row), chevron.
  *
- * The device name and the status line are not drawn. The scene tile already
- * carries the state (icon and tone), the primary control carries on/off, and
- * the trailing fact carries the measurement the status line used to repeat.
- * The name stays on the open control's accessible label.
+ * The status line is not drawn: the scene tile carries the state (icon and
+ * tone), the primary control carries on/off, and the trailing fact carries the
+ * measurement the status line used to repeat. The name IS drawn — a room
+ * caption alone cannot tell two devices of one room apart.
  *
  * `model` is always a real model (D315): a pending or failed batch, or a hub
  * with no row for the device, draws the legacy row instead. A model whose
@@ -34,10 +33,7 @@ export const ROW_FACT_MIN_WIDTH = 640
 
 export interface HeroRowBodyProps {
   readonly deviceId: number
-  /**
-   * What the row is called. Not drawn: the open control announces it. Kept so
-   * a caller that already has the name does not grow a second label.
-   */
+  /** What the row is called: the operator's local name, else the hub's (never the model's own). */
   readonly name: string
   readonly online: boolean
   /** A real model: a row without one is the legacy row, drawn by the caller. */
@@ -80,7 +76,10 @@ export function HeroRowBody({ deviceId, name, online, model, customIcon = null, 
         muted={!online || view.muted}
         testID={`hero-row-scene-${deviceId}`}
       />
-      <View style={styles.label} accessibilityLabel={name}>
+      <View style={styles.label}>
+        <Text testID={`hero-row-name-${deviceId}`} style={[styles.name, { color: offline ? colors.foregroundMuted : colors.foreground }]} numberOfLines={1}>
+          {name}
+        </Text>
         {/* The row carries no status line; offline is the one state it names, so a
             device the hub cannot reach never reads as a switched-off one. */}
         {offline ? <OfflineBadge online={online} testID={`device-offline-${deviceId}`} /> : null}
@@ -138,6 +137,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   label: { flex: 1, minWidth: 0, gap: 2 },
+  name: { fontSize: TYPOGRAPHY.size.md, fontWeight: TYPOGRAPHY.weight.medium },
   caption: { fontSize: TYPOGRAPHY.size.xs },
   control: { flexShrink: 0 },
   fact: { flexDirection: 'row', alignItems: 'center', gap: SPACING.xs, flexShrink: 0, maxWidth: 120 },

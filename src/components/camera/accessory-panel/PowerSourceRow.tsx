@@ -1,7 +1,9 @@
 /**
- * PowerSourceRow — the camera's power source in the accessory panel: the state
- * of the linked switch and the three things you can do with it (power on,
- * power off, restart).
+ * PowerSourceRow — the camera's power source in the accessory panel: a title
+ * and two buttons: ONE on/off toggle that shows the linked switch's state
+ * (on → "Power off", off → "Power on") and Restart. The title is the bare
+ * word "Power": the toggle already says the state, and the camera's name is
+ * the panel's own title.
  *
  * It sits between the devices and the function switches, drawn ONLY when the
  * hub says the camera has a power source linked. Whoever can reach the camera
@@ -11,10 +13,11 @@
  * States, each drawn differently:
  *  - not asked yet, or the hub has no such capability, or no source linked:
  *    nothing — none of these is a claim about the camera;
- *  - the read FAILED: "Power · unknown" with a line saying so, buttons inert —
- *    an unanswered read is never drawn as "no power source";
- *  - linked: "Power · on|off|unknown", or "Power · restarting" while a forced
- *    restart runs (the buttons are inert then; the hub refuses a second one).
+ *  - the read FAILED: a line saying so, buttons inert — an unanswered read is
+ *    never drawn as "no power source";
+ *  - linked, switch state unknown: the toggle is inert (no direction to claim);
+ *  - linked, restarting: both buttons inert, the toggle reads "Restarting"
+ *    (the hub refuses a second restart).
  *
  * An action shows its progress on its own button and its typed result as a
  * line of text under the row: a refusal (switch offline, restart already
@@ -70,12 +73,17 @@ export function PowerSourceRow({ deviceId }: PowerSourceRowProps): React.JSX.Ele
   const inFlight = action.isPending
   const inert = unknown || restarting || inFlight
 
-  const stateLabel =
-    status.isError || data === null
-      ? t('v2.powerSource.state.unknown')
-      : restarting
-        ? t('v2.powerSource.state.restarting')
-        : t(`v2.powerSource.state.${powerSwitchState(data)}`)
+  const switchState = data === null ? 'unknown' : powerSwitchState(data)
+  /** The toggle's direction: from on it powers off, from off it powers on. */
+  const toggleAction: PowerSourceAction | null =
+    switchState === 'on' ? 'powerOff' : switchState === 'off' ? 'powerOn' : null
+  const toggleLabel = restarting
+    ? t('v2.powerSource.state.restarting')
+    : toggleAction === 'powerOff'
+      ? t('v2.powerSource.powerOff')
+      : toggleAction === 'powerOn'
+        ? t('v2.powerSource.powerOn')
+        : t('v2.powerSource.state.unknown')
 
   const describe = (result: PowerSourceActionResult): string => {
     if (result.accepted) return t('v2.powerSource.accepted')
@@ -108,31 +116,25 @@ export function PowerSourceRow({ deviceId }: PowerSourceRowProps): React.JSX.Ele
     if (ok) run('forceRestart')
   }
 
-  const busyOn = inFlight && action.variables === 'powerOn'
-  const busyOff = inFlight && action.variables === 'powerOff'
+  const busyToggle = inFlight && action.variables !== 'forceRestart'
   const busyRestart = inFlight && action.variables === 'forceRestart'
 
   return (
     <View style={styles.row} testID="power-source-row">
       <Text style={[styles.label, { color: colors.foregroundMuted }]}>
-        {t('v2.powerSource.label', { state: stateLabel })}
+        {t('v2.powerSource.title')}
       </Text>
       <View style={styles.actions}>
         <Button
-          label={t('v2.powerSource.powerOn')}
-          kind="secondary"
+          label={toggleLabel}
+          kind={switchState === 'on' ? 'primary' : 'secondary'}
           grow
-          disabled={inert}
-          busy={busyOn}
-          onPress={() => run('powerOn')}
-        />
-        <Button
-          label={t('v2.powerSource.powerOff')}
-          kind="secondary"
-          grow
-          disabled={inert}
-          busy={busyOff}
-          onPress={() => run('powerOff')}
+          disabled={inert || toggleAction === null}
+          busy={busyToggle}
+          onPress={() => {
+            if (toggleAction !== null) run(toggleAction)
+          }}
+          testID="power-source-toggle"
         />
         <Button
           label={t('v2.powerSource.restart')}

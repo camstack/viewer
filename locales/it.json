@@ -4419,7 +4419,7 @@
       "confirmOffWhileRunning": "Il dispositivo è in funzione. Spegnerlo comunque?"
     },
     "powerSource": {
-      "label": "Alimentazione · {{state}}",
+      "title": "Alimentazione",
       "state": {
         "on": "accesa",
         "off": "spenta",

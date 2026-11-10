@@ -141,9 +141,9 @@ describe('a device with no interactive control', () => {
 })
 
 describe('the left of a hero row', () => {
-  it('does not show the device name or the status line', () => {
+  it('shows the device name, not the status line', () => {
     mountRow('camera', {})
-    expect(screen.queryByText('Device')).toBeNull()
+    expect(screen.getByTestId('hero-row-name-9').textContent).toBe('Device')
     expect(screen.queryByTestId('hero-row-status-9')).toBeNull()
     expect(screen.getByTestId('hero-row-scene-9')).toBeTruthy()
     expect(screen.getByTestId('accessory-detail-9')).toBeTruthy()

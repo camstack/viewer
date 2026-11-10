@@ -4422,7 +4422,7 @@
       "confirmOffWhileRunning": "The device is running. Turn it off anyway?"
     },
     "powerSource": {
-      "label": "Power · {{state}}",
+      "title": "Power",
       "state": {
         "on": "on",
         "off": "off",

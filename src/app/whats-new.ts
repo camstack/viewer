@@ -30,6 +30,20 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.700',
+    date: '2026-11-10',
+    notes: {
+      en: [
+        'Device rows show their name again, above the room.',
+        'Power row: one on/off button that shows the state, plus Restart.',
+      ],
+      it: [
+        'Le righe dei dispositivi mostrano di nuovo il nome, sopra la stanza.',
+        'Riga alimentazione: un solo pulsante acceso/spento con lo stato, più Riavvia.',
+      ],
+    },
+  },
+  {
     version: '1.0.699',
     date: '2026-11-10',
     notes: {
