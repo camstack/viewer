@@ -26,11 +26,11 @@ describe('ncClient', () => {
     await client.listRules()
     expect(mutate).toHaveBeenCalledWith({ addonId: 'pipeline-analytics', action: 'nc.listRules', input: {} })
   })
-  it('routes upsertTarget to addonId notifiers', async () => {
-    const mutate = vi.fn().mockResolvedValue({ target: { id: 'x', name: 'n', kind: 'ntfy', addonId: 'notifiers', enabled: true, config: {} } })
+  it('keeps the kind catalogue on the notifiers addon', async () => {
+    const mutate = vi.fn().mockResolvedValue({ kinds: [] })
     const client = makeNcClient({ addonsCustomMutate: mutate })
-    await client.upsertTarget({ id: 'x', name: 'n', kind: 'ntfy', addonId: 'notifiers', enabled: true, config: {} })
-    expect(mutate).toHaveBeenCalledWith({ addonId: 'notifiers', action: 'nc.upsertMyTarget', input: { target: expect.any(Object) } })
+    await client.listTargetKinds()
+    expect(mutate).toHaveBeenCalledWith({ addonId: 'notifiers', action: 'nc.listTargetKinds', input: {} })
   })
 })
 

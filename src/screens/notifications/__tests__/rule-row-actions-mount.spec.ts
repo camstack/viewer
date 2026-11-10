@@ -36,6 +36,7 @@ import { setTestPlatform } from '../../../testing/platform-control.js'
 import i18n from '../../../app/i18n.js'
 import { RulesTab } from '../RulesTab.js'
 import { resetRulesStripKeyForTests } from '../use-rules-strip-key.js'
+import { instanceRows } from '../../../testing/nc-target-rows.js'
 
 // The strip tab is session memory: every test is a fresh session.
 beforeEach(() => resetRulesStripKeyForTests())
@@ -143,13 +144,13 @@ function hub(
   let snoozes = initialSnoozes
   return {
     'auth.me': { id: 'u1', username: 'user', isAdmin: false },
+    'integrationInstances.listInstances': (): unknown => instanceRows([MY_TARGET]),
     'addons.custom': (input?: unknown): unknown => {
       const action = field(input, 'action')
       const body = field(input, 'input')
       if (action === 'nc.listRules') return { rules }
       if (action === 'nc.listTimelapseRules') return { rules: [] }
       if (action === 'nc.listSummaryRules') return { rules: [], canAuthor: true }
-      if (action === 'nc.listMyTargets') return { targets: [MY_TARGET] }
       if (action === 'nc.setRuleTargetEnabled') return { success: true }
       if (action === 'nc.listSnoozes') return { snoozes }
       if (action === 'nc.createSnooze') {
@@ -592,13 +593,13 @@ function familyHub(options: FamilyHubOptions = {}) {
   }
   return {
     'auth.me': { id: 'u1', username: 'user', isAdmin: false },
+    'integrationInstances.listInstances': (): unknown => instanceRows([]),
     'addons.custom': (input?: unknown): unknown => {
       const action = field(input, 'action')
       const body = field(input, 'input')
       if (action === 'nc.listRules') return { rules: [] }
       if (action === 'nc.listTimelapseRules') return { rules: timelapses }
       if (action === 'nc.listSummaryRules') return { rules: summaries, canAuthor: options.canAuthor ?? true }
-      if (action === 'nc.listMyTargets') return { targets: [] }
       if (action === 'nc.upsertTimelapseRule') {
         const { next, rule } = patchEnabled(timelapses, body)
         timelapses = next

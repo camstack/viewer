@@ -36,6 +36,7 @@ import { useRuleDraft, type UseRuleDraft } from '../use-rule-draft.js'
 import { adoptedRuleRoute, executeRuleSave, resolveDraftSource, type RuleSaveRequest } from '../rule-draft-source.js'
 import { useNcRuleDraftStore } from '../../../../store/nc-rule-draft-store.js'
 import { ruleHref } from '../../../../navigation/rule-routes.js'
+import { instanceRows } from '../../../../testing/nc-target-rows.js'
 
 vi.mock('../../../../connection/ConnectionProvider.js', async () =>
   (await import('../../../../testing/connection-stub.js')).connectionStubModule(),
@@ -74,13 +75,13 @@ function hub(state: OldHub, initial: readonly NcViewerRule[] = []) {
   const strip = (rule: Obj): Obj => Object.fromEntries(Object.entries(rule).filter(([k]) => k !== 'systemEventDelivery'))
   return {
     'auth.me': () => ({ id: 'u1', username: 'operator', isAdmin: true }),
+    'integrationInstances.listInstances': (): unknown => {
+      return instanceRows([{ id: 'tgt-a', name: 'Phone', kind: 'pushover', enabled: true, config: {} }])
+    },
     'addons.custom': (input?: unknown): unknown => {
       const action = field(input, 'action')
       const payload = field(input, 'input')
       if (action === 'nc.listRules') return { rules: state.stored ? [{ ...state.stored, readOnly: false }] : initial }
-      if (action === 'nc.listMyTargets') {
-        return { targets: [{ id: 'tgt-a', name: 'Phone', kind: 'pushover', addonId: 'notifiers', enabled: true, config: {} }] }
-      }
       if (action === 'nc.getConditionCatalog') return { catalog: [] }
       if (action === 'nc.getRuleAi') return { sections: [] }
       if (action === 'nc.getTemplateCatalog') {

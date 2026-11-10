@@ -24,6 +24,7 @@ import { hubCalls } from '../../../testing/hub-stub.js'
 import { routerCalls } from '../../../testing/native-stubs/expo-router.js'
 import { resetStubConnection, setStubConnection } from '../../../testing/connection-stub.js'
 import { SummaryEditorScreen } from '../rule-editor/SummaryEditorScreen.js'
+import { instanceRows } from '../../../testing/nc-target-rows.js'
 
 vi.mock('../../../connection/ConnectionProvider.js', async () =>
   (await import('../../../testing/connection-stub.js')).connectionStubModule(),
@@ -92,15 +93,15 @@ function hub(options: HubOptions = {}): Readonly<Record<string, unknown>> {
       if (options.me === 'pending') return new Promise(() => undefined)
       return { id: 'admin', username: 'admin', isAdmin: true }
     },
+    'integrationInstances.listInstances': (): unknown => {
+      if (options.targetsFail === true) throw new Error('targets unreachable')
+      return instanceRows([{ id: 't-own', name: 'Phone', kind: 'pushover', enabled: true, config: {} }])
+    },
     'addons.custom': (input?: unknown): unknown => {
       const action = field(input, 'action')
       if (action === 'nc.listSummaryRules') {
         if (options.rulesPending === true) return new Promise(() => undefined)
         return { rules: [rule], ...(canAuthor !== undefined ? { canAuthor } : {}) }
-      }
-      if (action === 'nc.listMyTargets') {
-        if (options.targetsFail === true) throw new Error('targets unreachable')
-        return { targets: [{ id: 't-own', name: 'Phone', kind: 'pushover', addonId: 'notifiers', enabled: true, config: {} }] }
       }
       if (action === 'nc.upsertSummaryRule') return { rule }
       throw new Error(`NOT_FOUND: ${String(action)}`)
@@ -116,7 +117,7 @@ function upserts(): readonly unknown[] {
 
 async function settle(): Promise<void> {
   await vi.waitFor(() =>
-    expect(hubCalls().some((call) => field(call.input, 'action') === 'nc.listMyTargets')).toBe(true),
+    expect(hubCalls().some((call) => call.path === 'integrationInstances.listInstances')).toBe(true),
   )
   await act(async () => {
     await Promise.resolve()

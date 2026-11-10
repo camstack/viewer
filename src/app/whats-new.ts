@@ -30,6 +30,14 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.698',
+    date: '2026-11-10',
+    notes: {
+      en: ["Your own notification destinations load through the hub's integrations."],
+      it: ["Le tue destinazioni di notifica si caricano dalle integrazioni dell'hub."],
+    },
+  },
+  {
     version: '1.0.697',
     date: '2026-11-10',
     notes: {

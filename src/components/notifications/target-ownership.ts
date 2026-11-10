@@ -1,7 +1,7 @@
 /**
  * target-ownership — which delivery targets a save may send.
  *
- * The picker lists only the caller's OWN targets (`nc.listMyTargets`), but a
+ * The picker lists only the caller's OWN targets (the integration instances of `notifiers`), but a
  * GLOBAL rule an admin edits may also deliver to other users' targets. Those
  * are invisible to him and not his to drop: a save that filtered the stored
  * list down to "mine" deleted every other user's target on every save, and the
@@ -15,7 +15,7 @@
  * not yet stored is appended.
  *
  * FOR A NON-ADMIN the old filter stands: the hub REFUSES his save when it
- * carries a target he does not own, and `nc.deleteMyTarget` leaves a deleted
+ * carries a target he does not own, and deleting an instance leaves a deleted
  * id on his rules — keeping it would fail every later save of that rule, a
  * rename included (fix round 2, NB1). Unknown role = not admin: callers block
  * Save until the verdict answers rather than guessing.

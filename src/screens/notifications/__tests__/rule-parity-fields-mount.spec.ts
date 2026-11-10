@@ -19,6 +19,7 @@ import { useRuleDraft, type UseRuleDraft } from '../rule-editor/use-rule-draft.j
 import { RuleSection } from '../rule-editor/sections/RuleSection.js'
 import { AdvancedSection } from '../rule-editor/sections/AdvancedSection.js'
 import { NotificationSection } from '../rule-editor/sections/NotificationSection.js'
+import { instanceRows } from '../../../testing/nc-target-rows.js'
 
 vi.mock('../../../connection/ConnectionProvider.js', async () =>
   (await import('../../../testing/connection-stub.js')).connectionStubModule(),
@@ -97,12 +98,12 @@ function hub(log: HubLog, isAdmin: boolean, rule: NcViewerRule) {
         { id: 'u-bruno', username: 'bruno', isAdmin: false },
       ]
     },
+    'integrationInstances.listInstances': (): unknown => {
+      return instanceRows([{ id: 'tgt-a', name: TARGET_NAME, kind: 'pushover', enabled: true, config: {} }])
+    },
     'addons.custom': (input?: unknown): unknown => {
       const action = actionOf(input)
       if (action === 'nc.listRules') return { rules: [rule] }
-      if (action === 'nc.listMyTargets') {
-        return { targets: [{ id: 'tgt-a', name: TARGET_NAME, kind: 'pushover', addonId: 'notifiers', enabled: true, config: {} }] }
-      }
       if (action === 'nc.getConditionCatalog') return { catalog: [] }
       if (action === 'nc.getRuleAi') return { sections: [] }
       if (action === 'nc.listAiProfiles') return { profiles: [{ id: 'p1', name: 'Local vision', model: 'qwen' }] }

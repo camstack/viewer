@@ -17,6 +17,7 @@ import { NcViewerRuleSchema, type NcViewerRule } from '../../../data/notificatio
 import { useRuleDraft, type UseRuleDraft } from '../rule-editor/use-rule-draft.js'
 import { RuleSection } from '../rule-editor/sections/RuleSection.js'
 import { AdvancedSection } from '../rule-editor/sections/AdvancedSection.js'
+import { instanceRows } from '../../../testing/nc-target-rows.js'
 
 vi.mock('../../../connection/ConnectionProvider.js', async () =>
   (await import('../../../testing/connection-stub.js')).connectionStubModule(),
@@ -57,12 +58,12 @@ function actionOf(input: unknown): string {
 function hub(rule: NcViewerRule) {
   return {
     'auth.me': (): unknown => ({ id: 'u1', username: 'operator', isAdmin: false }),
+    'integrationInstances.listInstances': (): unknown => {
+      return instanceRows([{ id: 'tgt-a', name: TARGET_NAME, kind: 'pushover', enabled: true, config: {} }])
+    },
     'addons.custom': (input?: unknown): unknown => {
       const action = actionOf(input)
       if (action === 'nc.listRules') return { rules: [rule] }
-      if (action === 'nc.listMyTargets') {
-        return { targets: [{ id: 'tgt-a', name: TARGET_NAME, kind: 'pushover', addonId: 'notifiers', enabled: true, config: {} }] }
-      }
       if (action === 'nc.getConditionCatalog') return { catalog: [] }
       if (action === 'nc.getRuleAi') return { sections: [] }
       throw new Error(`NOT_FOUND: ${action}`)

@@ -24,6 +24,7 @@ import { ruleDryRunInput } from '../rule-editor/rule-draft-source.js'
 import { emptyRuleForm, type NcRuleFormState } from '../../../components/notifications/rule-editor.js'
 import { NcViewerRuleSchema } from '../../../data/notification-center.js'
 import type { NcRuleDraft } from '../../../store/nc-rule-draft-store.js'
+import { instanceRows } from '../../../testing/nc-target-rows.js'
 
 vi.mock('../../../connection/ConnectionProvider.js', async () =>
   (await import('../../../testing/connection-stub.js')).connectionStubModule(),
@@ -59,11 +60,11 @@ function hub(isAdmin: boolean): Readonly<Record<string, unknown>> {
   return {
     'auth.me': { id: 'u1', username: 'operator', isAdmin },
     'notificationRules.testRule': DRY_RUN_ANSWER,
+    'integrationInstances.listInstances': (): unknown => {
+      return instanceRows([{ id: 't1', name: 'Phone', kind: 'pushover', enabled: true, config: {} }])
+    },
     'addons.custom': (input?: unknown): unknown => {
       const action = actionOf(input)
-      if (action === 'nc.listMyTargets') {
-        return { targets: [{ id: 't1', name: 'Phone', kind: 'pushover', addonId: 'notifiers', enabled: true, config: {} }] }
-      }
       if (action === 'nc.getConditionCatalog') return { catalog: [] }
       if (action === 'nc.testRule') {
         return {
@@ -133,7 +134,7 @@ describe('dry-run (mounted)', () => {
     mountScreen(React.createElement(Harness, { kind: 'detection' }), { hub: hub(true) })
     const button = await dom.findByText('Dry-run (last 60 min)')
     await vi.waitFor(() =>
-      expect(hubCalls().some((call) => actionOf(call.input) === 'nc.listMyTargets')).toBe(true),
+      expect(hubCalls().some((call) => call.path === 'integrationInstances.listInstances')).toBe(true),
     )
     await act(async () => {
       await Promise.resolve()
@@ -156,10 +157,8 @@ describe('dry-run (mounted)', () => {
     const base = hub(true)
     const failing = {
       ...base,
-      'addons.custom': (input?: unknown): unknown => {
-        if (actionOf(input) === 'nc.listMyTargets') throw new Error('targets unreachable')
-        const inner = base['addons.custom']
-        return typeof inner === 'function' ? inner(input) : undefined
+      'integrationInstances.listInstances': (): unknown => {
+        throw new Error('targets unreachable')
       },
     }
     mountScreen(React.createElement(Harness, { kind: 'detection' }), { hub: failing })

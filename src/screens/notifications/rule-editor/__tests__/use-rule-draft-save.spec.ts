@@ -21,6 +21,7 @@ import { useNcRuleDraftStore } from '../../../../store/nc-rule-draft-store.js'
 import { useRuleDraft, type UseRuleDraft } from '../use-rule-draft.js'
 import { routerCalls } from '../../../../testing/native-stubs/expo-router.js'
 import { emptyRuleAiForm } from '../../../../components/notifications/rule-ai-form.js'
+import { instanceRows } from '../../../../testing/nc-target-rows.js'
 /** One key of an unknown payload — the wire is read structurally. */
 function field(input: unknown, key: string): unknown {
   if (input === null || typeof input !== 'object' || !(key in input)) return undefined
@@ -81,7 +82,7 @@ interface HubLog {
   readonly mePending?: boolean
   /** `auth.me` REJECTS — the role read failed. */
   readonly meError?: boolean
-  /** `nc.listMyTargets` rejects. */
+  /** The targets list (`integrationInstances.listInstances`) rejects. */
   readonly targetsFail?: boolean
 }
 
@@ -95,11 +96,13 @@ function hub(log: HubLog, refuse: Refusal, rule: NcViewerRule = RULE) {
       log.meAnswered = true
       return { id: 'u1', username: 'operator', isAdmin: log.isAdmin === true }
     },
+    'integrationInstances.listInstances': (): unknown => {
+      if (log.targetsFail === true) throw new Error('targets unreachable')
+      return instanceRows([{ id: 'tgt-a', name: 'Phone', kind: 'pushover', enabled: true, config: {} }])
+    },
     'addons.custom': (input?: unknown): unknown => {
       const action = actionOf(input)
       if (action === 'nc.listRules') return { rules: [rule] }
-      if (action === 'nc.listMyTargets' && log.targetsFail === true) throw new Error('targets unreachable')
-      if (action === 'nc.listMyTargets') return { targets: [{ id: 'tgt-a', name: 'Phone', kind: 'pushover', addonId: 'notifiers', enabled: true, config: {} }] }
       if (action === 'nc.getConditionCatalog') return { catalog: [] }
       if (action === 'nc.getRuleAi') return { sections: [] }
       if (action === 'nc.updateRule') {

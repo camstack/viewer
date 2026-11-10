@@ -26,6 +26,7 @@ import { routerCalls, setTestCanGoBack } from '../../../testing/native-stubs/exp
 import { useNcRuleDraftStore } from '../../../store/nc-rule-draft-store.js'
 import { RuleSectionScreen } from '../rule-editor/RuleSectionScreen.js'
 import { DRAFT_HANDOFF_GRACE_MS } from '../rule-editor/use-rule-draft.js'
+import { instanceRows } from '../../../testing/nc-target-rows.js'
 
 vi.mock('../../../connection/ConnectionProvider.js', async () =>
   (await import('../../../testing/connection-stub.js')).connectionStubModule(),
@@ -53,12 +54,12 @@ function actionOf(input: unknown): unknown {
 
 const HUB = {
   'auth.me': { id: 'u1', username: 'admin', isAdmin: true },
+  'integrationInstances.listInstances': (): unknown => {
+    return instanceRows([{ id: 't1', name: 'Phone', kind: 'pushover', enabled: true, config: {} }])
+  },
   'addons.custom': (input?: unknown): unknown => {
     const action = actionOf(input)
     if (action === 'nc.listRules') return { rules: [RULE] }
-    if (action === 'nc.listMyTargets') {
-      return { targets: [{ id: 't1', name: 'Phone', kind: 'pushover', addonId: 'notifiers', enabled: true, config: {} }] }
-    }
     if (action === 'nc.getConditionCatalog') return { catalog: [] }
     if (action === 'nc.getRuleAi') return { sections: [] }
     throw new Error(`NOT_FOUND: ${String(action)}`)

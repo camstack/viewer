@@ -368,7 +368,7 @@ export interface BuildTargetArgs {
 }
 
 /**
- * Assemble the {@link Target} to send to `upsertMyTarget`. On edit, the id and
+ * Assemble the {@link Target} to send to `upsertTarget`. On edit, the id and
  * enabled flag are carried from the existing row; the config is the freshly
  * serialized form (NOT merged with the stored blob) so redacted secrets and the
  * server-owned `ownerUserId` are never echoed back — the server merges untouched

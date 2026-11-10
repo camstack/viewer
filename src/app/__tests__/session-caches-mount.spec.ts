@@ -20,6 +20,7 @@ import { mountScreen } from '../../testing/mount.js'
 import { useServer, type ServerContextValue } from '../ServerProvider.js'
 import { useNcTargets } from '../../data/use-notification-center.js'
 import type { Target } from '../../data/notification-center.js'
+import { instanceRows } from '../../testing/nc-target-rows.js'
 
 vi.mock('../../connection/ConnectionProvider.js', async () =>
   (await import('../../testing/connection-stub.js')).connectionStubModule(),
@@ -58,12 +59,11 @@ describe('a session change drops the previous user\'s NC caches (N2)', () => {
     const session = { user: 'a' }
     mountScreen(React.createElement(Probe), {
       hub: {
-        'addons.custom': (input?: unknown): unknown => {
-          if (actionOf(input) !== 'nc.listMyTargets') throw new Error('NOT_FOUND')
+        'integrationInstances.listInstances': (): unknown => {
           // B's answer never arrives: whatever the list shows after the switch
           // is either "pending" or a leftover.
           if (session.user === 'b') return new Promise(() => undefined)
-          return { targets: [{ id: 't-a', name: 'A phone', kind: 'pushover', addonId: 'notifiers', enabled: true, config: {} }] }
+          return instanceRows([{ id: 't-a', name: 'A phone', kind: 'pushover', enabled: true, config: {} }], 'a')
         },
       },
     })
@@ -92,10 +92,8 @@ describe('a session change drops the previous user\'s NC caches (N2)', () => {
     )
     mountScreen(React.createElement(Probe), {
       hub: {
-        'addons.custom': (input?: unknown): unknown => {
-          if (actionOf(input) !== 'nc.listMyTargets') throw new Error('NOT_FOUND')
-          return { targets: [{ id: 't-a', name: 'A phone', kind: 'pushover', addonId: 'notifiers', enabled: true, config: {} }] }
-        },
+        'integrationInstances.listInstances': (): unknown =>
+          instanceRows([{ id: 't-a', name: 'A phone', kind: 'pushover', enabled: true, config: {} }], 'a'),
       },
     })
     await act(async () => {

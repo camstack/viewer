@@ -54,12 +54,14 @@ function actionOf(input: unknown): unknown {
 function targetsFailHub(): Readonly<Record<string, unknown>> {
   return {
     'auth.me': { id: 'u1', username: 'user', isAdmin: false },
+    'integrationInstances.listInstances': (): unknown => {
+      throw new Error('targets unreachable')
+    },
     'addons.custom': (input?: unknown): unknown => {
       const action = actionOf(input)
       if (action === 'nc.listRules') return { rules: [ADMIN_RULE] }
       if (action === 'nc.listTimelapseRules') return { rules: [] }
       if (action === 'nc.listSummaryRules') return { rules: [], canAuthor: true }
-      if (action === 'nc.listMyTargets') throw new Error('targets unreachable')
       throw new Error(`NOT_FOUND: ${String(action)}`)
     },
   }

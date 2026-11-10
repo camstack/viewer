@@ -33,6 +33,7 @@ import { hubCalls } from '../../../testing/hub-stub.js'
 import { resetRuleDrafts } from '../../../testing/rule-draft-harness.js'
 import { RuleSectionScreen } from '../rule-editor/RuleSectionScreen.js'
 import { PICKER_SEARCH_DEBOUNCE_MS } from '../../../components/notifications/device-picker-model.js'
+import { instanceRows } from '../../../testing/nc-target-rows.js'
 
 vi.mock('../../../connection/ConnectionProvider.js', async () =>
   (await import('../../../testing/connection-stub.js')).connectionStubModule(),
@@ -103,10 +104,10 @@ function hub(rule: ReturnType<typeof ruleOf>) {
       if (caps.includes('camera-streams')) return [CAMERA.id]
       return []
     },
+    'integrationInstances.listInstances': (): unknown => instanceRows([]),
     'addons.custom': (input?: unknown): unknown => {
       const action = field(input, 'action')
       if (action === 'nc.listRules') return { rules: [rule] }
-      if (action === 'nc.listMyTargets') return { targets: [] }
       if (action === 'nc.getConditionCatalog') return { catalog: [DEVICES_DESCRIPTOR] }
       if (action === 'nc.getRuleAi') return { sections: [] }
       throw new Error(`NOT_FOUND: ${String(action)}`)

@@ -24,6 +24,7 @@ import { resetStubConnection, setStubConnection } from '../../../testing/connect
 import { EXPO_IMAGE_TESTID_PREFIX } from '../../../testing/native-stubs/expo-image.js'
 import { RuleHistoryScreen, type RuleHistoryScreenProps } from '../RuleHistoryScreen.js'
 import IT from '../../../../locales/it.json'
+import { instanceRows } from '../../../testing/nc-target-rows.js'
 
 vi.mock('../../../connection/ConnectionProvider.js', async () =>
   (await import('../../../testing/connection-stub.js')).connectionStubModule(),
@@ -86,13 +87,11 @@ function hub(isAdmin: boolean, history: unknown, catalogue: 'answers' | 'never' 
       return { url: id === 'a-ok' ? 'https://hub.example/a/a-ok.jpg?sig=1' : null }
     },
     'deviceManager.listAll': listAll(catalogue),
+    'integrationInstances.listInstances': (): unknown => {
+      return instanceRows([{ id: 't1', name: 'My phone', kind: 'push', enabled: true, config: {} }])
+    },
     'addons.custom': (input?: unknown): unknown => {
       const action = field(input, 'action')
-      if (action === 'nc.listMyTargets') {
-        return {
-          targets: [{ id: 't1', name: 'My phone', kind: 'push', addonId: 'notifiers', enabled: true, config: {} }],
-        }
-      }
       if (action === 'nc.listRules') return { rules: [] }
       throw new Error(`NOT_FOUND: ${String(action)}`)
     },

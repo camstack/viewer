@@ -33,6 +33,7 @@ import { NcHubTooOldToClearError, assertClearsLanded, ncNotConnectedError } from
 import { useNcErrorText, type NcErrorText } from '../../components/notifications/use-nc-error-text.js'
 import { routerCalls } from '../../testing/native-stubs/expo-router.js'
 import { TimelapseEditorScreen } from '../../screens/notifications/rule-editor/TimelapseEditorScreen.js'
+import { instanceRows } from '../../testing/nc-target-rows.js'
 
 vi.mock('../../connection/ConnectionProvider.js', async () =>
   (await import('../../testing/connection-stub.js')).connectionStubModule(),
@@ -217,12 +218,12 @@ describe('the editor stays open, draft intact, and says why in the app language 
   it('timelapse editor over an old hub: the emptied caption is not reported saved', async () => {
     const hub = {
       'auth.me': { id: 'admin', username: 'admin', isAdmin: true },
+      'integrationInstances.listInstances': (): unknown => {
+        return instanceRows([{ id: 't1', name: 'Phone', kind: 'pushover', enabled: true, config: {} }], 'admin')
+      },
       'addons.custom': (input?: unknown): unknown => {
         const action = actionOf(input)
         if (action === 'nc.listTimelapseRules') return { rules: [{ ...TIMELAPSE, readOnly: false }] }
-        if (action === 'nc.listMyTargets') {
-          return { targets: [{ id: 't1', name: 'Phone', kind: 'pushover', addonId: 'notifiers', enabled: true, config: {} }] }
-        }
         if (action === 'nc.upsertTimelapseRule') return { rule: TIMELAPSE }
         throw new Error(`NOT_FOUND: ${String(action)}`)
       },

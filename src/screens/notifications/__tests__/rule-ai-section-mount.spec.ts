@@ -37,6 +37,7 @@ import {
   type NcViewerRule,
 } from '../../../data/notification-center.js'
 import { RuleDraftHarness, resetRuleDrafts, withRuleList } from '../../../testing/rule-draft-harness.js'
+import { instanceRows } from '../../../testing/nc-target-rows.js'
 
 vi.mock('../../../connection/ConnectionProvider.js', async () =>
   (await import('../../../testing/connection-stub.js')).connectionStubModule(),
@@ -45,7 +46,7 @@ vi.mock('../../../connection/ConnectionProvider.js', async () =>
 /** The harness pins the locale to `en` (`native-stubs/expo-localization.ts`). */
 const AI_TOGGLE_LABEL = 'Describe with AI'
 const LENGTH_LABEL = 'Length'
-/** Rendered by `TargetPicker` once `nc.listMyTargets` has answered — the
+/** Rendered by `TargetPicker` once the targets list has answered — the
  *  readiness node every assertion below waits for, so a negative claim can
  *  never be "the queries had not landed yet". */
 const TARGET_NAME = 'Phone (pushover)'
@@ -91,7 +92,6 @@ const TARGET_KINDS = [
  *  does not have it (the bridge throws), which is the older-hub case. */
 const NC_RESPONSES: Readonly<Record<string, unknown>> = {
   'nc.getConditionCatalog': { catalog: [] },
-  'nc.listMyTargets': { targets: TARGETS },
   'nc.listTargetKinds': { kinds: TARGET_KINDS },
   // No section on disk for either rule — the ordinary case, and the one where
   // every default has to come from somewhere other than a stored value.
@@ -107,6 +107,7 @@ function actionOf(input: unknown): string {
 }
 
 const HUB = {
+  'integrationInstances.listInstances': (): unknown => instanceRows(TARGETS),
   'addons.custom': (input?: unknown): unknown => {
     const action = actionOf(input)
     if (!Object.prototype.hasOwnProperty.call(NC_RESPONSES, action)) {
@@ -142,7 +143,7 @@ const SYSTEM_CONDITIONS: NcConditions = { systemEvent: { kinds: ['device-offline
 /** Mount the editor on a rule and wait until its queries have landed. */
 async function openEditor(rule: NcViewerRule): Promise<RenderResult> {
   const screen = mountScreen(React.createElement(RuleDraftHarness, { ruleId: rule.id }), {
-    hub: withRuleList(rule, actionOf, HUB['addons.custom']),
+    hub: { ...HUB, ...withRuleList(rule, actionOf, HUB['addons.custom']) },
   })
   await screen.findByText(TARGET_NAME)
   return screen

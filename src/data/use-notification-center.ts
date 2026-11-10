@@ -11,6 +11,8 @@
  * Mutations throw on transport/server failure (like `use-face-gallery`) so the
  * UI can surface it rather than silently "succeeding".
  */
+import { toSessionUser } from './use-me.js'
+import type { NcInstanceMethod } from './nc-target-instances.js'
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query'
 import { useConnection } from '../connection/ConnectionProvider.js'
 import { useDebouncedValue } from '../hooks/use-debounced-value.js'
@@ -110,7 +112,51 @@ async function addonsCustomCall(
 /** Build an {@link NcClient} bound to a live tRPC proxy. Exported for the
  *  sibling hook files that add one action each (`use-nc-rule-test.ts`). */
 export function ncClientForTrpc(trpcClient: unknown): NcClient {
-  return makeNcClient({ addonsCustomMutate: (args) => addonsCustomCall(trpcClient, args) })
+  return makeNcClient({
+    addonsCustomMutate: (args) => addonsCustomCall(trpcClient, args),
+    integrationInstances: (args) => integrationInstancesCall(trpcClient, args),
+    sessionUserId: () => sessionUserIdCall(trpcClient),
+  })
+}
+
+/** The two reads of the instances door are queries; every other method is a mutation. */
+const INSTANCE_QUERIES: ReadonlySet<NcInstanceMethod> = new Set(['listInstances', 'getInstance'])
+
+/** Walk `path` on the tRPC proxy and call its `query` / `mutate` leaf (the proxy is `unknown` at this boundary). */
+async function trpcLeafCall(
+  trpcClient: unknown,
+  path: readonly string[],
+  leaf: 'query' | 'mutate',
+  input: unknown,
+): Promise<unknown> {
+  let node: unknown = trpcClient
+  for (const key of path) {
+    node = (typeof node === 'object' || typeof node === 'function') && node !== null ? Reflect.get(node, key) : undefined
+  }
+  const fn: unknown = node != null ? Reflect.get(node, leaf) : undefined
+  if (typeof fn !== 'function') throw new Error(`${path.join('.')} unavailable`)
+  return await Promise.resolve(Reflect.apply(fn, node, [input]))
+}
+
+function integrationInstancesCall(
+  trpcClient: unknown,
+  args: { method: NcInstanceMethod; input: unknown },
+): Promise<unknown> {
+  return trpcLeafCall(
+    trpcClient,
+    ['integrationInstances', args.method],
+    INSTANCE_QUERIES.has(args.method) ? 'query' : 'mutate',
+    args.input,
+  )
+}
+
+/** The signed-in user's id, or `undefined` when the hub did not answer `auth.me`. */
+async function sessionUserIdCall(trpcClient: unknown): Promise<string | undefined> {
+  try {
+    return toSessionUser(await trpcLeafCall(trpcClient, ['auth', 'me'], 'query', undefined))?.id
+  } catch {
+    return undefined
+  }
 }
 
 // ── Queries ────────────────────────────────────────────────────────────────

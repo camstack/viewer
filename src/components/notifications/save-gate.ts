@@ -3,7 +3,7 @@
  *
  * Two reads decide which stored targets a save keeps (`target-ownership.ts`):
  * WHO is saving (`useAdminVerdict`) and WHICH targets are his
- * (`nc.listMyTargets`). Until both have answered, Save is blocked and the
+ * (the integration instances of `notifiers`). Until both have answered, Save is blocked and the
  * screen says why — never a guess in either direction:
  *
  *  - an admin read as a user drops other users' targets (review I1);

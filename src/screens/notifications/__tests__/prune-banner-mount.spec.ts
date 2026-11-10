@@ -23,6 +23,7 @@ import { hubCalls } from '../../../testing/hub-stub.js'
 import { TimelapseEditorScreen } from '../rule-editor/TimelapseEditorScreen.js'
 import { useAdminVerdict } from '../../../data/use-me.js'
 import { useNcPrunes } from '../../../data/use-notification-center.js'
+import { instanceRows } from '../../../testing/nc-target-rows.js'
 
 vi.mock('../../../connection/ConnectionProvider.js', async () =>
   (await import('../../../testing/connection-stub.js')).connectionStubModule(),
@@ -78,12 +79,12 @@ function hub(options: HubOptions = {}): Readonly<Record<string, unknown>> {
       username: 'operator',
       isAdmin: (options.me ?? 'admin') === 'admin',
     }),
+    'integrationInstances.listInstances': (): unknown => instanceRows([]),
     'addons.custom': (input?: unknown): unknown => {
       const action = field(input, 'action')
       if (action === 'nc.listTimelapseRules') {
         return { rules: [{ ...DISABLED_RULE, enabled: options.enabled ?? false }] }
       }
-      if (action === 'nc.listMyTargets') return { targets: [] }
       if (action === 'nc.listPrunes') {
         if (options.prunesFail) throw new Error('forbidden: admin required')
         return { prunes: [PRUNE] }

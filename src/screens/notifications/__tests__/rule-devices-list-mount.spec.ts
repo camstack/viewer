@@ -20,6 +20,7 @@ import { ruleScopeDraftOf, type RuleScopeDraft } from '../../../components/notif
 import { RuleDevicesList } from '../rule-editor/RuleDevicesList.js'
 import { RuleSummaryScreen } from '../rule-editor/RuleSummaryScreen.js'
 import { resetRuleDrafts } from '../../../testing/rule-draft-harness.js'
+import { instanceRows } from '../../../testing/nc-target-rows.js'
 
 vi.mock('../../../connection/ConnectionProvider.js', async () =>
   (await import('../../../testing/connection-stub.js')).connectionStubModule(),
@@ -118,10 +119,10 @@ describe('the rule overview carries the list', () => {
     const hub = {
       ...HUB,
       'auth.me': { id: 'u1', username: 'admin', isAdmin: true },
+      'integrationInstances.listInstances': (): unknown => instanceRows([]),
       'addons.custom': (input?: unknown): unknown => {
         const action = actionOf(input)
         if (action === 'nc.listRules') return { rules: [RULE] }
-        if (action === 'nc.listMyTargets') return { targets: [] }
         if (action === 'nc.getConditionCatalog') return { catalog: [] }
         throw new Error(`NOT_FOUND: ${String(action)}`)
       },

@@ -25,6 +25,7 @@ import { mountScreen } from '../../../testing/mount.js'
 import { hubCalls } from '../../../testing/hub-stub.js'
 import { routerCalls } from '../../../testing/native-stubs/expo-router.js'
 import { TimelapseEditorScreen } from '../rule-editor/TimelapseEditorScreen.js'
+import { instanceRows } from '../../../testing/nc-target-rows.js'
 
 vi.mock('../../../connection/ConnectionProvider.js', async () =>
   (await import('../../../testing/connection-stub.js')).connectionStubModule(),
@@ -91,14 +92,14 @@ function hub(options: HubOptions = {}): Readonly<Record<string, unknown>> {
         ? new Promise(() => undefined)
         : { id: 'u1', username: 'operator', isAdmin: (options.me ?? 'admin') === 'admin' }
     },
+    'integrationInstances.listInstances': (): unknown => {
+      if (options.targetsFail) throw new Error('targets unreachable')
+      return instanceRows(MY_TARGETS.targets)
+    },
     'addons.custom': (input?: unknown): unknown => {
       const action = field(input, 'action')
       if (action === 'nc.listTimelapseRules') {
         return options.rulesPending ? new Promise(() => undefined) : { rules: [rule] }
-      }
-      if (action === 'nc.listMyTargets') {
-        if (options.targetsFail) throw new Error('targets unreachable')
-        return MY_TARGETS
       }
       if (action === 'nc.upsertTimelapseRule') return { rule }
       throw new Error(`NOT_FOUND: ${String(action)}`)
@@ -114,7 +115,7 @@ function upserts(): readonly unknown[] {
 
 async function settle(): Promise<void> {
   await vi.waitFor(() =>
-    expect(hubCalls().some((call) => field(call.input, 'action') === 'nc.listMyTargets')).toBe(true),
+    expect(hubCalls().some((call) => call.path === 'integrationInstances.listInstances')).toBe(true),
   )
   await act(async () => {
     await Promise.resolve()

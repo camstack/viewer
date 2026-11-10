@@ -29,6 +29,7 @@ import {
 } from '../../../data/notification-center.js'
 import { TemplateField } from '../TemplateField.js'
 import { RuleDraftHarness, resetRuleDrafts, withRuleList } from '../../../testing/rule-draft-harness.js'
+import { instanceRows } from '../../../testing/nc-target-rows.js'
 
 vi.mock('../../../connection/ConnectionProvider.js', async () =>
   (await import('../../../testing/connection-stub.js')).connectionStubModule(),
@@ -135,11 +136,6 @@ const TARGET_NAME = 'Phone (pushover)'
 
 const NC_RESPONSES: Readonly<Record<string, unknown>> = {
   'nc.getConditionCatalog': { catalog: [] },
-  'nc.listMyTargets': {
-    targets: [
-      { id: 'tgt-a', name: TARGET_NAME, kind: 'pushover', addonId: 'notifiers', enabled: true, config: {} },
-    ],
-  },
   'nc.listTargetKinds': { kinds: [] },
   'nc.getRuleAi': { sections: [] },
   'nc.listAiProfiles': { profiles: [] },
@@ -154,6 +150,8 @@ function actionOf(input: unknown): string {
 }
 
 const HUB = {
+  'integrationInstances.listInstances': (): unknown =>
+    instanceRows([{ id: 'tgt-a', name: TARGET_NAME, kind: 'pushover', enabled: true, config: {} }]),
   'addons.custom': (input?: unknown): unknown => {
     const action = actionOf(input)
     if (!Object.prototype.hasOwnProperty.call(NC_RESPONSES, action)) {
@@ -184,7 +182,7 @@ function makeRule(overrides: Record<string, unknown>): NcViewerRule {
 
 async function openEditor(rule: NcViewerRule): Promise<void> {
   mountScreen(React.createElement(RuleDraftHarness, { ruleId: rule.id }), {
-    hub: withRuleList(rule, actionOf, HUB['addons.custom']),
+    hub: { ...HUB, ...withRuleList(rule, actionOf, HUB['addons.custom']) },
   })
   await dom.findByText(TARGET_NAME)
   await dom.findByTestId('rule-template-body-chip-camera')

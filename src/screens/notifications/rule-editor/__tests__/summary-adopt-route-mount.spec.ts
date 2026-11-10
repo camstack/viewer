@@ -17,6 +17,7 @@ import { useNcRuleDraftStore } from '../../../../store/nc-rule-draft-store.js'
 import { defaultSummaryDelivery } from '../../../../components/notifications/system-event-delivery.js'
 import { ruleHref } from '../../../../navigation/rule-routes.js'
 import { RuleSummaryScreen } from '../RuleSummaryScreen.js'
+import { instanceRows } from '../../../../testing/nc-target-rows.js'
 
 vi.mock('../../../../connection/ConnectionProvider.js', async () =>
   (await import('../../../../testing/connection-stub.js')).connectionStubModule(),
@@ -32,12 +33,12 @@ const creates: unknown[] = []
 /** A hub older than D647: it stores the rule and drops `systemEventDelivery`. */
 const OLD_HUB = {
   'auth.me': () => ({ id: 'u1', username: 'operator', isAdmin: true }),
+  'integrationInstances.listInstances': (): unknown => {
+    return instanceRows([{ id: 'tgt-a', name: 'Phone', kind: 'pushover', enabled: true, config: {} }])
+  },
   'addons.custom': (input?: unknown): unknown => {
     const action = field(input, 'action')
     if (action === 'nc.listRules') return { rules: [] }
-    if (action === 'nc.listMyTargets') {
-      return { targets: [{ id: 'tgt-a', name: 'Phone', kind: 'pushover', addonId: 'notifiers', enabled: true, config: {} }] }
-    }
     if (action === 'nc.getConditionCatalog') return { catalog: [] }
     if (action === 'nc.getRuleAi') return { sections: [] }
     if (action === 'nc.createRule') {

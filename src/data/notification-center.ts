@@ -6,7 +6,7 @@
  * server-side (spec C1/C2). Two addons back the surface:
  *
  *   • rules    → `addonId: 'pipeline-analytics'` (nc.listRules, nc.createRule, …)
- *   • targets  → `addonId: 'notifiers'` (nc.listMyTargets, nc.upsertMyTarget, …)
+ *   • targets  → `addonId: 'notifiers'` (`integrationInstances` pinned to `notifiers`; `nc.listTargetKinds` for the kind catalogue)
  *
  * The Zod schemas below are viewer-LOCAL mirrors of the server contracts
  * (`@camstack/types` `notification-rules.cap.ts` / `notification-output.cap.ts`
@@ -18,6 +18,7 @@
  * pure, unit-testable seam (the transport is wired in `use-notification-center`).
  */
 import { z } from 'zod'
+import { makeNcTargetsClient, type NcInstancesDeps, type NcTargetsClient } from './nc-target-instances.js'
 import { type NcListPrunesResult, NcListPrunesResultSchema } from './nc-prunes.js'
 import {
   type AlarmArmMode,
@@ -1843,6 +1844,10 @@ export const NC_DRY_RUN_LOOKBACK_MINUTES = 60
 /** The `addons.custom` mutate delegate — the client's single dependency. */
 export interface NcClientDeps {
   readonly addonsCustomMutate: (args: { addonId: string; action: string; input: unknown }) => Promise<unknown>
+  /** `integrationInstances.<method>` over the live proxy; only the target calls need it. */
+  readonly integrationInstances?: NcInstancesDeps['integrationInstances']
+  /** The signed-in user's id (`auth.me`); only the target calls need it. */
+  readonly sessionUserId?: NcInstancesDeps['sessionUserId']
 }
 
 /** One typed method per `nc.*` bridge action, split across the two addons. */
@@ -1987,6 +1992,12 @@ export function wireTemplateContext(context: NcTemplateVarContext): NcTemplateVa
 export function makeNcClient(deps: NcClientDeps): NcClient {
   const call = <T>(addonId: string, action: string, input: unknown, out: z.ZodType<T>): Promise<T> =>
     deps.addonsCustomMutate({ addonId, action, input }).then((r) => out.parse(r))
+  // The user's own targets are integration instances of `notifiers` (D1013), not `nc.*` actions.
+  const targets = (): NcTargetsClient => {
+    const { integrationInstances, sessionUserId } = deps
+    if (!integrationInstances || !sessionUserId) throw new Error('integrationInstances unavailable')
+    return makeNcTargetsClient({ integrationInstances, sessionUserId })
+  }
   return {
     listRules: () => call(RULES, 'nc.listRules', {}, NcListRulesResultSchema),
     getConditionCatalog: () => call(RULES, 'nc.getConditionCatalog', {}, NcConditionCatalogResultSchema),
@@ -2055,13 +2066,12 @@ export function makeNcClient(deps: NcClientDeps): NcClient {
     listSnoozes: () => call(RULES, 'nc.listSnoozes', {}, NcListSnoozesResultSchema),
     createSnooze: (snooze) => call(RULES, 'nc.createSnooze', { snooze }, NcSnoozeResultSchema),
     cancelSnooze: (snoozeId) => call(RULES, 'nc.cancelSnooze', { snoozeId }, NcSuccessResultSchema),
-    listTargets: () => call(TGT, 'nc.listMyTargets', {}, NcTargetsResultSchema),
+    listTargets: () => targets().listTargets(),
     listTargetKinds: () => call(TGT, 'nc.listTargetKinds', {}, NcTargetKindsResultSchema),
-    upsertTarget: (target) => call(TGT, 'nc.upsertMyTarget', { target }, NcTargetResultSchema),
-    deleteTarget: (targetId) => call(TGT, 'nc.deleteMyTarget', { targetId }, NcSuccessResultSchema),
-    setTargetEnabled: (targetId, enabled) =>
-      call(TGT, 'nc.setMyTargetEnabled', { targetId, enabled }, NcSuccessResultSchema),
-    testTarget: (targetId) => call(TGT, 'nc.testMyTarget', { targetId }, NcTestTargetResultSchema),
+    upsertTarget: (target) => targets().upsertTarget(target),
+    deleteTarget: (targetId) => targets().deleteTarget(targetId),
+    setTargetEnabled: (targetId, enabled) => targets().setTargetEnabled(targetId, enabled),
+    testTarget: (targetId) => targets().testTarget(targetId),
     testRule: (ruleId, deviceId) =>
       call(
         RULES,

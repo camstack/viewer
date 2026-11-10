@@ -24,6 +24,7 @@ import { resetStubConnection, setStubConnection } from '../../../testing/connect
 import { routerCalls } from '../../../testing/native-stubs/expo-router.js'
 import { RulesTab } from '../RulesTab.js'
 import { resetRulesStripKeyForTests } from '../use-rules-strip-key.js'
+import { instanceRows } from '../../../testing/nc-target-rows.js'
 
 // The strip tab is session memory: every test is a fresh session.
 beforeEach(() => resetRulesStripKeyForTests())
@@ -83,12 +84,12 @@ function hub(isAdmin: boolean, lastRuns: LastRunsAnswer) {
   return {
     'auth.me': { id: 'u1', username: isAdmin ? 'admin' : 'user', isAdmin },
     [LAST_RUNS_PATH]: lastRuns,
+    'integrationInstances.listInstances': (): unknown => instanceRows([]),
     'addons.custom': (input?: unknown): unknown => {
       const action = field(input, 'action')
       if (action === 'nc.listRules') return { rules: RULES }
       if (action === 'nc.listTimelapseRules') return { rules: [TIMELAPSE] }
       if (action === 'nc.listSummaryRules') return { rules: [], canAuthor: true }
-      if (action === 'nc.listMyTargets') return { targets: [] }
       throw new Error(`NOT_FOUND: ${String(action)}`)
     },
   }
