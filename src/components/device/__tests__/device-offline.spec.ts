@@ -23,11 +23,11 @@ afterEach(() => cleanup())
 const offModel: HeroRowModel = {
   deviceId: 9,
   name: 'Lamp',
-  type: 'switch',
+  type: 'plug',
   state: 'off',
   stateAssumed: false,
   look: { icon: 'power', tone: 'muted', background: 'plain', animation: 'none' },
-  scene: { id: 'switch', mode: null, level: null },
+  scene: { id: 'generic', mode: null, level: null },
   statusLine: [{ en: 'Off', it: 'Spento' }],
   primary: null,
   timedRun: null,
