@@ -459,19 +459,20 @@ describe('the list Snooze switch reads live rule-scoped windows', () => {
       conditions: { systemEvent: { kinds: ['alarm-triggered'] } },
     })
     expect(buildRuleRowModel(alarm, []).actions.snoozeSwitch).toBe(false)
-    const arms = makeRule({
-      actions: { onTrigger: [{ kind: 'do', action: { kind: 'cap', deviceId: 9, cap: 'alarm-panel', method: 'arm' } }] },
-    })
-    expect(buildRuleRowModel(arms, []).actions.snoozeSwitch).toBe(false)
+    const arms = makeRule({ actions: { onTrigger: ['act-arm'] } })
+    const listed = [
+      { id: 'act-arm', name: 'Arm', steps: [{ kind: 'cap' as const, deviceId: 9, cap: 'alarm-panel', method: 'arm' }] },
+    ]
+    expect(buildRuleRowModel(arms, [], listed).actions.snoozeSwitch).toBe(false)
   })
 
-  it('a BUTTON whose shared sequence arms the panel counts — resolved through the shared list', () => {
-    const viaButton = makeRule({ actions: { buttons: [{ id: 'b', label: 'Arm', sequenceId: 'seq-arm' }] } })
-    const sequences = [
-      { id: 'seq-arm', name: 'arm', actions: [{ kind: 'cap' as const, deviceId: 9, cap: 'alarm-panel', method: 'arm' }] },
+  it('a BUTTON whose Action arms the panel counts — resolved through the Action list', () => {
+    const viaButton = makeRule({ actions: { buttons: [{ id: 'b', label: 'Arm', actionId: 'act-arm' }] } })
+    const listed = [
+      { id: 'act-arm', name: 'arm', steps: [{ kind: 'cap' as const, deviceId: 9, cap: 'alarm-panel', method: 'arm' }] },
     ]
-    expect(buildRuleRowModel(viaButton, [], sequences).actions.snoozeSwitch).toBe(false)
-    // Without the list (a non-admin), the binding proves nothing.
+    expect(buildRuleRowModel(viaButton, [], listed).actions.snoozeSwitch).toBe(false)
+    // Without the list (a non-admin), the id proves nothing.
     expect(buildRuleRowModel(viaButton, []).actions.snoozeSwitch).toBe(true)
   })
 

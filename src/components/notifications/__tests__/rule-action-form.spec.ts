@@ -1,156 +1,98 @@
 import { describe, expect, it } from 'vitest'
-import { NcRuleActionsSchema as PublishedRuleActionsSchema } from '@camstack/types'
+import type { NcListedAction } from '../../../data/listed-actions.js'
 import {
   NcRuleActionsSchema,
-  type NcRuleAction,
   type NcRuleActions,
   type NcRuleNotificationButton,
 } from '../../../data/notification-center.js'
 import {
   NC_ACTIONS_EMPTY_FORM,
-  argsToRows,
   actionsToForm,
   bindingCount,
   formActionSteps,
   formToActions,
-  parseArgRow,
-  rowsToArgs,
   storedActionSteps,
   storedActionsAreSet,
-  unknownSequenceRefs,
+  unknownActionRefs,
 } from '../rule-action-form.js'
 
-const CAP = { editId: 't1', kind: 'cap' as const, seconds: 0, deviceId: 1, cap: 'c', method: 'm', args: [] }
+const PANEL = { kind: 'cap' as const, cap: 'alarm-panel', method: 'trigger', deviceId: 1 }
 
-describe('args rows — typed text, parsed at save', () => {
-  it('keeps half-typed JSON as text and reports it, instead of snapping back', () => {
-    const rows = [{ key: 'payload', type: 'json' as const, text: '{"a":' }]
-    const res = rowsToArgs(rows)
-    expect(res.errors).toEqual([{ index: 0, errorKey: 'v2.nc.rules.actions.args.invalidJson' }])
-    // No partial args: a broken row must not let the others through as if complete.
-    expect(res.args).toBeUndefined()
-  })
-  it('parses each type', () => {
-    expect(parseArgRow({ key: 'n', type: 'number', text: '12.5' })).toEqual({ ok: true, value: 12.5 })
-    expect(parseArgRow({ key: 'b', type: 'boolean', text: 'true' })).toEqual({ ok: true, value: true })
-    expect(parseArgRow({ key: 's', type: 'string', text: 'x' })).toEqual({ ok: true, value: 'x' })
-    expect(parseArgRow({ key: 'n', type: 'number', text: 'abc' })).toEqual({
-      ok: false,
-      errorKey: 'v2.nc.rules.actions.args.invalidNumber',
-    })
-  })
-  it('round-trips stored args through rows', () => {
-    const args = { level: 50, on: true, name: 'x', nested: { a: [1] } }
-    expect(rowsToArgs(argsToRows(args)).args).toEqual(args)
-  })
-  it('duplicate or empty keys are errors', () => {
-    expect(rowsToArgs([{ key: '', type: 'string', text: 'x' }]).errors).toHaveLength(1)
-    expect(
-      rowsToArgs([
-        { key: 'a', type: 'string', text: '1' },
-        { key: 'a', type: 'string', text: '2' },
-      ]).errors,
-    ).toHaveLength(1)
-  })
-})
-
-describe('actions form — hook bindings to shared sequences (the admin model)', () => {
-  it('round-trips every hook edge, sequence and Do bindings, and buttons — nothing lost', () => {
+describe('actions form — hook edges name Actions by id', () => {
+  it('round-trips a stored block, including a button icon', () => {
     const actions: NcRuleActions = {
-      onActivation: [{ kind: 'sequence', sequenceId: 'seq-arm' }],
-      onDeactivation: [{ kind: 'do', action: { kind: 'wait', seconds: 2 } }],
-      onTrigger: [
-        { kind: 'sequence', sequenceId: 'seq-siren' },
-        { kind: 'do', action: { kind: 'cap', deviceId: 7, cap: 'switch', method: 'setState', args: { on: true } } },
-      ],
-      onTriggerOff: [{ kind: 'do', action: { kind: 'cap', deviceId: 7, cap: 'switch', method: 'setState', args: { on: false } } }],
+      onActivation: ['act-arm'],
+      onDeactivation: ['act-wait'],
+      onTrigger: ['act-siren', 'act-switch'],
+      onTriggerOff: ['act-off'],
       buttons: [
-        { id: 'b1', label: 'Siren', sequenceId: 'seq-siren' },
-        { id: 'b2', label: 'Arm', sequenceId: 'seq-arm', icon: 'arm-away', destructive: true },
+        { id: 'b1', label: 'Siren', actionId: 'act-siren' },
+        { id: 'b2', label: 'Arm', actionId: 'act-arm', icon: 'arm-away', destructive: true },
       ],
     }
     expect(formToActions(actionsToForm(actions))).toEqual({ actions, errors: [], problemCount: 0 })
     expect(NcRuleActionsSchema.safeParse(formToActions(actionsToForm(actions)).actions).success).toBe(true)
   })
 
-  it('never emits the legacy inline-sequence shape the hub refuses', () => {
+  it('copies the ids — the form does not invent steps', () => {
     const { actions } = formToActions(
-      actionsToForm({ onTrigger: [{ kind: 'sequence', sequenceId: 's' }], buttons: [{ id: 'b', label: 'L', sequenceId: 's' }] }),
+      actionsToForm({ onTrigger: ['act-s'], buttons: [{ id: 'b', label: 'L', actionId: 'act-s' }] }),
     )
-    expect(actions?.onTrigger?.[0]).toEqual({ kind: 'sequence', sequenceId: 's' })
-    expect(actions?.buttons?.[0]).not.toHaveProperty('sequence')
-    expect(PublishedRuleActionsSchema.safeParse(actions).success).toBe(true)
+    expect(actions?.onTrigger).toEqual(['act-s'])
+    expect(actions?.buttons?.[0]?.actionId).toBe('act-s')
   })
 
-  it('an empty form is absent, never {}', () => {
+  it('an absent block and an empty form both say nothing', () => {
     expect(formToActions(actionsToForm(undefined)).actions).toBeUndefined()
     expect(formToActions(NC_ACTIONS_EMPTY_FORM)).toEqual({ errors: [], problemCount: 0 })
   })
 
-  it('a sequence binding not yet picked, and a button with no sequence, are errors', () => {
+  it('a blank id is an error, and an error means no actions are sent', () => {
     const form = {
       ...NC_ACTIONS_EMPTY_FORM,
-      onTrigger: [{ editId: 'b1', kind: 'sequence' as const, sequenceId: ' ' }],
-      buttons: [{ id: 'b', label: 'x', sequenceId: '' }],
+      onTrigger: [' '],
+      buttons: [{ id: 'b', label: 'x', actionId: '' }],
     }
     const res = formToActions(form)
-    expect(res.errors).toEqual([
-      'v2.nc.rules.actions.bindingMissingSequence',
-      'v2.nc.rules.actions.buttonMissingSequence',
-    ])
     expect(res.actions).toBeUndefined()
-  })
-
-  it('a Do step with an invalid args row is an error, not a silent drop', () => {
-    const form = {
-      ...NC_ACTIONS_EMPTY_FORM,
-      onTrigger: [{ editId: 'b1', kind: 'do' as const, step: { ...CAP, args: [{ editId: 'a1', key: 'p', type: 'json' as const, text: '{' }] } }],
-    }
-    expect(formToActions(form).errors).toContain('v2.nc.rules.actions.args.invalidJson')
-  })
-
-  it('a Do step with no device or method is an error', () => {
-    const form = { ...NC_ACTIONS_EMPTY_FORM, onActivation: [{ editId: 'b1', kind: 'do' as const, step: { ...CAP, deviceId: undefined, method: ' ' } }] }
-    expect(formToActions(form).errors).toEqual([
-      'v2.nc.rules.actions.stepMissingDevice',
-      'v2.nc.rules.actions.stepMissingMethod',
+    expect(res.errors).toEqual([
+      'v2.nc.rules.actions.hookMissingAction',
+      'v2.nc.rules.actions.buttonMissingAction',
     ])
+    expect(res.problemCount).toBe(2)
   })
 
-  it('more than 4 bindings on one edge is an error (the hub caps each edge)', () => {
-    const many = Array.from({ length: 5 }, (_, i) => ({ editId: `b${i}`, kind: 'sequence' as const, sequenceId: 's' }))
-    expect(formToActions({ ...NC_ACTIONS_EMPTY_FORM, onTrigger: many }).errors).toContain('v2.nc.rules.actions.tooManyBindings')
+  it('more than four ids on one edge is an error; four is the hub cap', () => {
+    const many = ['a', 'b', 'c', 'd', 'e']
+    expect(formToActions({ ...NC_ACTIONS_EMPTY_FORM, onTrigger: many }).errors).toContain(
+      'v2.nc.rules.actions.tooManyActions',
+    )
     expect(formToActions({ ...NC_ACTIONS_EMPTY_FORM, onTrigger: many.slice(0, 4) }).errors).toEqual([])
   })
 })
 
-describe('server bounds', () => {
-  const WAIT = { editId: 't1', kind: 'wait' as const, seconds: 1, deviceId: undefined, cap: '', method: '', args: [] }
-  const doHook = (step: typeof WAIT) => ({ ...NC_ACTIONS_EMPTY_FORM, onTrigger: [{ editId: 'b1', kind: 'do' as const, step }] })
-  const button = (over: Partial<NcRuleNotificationButton> = {}): NcRuleNotificationButton => ({ id: 'b', label: 'L', sequenceId: 's', ...over })
+describe('buttons', () => {
+  const button = (over: Partial<NcRuleNotificationButton> = {}): NcRuleNotificationButton => ({
+    id: 'b',
+    label: 'L',
+    actionId: 'act',
+    ...over,
+  })
 
-  it('a padded sequence id is trimmed on the way out', () => {
+  it('trims the Action id it sends', () => {
     const res = formToActions({
       ...NC_ACTIONS_EMPTY_FORM,
-      onTrigger: [{ editId: 'b1', kind: 'sequence', sequenceId: ' s ' }],
-      buttons: [button({ sequenceId: ' s ' })],
+      onTrigger: [' act '],
+      buttons: [button({ actionId: ' act ' })],
     })
-    expect(res.actions?.onTrigger?.[0]).toEqual({ kind: 'sequence', sequenceId: 's' })
-    expect(res.actions?.buttons?.[0]?.sequenceId).toBe('s')
+    expect(res.actions?.onTrigger).toEqual(['act'])
+    expect(res.actions?.buttons?.[0]?.actionId).toBe('act')
   })
 
-  it('a wait longer than the hub allows (300 s) is an error', () => {
-    expect(formToActions(doHook({ ...WAIT, seconds: 301 })).errors).toContain('v2.nc.rules.actions.waitOutOfRange')
-    expect(formToActions(doHook({ ...WAIT, seconds: 300 })).errors).toEqual([])
-  })
-
-  it('more than 8 buttons is an error', () => {
+  it('refuses too many, a long label, a long id, and a repeated id', () => {
     const buttons = Array.from({ length: 9 }, (_, i) => button({ id: `b${i}` }))
     expect(formToActions({ ...NC_ACTIONS_EMPTY_FORM, buttons }).errors).toContain('v2.nc.rules.actions.tooManyButtons')
     expect(formToActions({ ...NC_ACTIONS_EMPTY_FORM, buttons: buttons.slice(0, 8) }).errors).toEqual([])
-  })
-
-  it('labels and ids over the hub bounds, and duplicate ids, are errors', () => {
     expect(formToActions({ ...NC_ACTIONS_EMPTY_FORM, buttons: [button({ label: 'x'.repeat(41) })] }).errors).toContain(
       'v2.nc.rules.actions.labelTooLong',
     )
@@ -163,37 +105,32 @@ describe('server bounds', () => {
   })
 })
 
-describe('reading the shared sequences', () => {
-  const FORM = actionsToForm({
-    onTrigger: [{ kind: 'sequence', sequenceId: 'known' }, { kind: 'do', action: { kind: 'cap', deviceId: 1, cap: 'alarm-panel', method: 'trigger' } }],
-    buttons: [{ id: 'b', label: 'L', sequenceId: 'gone' }],
+describe('reading the hub Actions', () => {
+  const listed: readonly NcListedAction[] = [
+    { id: 'known', name: 'Known', steps: [{ kind: 'wait', seconds: 1 }] },
+    { id: 'panel', name: 'Panel', steps: [PANEL] },
+  ]
+  const form = actionsToForm({
+    onTrigger: ['known', 'panel'],
+    buttons: [{ id: 'b', label: 'L', actionId: 'gone' }],
   })
 
-  it('names the ids the answered list does not carry (the admin warning), and counts bindings', () => {
-    expect(unknownSequenceRefs(FORM, new Set(['known']))).toEqual(['gone'])
-    expect(unknownSequenceRefs(FORM, new Set(['known', 'gone']))).toEqual([])
-    expect(bindingCount(FORM)).toBe(2)
+  it('names the ids the answered list does not carry', () => {
+    expect(unknownActionRefs(form, new Set(listed.map((action) => action.id)))).toEqual(['gone'])
+    expect(unknownActionRefs(form, new Set(['known', 'panel', 'gone']))).toEqual([])
+    expect(bindingCount(form)).toBe(2)
   })
 
-  it('resolves the steps every binding and button can run', () => {
-    const steps: Readonly<Record<string, readonly NcRuleAction[]>> = {
-      known: [{ kind: 'wait', seconds: 1 }],
-      gone: [{ kind: 'cap', deviceId: 2, cap: 'switch', method: 'setState' }],
-    }
-    const of = (id: string) => steps[id]
-    expect(formActionSteps(FORM, of)).toEqual([
-      { kind: 'wait', seconds: 1 },
-      { kind: 'cap', deviceId: 1, cap: 'alarm-panel', method: 'trigger' },
-      { kind: 'cap', deviceId: 2, cap: 'switch', method: 'setState' },
-    ])
-    expect(storedActionSteps(formToActions(FORM).actions, of)).toEqual(formActionSteps(FORM, of))
-    expect(formActionSteps(FORM, () => undefined)).toEqual([{ kind: 'cap', deviceId: 1, cap: 'alarm-panel', method: 'trigger' }])
+  it('collects the steps of every named Action, hooks and buttons', () => {
+    expect(formActionSteps(form, listed)).toEqual([{ kind: 'wait', seconds: 1 }, PANEL])
+    expect(storedActionSteps(formToActions(form).actions, listed)).toEqual(formActionSteps(form, listed))
+    expect(formActionSteps(form, [])).toEqual([])
   })
 
-  it('a stored block says something only with a binding or a button', () => {
+  it('a stored block is set when any edge or a button carries something', () => {
     expect(storedActionsAreSet(undefined)).toBe(false)
     expect(storedActionsAreSet({})).toBe(false)
-    expect(storedActionsAreSet({ onTriggerOff: [{ kind: 'sequence', sequenceId: 's' }] })).toBe(true)
-    expect(storedActionsAreSet({ buttons: [{ id: 'b', label: 'L', sequenceId: 's' }] })).toBe(true)
+    expect(storedActionsAreSet({ onTriggerOff: ['act'] })).toBe(true)
+    expect(storedActionsAreSet({ buttons: [{ id: 'b', label: 'L', actionId: 'act' }] })).toBe(true)
   })
 })

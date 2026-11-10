@@ -30,6 +30,14 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.697',
+    date: '2026-11-10',
+    notes: {
+      en: ['Notification rules and their buttons now run Actions you pick from a list.'],
+      it: ['Le regole di notifica e i pulsanti eseguono le Azioni scelte da un elenco.'],
+    },
+  },
+  {
     version: '1.0.696',
     date: '2026-11-10',
     notes: {

@@ -1227,20 +1227,14 @@ describe('D3 — the form models EVERY rule field (parse → form → input is t
     priority: 4,
     snoozeAllowGlobal: true,
     snoozeOptions: [5, 45],
-    // The hub's shape: hook bindings to SHARED sequences by id, or one inline
-    // step — on every edge — and buttons that run a shared sequence by id.
+    // The hub's shape: each hook edge is an ordered list of Action ids, and
+    // each button names one Action.
     actions: {
-      onActivation: [{ kind: 'sequence', sequenceId: 'seq-arm' }],
-      onDeactivation: [{ kind: 'do', action: { kind: 'wait', seconds: 2.5 } }],
-      onTrigger: [
-        { kind: 'sequence', sequenceId: 'seq-siren' },
-        {
-          kind: 'do',
-          action: { kind: 'cap', deviceId: 7, cap: 'switch', method: 'setState', args: { on: true, level: 50, payload: { a: [1] } } },
-        },
-      ],
-      onTriggerOff: [{ kind: 'do', action: { kind: 'cap', deviceId: 9, cap: 'lock', method: 'unlock' } }],
-      buttons: [{ id: 'b1', label: 'Open', sequenceId: 'seq-open', icon: 'unlock', destructive: true }],
+      onActivation: ['act-arm'],
+      onDeactivation: ['act-wait'],
+      onTrigger: ['act-siren', 'act-switch'],
+      onTriggerOff: ['act-unlock'],
+      buttons: [{ id: 'b1', label: 'Open', actionId: 'act-open', icon: 'unlock', destructive: true }],
     },
     confirm: {
       enabled: true,
@@ -1345,13 +1339,7 @@ describe('D3 — the form models EVERY rule field (parse → form → input is t
       ...form,
       actions: {
         ...form.actions,
-        onTrigger: [
-          {
-            editId: 'b1',
-            kind: 'do' as const,
-            step: { editId: 't1', kind: 'cap' as const, seconds: 0, deviceId: 7, cap: 'switch', method: 'm', args: [{ editId: 'a1', key: 'p', type: 'json' as const, text: '{' }] },
-          },
-        ],
+        onTrigger: [''],
       },
     }
     expect(isRuleFormValid(broken, { isAdmin: true })).toBe(false)
@@ -1384,8 +1372,8 @@ describe('fix round 1 — actions is an ADMIN problem; stored absent-equivalents
   const dangling = makeForm({
     name: 'x',
     targetIds: ['tgt-a'],
-    // Admin-wired, and broken: the button runs no sequence at all.
-    actions: { ...NC_ACTIONS_EMPTY_FORM, buttons: [{ id: 'b', label: 'Open', sequenceId: '' }] },
+    // Admin-wired, and broken: the button names no Action at all.
+    actions: { ...NC_ACTIONS_EMPTY_FORM, buttons: [{ id: 'b', label: 'Open', actionId: '' }] },
   })
 
   it('a non-admin is never blocked by actions they cannot see or change', () => {

@@ -100,7 +100,7 @@ import { ruleLastRunLine } from '../../components/notifications/rule-last-run.js
 import type { RuleTitleHistory } from '../../components/notifications/RuleTitle.js'
 import { useMinuteClock } from '../../components/notifications/RuleLastRunRow.js'
 import { useAdminVerdict } from '../../data/use-me.js'
-import { useSharedSequences } from '../../data/use-shared-sequences.js'
+import { useActionsList } from '../../data/use-actions-list.js'
 import { useRulesStripKey } from './use-rules-strip-key.js'
 import { SPACING, RADIUS } from '../../theme/tokens.js'
 import {
@@ -159,9 +159,9 @@ export function RulesTab() {
   // reads that as "this hub still refuses your write" rather than trying it.
   const canAuthorSummary = summaryQuery.data?.canAuthor === true
   const verdict = useAdminVerdict()
-  // The shared sequences a rule's bindings point at — only for an admin (the
+  // The Actions a rule's hooks and buttons name — only for an admin (the
   // method is admin-only); the snooze switch resolves alarm steps through it.
-  const sharedSequences = useSharedSequences(verdict === 'admin').data
+  const listedActions = useActionsList(verdict === 'admin').data
   // ONE read for every card of every kind — never a per-card call. `hidden`
   // for a viewer the hub has not confirmed as an admin: the method is admin,
   // and a refusal must never read as "not in the last N days" (D315).
@@ -343,7 +343,7 @@ export function RulesTab() {
                   ownTargets={ownTargets}
                   ownTargetsState={ownTargetsState}
                   history={historyFor(rule.id, rule.name)}
-                  sequences={sharedSequences}
+                  actions={listedActions}
                   onEdit={openRule}
                   onDelete={deleteOne}
                   onSetEnabled={switchRule}
@@ -367,7 +367,7 @@ export function RulesTab() {
                   ownTargets={ownTargets}
                   ownTargetsState={ownTargetsState}
                   history={historyFor(rule.id, rule.name)}
-                  sequences={sharedSequences}
+                  actions={listedActions}
                   onEdit={openRule}
                   onDelete={deleteOne}
                   onSetEnabled={switchRule}
@@ -391,7 +391,7 @@ export function RulesTab() {
                   ownTargets={ownTargets}
                   ownTargetsState={ownTargetsState}
                   history={historyFor(rule.id, rule.name)}
-                  sequences={sharedSequences}
+                  actions={listedActions}
                   onEdit={openRule}
                   onDelete={deleteOne}
                   onSetEnabled={switchRule}

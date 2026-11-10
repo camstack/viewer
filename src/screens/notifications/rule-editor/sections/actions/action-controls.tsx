@@ -6,7 +6,7 @@
  */
 import React from 'react'
 import { Pressable, Text, TextInput, View } from 'react-native'
-import { Plus, RefreshCw, Trash2 } from '../../../../../lib/icons.js'
+import { ChevronDown, ChevronUp, Plus, RefreshCw, Trash2 } from '../../../../../lib/icons.js'
 import { useTheme } from '../../../../../theme/theme-provider.js'
 import { RADIUS, SPACING } from '../../../../../theme/tokens.js'
 
@@ -73,14 +73,15 @@ export function ActionTextField({
 export interface ActionLinkButtonProps {
   readonly label: string
   readonly onPress: () => void
-  readonly kind: 'add' | 'remove' | 'retry'
+  readonly kind: 'add' | 'remove' | 'retry' | 'up' | 'down'
   readonly disabled?: boolean
 }
 
 export function ActionLinkButton({ label, onPress, kind, disabled = false }: ActionLinkButtonProps) {
   const { colors } = useTheme()
   const color = kind === 'remove' ? colors.danger : colors.primary
-  const Icon = kind === 'remove' ? Trash2 : kind === 'retry' ? RefreshCw : Plus
+  const Icon =
+    kind === 'remove' ? Trash2 : kind === 'retry' ? RefreshCw : kind === 'up' ? ChevronUp : kind === 'down' ? ChevronDown : Plus
   return (
     <Pressable
       accessibilityRole="button"

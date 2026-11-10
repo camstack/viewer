@@ -12,14 +12,14 @@ import {
 } from '../../../data/notification-center.js'
 import { NC_CLIP_SPEED_DEFAULT } from '../rule-editor.js'
 import { NC_ALARM_SYSTEM_EVENT_KINDS } from '@camstack/types/client'
-import type { NcRuleAction } from '../../../data/notification-center.js'
+import type { ActionStep } from '@camstack/types'
+import { actionStepsResolver } from '../../../data/listed-actions.js'
 import {
   NC_CLIP_SPEED_CHOICES,
   NC_CONFIRM_OPS,
   NC_COOLDOWN_UI_MAX_SEC,
   NC_GROUPING_STEPPER,
   isSnoozeExempt,
-  sequenceResolver,
   isValidTimeZone,
   linkedCamerasApplies,
   parseConfirmOp,
@@ -98,8 +98,8 @@ describe('confirm expectation operator', () => {
 })
 
 describe('isSnoozeExempt — the admin’s isRuleSnoozeExempt, on the viewer form', () => {
-  const steps = (caps: readonly string[]): readonly NcRuleAction[] =>
-    caps.map((cap) => ({ kind: 'cap', deviceId: 7, cap, method: 'arm' }))
+  const steps = (caps: readonly string[]): readonly ActionStep[] =>
+    caps.map((cap) => ({ kind: 'cap' as const, deviceId: 7, cap, method: 'arm' }))
 
   it('every published alarm kind makes a system rule exempt', () => {
     expect(NC_ALARM_SYSTEM_EVENT_KINDS.length).toBeGreaterThan(0)
@@ -118,8 +118,8 @@ describe('isSnoozeExempt — the admin’s isRuleSnoozeExempt, on the viewer for
     expect(isSnoozeExempt({}, steps(['light', 'siren']))).toBe(false)
   })
 
-  it('resolves a shared sequence by id, and nothing for one the list lacks', () => {
-    const of = sequenceResolver([{ id: 'a', name: 'A', actions: [{ kind: 'wait', seconds: 1 }] }])
+  it('resolves an Action by id, and nothing for one the list lacks', () => {
+    const of = actionStepsResolver([{ id: 'a', name: 'A', steps: [{ kind: 'wait', seconds: 1 }] }])
     expect(of('a')).toEqual([{ kind: 'wait', seconds: 1 }])
     expect(of('b')).toBeUndefined()
   })

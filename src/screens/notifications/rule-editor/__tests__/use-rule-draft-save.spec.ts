@@ -16,13 +16,11 @@ import React, { useEffect } from 'react'
 
 import { mountScreen } from '../../../../testing/mount.js'
 import { resetRuleDrafts } from '../../../../testing/rule-draft-harness.js'
-import { NcViewerRuleSchema, type NcViewerRule } from '../../../../data/notification-center.js'
+import { NcRuleActionsSchema, NcViewerRuleSchema, type NcViewerRule } from '../../../../data/notification-center.js'
 import { useNcRuleDraftStore } from '../../../../store/nc-rule-draft-store.js'
 import { useRuleDraft, type UseRuleDraft } from '../use-rule-draft.js'
 import { routerCalls } from '../../../../testing/native-stubs/expo-router.js'
 import { emptyRuleAiForm } from '../../../../components/notifications/rule-ai-form.js'
-import { NcRuleActionsSchema as PublishedRuleActionsSchema } from '@camstack/types'
-
 /** One key of an unknown payload — the wire is read structurally. */
 function field(input: unknown, key: string): unknown {
   if (input === null || typeof input !== 'object' || !(key in input)) return undefined
@@ -281,15 +279,12 @@ describe('useRuleDraft().save — the admin-only fields follow the CALLER', () =
     ...RULE_FIELDS,
     targetUsers: ['u-anna'],
     // Every hook edge and a button: an unrelated edit must send them ALL back
-    // (the hub's patch replaces `actions` whole), in the hub's binding shape.
+    // (the hub's patch replaces `actions` whole), as Action ids.
     actions: {
-      onActivation: [{ kind: 'sequence', sequenceId: 'seq-arm' }],
-      onTrigger: [
-        { kind: 'sequence', sequenceId: 'seq-siren' },
-        { kind: 'do', action: { kind: 'cap', deviceId: 7, cap: 'switch', method: 'turnOn' } },
-      ],
-      onTriggerOff: [{ kind: 'do', action: { kind: 'wait', seconds: 3 } }],
-      buttons: [{ id: 'b1', label: 'Siren', sequenceId: 'seq-siren' }],
+      onActivation: ['act-arm'],
+      onTrigger: ['act-siren', 'act-switch'],
+      onTriggerOff: ['act-wait'],
+      buttons: [{ id: 'b1', label: 'Siren', actionId: 'act-siren' }],
     },
   })
 
@@ -319,7 +314,7 @@ describe('useRuleDraft().save — the admin-only fields follow the CALLER', () =
     // Exactly as stored — nothing dropped, nothing added — and what the hub accepts.
     const actions = field(field(sent, 'patch'), 'actions')
     expect(actions).toEqual(WIRED.actions)
-    expect(PublishedRuleActionsSchema.safeParse(actions).success).toBe(true)
+    expect(NcRuleActionsSchema.safeParse(actions).success).toBe(true)
   })
 
   it('a non-admin neither sends nor clears them — the hub keeps the admin wiring', async () => {
@@ -335,7 +330,7 @@ describe('useRuleDraft().save — a broken admin-wired actions block', () => {
   // editor's validator, which trims, does not.
   const DANGLING = NcViewerRuleSchema.parse({
     ...RULE_FIELDS,
-    actions: { buttons: [{ id: 'b1', label: '   ', sequenceId: 'seq-open' }] },
+    actions: { buttons: [{ id: 'b1', label: '   ', actionId: 'act-open' }] },
   })
 
   async function trySave(isAdmin: boolean): Promise<{ log: HubLog; refused: boolean }> {

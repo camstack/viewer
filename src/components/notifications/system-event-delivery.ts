@@ -349,9 +349,8 @@ export function summaryFormProblems(
   // absent or `instant` one is never refused.
   if (form.delivery !== 'system-event' || stored === undefined || stored.mode === 'instant') return []
   const { actions } = formToActions(form.actions)
-  // The actions mirror IS the hub's shape now (hook bindings to shared
-  // sequences), so the hub's own verdict judges them — 'actions-beside-summary'
-  // included.
+  // The actions mirror IS the hub's shape now (Action ids per hook), so the
+  // hub's own verdict judges them — 'actions-beside-summary' included.
   const problems: readonly NcSystemEventDeliveryProblem[] = systemEventDeliveryProblems({
     delivery: form.delivery,
     conditions: form.conditions,

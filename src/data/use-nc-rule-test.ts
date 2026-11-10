@@ -66,10 +66,8 @@ export function useNcDryRunRule(): UseMutationResult<readonly NcDryRunRecord[], 
 }
 
 /** The draft minus `actions`, which is what a dry run is asked to evaluate.
- *  A dry run judges which records MATCH; it runs no action. The hub's rule now
- *  takes `actions` as bindings to shared sequences, a shape this editor's
- *  inline sequences are not — sending them would fail the whole dry run on a
- *  field the dry run never reads. */
+ *  A dry run judges which records MATCH; it runs no Action. Sending the
+ *  rule's Action ids would fail the whole dry run on a field it never reads. */
 export function withoutActions(rule: NcRuleInput): NcDryRunRule {
   const { actions: _actions, systemEventDelivery, ...rest } = rule
   // The combined-moments delivery (D1019) says WHEN a rule speaks, which a dry

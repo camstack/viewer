@@ -26,12 +26,11 @@ import {
   NC_COOLDOWN_STEP_SEC,
   NC_COOLDOWN_UI_MAX_SEC,
   isSnoozeExempt,
-  sequenceResolver,
 } from '../../../../components/notifications/rule-field-choices.js'
 import { verdictApplies } from '../../../../components/notifications/rule-editor.js'
 import { formActionSteps } from '../../../../components/notifications/rule-action-form.js'
 import { useAdminVerdict } from '../../../../data/use-me.js'
-import { useSharedSequences } from '../../../../data/use-shared-sequences.js'
+import { useActionsList } from '../../../../data/use-actions-list.js'
 import { SPACING } from '../../../../theme/tokens.js'
 import { ToggleRow } from '../../../../components/ui/ToggleRow.js'
 import { ConfirmGateFields } from './ConfirmGateFields.js'
@@ -46,9 +45,9 @@ export function AdvancedSection(props: RuleSectionProps) {
   const { t } = useTranslation()
   const form = draft.form
   const offersConfirm = ruleKindSpec(kind).carriesMedia || form.confirm.enabled
-  // Sequence bindings resolve through the shared list (admin-only read); for
-  // anyone else only the inline Do steps count, as on the admin's list.
-  const sequences = useSharedSequences(useAdminVerdict() === 'admin').data ?? []
+  // Action ids resolve through `actions.list` (admin-only). Without that list
+  // a step cannot prove it actuates the panel, as on the admin's list.
+  const listedActions = useActionsList(useAdminVerdict() === 'admin').data ?? []
 
   return (
     <View style={{ gap: SPACING.xl }}>
@@ -69,7 +68,7 @@ export function AdvancedSection(props: RuleSectionProps) {
       <SnoozeButtonsFields
         snoozeOptions={form.snoozeOptions}
         snoozeAllowGlobal={form.snoozeAllowGlobal}
-        exempt={isSnoozeExempt(form.conditions, formActionSteps(form.actions, sequenceResolver(sequences)))}
+        exempt={isSnoozeExempt(form.conditions, formActionSteps(form.actions, listedActions))}
         onSnoozeOptions={(next) => patch({ snoozeOptions: next })}
         onSnoozeAllowGlobal={(next) => patch({ snoozeAllowGlobal: next })}
       />

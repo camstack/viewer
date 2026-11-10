@@ -15,13 +15,14 @@
  * module so it is unit-tested directly (the repo's node-env `.spec.ts` idiom),
  * with {@link RuleRow} rendering the resulting model.
  */
-import type { NcMediaPolicy, NcSchedule, NcSharedSequence, NcSnooze, NcViewerRule, Target } from '../../data/notification-center.js'
+import type { NcListedAction } from '../../data/listed-actions.js'
+import type { NcMediaPolicy, NcSchedule, NcSnooze, NcViewerRule, Target } from '../../data/notification-center.js'
 import { pruneMediaPolicy } from './rule-editor.js'
 import { normalizeMediaPolicy, resolveNcMediaImage, type NcMediaRuleSubject } from './rule-media-image.js'
 import { summaryScheduleOf } from './system-event-delivery.js'
 import { ruleKindOf, ruleKindSpec } from '@camstack/types/client'
 import { kindLabelKey } from './rule-kind-nav.js'
-import { isSnoozeExempt, sequenceResolver } from './rule-field-choices.js'
+import { isSnoozeExempt } from './rule-field-choices.js'
 import { storedActionSteps } from './rule-action-form.js'
 
 /**
@@ -348,7 +349,7 @@ export function ruleMediaBadges(rule: NcMediaBadgeSubject): readonly RuleMediaBa
 export function buildRuleRowModel(
   rule: NcViewerRule,
   ownTargets: readonly Target[],
-  sequences: readonly NcSharedSequence[] = [],
+  listedActions: readonly NcListedAction[] = [],
 ): RuleRowModel {
   const mediaBadges = ruleMediaBadges(rule)
   const kind = ruleKindOf(rule)
@@ -357,10 +358,7 @@ export function buildRuleRowModel(
     enabled: rule.enabled,
     mustRecreate: kind === 'mixed',
   }
-  const snoozeSwitch = !isSnoozeExempt(
-    rule.conditions,
-    storedActionSteps(rule.actions, sequenceResolver(sequences)),
-  )
+  const snoozeSwitch = !isSnoozeExempt(rule.conditions, storedActionSteps(rule.actions, listedActions))
   if (!rule.readOnly) {
     return {
       editable: true,

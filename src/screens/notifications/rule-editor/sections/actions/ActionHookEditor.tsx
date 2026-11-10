@@ -1,86 +1,62 @@
 /**
  * ActionHookEditor — one hook edge of the rule (on activation / deactivation /
- * trigger / trigger off) and its bindings: each runs a SHARED sequence by id,
- * or one inline step ("Single action"). The admin's `HookSection`.
- *
- * Adding stops at the hub's cap per edge; a sequence binding can only be added
- * once the hub has listed at least one sequence (it would point at nothing).
+ * trigger / trigger off) and the Actions it starts, in order. The admin's
+ * `HookSection`. Adding stops at the hub's cap per edge, and only once the hub
+ * has listed at least one Action (an id would otherwise point at nothing).
  */
-import React from 'react'
-import { Text, View } from 'react-native'
+import React, { useState } from 'react'
+import { Pressable, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { Section } from '../../../../../components/ui/Section.js'
-import { SelectRow } from '../../../../../components/ui/SelectRow.js'
+import { SectionLabel } from '../../../../../components/ui/SectionLabel.js'
 import {
-  addBinding,
-  canAddBinding,
-  newDoBindingForm,
-  newSequenceBindingForm,
-  removeBinding,
-  replaceBinding,
+  addAction,
+  canAddAction,
+  moveAction,
+  removeAction,
+  replaceAction,
 } from '../../../../../components/notifications/rule-action-edit.js'
-import type {
-  NcActionsFormState,
-  NcBindingForm,
-  NcHookKey,
-} from '../../../../../components/notifications/rule-action-form.js'
-import type { NcSharedSequence } from '../../../../../data/notification-center.js'
+import type { NcActionsFormState, NcHookKey } from '../../../../../components/notifications/rule-action-form.js'
+import type { NcListedAction } from '../../../../../data/listed-actions.js'
 import { useTheme } from '../../../../../theme/theme-provider.js'
 import { SPACING } from '../../../../../theme/tokens.js'
 import { Hint } from '../SectionHint.js'
 import { ActionLinkButton } from './action-controls.js'
-import { ActionStepEditor } from './ActionStepEditor.js'
-import { sequenceOptions, UNSET_SEQUENCE } from './sequence-options.js'
-import { SectionLabel } from '../../../../../components/ui/SectionLabel.js'
+import { ActionPickerSheet } from './ActionPickerSheet.js'
 
 const UI = 'v2.nc.rules.editor.actions'
+
+type Picker =
+  | { readonly kind: 'add' }
+  | { readonly kind: 'replace'; readonly index: number }
 
 export interface ActionHookEditorProps {
   readonly hook: NcHookKey
   readonly form: NcActionsFormState
-  /** The hub's shared sequences; `undefined` while unanswered. */
-  readonly sequences: readonly NcSharedSequence[] | undefined
+  /** The hub's Actions; `undefined` while unanswered. */
+  readonly actions: readonly NcListedAction[] | undefined
   readonly onChange: (next: NcActionsFormState) => void
 }
 
-export function ActionHookEditor({ hook, form, sequences, onChange }: ActionHookEditorProps) {
+function actionName(actions: readonly NcListedAction[] | undefined, id: string, missing: string, pending: string): string {
+  if (actions === undefined) return pending
+  return actions.find((action) => action.id === id)?.name ?? missing
+}
+
+export function ActionHookEditor({ hook, form, actions, onChange }: ActionHookEditorProps) {
   const { t } = useTranslation()
   const { colors } = useTheme()
-  const bindings = form[hook]
-  const room = canAddBinding(form, hook)
-  const firstSequence = sequences?.[0]?.id
+  const ids = form[hook]
+  const room = canAddAction(form, hook)
+  const canPick = actions !== undefined && actions.length > 0
+  const [picker, setPicker] = useState<Picker | null>(null)
 
-  const card = (binding: NcBindingForm, index: number): React.ReactElement => {
-    const set = (next: NcBindingForm): void => onChange(replaceBinding(form, hook, index, next))
-    const remove = (): void => onChange(removeBinding(form, hook, index))
-    if (binding.kind === 'do') {
-      return (
-        <Section key={binding.editId}>
-          <ActionStepEditor
-            title={t(`${UI}.doTitle`)}
-            removeLabel={t(`${UI}.removeBinding`)}
-            step={binding.step}
-            onChange={(step) => set({ ...binding, step })}
-            onRemove={remove}
-          />
-        </Section>
-      )
-    }
-    return (
-      <Section key={binding.editId}>
-        <SelectRow<string>
-          label={t(`${UI}.sequenceLabel`)}
-          options={sequenceOptions(sequences, binding.sequenceId, t)}
-          value={binding.sequenceId.trim()}
-          onChange={(sequenceId) => {
-            if (sequenceId !== UNSET_SEQUENCE && sequenceId !== binding.sequenceId) set({ ...binding, sequenceId })
-          }}
-        />
-        <View style={{ paddingHorizontal: SPACING.xl, paddingBottom: SPACING.md }}>
-          <ActionLinkButton kind="remove" label={t(`${UI}.removeBinding`)} onPress={remove} />
-        </View>
-      </Section>
+  const pick = (actionId: string): void => {
+    if (picker === null) return
+    onChange(
+      picker.kind === 'add' ? addAction(form, hook, actionId) : replaceAction(form, hook, picker.index, actionId),
     )
+    setPicker(null)
   }
 
   return (
@@ -89,24 +65,59 @@ export function ActionHookEditor({ hook, form, sequences, onChange }: ActionHook
       <Text style={{ color: colors.foregroundSubtle, fontSize: 12, lineHeight: 17, paddingHorizontal: SPACING.xs }}>
         {t(`${UI}.hook.${hook}.hint`)}
       </Text>
-      {bindings.length === 0 ? <Hint text={t(`${UI}.hookEmpty`)} /> : null}
-      {bindings.map(card)}
+      {ids.length === 0 ? <Hint text={t(`${UI}.hookEmpty`)} /> : null}
+      {ids.map((id, index) => (
+        <Section key={`${hook}#${index}`}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t(`${UI}.actionLabel`)}
+            onPress={() => {
+              if (canPick) setPicker({ kind: 'replace', index })
+            }}
+            style={{ paddingHorizontal: SPACING.xl, paddingTop: SPACING.lg }}
+          >
+            <Text style={{ color: colors.foregroundSubtle, fontSize: 12 }}>{t(`${UI}.actionLabel`)}</Text>
+            <Text style={{ color: colors.foreground, fontSize: 16, paddingVertical: SPACING.sm }}>
+              {actionName(actions, id, t(`${UI}.actionMissing`, { id }), t(`${UI}.actionById`, { id }))}
+            </Text>
+          </Pressable>
+          <View style={{ flexDirection: 'row', paddingHorizontal: SPACING.xl, paddingBottom: SPACING.md, gap: SPACING.lg }}>
+            <ActionLinkButton
+              kind="up"
+              label={t(`${UI}.moveUp`)}
+              disabled={index === 0}
+              onPress={() => onChange(moveAction(form, hook, index, -1))}
+            />
+            <ActionLinkButton
+              kind="down"
+              label={t(`${UI}.moveDown`)}
+              disabled={index === ids.length - 1}
+              onPress={() => onChange(moveAction(form, hook, index, 1))}
+            />
+            <ActionLinkButton
+              kind="remove"
+              label={t(`${UI}.removeBinding`)}
+              onPress={() => onChange(removeAction(form, hook, index))}
+            />
+          </View>
+        </Section>
+      ))}
       <View style={{ paddingHorizontal: SPACING.xs }}>
         <ActionLinkButton
           kind="add"
-          label={t(`${UI}.addSequenceBinding`)}
-          disabled={!room || firstSequence === undefined}
-          onPress={() =>
-            onChange(addBinding(form, hook, (siblings) => newSequenceBindingForm(siblings, firstSequence ?? '')))
-          }
-        />
-        <ActionLinkButton
-          kind="add"
-          label={t(`${UI}.addDoBinding`)}
-          disabled={!room}
-          onPress={() => onChange(addBinding(form, hook, newDoBindingForm))}
+          label={t(`${UI}.addAction`)}
+          disabled={!room || !canPick}
+          onPress={() => setPicker({ kind: 'add' })}
         />
       </View>
+      {picker !== null && actions !== undefined ? (
+        <ActionPickerSheet
+          title={t(`${UI}.pickAction`)}
+          actions={actions}
+          onPick={pick}
+          onClose={() => setPicker(null)}
+        />
+      ) : null}
     </View>
   )
 }

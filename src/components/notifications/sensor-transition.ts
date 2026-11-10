@@ -22,11 +22,11 @@ import {
   sensorTransitionOffered,
 } from '@camstack/types/client'
 import type { NcDroppedCondition, NcRuleKind } from '@camstack/types'
+import type { ActionStep } from '@camstack/types'
 import type {
   NcConditionDescriptor,
   NcConditions,
   NcDelivery,
-  NcRuleAction,
   NcRuleActions,
 } from '../../data/notification-center.js'
 
@@ -155,12 +155,12 @@ export function sensorTransitionReasonKey(): string {
 export const SENSOR_TRANSITION_NEVER_FIRES_KEY = `${PREFIX}.neverFires`
 
 /** The actions half of the never-fires question: what the rule runs, and how
- *  a sequence binding resolves to its steps (the hub's shared list). */
+ *  an Action id resolves to its steps (`actions.list`). */
 export interface NcSensorTransitionAlarmActions {
   /** The rule's actions, as the save would send them. */
   readonly actions?: NcRuleActions
-  /** A shared sequence's steps — without it a sequence binding proves nothing. */
-  readonly sequenceActionsOf?: (sequenceId: string) => readonly NcRuleAction[] | undefined
+  /** An Action's steps — without it an Action id proves nothing. */
+  readonly actionStepsOf?: (actionId: string) => readonly ActionStep[] | undefined
 }
 
 /** What the never-fires question reads off an editor form. */
@@ -169,14 +169,48 @@ export interface NcSensorTransitionAlarmSubject extends NcSensorTransitionAlarmA
 }
 
 /**
+ * Openings the alarm refuses a closing edge for — the same list as
+ * `NC_ALARM_OPENING_EVENT_KINDS` in `alarm-membership.ts`. Not imported: the
+ * value is not on the client entry the phone loads.
+ */
+const ALARM_OPENING_KINDS: readonly string[] = ['contact', 'cover', 'lock', 'switch']
+const ALARM_PANEL_CAP = 'alarm-panel'
+const ALARM_PANEL_TRIGGER = 'trigger'
+
+function isOpeningKind(kind: string): boolean {
+  const normalized = kind.trim().toLowerCase()
+  return ALARM_OPENING_KINDS.some((opening) => opening === normalized)
+}
+
+/** An on-match Action whose steps pull `alarm-panel.trigger`. */
+function onTriggerPullsAlarm(subject: NcSensorTransitionAlarmSubject): boolean {
+  const resolve = subject.actionStepsOf
+  for (const actionId of subject.actions?.onTrigger ?? []) {
+    const steps = resolve?.(actionId)
+    if (
+      steps?.some(
+        (step) => step.kind === 'cap' && step.cap === ALARM_PANEL_CAP && step.method === ALARM_PANEL_TRIGGER,
+      )
+    ) {
+      return true
+    }
+  }
+  return false
+}
+
+/**
  * An alarm rule over openings asking for "only when it clears" — the alarm
  * refuses every closing, the edge refuses every opening. Not refused on save
  * (alarm membership is derived and can change with an action edit), but SAID.
+ *
+ * The armed-state half is the shared predicate. An Action id proves membership
+ * here, from the steps `actions.list` returned: the build the phone loads
+ * still resolves the retired sequence bindings, which an id cannot.
  */
 export function sensorTransitionNeverFiresFor(subject: NcSensorTransitionAlarmSubject): boolean {
-  return sensorTransitionNeverFires({
-    conditions: subject.conditions,
-    ...(subject.actions !== undefined ? { actions: subject.actions } : {}),
-    ...(subject.sequenceActionsOf !== undefined ? { sequenceActionsOf: subject.sequenceActionsOf } : {}),
-  })
+  if (subject.conditions.sensorTransition !== 'cleared') return false
+  const kinds = subject.conditions.sensorKinds ?? []
+  if (kinds.length === 0 || !kinds.every(isOpeningKind)) return false
+  if (onTriggerPullsAlarm(subject)) return true
+  return sensorTransitionNeverFires({ conditions: subject.conditions })
 }

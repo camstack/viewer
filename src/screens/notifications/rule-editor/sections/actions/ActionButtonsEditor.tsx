@@ -1,15 +1,15 @@
 /**
  * ActionButtonsEditor — the buttons the rule's notification carries, each
- * running one SHARED sequence by id (the admin's "Buttons on the
- * notification"). A button cannot define steps of its own.
+ * running one Action (the admin's "Buttons on the notification"). A button
+ * cannot define steps of its own.
  *
- * A button whose sequence the hub no longer lists still shows it, marked
+ * A button whose Action the hub no longer lists still shows it, marked
  * missing, rather than silently re-pointing at another. The id is generated
  * and never shown — it is what the audit line names when the button is tapped,
  * not something to author.
  */
-import React from 'react'
-import { View } from 'react-native'
+import React, { useState } from 'react'
+import { Pressable, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { Section } from '../../../../../components/ui/Section.js'
 import { SelectRow, type SelectOption } from '../../../../../components/ui/SelectRow.js'
@@ -19,12 +19,13 @@ import {
   NcNotificationActionIconSchema,
   type NcNotificationActionIcon,
   type NcRuleNotificationButton,
-  type NcSharedSequence,
 } from '../../../../../data/notification-center.js'
+import type { NcListedAction } from '../../../../../data/listed-actions.js'
+import { useTheme } from '../../../../../theme/theme-provider.js'
 import { SPACING } from '../../../../../theme/tokens.js'
 import { Hint } from '../SectionHint.js'
 import { ActionLinkButton, ActionTextField } from './action-controls.js'
-import { sequenceOptions, UNSET_SEQUENCE } from './sequence-options.js'
+import { ActionPickerSheet } from './ActionPickerSheet.js'
 
 const UI = 'v2.nc.rules.editor.actions'
 /** The select's "no icon" value — never a real icon. */
@@ -41,16 +42,25 @@ function withDestructive(button: NcRuleNotificationButton, destructive: boolean)
   return destructive ? { ...rest, destructive: true } : rest
 }
 
+function actionName(actions: readonly NcListedAction[] | undefined, id: string, missing: string, pending: string): string {
+  if (id.trim().length === 0) return missing
+  if (actions === undefined) return pending
+  return actions.find((action) => action.id === id)?.name ?? missing
+}
+
 export interface ActionButtonRowProps {
   readonly button: NcRuleNotificationButton
-  /** The hub's shared sequences; `undefined` while unanswered. */
-  readonly sequences: readonly NcSharedSequence[] | undefined
+  /** The hub's Actions; `undefined` while unanswered. */
+  readonly actions: readonly NcListedAction[] | undefined
   readonly onChange: (next: NcRuleNotificationButton) => void
   readonly onRemove: () => void
 }
 
-export function ActionButtonRow({ button, sequences, onChange, onRemove }: ActionButtonRowProps) {
+export function ActionButtonRow({ button, actions, onChange, onRemove }: ActionButtonRowProps) {
   const { t } = useTranslation()
+  const { colors } = useTheme()
+  const [open, setOpen] = useState(false)
+  const canPick = actions !== undefined && actions.length > 0
   const iconOptions: readonly SelectOption<string>[] = [
     { value: UNSET, label: t(`${UI}.iconNone`) },
     ...NcNotificationActionIconSchema.options.map((icon: NcNotificationActionIcon) => ({
@@ -58,6 +68,12 @@ export function ActionButtonRow({ button, sequences, onChange, onRemove }: Actio
       label: t(`${UI}.icon.${icon}`),
     })),
   ]
+  const name = actionName(
+    actions,
+    button.actionId,
+    t(`${UI}.actionMissing`, { id: button.actionId }),
+    t(`${UI}.actionById`, { id: button.actionId }),
+  )
 
   return (
     <Section>
@@ -69,14 +85,17 @@ export function ActionButtonRow({ button, sequences, onChange, onRemove }: Actio
           invalid={button.label.trim().length === 0}
         />
       </View>
-      <SelectRow<string>
-        label={t(`${UI}.buttonSequenceLabel`)}
-        options={sequenceOptions(sequences, button.sequenceId, t)}
-        value={button.sequenceId.trim()}
-        onChange={(sequenceId) => {
-          if (sequenceId !== UNSET_SEQUENCE && sequenceId !== button.sequenceId) onChange({ ...button, sequenceId })
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={t(`${UI}.buttonActionLabel`)}
+        onPress={() => {
+          if (canPick) setOpen(true)
         }}
-      />
+        style={{ paddingHorizontal: SPACING.xl, paddingVertical: SPACING.md }}
+      >
+        <Text style={{ color: colors.foregroundSubtle, fontSize: 12 }}>{t(`${UI}.buttonActionLabel`)}</Text>
+        <Text style={{ color: colors.foreground, fontSize: 16, paddingVertical: SPACING.sm }}>{name}</Text>
+      </Pressable>
       <SelectRow<string>
         label={t(`${UI}.buttonIconLabel`)}
         options={iconOptions}
@@ -92,19 +111,30 @@ export function ActionButtonRow({ button, sequences, onChange, onRemove }: Actio
       <View style={{ paddingHorizontal: SPACING.xl, paddingBottom: SPACING.md }}>
         <ActionLinkButton kind="remove" label={t(`${UI}.removeButton`)} onPress={onRemove} />
       </View>
+      {open && actions !== undefined ? (
+        <ActionPickerSheet
+          title={t(`${UI}.pickAction`)}
+          actions={actions}
+          onPick={(actionId) => {
+            onChange({ ...button, actionId })
+            setOpen(false)
+          }}
+          onClose={() => setOpen(false)}
+        />
+      ) : null}
     </Section>
   )
 }
 
 export interface ActionButtonsFooterProps {
   readonly count: number
-  /** No shared sequence to run: a button would point at nothing. */
-  readonly noSequences: boolean
+  /** No Action to run: a button would point at nothing. */
+  readonly noActions: boolean
   readonly onAdd: () => void
 }
 
 /** The hint and the add control; adding stops at the hub's maximum. */
-export function ActionButtonsFooter({ count, noSequences, onAdd }: ActionButtonsFooterProps) {
+export function ActionButtonsFooter({ count, noActions, onAdd }: ActionButtonsFooterProps) {
   const { t } = useTranslation()
   return (
     <View style={{ paddingHorizontal: SPACING.xs }}>
@@ -113,7 +143,7 @@ export function ActionButtonsFooter({ count, noSequences, onAdd }: ActionButtons
         kind="add"
         label={t(`${UI}.addButton`)}
         onPress={onAdd}
-        disabled={noSequences || count >= NC_ACTION_BUTTONS_MAX}
+        disabled={noActions || count >= NC_ACTION_BUTTONS_MAX}
       />
     </View>
   )

@@ -27,8 +27,8 @@ import { ScheduleTimeZoneField } from './ScheduleTimeZoneField.js'
 import { RuleDryRunCard } from '../RuleDryRunCard.js'
 import { canDryRun } from '../../../../components/notifications/rule-test-result.js'
 import { formToActions } from '../../../../components/notifications/rule-action-form.js'
-import { sequenceResolver } from '../../../../components/notifications/rule-field-choices.js'
-import { useSharedSequences } from '../../../../data/use-shared-sequences.js'
+import { actionStepsResolver } from '../../../../data/listed-actions.js'
+import { useActionsList } from '../../../../data/use-actions-list.js'
 import { formScopedDeviceIds, ruleScopeExceptOffered } from '../../../../components/notifications/rule-scope-form.js'
 import { ruleScopeList, type RuleScopeDraft } from '../../../../components/notifications/rule-scope-model.js'
 import type { ConditionFormScopes } from '../../../../components/notifications/ConditionForm.js'
@@ -94,13 +94,13 @@ export function ConditionsSection({ draft, patch, kind, catalog, rule }: RuleSec
   }
   const deviceIds = formScopedDeviceIds(form)
   // The alarm half of "Notify when"'s never-fires warning (D640 × D630).
-  // A sequence binding proves membership only through the shared list
-  // (admin-only read) — the admin's `sequenceActionsOf`.
-  const sharedSequences = useSharedSequences(verdict === 'admin').data
+  // An Action id proves membership only through `actions.list`
+  // (admin-only read) — the admin's `actionStepsOf`.
+  const listedActions = useActionsList(verdict === 'admin').data
   const actions = formToActions(form.actions).actions
   const alarmActions = {
     ...(actions !== undefined ? { actions } : {}),
-    ...(sharedSequences !== undefined ? { sequenceActionsOf: sequenceResolver(sharedSequences) } : {}),
+    ...(listedActions !== undefined ? { actionStepsOf: actionStepsResolver(listedActions) } : {}),
   }
 
   const conditionForm = (

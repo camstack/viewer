@@ -642,13 +642,10 @@ describe('persisted rule — the admin-authored fields survive a parse', () => {
     throttle: { cooldownSec: 60, scope: 'rule-device' },
     priority: 3,
     actions: {
-      onActivation: [{ kind: 'sequence', sequenceId: 'seq-arm' }],
-      onTrigger: [
-        { kind: 'sequence', sequenceId: 'seq-siren' },
-        { kind: 'do', action: { kind: 'cap', deviceId: 7, cap: 'switch', method: 'turnOn', args: { level: 5 } } },
-      ],
-      onTriggerOff: [{ kind: 'do', action: { kind: 'wait', seconds: 2 } }],
-      buttons: [{ id: 'b1', label: 'Siren', sequenceId: 'seq-siren', icon: 'alert', destructive: true }],
+      onActivation: ['act-arm'],
+      onTrigger: ['act-siren', 'act-switch'],
+      onTriggerOff: ['act-wait'],
+      buttons: [{ id: 'b1', label: 'Siren', actionId: 'act-siren', icon: 'alert', destructive: true }],
     },
     confirm: { enabled: true, profileId: 'p1', prompt: 'a car?', expect: { op: '>=', count: 2 }, timeoutMs: 5000, onTimeout: 'suppress', maxImagePx: 512 },
     groupingSec: 20,
@@ -667,10 +664,13 @@ describe('persisted rule — the admin-authored fields survive a parse', () => {
     expect(parsed.media.linkedCameras).toBe('each')
   })
 
-  it('a rule still carrying the LEGACY inline sequences is refused, not half-parsed', () => {
-    // The hub migrates these at boot; a mirror that accepted them would let the
-    // phone write back a shape the hub's input schema rejects.
-    const legacy = { ...persisted, actions: { onTrigger: [{ name: 'siren', enabled: true, actions: [{ kind: 'wait', seconds: 1 }] }] } }
+  it('a rule still carrying sequence bindings or inline steps is refused, not half-parsed', () => {
+    // The hub no longer stores those (planning#473). A mirror that accepted
+    // them would let the phone write back a shape the hub's input schema rejects.
+    const legacy = {
+      ...persisted,
+      actions: { onTrigger: [{ kind: 'sequence', sequenceId: 'seq-siren' }] },
+    }
     expect(NcRuleSchema.safeParse(legacy).success).toBe(false)
   })
 

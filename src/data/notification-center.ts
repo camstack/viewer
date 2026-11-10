@@ -35,7 +35,6 @@ import {
   NC_CONSUMABLE_LOW_PERCENT_MAX,
   NC_GROUPING_MAX_SEC,
   NC_GROUPING_MIN_SEC,
-  DeviceType,
   TimelapseRuleSchema,
   isSystemRuleKind,
   systemEventKindsOfFamily,
@@ -665,17 +664,14 @@ export const NC_SNOOZE_OPTIONS_MAX = 4
  *  Mirrors the cap's `NC_DEFAULT_SNOOZE_MINUTES`. */
 export const NC_DEFAULT_SNOOZE_MINUTES: readonly number[] = [10, 30, 60]
 
-// ── Actions (mirrors notification-rules.cap.ts ~705-820) ──────────────────
+// ── Actions (mirrors notification-rules.cap.ts NcRuleActionsSchema) ────────
 //
-// Copied field for field from `NcRuleActionSchema`, `NcSharedSequenceSchema`,
-// `NcActionBindingSchema`, `NcHookBindingsSchema`,
-// `NcRuleNotificationButtonSchema` and `NcRuleActionsSchema`. A rule BINDS to
-// shared sequences by id (the hub's sequence store, authored on the admin's
-// Notifications → Sequences) or authors a single step inline ("Do"); it never
-// carries a sequence of its own. ADMIN-ONLY on the hub (a non-admin may echo
-// them unchanged, never change or clear them), and mirrored for everyone all
-// the same: an unmirrored field is stripped on parse, and the phone would then
-// hold a rule without the siren an admin wired to it.
+// A rule names existing Actions by id (`actions.list`). It does not carry
+// steps, and the notification centre has no sequence of its own (planning#473).
+// ADMIN-ONLY on the hub (a non-admin may echo them unchanged, never change or
+// clear them), and mirrored for everyone all the same: an unmirrored field is
+// stripped on parse, and the phone would then hold a rule without the Action
+// an admin wired to it.
 
 /** The button icon vocabulary — mirrors `NotificationActionIconSchema`
  *  (notification-output.cap.ts ~102), member for member. */
@@ -701,86 +697,27 @@ export const NcNotificationActionIconSchema = z.enum([
 ])
 export type NcNotificationActionIcon = z.infer<typeof NcNotificationActionIconSchema>
 
-/** The hub's bounds on an actions block (same cap lines), shared by the
- *  schemas below and the editor's validator (`rule-action-form.ts`) so the two
- *  cannot disagree. */
-export const NC_ACTION_WAIT_MAX_SEC = 300
-export const NC_ACTION_SEQUENCE_NAME_MAX = 120
-export const NC_ACTION_MIN_DELAY_MAX_SEC = 86_400
+/** The hub's bounds on an actions block, shared with the editor's validator
+ *  (`rule-action-form.ts`) so the two cannot disagree. */
 export const NC_ACTION_BUTTON_ID_MAX = 64
 export const NC_ACTION_BUTTON_LABEL_MAX = 40
 export const NC_ACTION_BUTTONS_MAX = 8
 
-/** WHO a cap step acts on — mirrors `ActionTargetSchema` (D983). */
-export const NcActionTargetSchema = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('devices'), ids: z.array(z.number().int()).min(1) }),
-  z.object({
-    kind: z.literal('domain'),
-    /** Narrow to one kind of device. */
-    deviceType: z.enum(DeviceType).optional(),
-    /** Narrow to one room: the `location` label devices carry. */
-    roomId: z.string().min(1).optional(),
-  }),
-  z.object({ kind: z.literal('var'), name: z.string().min(1) }),
-])
-export type NcActionTarget = z.infer<typeof NcActionTargetSchema>
+/** Most Actions one hook edge may start (the schema's `.max(4)`). */
+export const NC_HOOK_ACTIONS_MAX = 4
 
-/** One step of a sequence: a pause, or one device-scoped cap method call. */
-export const NcRuleActionSchema = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('wait'), seconds: z.number().min(0).max(NC_ACTION_WAIT_MAX_SEC) }),
-  z.object({
-    kind: z.literal('cap'),
-    /** WHO the step acts on (D983) — the only shape that is written. */
-    target: NcActionTargetSchema.optional(),
-    /** The vocabulary action the step performs; required for a `domain` target. */
-    actionId: z.string().min(1).optional(),
-    /** @deprecated The pre-D983 single device. Read, never written. */
-    deviceId: z.number().int().optional(),
-    cap: z.string().min(1),
-    method: z.string().min(1),
-    /** Method arguments, minus `deviceId` (the executor injects it). */
-    args: z.record(z.string(), z.unknown()).optional(),
-  }).refine((step) => step.target !== undefined || step.deviceId !== undefined, {
-    message: 'a cap step needs a target',
-    path: ['target'],
-  }).refine((step) => step.target?.kind !== 'domain' || step.actionId !== undefined, {
-    message: 'a domain target needs the vocabulary action it applies to (actionId)',
-    path: ['actionId'],
-  }),
-])
-export type NcRuleAction = z.infer<typeof NcRuleActionSchema>
+/** One Action id. The centre runs the Action; the rule only names it. */
+export const NcActionIdSchema = z.string().min(1)
 
-/**
- * A named, ordered run of steps SHARED across rules, with its own actuator
- * throttle (keyed on the id, so two rules sharing one share its budget).
- * Served by `notificationRules.listSequences` (admin-only).
- */
-export const NcSharedSequenceSchema = z.object({
-  id: z.string().min(1),
-  name: z.string().min(1).max(NC_ACTION_SEQUENCE_NAME_MAX),
-  minDelaySec: z.number().int().min(0).max(NC_ACTION_MIN_DELAY_MAX_SEC).optional(),
-  actions: z.array(NcRuleActionSchema).min(1),
-})
-export type NcSharedSequence = z.infer<typeof NcSharedSequenceSchema>
+/** Action ids one hook edge runs, in order. */
+export const NcHookActionIdsSchema = z.array(NcActionIdSchema).max(NC_HOOK_ACTIONS_MAX)
+export type NcHookActionIds = z.infer<typeof NcHookActionIdsSchema>
 
-/** What one hook slot runs: a shared sequence by id, or one inline step. */
-export const NcActionBindingSchema = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('sequence'), sequenceId: z.string().min(1) }),
-  z.object({ kind: z.literal('do'), action: NcRuleActionSchema }),
-])
-export type NcActionBinding = z.infer<typeof NcActionBindingSchema>
-
-/** The hub's cap on one hook edge's bindings. */
-export const NC_HOOK_BINDINGS_MAX = 4
-
-export const NcHookBindingsSchema = z.array(NcActionBindingSchema).max(NC_HOOK_BINDINGS_MAX)
-export type NcHookBindings = z.infer<typeof NcHookBindingsSchema>
-
-/** A notification button that runs one SHARED sequence, by id. */
+/** A notification button that runs one Action, by id. */
 export const NcRuleNotificationButtonSchema = z.object({
   id: z.string().min(1).max(NC_ACTION_BUTTON_ID_MAX),
   label: z.string().min(1).max(NC_ACTION_BUTTON_LABEL_MAX),
-  sequenceId: z.string().min(1),
+  actionId: NcActionIdSchema,
   icon: NcNotificationActionIconSchema.optional(),
   destructive: z.boolean().optional(),
 })
@@ -792,10 +729,10 @@ export type NcRuleNotificationButton = z.infer<typeof NcRuleNotificationButtonSc
  * (a positive / raised match), `onTriggerOff` (a clear / leave match).
  */
 export const NcRuleActionsSchema = z.object({
-  onActivation: NcHookBindingsSchema.optional(),
-  onDeactivation: NcHookBindingsSchema.optional(),
-  onTrigger: NcHookBindingsSchema.optional(),
-  onTriggerOff: NcHookBindingsSchema.optional(),
+  onActivation: NcHookActionIdsSchema.optional(),
+  onDeactivation: NcHookActionIdsSchema.optional(),
+  onTrigger: NcHookActionIdsSchema.optional(),
+  onTriggerOff: NcHookActionIdsSchema.optional(),
   buttons: z.array(NcRuleNotificationButtonSchema).max(NC_ACTION_BUTTONS_MAX).optional(),
 })
 export type NcRuleActions = z.infer<typeof NcRuleActionsSchema>

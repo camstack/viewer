@@ -2,14 +2,13 @@
  * ActionsSection — what the rule RUNS, by hook edge, and the buttons its
  * notification carries (ADMIN-ONLY: `editorSectionsFor(kind, isAdmin)` offers
  * it to admins alone, and the save sends or clears `actions` only for an
- * admin). The admin's rule Actions tab, model for model: each hook binds to
- * SHARED sequences by id or authors one inline step; sequences themselves are
- * authored on the admin console (Notifications → Sequences) and only LISTED
- * here (`notificationRules.listSequences`).
+ * admin). Each hook is an ordered list of existing Actions by id; each button
+ * names one. Actions themselves are authored on the hub (`actions.list`) and
+ * only PICKED here.
  *
  * Everything is edited as form state (`NcActionsFormState`) in the shared
- * draft, so a half-typed argument survives leaving the sub-screen; the parse
- * happens at save (`formToActions`), and while it fails the problems are
+ * draft, so a half-written button label survives leaving the sub-screen; the
+ * parse happens at save (`formToActions`), and while it fails the problems are
  * listed here and the save is refused (`ruleFormProblems` → `actions`).
  */
 import React from 'react'
@@ -20,10 +19,10 @@ import { newButtonForm, removeAt, replaceAt } from '../../../../components/notif
 import {
   NC_HOOK_KEYS,
   formToActions,
-  unknownSequenceRefs,
+  unknownActionRefs,
   type NcActionsFormState,
 } from '../../../../components/notifications/rule-action-form.js'
-import { useSharedSequences } from '../../../../data/use-shared-sequences.js'
+import { useActionsList } from '../../../../data/use-actions-list.js'
 import { useTheme } from '../../../../theme/theme-provider.js'
 import { RADIUS, SPACING } from '../../../../theme/tokens.js'
 import { ActionButtonRow, ActionButtonsFooter } from './actions/ActionButtonsEditor.js'
@@ -42,23 +41,24 @@ export function ActionsSection({ draft, patch }: RuleSectionProps) {
   const form = draft.form.actions
   const set = (next: NcActionsFormState): void => patch({ actions: next })
   const { errors } = formToActions(form)
-  const sequencesQuery = useSharedSequences()
-  const sequences = sequencesQuery.data
-  const unknown = sequences === undefined ? [] : unknownSequenceRefs(form, new Set(sequences.map((s) => s.id)))
+  const actionsQuery = useActionsList()
+  const actions = actionsQuery.data
+  const unknown = actions === undefined ? [] : unknownActionRefs(form, new Set(actions.map((action) => action.id)))
+  const firstId = actions?.[0]?.id
 
-  const sequencesState = (() => {
-    if (sequencesQuery.isError) {
+  const actionsState = (() => {
+    if (actionsQuery.isError) {
       return (
         <View style={{ paddingHorizontal: SPACING.xs }}>
           <Text accessibilityRole="alert" style={{ color: colors.danger, fontSize: 13 }}>
-            {t(`${UI}.sequencesUnavailable`)}
+            {t(`${UI}.actionsUnavailable`)}
           </Text>
-          <ActionLinkButton kind="retry" label={t(`${UI}.sequencesRetry`)} onPress={() => void sequencesQuery.refetch()} />
+          <ActionLinkButton kind="retry" label={t(`${UI}.actionsRetry`)} onPress={() => void actionsQuery.refetch()} />
         </View>
       )
     }
-    if (sequences === undefined) return <Hint text={t(`${UI}.sequencesLoading`)} />
-    return <Hint text={t(sequences.length === 0 ? `${UI}.sequencesNone` : `${UI}.sequencesHint`)} />
+    if (actions === undefined) return <Hint text={t(`${UI}.actionsLoading`)} />
+    return <Hint text={t(actions.length === 0 ? `${UI}.actionsNone` : `${UI}.actionsHint`)} />
   })()
 
   return (
@@ -92,14 +92,14 @@ export function ActionsSection({ draft, patch }: RuleSectionProps) {
 
       {unknown.length > 0 ? (
         <Text style={{ color: colors.warning, fontSize: 13, paddingHorizontal: SPACING.xs }}>
-          {t(`${UI}.unknownSequences`, { count: unknown.length })}
+          {t(`${UI}.unknownActions`, { count: unknown.length })}
         </Text>
       ) : null}
 
-      {sequencesState}
+      {actionsState}
 
       {NC_HOOK_KEYS.map((hook) => (
-        <ActionHookEditor key={hook} hook={hook} form={form} sequences={sequences} onChange={set} />
+        <ActionHookEditor key={hook} hook={hook} form={form} actions={actions} onChange={set} />
       ))}
 
       <View style={{ gap: SPACING.md }}>
@@ -110,18 +110,18 @@ export function ActionsSection({ draft, patch }: RuleSectionProps) {
             // must still not collapse two rows into one React node.
             key={`${button.id}#${index}`}
             button={button}
-            sequences={sequences}
+            actions={actions}
             onChange={(next) => set({ ...form, buttons: replaceAt(form.buttons, index, next) })}
             onRemove={() => set({ ...form, buttons: removeAt(form.buttons, index) })}
           />
         ))}
         <ActionButtonsFooter
           count={form.buttons.length}
-          noSequences={sequences === undefined || sequences.length === 0}
+          noActions={firstId === undefined}
           onAdd={() =>
             set({
               ...form,
-              buttons: [...form.buttons, newButtonForm(form, t(`${UI}.buttonDefaultLabel`), sequences?.[0]?.id ?? '')],
+              buttons: [...form.buttons, newButtonForm(form, t(`${UI}.buttonDefaultLabel`), firstId ?? '')],
             })
           }
         />

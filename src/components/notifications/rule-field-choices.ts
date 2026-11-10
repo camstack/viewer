@@ -10,13 +10,11 @@ import {
   NC_GROUPING_MAX_SEC,
   NC_GROUPING_MIN_SEC,
 } from '@camstack/types/client'
-import type { NcRuleKind } from '@camstack/types'
+import type { ActionStep, NcRuleKind } from '@camstack/types'
 import {
   NcConfirmExpectSchema,
   type NcConditions,
   type NcConfirmExpect,
-  type NcRuleAction,
-  type NcSharedSequence,
 } from '../../data/notification-center.js'
 
 /** The cooldown stepper's ceiling. The hub accepts a day; a phone stepper past
@@ -87,22 +85,14 @@ const ALARM_PANEL_CAP = 'alarm-panel'
  * Is this rule one a snooze can never silence? The admin's
  * `isRuleSnoozeExempt`: true when the rule is ABOUT the panel (a system-event
  * alarm kind — the PUBLISHED list) or ACTUATES it (a step on the `alarm-panel`
- * cap, among the steps its bindings and buttons run — resolved through the
- * shared sequences by `formActionSteps` / `storedActionSteps`). Derived, never
- * stored — the hub's `snooze-exempt` is the authority, and this exists so the
- * editor does not offer what the hub ignores.
+ * cap, among the steps of the Actions its hooks and buttons name —
+ * `formActionSteps` / `storedActionSteps`). Derived, never stored — the hub's
+ * `snooze-exempt` is the authority, and this exists so the editor does not
+ * offer what the hub ignores.
  */
-export function isSnoozeExempt(conditions: NcConditions, steps: readonly NcRuleAction[]): boolean {
+export function isSnoozeExempt(conditions: NcConditions, steps: readonly ActionStep[]): boolean {
   if (isAboutAlarm(conditions)) return true
   return steps.some((step) => step.kind === 'cap' && step.cap === ALARM_PANEL_CAP)
-}
-
-/** A shared sequence's steps by id — `undefined` for one the list does not carry. */
-export function sequenceResolver(
-  sequences: readonly NcSharedSequence[],
-): (sequenceId: string) => readonly NcRuleAction[] | undefined {
-  const byId = new Map(sequences.map((sequence) => [sequence.id, sequence.actions]))
-  return (sequenceId) => byId.get(sequenceId)
 }
 
 function isAboutAlarm(conditions: NcConditions): boolean {

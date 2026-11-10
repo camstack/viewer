@@ -249,7 +249,7 @@ describe('what the editor offers and refuses (the hub verdict, said before the s
     const form: NcRuleFormState = {
       ...inputToForm(
         summaryRule({
-          actions: { onTrigger: [{ kind: 'do', action: { kind: 'wait', seconds: 1 } }] },
+          actions: { onTrigger: ['act-wait'] },
         }),
       ),
     }

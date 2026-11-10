@@ -22,7 +22,8 @@ import { useTheme } from '../../theme/theme-provider.js'
 import { Section } from '../ui/Section.js'
 import { ToggleRow } from '../ui/ToggleRow.js'
 import { SPACING, RADIUS } from '../../theme/tokens.js'
-import type { NcSharedSequence, NcViewerRule, Target } from '../../data/notification-center.js'
+import type { NcListedAction } from '../../data/listed-actions.js'
+import type { NcViewerRule, Target } from '../../data/notification-center.js'
 import { buildRuleRowModel, type RuleMediaBadge, type RuleSnoozeSwitch } from './rule-row.js'
 import { RuleActionRow } from './RuleActionRow.js'
 import { CardControls } from './CardControls.js'
@@ -62,9 +63,9 @@ interface RuleRowProps {
   readonly onSetTargetEnabled: (ruleId: string, targetId: string, enabled: boolean) => void
   /** The admin-only last-run line under the title; absent for anyone else. */
   readonly history?: RuleTitleHistory
-  /** The hub's shared sequences (admin-only read) — resolves the rule's
-   *  sequence bindings for the snooze verdict; absent resolves none. */
-  readonly sequences?: readonly NcSharedSequence[]
+  /** The hub's Actions (admin-only read) — resolves the rule's Action ids
+   *  for the snooze verdict; absent resolves none. */
+  readonly actions?: readonly NcListedAction[]
 }
 
 export function RuleRow({
@@ -78,11 +79,11 @@ export function RuleRow({
   onSetTargetEnabled,
   history,
   snooze,
-  sequences,
+  actions,
 }: RuleRowProps) {
   const { t } = useTranslation()
   const { colors } = useTheme()
-  const model = useMemo(() => buildRuleRowModel(rule, ownTargets, sequences), [rule, ownTargets, sequences])
+  const model = useMemo(() => buildRuleRowModel(rule, ownTargets, actions), [rule, ownTargets, actions])
 
   return (
     // `accessible={false}`: a card that were ONE accessibility element would

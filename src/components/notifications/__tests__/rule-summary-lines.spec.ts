@@ -135,18 +135,17 @@ describe('summary lines', () => {
       params: { classes: 'cat, dog', count: 1 },
     })
   })
-  it('actions: none until a sequence or a button exists', () => {
+  it('actions: none until an Action or a button exists', () => {
     expect(sectionSummary('actions', emptyRuleForm(), ctx)).toEqual({ key: 'v2.nc.rules.summary.actions.none' })
   })
   it('actions: counts the DRAFT, not the stored rule — an edit shows before it is saved', () => {
-    const step = { editId: 't1', kind: 'wait' as const, seconds: 2, deviceId: undefined, cap: '', method: '', args: [] }
     const form = {
       ...emptyRuleForm(),
       actions: {
         ...NC_ACTIONS_EMPTY_FORM,
-        onActivation: [{ editId: 'b1', kind: 'sequence' as const, sequenceId: 'a' }],
-        onTrigger: [{ editId: 'b1', kind: 'do' as const, step }],
-        buttons: [{ id: 'x', label: 'X', sequenceId: 'a' }],
+        onActivation: ['act-a'],
+        onTrigger: ['act-b'],
+        buttons: [{ id: 'x', label: 'X', actionId: 'act-a' }],
       },
     }
     expect(sectionSummary('actions', form, ctx)).toEqual({
@@ -159,8 +158,8 @@ describe('summary lines', () => {
       ...emptyRuleForm(),
       actions: {
         ...NC_ACTIONS_EMPTY_FORM,
-        onTrigger: [{ editId: 'b1', kind: 'sequence' as const, sequenceId: '' }],
-        buttons: [{ id: 'x', label: '', sequenceId: '' }],
+        onTrigger: [' '],
+        buttons: [{ id: 'x', label: '', actionId: '' }],
       },
     }
     expect(sectionSummary('actions', form, ctx)).toEqual({
@@ -168,14 +167,13 @@ describe('summary lines', () => {
       params: { count: 3 },
     })
   })
-  it('actions: the count is of problem INSTANCES — two unpicked sequences are two problems, not one kind', () => {
-    const blank = { kind: 'sequence' as const, sequenceId: '' }
+  it('actions: the count is of problem INSTANCES — two unpicked Actions are two problems, not one kind', () => {
     const form = {
       ...emptyRuleForm(),
       actions: {
         ...NC_ACTIONS_EMPTY_FORM,
-        onTrigger: [{ ...blank, editId: 'b1' }],
-        onTriggerOff: [{ ...blank, editId: 'b1' }],
+        onTrigger: [''],
+        onTriggerOff: [' '],
       },
     }
     expect(sectionSummary('actions', form, ctx)).toEqual({

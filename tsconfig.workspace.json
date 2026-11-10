@@ -24,6 +24,10 @@
         "../camstack-server/packages/types/src/index.ts",
         "../packages/types/src/index.ts"
       ],
+      "@camstack/types/client": [
+        "../camstack-server/packages/types/src/client.ts",
+        "../packages/types/src/client.ts"
+      ],
       "@camstack/sdk": [
         "../camstack-server/packages/sdk/src/index.ts",
         "../packages/sdk/src/index.ts"

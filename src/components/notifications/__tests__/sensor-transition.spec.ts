@@ -175,18 +175,14 @@ describe('the alarm rule that can never fire', () => {
     expect(sensorTransitionNeverFiresFor({ conditions: alarm('raised').conditions })).toBe(false)
     expect(sensorTransitionNeverFiresFor({ conditions: cleared })).toBe(false)
   })
-  it('an onTrigger Do binding that pulls the panel trigger makes it an alarm rule', () => {
-    const actions = { onTrigger: [{ kind: 'do' as const, action: TRIGGER }] }
-    expect(sensorTransitionNeverFiresFor({ conditions: cleared, actions })).toBe(true)
-  })
-  it('a sequence binding proves it only through the shared list', () => {
-    const actions = { onTrigger: [{ kind: 'sequence' as const, sequenceId: 'seq-alarm' }] }
+  it('an onTrigger Action that pulls the panel trigger makes it an alarm rule, only through the list', () => {
+    const actions = { onTrigger: ['act-alarm'] }
     expect(sensorTransitionNeverFiresFor({ conditions: cleared, actions })).toBe(false)
     expect(
       sensorTransitionNeverFiresFor({
         conditions: cleared,
         actions,
-        sequenceActionsOf: (id) => (id === 'seq-alarm' ? [TRIGGER] : undefined),
+        actionStepsOf: (id) => (id === 'act-alarm' ? [TRIGGER] : undefined),
       }),
     ).toBe(true)
   })
