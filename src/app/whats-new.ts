@@ -30,6 +30,20 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.702',
+    date: '2026-11-10',
+    notes: {
+      en: [
+        'Climate rows: mode and temperature. Robots: start/pause and return to base.',
+        'Media rows: power, volume and a remote button.',
+      ],
+      it: [
+        'Righe clima: modalità e temperatura. Robot: avvia/pausa e torna alla base.',
+        'Righe media: accensione, volume e pulsante telecomando.',
+      ],
+    },
+  },
+  {
     version: '1.0.701',
     date: '2026-11-10',
     notes: {

@@ -15,12 +15,14 @@
 import React from 'react'
 import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native'
 import { useTranslation } from 'react-i18next'
-import type { HeroRowModel } from '@camstack/types'
+import type { HeroControl, HeroRowModel, REMOTE_OPEN_ACTION_ID } from '@camstack/types'
+import { useRouter } from 'expo-router'
 import { CatalogIcon } from '../components/CatalogIcon.js'
 import { OfflineBadge } from '../components/device/OfflineBadge.js'
 import { isDeviceOffline } from '../components/device/device-reachability.js'
 import { hapticTap } from '../lib/haptics.js'
-import { ChevronRight } from '../lib/icons.js'
+import { ChevronRight, RemoteControl } from '../lib/icons.js'
+import { remoteRoute } from '../remote/remote-route.js'
 import { useTheme } from '../theme/theme-provider.js'
 import { SPACING, TYPOGRAPHY } from '../theme/tokens.js'
 import { HeroControlView } from './HeroControlView.js'
@@ -59,11 +61,25 @@ export interface HeroRowBodyProps {
   readonly openLabel: string
 }
 
+/** The action id the row opens the remote with; typed against the hub's constant (type-only import). */
+const REMOTE_OPEN: typeof REMOTE_OPEN_ACTION_ID = 'remote.open'
+
+/** `primary` then the hub's `extras` (absent on an older hub = today's single control). */
+export function rowControls(model: HeroRowModel): readonly HeroControl[] {
+  return model.primary === null ? [] : [model.primary, ...(model.extras ?? [])]
+}
+
+function isRemoteOpen(control: HeroControl): boolean {
+  return control.kind === 'action' && control.action.id === REMOTE_OPEN
+}
+
 export function HeroRowBody({ deviceId, name, online, model, customIcon = null, caption = null, fallbackControl = null, shortcuts = null, onOpen, openLabel }: HeroRowBodyProps): React.JSX.Element {
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { colors } = useTheme()
   const { width } = useWindowDimensions()
   const caller = useHeroCaller(deviceId)
+  const router = useRouter()
+  const controls = rowControls(model)
   const locale = heroLocale(i18n.language)
   const view = rowView(model, locale)
   const offline = isDeviceOffline(online)
@@ -93,9 +109,28 @@ export function HeroRowBody({ deviceId, name, online, model, customIcon = null, 
         <View style={styles.control} testID={`hero-row-shortcuts-${deviceId}`}>
           {shortcuts}
         </View>
-      ) : model.primary !== null ? (
-        <View style={styles.control}>
-          <HeroControlView control={model.primary} locale={locale} caller={caller} online={online} />
+      ) : controls.length > 0 ? (
+        <View style={styles.controls}>
+          {controls.map((control) =>
+            isRemoteOpen(control) ? (
+              <Pressable
+                key={REMOTE_OPEN}
+                onPress={() => {
+                  hapticTap()
+                  router.push(remoteRoute(deviceId, name))
+                }}
+                hitSlop={6}
+                accessibilityRole="button"
+                accessibilityLabel={t('v2.hero.remote')}
+                testID={`hero-row-remote-${deviceId}`}
+                style={[styles.remote, { borderColor: colors.borderSubtle }]}
+              >
+                <RemoteControl size={18} color={colors.foreground} />
+              </Pressable>
+            ) : (
+              <HeroControlView key={control.kind === 'action' ? control.action.id : control.id} control={control} locale={locale} caller={caller} online={online} />
+            ),
+          )}
         </View>
       ) : fallbackControl !== null ? (
         <View style={styles.control}>{fallbackControl}</View>
@@ -140,6 +175,8 @@ const styles = StyleSheet.create({
   name: { fontSize: TYPOGRAPHY.size.md, fontWeight: TYPOGRAPHY.weight.medium },
   caption: { fontSize: TYPOGRAPHY.size.xs },
   control: { flexShrink: 0 },
+  controls: { flexShrink: 0, flexDirection: 'row', alignItems: 'center', gap: SPACING.xs },
+  remote: { width: 36, height: 36, borderRadius: 18, borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center' },
   fact: { flexDirection: 'row', alignItems: 'center', gap: SPACING.xs, flexShrink: 0, maxWidth: 120 },
   factText: { fontSize: TYPOGRAPHY.size.sm },
   chevron: { width: 30, height: 30, alignItems: 'center', justifyContent: 'center' },
