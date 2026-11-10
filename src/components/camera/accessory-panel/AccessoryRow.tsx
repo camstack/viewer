@@ -164,8 +164,8 @@ export const AccessoryRow = memo(function AccessoryRow({
     if (draft !== row.label) onRename(row, draft)
   }, [draft, row, onRename])
 
+  // The row names the device, never its room: the panel is already one camera's place.
   const captionText = [
-    row.device.location,
     row.origin === 'local' ? t('v2.accessoryPanel.localBadge') : null,
     row.hidden ? t('v2.accessoryPanel.hiddenBadge') : null,
   ]
@@ -177,18 +177,12 @@ export const AccessoryRow = memo(function AccessoryRow({
   ) : null
 
   const caption =
-    row.device.location !== null || row.origin === 'local' || row.hidden ? (
+    captionText !== '' ? (
       <Text
         style={[styles.caption, { fontSize: ui.font.xs, color: colors.foregroundSubtle }]}
         numberOfLines={1}
       >
-        {[
-          row.device.location,
-          row.origin === 'local' ? t('v2.accessoryPanel.localBadge') : null,
-          row.hidden ? t('v2.accessoryPanel.hiddenBadge') : null,
-        ]
-          .filter((part): part is string => part !== null)
-          .join(' · ')}
+        {captionText}
       </Text>
     ) : null
 

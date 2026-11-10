@@ -30,6 +30,14 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.701',
+    date: '2026-11-10',
+    notes: {
+      en: ['Camera device rows show only the device name, no room.'],
+      it: ['Le righe dei dispositivi della camera mostrano solo il nome, senza stanza.'],
+    },
+  },
+  {
     version: '1.0.700',
     date: '2026-11-10',
     notes: {

@@ -34,18 +34,18 @@ const offModel: HeroRowModel = {
   trailing: null,
 }
 
-const row = (online: boolean): AccessoryPanelRow => ({
-  device: { id: 9, name: 'Lamp', type: 'switch', online, features: ['switch'], location: null, role: null, displayIcon: null },
+const row = (online: boolean, location: string | null = null): AccessoryPanelRow => ({
+  device: { id: 9, name: 'Lamp', type: 'switch', online, features: ['switch'], location, role: null, displayIcon: null },
   origin: 'server',
   label: 'Lamp',
   iconKey: 'power',
   hidden: false,
 })
 
-function mountRow(online: boolean, withModel: boolean): void {
+function mountRow(online: boolean, withModel: boolean, location: string | null = null): void {
   mountScreen(
     React.createElement(AccessoryRow, {
-      row: row(online),
+      row: row(online, location),
       editing: false,
       first: true,
       last: true,
@@ -87,6 +87,12 @@ describe.each([
   it('an offline device wears the Offline badge', () => {
     mountRow(false, withModel)
     expect(screen.getByTestId('device-offline-9')).toBeTruthy()
+  })
+
+  it('names the device, never its room', () => {
+    mountRow(true, withModel, 'Bedroom')
+    expect(screen.getByText('Lamp')).toBeTruthy()
+    expect(screen.queryByText(/Bedroom/)).toBeNull()
   })
 
   it('an online device that is OFF does not', () => {

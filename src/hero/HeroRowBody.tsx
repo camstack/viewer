@@ -1,6 +1,6 @@
 /**
  * HeroRowBody — a device row built from `hero-layout.getRowModels` and nothing
- * else: scene tile, name, the location caption, the primary control, the
+ * else: scene tile, name (never the room), the primary control, the
  * trailing fact (tablet width and up, like the web row), chevron.
  *
  * The status line is not drawn: the scene tile carries the state (icon and
@@ -40,7 +40,7 @@ export interface HeroRowBodyProps {
   readonly model: HeroRowModel
   /** An icon the operator picked on this phone; replaces the state icon, keeps the tone. */
   readonly customIcon?: string | null
-  /** Location and local badges, in the flexible middle. */
+  /** Local and hidden badges, under the name. Never the room. */
   readonly caption?: string | null
   /**
    * Drawn in the control zone when the hub's row model carries no control for a
