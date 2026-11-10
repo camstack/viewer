@@ -1,7 +1,13 @@
 /**
  * HeroRowBody — a device row built from `hero-layout.getRowModels` and nothing
- * else: scene tile, name, ONE status line, the primary control, the trailing
- * fact (tablet width and up, like the web row), chevron.
+ * else: scene tile, the primary control, the trailing fact (tablet width and
+ * up, like the web row), chevron. A location caption sits in the flexible
+ * middle when the caller has one.
+ *
+ * The device name and the status line are not drawn. The scene tile already
+ * carries the state (icon and tone), the primary control carries on/off, and
+ * the trailing fact carries the measurement the status line used to repeat.
+ * The name stays on the open control's accessible label.
  *
  * `model` is always a real model (D315): a pending or failed batch, or a hub
  * with no row for the device, draws the legacy row instead. A model whose
@@ -26,14 +32,17 @@ export const ROW_FACT_MIN_WIDTH = 640
 
 export interface HeroRowBodyProps {
   readonly deviceId: number
-  /** What the row is called: the operator's local name, else the hub's (never the model's own). */
+  /**
+   * What the row is called. Not drawn: the open control announces it. Kept so
+   * a caller that already has the name does not grow a second label.
+   */
   readonly name: string
   readonly online: boolean
   /** A real model: a row without one is the legacy row, drawn by the caller. */
   readonly model: HeroRowModel
   /** An icon the operator picked on this phone; replaces the state icon, keeps the tone. */
   readonly customIcon?: string | null
-  /** Shown under the name while the model has no status line (location, badges). */
+  /** Location and local badges, in the flexible middle. */
   readonly caption?: string | null
   /**
    * Drawn in the control zone when the hub's row model carries no control for a
@@ -59,7 +68,6 @@ export function HeroRowBody({ deviceId, name, online, model, customIcon = null, 
   const caller = useHeroCaller(deviceId)
   const locale = heroLocale(i18n.language)
   const view = rowView(model, locale)
-  const status = view.status
   const showFact = view.trailing !== null && width >= ROW_FACT_MIN_WIDTH
   return (
     <View style={[styles.row, { borderBottomColor: colors.borderSubtle }]} testID={`hero-row-${deviceId}`}>
@@ -69,15 +77,7 @@ export function HeroRowBody({ deviceId, name, online, model, customIcon = null, 
         muted={!online || view.muted}
         testID={`hero-row-scene-${deviceId}`}
       />
-      <View style={styles.label}>
-        <Text style={[styles.name, { color: colors.foreground }]} numberOfLines={1}>
-          {name}
-        </Text>
-        {status !== '' ? (
-          <Text testID={`hero-row-status-${deviceId}`} style={[styles.status, { color: colors.foregroundMuted }]} numberOfLines={1}>
-            {status}
-          </Text>
-        ) : null}
+      <View style={styles.label} accessibilityLabel={name}>
         {caption !== null && caption !== '' ? (
           <Text testID={`hero-row-caption-${deviceId}`} style={[styles.caption, { color: colors.foregroundSubtle }]} numberOfLines={1}>
             {caption}
@@ -132,8 +132,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   label: { flex: 1, minWidth: 0, gap: 2 },
-  name: { fontSize: TYPOGRAPHY.size.md, fontWeight: TYPOGRAPHY.weight.medium },
-  status: { fontSize: TYPOGRAPHY.size.sm },
   caption: { fontSize: TYPOGRAPHY.size.xs },
   control: { flexShrink: 0 },
   fact: { flexDirection: 'row', alignItems: 'center', gap: SPACING.xs, flexShrink: 0, maxWidth: 120 },

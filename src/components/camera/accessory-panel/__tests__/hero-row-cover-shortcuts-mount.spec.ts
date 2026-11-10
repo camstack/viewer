@@ -139,3 +139,14 @@ describe('a device with no interactive control', () => {
     expect(screen.getByTestId('hero-row-9')).toBeTruthy()
   })
 })
+
+describe('the left of a hero row', () => {
+  it('does not show the device name or the status line', () => {
+    mountRow('camera', {})
+    expect(screen.queryByText('Device')).toBeNull()
+    expect(screen.queryByTestId('hero-row-status-9')).toBeNull()
+    expect(screen.getByTestId('hero-row-scene-9')).toBeTruthy()
+    expect(screen.getByTestId('accessory-detail-9')).toBeTruthy()
+    expect(screen.getByText('Model pill')).toBeTruthy()
+  })
+})
