@@ -781,6 +781,29 @@ export const NcRuleTemplateSchema = z.object({
 })
 export type NcRuleTemplate = z.infer<typeof NcRuleTemplateSchema>
 
+/** Which picture kind one target receives (#487). */
+export const NcTargetAttachmentSchema = z.enum(['none', 'image', 'clip', 'gif'])
+export type NcTargetAttachment = z.infer<typeof NcTargetAttachmentSchema>
+
+/**
+ * One target's own settings (#487, D1032) — the base rule of every delivery.
+ * Mirrored so an edit from the phone carries them through untouched; the app
+ * does not author them yet.
+ */
+export const NcTargetOverrideSchema = z.object({
+  template: NcRuleTemplateSchema.optional(),
+  schedule: NcScheduleSchema.optional(),
+  priority: z.number().int().min(1).max(5).optional(),
+  attachment: NcTargetAttachmentSchema.optional(),
+  /** `false` = no buttons for this target; `true` is the same as absent. */
+  actions: z.boolean().optional(),
+})
+export type NcTargetOverride = z.infer<typeof NcTargetOverrideSchema>
+
+/** Per-target settings keyed by target id (#487). */
+export const NcTargetOverridesSchema = z.record(z.string(), NcTargetOverrideSchema)
+export type NcTargetOverrides = z.infer<typeof NcTargetOverridesSchema>
+
 /** Client-supplied rule fields (server stamps id/createdBy/createdAt/updatedAt). */
 export const NcRuleInputSchema = z.object({
   name: z.string().min(1).max(200),
@@ -806,6 +829,8 @@ export const NcRuleInputSchema = z.object({
   targets: z.array(NcRuleTargetSchema),
   /** USERS this rule addresses besides `targets`. ADMIN-ONLY on the hub. */
   targetUsers: z.array(z.string()).optional(),
+  /** Per-target settings (#487): carried through an edit, never dropped. */
+  targetOverrides: NcTargetOverridesSchema.optional(),
   media: NcMediaPolicySchema.default({}),
   throttle: NcThrottleSchema.default({ cooldownSec: 60, scope: 'rule-device' }),
   template: NcRuleTemplateSchema.optional(),
@@ -891,6 +916,7 @@ export const NcRulePatchSchema = z.object({
   systemEventDelivery: NcSystemEventDeliverySchema.optional(),
   targets: z.array(NcRuleTargetSchema).optional(),
   targetUsers: z.array(z.string()).optional(),
+  targetOverrides: NcTargetOverridesSchema.optional(),
   media: NcMediaPolicySchema.optional(),
   throttle: NcThrottleSchema.optional(),
   template: NcRuleTemplateSchema.optional(),

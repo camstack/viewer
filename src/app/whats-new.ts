@@ -30,6 +30,22 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.699',
+    date: '2026-11-10',
+    notes: {
+      en: [
+        'An offline device shows a red Offline badge, no longer looks switched off.',
+        'Camera accessories get a power-source row: on, off and restart.',
+        'Per-destination notification settings survive an edit from the app.',
+      ],
+      it: [
+        'Un dispositivo offline mostra il badge rosso Offline, non sembra più spento.',
+        'Gli accessori della camera hanno la riga alimentazione: accendi, spegni, riavvia.',
+        "Le impostazioni per destinazione delle notifiche restano dopo una modifica dall'app.",
+      ],
+    },
+  },
+  {
     version: '1.0.698',
     date: '2026-11-10',
     notes: {

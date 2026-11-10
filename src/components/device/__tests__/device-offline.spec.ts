@@ -96,11 +96,11 @@ describe.each([
 })
 
 describe('hero row status', () => {
-  it('offline replaces the stale "Off" status line; online-off keeps it', () => {
+  it('offline is the one state the row names; online-off shows no badge', () => {
     mountRow(false, true)
-    expect(screen.queryByTestId('hero-row-status-9')).toBeNull()
+    expect(screen.getByTestId('device-offline-9')).toBeTruthy()
     cleanup()
     mountRow(true, true)
-    expect(screen.getByTestId('hero-row-status-9').textContent).toBe('Off')
+    expect(screen.queryByTestId('device-offline-9')).toBeNull()
   })
 })
