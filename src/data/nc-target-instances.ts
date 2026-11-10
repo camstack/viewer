@@ -31,7 +31,8 @@ export type NcTargetInstance = z.infer<typeof NcTargetInstanceSchema>
 const InstanceListSchema = z.array(NcTargetInstanceSchema)
 const NullableInstanceSchema = NcTargetInstanceSchema.nullable()
 const CreatedSchema = z.object({ id: z.string() })
-const NO_PROCEDURE = /not.?found|no such procedure|unavailable/i
+/** A hub without the optional `testInstance` procedure (tRPC NOT_FOUND). Network and other errors surface. */
+const NO_PROCEDURE = /NOT_FOUND|No procedure found/i
 const TestResultSchema = z.object({
   success: z.boolean(),
   error: z.string().optional(),
@@ -70,12 +71,9 @@ function ownerOf(row: NcTargetInstance): unknown {
   return row.formValues[NC_TARGET_OWNER_KEY]
 }
 
-/** Own rows only. Without a known user, the hub's `mine` scoping stands and a row must at least carry an owner. */
-export function ownRows(rows: readonly NcTargetInstance[], userId: string | undefined): NcTargetInstance[] {
-  return rows.filter((row) => {
-    const owner = ownerOf(row)
-    return userId === undefined ? typeof owner === 'string' && owner.length > 0 : owner === userId
-  })
+/** Own rows only: fail closed, a row counts as the user's only when its owner key is the user's id. */
+export function ownRows(rows: readonly NcTargetInstance[], userId: string): NcTargetInstance[] {
+  return rows.filter((row) => ownerOf(row) === userId)
 }
 
 export interface NcTargetsClient {
@@ -112,10 +110,8 @@ export function makeNcTargetsClient(deps: NcInstancesDeps): NcTargetsClient {
 
   return {
     listTargets: async () => {
-      const [rows, userId] = await Promise.all([
-        call('listInstances', { mine: true }, InstanceListSchema),
-        deps.sessionUserId(),
-      ])
+      const userId = await requireUser()
+      const rows = await call('listInstances', { mine: true }, InstanceListSchema)
       return { targets: ownRows(rows, userId).map(instanceToTarget) }
     },
 

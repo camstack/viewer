@@ -150,6 +150,7 @@ function actionOf(input: unknown): string {
 }
 
 const HUB = {
+  'auth.me': { id: 'u1', username: 'user', isAdmin: false },
   'integrationInstances.listInstances': (): unknown =>
     instanceRows([{ id: 'tgt-a', name: TARGET_NAME, kind: 'pushover', enabled: true, config: {} }]),
   'addons.custom': (input?: unknown): unknown => {

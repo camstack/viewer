@@ -59,6 +59,7 @@ describe('a session change drops the previous user\'s NC caches (N2)', () => {
     const session = { user: 'a' }
     mountScreen(React.createElement(Probe), {
       hub: {
+        'auth.me': (): unknown => ({ id: session.user, username: session.user, isAdmin: false }),
         'integrationInstances.listInstances': (): unknown => {
           // B's answer never arrives: whatever the list shows after the switch
           // is either "pending" or a leftover.
@@ -92,6 +93,7 @@ describe('a session change drops the previous user\'s NC caches (N2)', () => {
     )
     mountScreen(React.createElement(Probe), {
       hub: {
+        'auth.me': { id: 'a', username: 'a', isAdmin: false },
         'integrationInstances.listInstances': (): unknown =>
           instanceRows([{ id: 't-a', name: 'A phone', kind: 'pushover', enabled: true, config: {} }], 'a'),
       },

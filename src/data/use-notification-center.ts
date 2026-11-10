@@ -11,6 +11,7 @@
  * Mutations throw on transport/server failure (like `use-face-gallery`) so the
  * UI can surface it rather than silently "succeeding".
  */
+import { log } from '../lib/logger.js'
 import { toSessionUser } from './use-me.js'
 import type { NcInstanceMethod } from './nc-target-instances.js'
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query'
@@ -154,7 +155,10 @@ function integrationInstancesCall(
 async function sessionUserIdCall(trpcClient: unknown): Promise<string | undefined> {
   try {
     return toSessionUser(await trpcLeafCall(trpcClient, ['auth', 'me'], 'query', undefined))?.id
-  } catch {
+  } catch (e) {
+    log.warn('nc', 'auth.me failed: the notification targets stay closed', {
+      error: e instanceof Error ? e.message : String(e),
+    })
     return undefined
   }
 }

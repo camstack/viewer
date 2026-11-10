@@ -117,7 +117,9 @@ function upserts(): readonly unknown[] {
 
 async function settle(): Promise<void> {
   await vi.waitFor(() =>
-    expect(hubCalls().some((call) => call.path === 'integrationInstances.listInstances')).toBe(true),
+    expect(
+      hubCalls().some((call) => call.path === 'integrationInstances.listInstances' || call.path === 'auth.me'),
+    ).toBe(true),
   )
   await act(async () => {
     await Promise.resolve()

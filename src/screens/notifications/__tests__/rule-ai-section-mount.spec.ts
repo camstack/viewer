@@ -107,6 +107,7 @@ function actionOf(input: unknown): string {
 }
 
 const HUB = {
+  'auth.me': { id: 'u1', username: 'user', isAdmin: false },
   'integrationInstances.listInstances': (): unknown => instanceRows(TARGETS),
   'addons.custom': (input?: unknown): unknown => {
     const action = actionOf(input)

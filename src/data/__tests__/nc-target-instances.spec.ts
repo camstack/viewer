@@ -18,12 +18,12 @@ const ROW = (id: string, owner: string | null, extra: Record<string, unknown> = 
 
 function clientOver(
   answers: Partial<Record<NcInstanceMethod, unknown | ((input: unknown) => unknown)>>,
-  userId: string | undefined = 'u1',
+  userId: string | null = 'u1',
 ) {
   const calls: Array<{ method: NcInstanceMethod; input: unknown }> = []
   const client = makeNcClient({
     addonsCustomMutate: vi.fn(),
-    sessionUserId: () => Promise.resolve(userId),
+    sessionUserId: () => Promise.resolve(userId ?? undefined),
     integrationInstances: async (args) => {
       calls.push(args)
       const a = answers[args.method]
@@ -32,6 +32,19 @@ function clientOver(
     },
   })
   return { client, calls }
+}
+
+const SEED = {
+  id: '',
+  name: 'Mine',
+  kind: 'pushover',
+  addonId: 'notifiers',
+  enabled: true,
+  config: { token: 'x' },
+}
+
+function hasId(input: unknown, id: string): boolean {
+  return typeof input === 'object' && input !== null && 'id' in input && input.id === id
 }
 
 describe('own notification targets through integrationInstances', () => {
@@ -103,6 +116,77 @@ describe('own notification targets through integrationInstances', () => {
       success: false,
       error: 'This kind cannot be tested',
     })
+  })
+
+  it('a user that is not known lists nothing and writes nothing', async () => {
+    const { client, calls } = clientOver({ listInstances: [ROW('a', 'u1')], getInstance: ROW('a', 'u1') }, null)
+    await expect(client.listTargets()).rejects.toThrow('authenticated user required')
+    await expect(client.deleteTarget('a')).rejects.toThrow('authenticated user required')
+    await expect(client.setTargetEnabled('a', false)).rejects.toThrow('authenticated user required')
+    await expect(client.testTarget('a')).rejects.toThrow('authenticated user required')
+    await expect(client.upsertTarget(SEED)).rejects.toThrow('authenticated user required')
+    expect(calls).toEqual([])
+  })
+
+  it('updates an own row in place, and skips setInstanceEnabled when enabled is unchanged', async () => {
+    const { client, calls } = clientOver({
+      getInstance: ROW('a', 'u1'),
+      updateInstance: { ok: true },
+      setInstanceEnabled: { ok: true },
+    })
+    await client.upsertTarget({ ...SEED, id: 'a', name: 'Renamed' })
+    expect(calls.map((c) => c.method)).toEqual(['getInstance', 'updateInstance', 'getInstance'])
+    expect(calls[1]?.input).toEqual({
+      addonId: 'notifiers',
+      id: 'a',
+      name: 'Renamed',
+      values: { token: 'x', ownerUserId: 'u1' },
+    })
+  })
+
+  it('a FOREIGN id creates a fresh row and never updates it', async () => {
+    const { client, calls } = clientOver({
+      getInstance: (input: unknown) => (hasId(input, 'b') ? ROW('b', 'u2') : ROW('fresh', 'u1')),
+      createInstance: { id: 'fresh' },
+      setInstanceEnabled: { ok: true },
+    })
+    const out = await client.upsertTarget({ ...SEED, id: 'b' })
+    expect(out.target.id).toBe('fresh')
+    expect(calls.some((c) => c.method === 'updateInstance')).toBe(false)
+    expect(calls.some((c) => c.method === 'createInstance')).toBe(true)
+  })
+
+  it('switches an own target, and refuses one it does not own', async () => {
+    const own = clientOver({ getInstance: ROW('a', 'u1'), setInstanceEnabled: { ok: true } })
+    await expect(own.client.setTargetEnabled('a', false)).resolves.toEqual({ success: true })
+    expect(own.calls[1]).toEqual({
+      method: 'setInstanceEnabled',
+      input: { addonId: 'notifiers', id: 'a', enabled: false },
+    })
+    const foreign = clientOver({ getInstance: ROW('b', 'u2'), setInstanceEnabled: { ok: true } })
+    await expect(foreign.client.setTargetEnabled('b', false)).rejects.toThrow('target not owned: b')
+    expect(foreign.calls.some((c) => c.method === 'setInstanceEnabled')).toBe(false)
+  })
+
+  it('delete and test refuse a GLOBAL row (no owner key)', async () => {
+    const { client, calls } = clientOver({
+      getInstance: ROW('g', null),
+      deleteInstance: { ok: true },
+      testInstance: { success: true },
+    })
+    await expect(client.deleteTarget('g')).rejects.toThrow('target not owned: g')
+    await expect(client.testTarget('g')).rejects.toThrow('target not owned: g')
+    expect(calls.map((c) => c.method)).toEqual(['getInstance', 'getInstance'])
+  })
+
+  it('a test that fails for a reason other than a missing procedure surfaces', async () => {
+    const { client } = clientOver({
+      getInstance: ROW('a', 'u1'),
+      testInstance: () => {
+        throw new Error('network request failed: unavailable')
+      },
+    })
+    await expect(client.testTarget('a')).rejects.toThrow('unavailable')
   })
 
   it('the viewer mirror reads what the published instance schema writes', () => {
