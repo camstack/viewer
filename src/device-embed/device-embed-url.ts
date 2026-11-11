@@ -43,10 +43,13 @@ export interface DeviceEmbedUrlInput {
   readonly lang: DeviceEmbedLang
 }
 
-/** `<hub>/embed/device/<id>?theme=…&lang=…` — no token, ever. */
+/**
+ * `<hub>/embed/device/<id>?theme=…&lang=…&host=viewer` — no token, ever.
+ * `host=viewer` tells the card that the header above it already names the device.
+ */
 export function buildDeviceEmbedUrl(input: DeviceEmbedUrlInput): string {
   const base = input.serverUrl.replace(/\/+$/, '')
-  const query = new URLSearchParams({ theme: input.theme, lang: input.lang })
+  const query = new URLSearchParams({ theme: input.theme, lang: input.lang, host: 'viewer' })
   return `${base}/embed/device/${String(input.deviceId)}?${query.toString()}`
 }
 

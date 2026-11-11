@@ -71,7 +71,7 @@ describe('DeviceDetailScreen', () => {
     expect(screen.getByText('Washer plug')).toBeTruthy()
     expect(await screen.findByText('Online')).toBeTruthy()
     const view = lastWebView()
-    expect(view.source.uri).toMatch(/^http:\/\/hub\.test:8080\/embed\/device\/22\?theme=(light|dark)&lang=en$/)
+    expect(view.source.uri).toMatch(/^http:\/\/hub\.test:8080\/embed\/device\/22\?theme=(light|dark)&lang=en&host=viewer$/)
     // No native copy of the card is drawn any more.
     expect(screen.queryByText('Overview')).toBeNull()
     expect(screen.queryByText('History')).toBeNull()

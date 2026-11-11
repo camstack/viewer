@@ -13,13 +13,13 @@ import {
 describe('buildDeviceEmbedUrl', () => {
   it('names the device, the theme and the language — never a token', () => {
     const url = buildDeviceEmbedUrl({ serverUrl: 'https://hub.lan:8443/', deviceId: 42, theme: 'dark', lang: 'it' })
-    expect(url).toBe('https://hub.lan:8443/embed/device/42?theme=dark&lang=it')
+    expect(url).toBe('https://hub.lan:8443/embed/device/42?theme=dark&lang=it&host=viewer')
     expect(url).not.toMatch(/token/i)
   })
 
   it('keeps a hub mounted under a path', () => {
     expect(buildDeviceEmbedUrl({ serverUrl: 'https://relay.example/p/abc', deviceId: 7, theme: 'light', lang: 'en' })).toBe(
-      'https://relay.example/p/abc/embed/device/7?theme=light&lang=en',
+      'https://relay.example/p/abc/embed/device/7?theme=light&lang=en&host=viewer',
     )
   })
 })
