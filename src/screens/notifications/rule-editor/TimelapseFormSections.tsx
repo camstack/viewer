@@ -24,7 +24,12 @@ import { Section } from '../../../components/ui/Section.js'
 import { SegmentedControl, type SegmentOption } from '../../../components/ui/SegmentedControl.js'
 import { StepperRow } from '../../../components/ui/StepperRow.js'
 import { ToggleRow } from '../../../components/ui/ToggleRow.js'
-import { DevicePicker } from '../../../components/notifications/DevicePicker.js'
+import { DeviceValueField } from '../../../components/device-value-picker/DeviceValueField.js'
+import {
+  CAMERA_REQUIRES,
+  deviceIdsOf,
+  pickedDevices,
+} from '../../../components/device-value-picker/picked-devices.js'
 import { Hint } from '../../../components/notifications/FieldHint.js'
 import {
   ScheduleField,
@@ -144,7 +149,13 @@ export function TimelapseFormSections({
       <View style={{ gap: SPACING.lg }}>
         <SectionLabel inset>{t('v2.nc.rules.editor.section.devices')}</SectionLabel>
         <Hint text={t('v2.nc.timelapse.camerasHint')} />
-        <DevicePicker source={{ kind: 'cameras' }} value={form.deviceIds} onChange={(next) => update({ deviceIds: next })} />
+        <DeviceValueField
+          kind="device"
+          requires={CAMERA_REQUIRES}
+          recentKey="timelapse-rule-cameras"
+          value={pickedDevices(form.deviceIds)}
+          onChange={(next) => update({ deviceIds: deviceIdsOf(next) })}
+        />
         {shows('devices') ? <Problem text={t('v2.nc.timelapse.problem.devices')} /> : null}
       </View>
 

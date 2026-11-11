@@ -3714,7 +3714,8 @@
       "show": "Mostra {{device}}",
       "moveUp": "Sposta {{device}} in su",
       "moveDown": "Sposta {{device}} in giù",
-      "remove": "Togli {{device}} da questa lista"
+      "remove": "Togli {{device}} da questa lista",
+      "nothingToAdd": "Nessun dispositivo ha un controllo che questo pannello può mostrare."
     },
     "servers": {
       "title": "Server",
@@ -4443,6 +4444,50 @@
         "noPowerSource": "Nessuna sorgente di alimentazione collegata.",
         "generic": "La richiesta è stata rifiutata."
       }
+    },
+    "deviceValuePicker": {
+      "title": "Scegli un dispositivo",
+      "search": "Cerca nome, stanza, tipo o id",
+      "or": "o",
+      "matchesOf_one": "{{cap}} · {{count}} su {{total}}",
+      "matchesOf_other": "{{cap}} · {{count}} su {{total}}",
+      "devicesCount_one": "{{count}} dispositivo",
+      "devicesCount_other": "{{count}} dispositivi",
+      "showIncompatible_one": "mostra quello che non lo ha",
+      "showIncompatible_other": "mostra i {{count}} che non lo hanno",
+      "hideIncompatible": "nascondi quelli che non lo hanno",
+      "facet": {
+        "location": "Posizione",
+        "integration": "Integrazione",
+        "type": "Tipo",
+        "any": "tutti",
+        "none": "Niente da scegliere qui",
+        "more": "altri {{count}}"
+      },
+      "failed": "Impossibile caricare i dispositivi.",
+      "failedBody": "L’hub non ha risposto. Riprova.",
+      "empty": "Nessun dispositivo fornisce {{cap}}",
+      "emptyAny": "Nessun dispositivo",
+      "showAll": "Mostra tutti i dispositivi",
+      "filterMiss": "Nessun dispositivo con {{cap}} corrisponde ai filtri",
+      "filterMissAny": "Nessun dispositivo corrisponde ai filtri",
+      "searchMiss": "Nessun dispositivo con {{cap}} corrisponde a “{{query}}”",
+      "searchMissAny": "Nessun dispositivo corrisponde a “{{query}}”",
+      "clearSearch": "Cancella ricerca e filtri",
+      "suggested": "Suggeriti",
+      "recent": "Recenti",
+      "offline": "offline",
+      "valuesCount_one": "{{count}} valore",
+      "valuesCount_other": "{{count}} valori",
+      "chooseValue": "Scegli un valore",
+      "doneCount": "Fatto ({{count}})",
+      "selectedCount_one": "{{count}} selezionato",
+      "selectedCount_other": "{{count}} selezionati",
+      "gone": "Dispositivo #{{id}} non trovato",
+      "deviceId": "Dispositivo #{{id}}",
+      "moreChips": "+{{count}}",
+      "resolveFailed": "Impossibile verificare i dispositivi scelti.",
+      "inContainer": "in {{name}}"
     }
   },
   "prototype": {

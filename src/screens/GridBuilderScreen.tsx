@@ -7,25 +7,30 @@
  * and an Export row shares the grid as JSON. Runtime view settings (quality /
  * layout / highlight) are NOT edited here — the grid runtime toolbar owns
  * them. The body
- * is a multi-select list of the server's cameras (`useCameras`, the
- * authoritative `deviceManager.listAll` query); a lucide `Check` marks members.
+ * is the device → value picker's list inline (`DeviceValueList`, issue #496):
+ * the cameras (`camera-streams`) from `deviceManager.search`, with search and
+ * the Location / Integration / Type facets; a ✓ marks members. A camera
+ * hidden from the app is not offered.
  * Toggling a row adds/removes through the store so membership persists
  * immediately — "Done" (the glass back button) just commits the name + navigates
  * back. The name/options/export ride in the list header so the whole screen
  * scrolls as one (no nested scroll views).
  */
 import React, { useEffect, useMemo, useState } from 'react'
-import { View, Text, FlatList, Pressable, StyleSheet } from 'react-native'
+import { View, StyleSheet } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useRouter } from 'expo-router'
-import { Check, Plus, ArrowUpDown } from '../lib/icons.js'
+import { Plus, ArrowUpDown } from '../lib/icons.js'
 import { useConnection } from '../connection/ConnectionProvider.js'
 import { useTheme } from '../theme/theme-provider.js'
 import { ScreenHeader } from '../components/ScreenHeader.js'
 import { GridBuilderHeader } from '../components/grid/GridBuilderHeader.js'
 import { GridManageList } from '../components/grid/GridManageList.js'
 import { useCameras, type CameraInfo } from '../data/use-cameras.js'
-import { SPACING, RADIUS } from '../theme/tokens.js'
+import { SPACING } from '../theme/tokens.js'
+import { DeviceValueList } from '../components/device-value-picker/DeviceValueList.js'
+import { CAMERA_REQUIRES, pickedDevices } from '../components/device-value-picker/picked-devices.js'
+import { useDeviceValueBrowse } from '../components/device-value-picker/use-device-value-browse.js'
 import { findServerGrid, useGridStore, resolveGridOptions } from '../store/grid-store.js'
 import { useActiveServerId } from '../store/server-scope.js'
 import { useGridLocalStore } from '../store/grid-local-store.js'
@@ -45,6 +50,12 @@ export function GridBuilderScreen({ gridId, onClose }: GridBuilderScreenProps) {
   const router = useRouter()
   const { state } = useConnection()
   const { data: cameras = [] } = useCameras()
+  // A camera hidden from the app's lists is not offered here either.
+  const { data: allCameras } = useCameras({ includeHidden: true })
+  const hiddenFromApp = useMemo(() => {
+    const visible = new Set(cameras.map((c) => c.id))
+    return (allCameras ?? []).filter((c) => !visible.has(c.id)).map((c) => c.id)
+  }, [cameras, allCameras])
 
   const grids = useGridStore((s) => s.grids)
   const hydrate = useGridStore((s) => s.hydrate)
@@ -75,6 +86,13 @@ export function GridBuilderScreen({ gridId, onClose }: GridBuilderScreenProps) {
     }
     return out
   }, [grid, cameras])
+  const picked = useMemo(() => pickedDevices(grid?.cameraIds ?? []), [grid?.cameraIds])
+  const browse = useDeviceValueBrowse({
+    requires: CAMERA_REQUIRES,
+    excludeIds: hiddenFromApp,
+    recentIds: NO_RECENTS,
+    enabled: state === 'connected',
+  })
   const hiddenIds = useMemo(() => new Set(grid?.hiddenCameraIds ?? []), [grid?.hiddenCameraIds])
   const audioOnIds = useMemo(() => new Set(storedAudioOnIds ?? []), [storedAudioOnIds])
   const [mode, setMode] = useState<'add' | 'arrange'>('add')
@@ -164,87 +182,24 @@ export function GridBuilderScreen({ gridId, onClose }: GridBuilderScreenProps) {
           onRemove={(cameraId) => removeGridCamera(gridId, cameraId)}
         />
       ) : (
-        <FlatList
-          data={cameras}
-          keyExtractor={(c) => String(c.id)}
-          ListHeaderComponent={header}
-          ListEmptyComponent={
-            <View style={styles.center}>
-              <Text style={{ color: colors.foregroundMuted, fontSize: 15 }}>{t('v2.cameras.empty')}</Text>
-            </View>
-          }
-          contentContainerStyle={{ paddingHorizontal: SPACING.md, paddingBottom: SPACING['2xl'], gap: SPACING.md }}
-          renderItem={({ item }) => (
-            <CameraSelectRow
-              camera={item}
-              selected={selected.has(item.id)}
-              onToggle={() => toggleCamera(item.id)}
-            />
-          )}
+        <DeviceValueList
+          testID="grid-builder-cameras"
+          browse={browse}
+          caps={CAMERA_REQUIRES.caps}
+          kind="device"
+          multiple
+          picked={picked}
+          onPick={(value) => toggleCamera(value.deviceId)}
+          onDrill={() => undefined}
+          header={<View style={styles.header}>{header}</View>}
         />
       )}
     </View>
   )
 }
 
-/** A selectable camera row (checkbox + name + online status). */
-function CameraSelectRow({
-  camera,
-  selected,
-  onToggle,
-}: {
-  readonly camera: CameraInfo
-  readonly selected: boolean
-  readonly onToggle: () => void
-}) {
-  const { t } = useTranslation()
-  const { colors } = useTheme()
-  return (
-    <Pressable
-      onPress={onToggle}
-      accessibilityRole="checkbox"
-      accessibilityState={{ checked: selected }}
-      style={({ pressed }) => ({
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: SPACING.lg,
-        backgroundColor: pressed ? colors.surfaceHover : colors.surface,
-        borderColor: selected ? colors.primary : colors.border,
-        borderWidth: 1,
-        borderRadius: RADIUS.md,
-        paddingVertical: SPACING.lg,
-        paddingHorizontal: SPACING.xl,
-      })}
-    >
-      <View
-        style={{
-          width: 24,
-          height: 24,
-          borderRadius: RADIUS.sm,
-          alignItems: 'center',
-          justifyContent: 'center',
-          borderWidth: 1,
-          borderColor: selected ? colors.primary : colors.border,
-          backgroundColor: selected ? colors.primary : 'transparent',
-        }}
-      >
-        {selected ? <Check size={16} color={colors.primaryForeground} /> : null}
-      </View>
-      <View style={{ flex: 1, gap: SPACING.xs }}>
-        <Text style={{ color: colors.foreground, fontSize: 16, fontWeight: '600' }}>{camera.name}</Text>
-        <Text style={{ color: camera.online ? colors.success : colors.foregroundMuted, fontSize: 12 }}>
-          {camera.online ? t('v2.common.online') : t('v2.common.offline')}
-        </Text>
-      </View>
-    </Pressable>
-  )
-}
+const NO_RECENTS: readonly number[] = []
 
 const styles = StyleSheet.create({
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: SPACING['2xl'],
-  },
+  header: { paddingHorizontal: SPACING.md, paddingBottom: SPACING.md },
 })

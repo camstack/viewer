@@ -45,7 +45,7 @@ import {
   NC_CAMERA_SCOPE_CAP_NAME,
   ruleDeviceCompatCapNames,
 } from '@camstack/types/client'
-import type { NcRuleKind } from '@camstack/types'
+import type { DeviceSearchRequires, NcRuleKind } from '@camstack/types'
 
 /** The most cap names one `listDeviceIdsByCaps` call takes. */
 export const MAX_CAPS_PER_QUERY = 16
@@ -117,4 +117,15 @@ export function ruleDeviceSource(
   }
   const capNames = ruleDeviceCompatCapNames(kind)
   return capNames === null ? { kind: 'cameras' } : { kind: 'caps', capNames, subject: 'camera' }
+}
+
+/**
+ * The device → value picker's ask for a source (`deviceManager.search`
+ * `requires`): a device bound to ANY of the source's caps. The search takes
+ * any number of caps, so the two queries above become one union. A camera
+ * scope is the `camera-streams` binding.
+ */
+export function deviceSourceRequires(source: RuleDeviceSource): DeviceSearchRequires {
+  if (source.kind === 'cameras') return { caps: [NC_CAMERA_SCOPE_CAP_NAME] }
+  return { caps: [...new Set([...source.capNames, ...(source.extraCapNames ?? [])])], mode: 'any' }
 }

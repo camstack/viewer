@@ -26,7 +26,8 @@ import { NC_CONSUMABLE_LOW_PERCENT_DEFAULT } from '@camstack/types/client'
 import type { NcSystemEventFamily } from '@camstack/types'
 import { useTheme } from '../../theme/theme-provider.js'
 import { RADIUS, SPACING } from '../../theme/tokens.js'
-import { DevicePicker, type DevicePickerSource } from './DevicePicker.js'
+import { DeviceValueField } from '../device-value-picker/DeviceValueField.js'
+import { CAMERA_REQUIRES, deviceIdsOf, pickedDevices } from '../device-value-picker/picked-devices.js'
 import { Hint } from './FieldHint.js'
 import { NodePicker, PackagePicker } from './ScopePickers.js'
 import {
@@ -52,14 +53,12 @@ import type {
 } from '../../data/notification-center.js'
 import { SectionLabel } from '../ui/SectionLabel.js'
 
-/** An alarm rule's `deviceIds` is the CAMERA whose rule set the alarm off. */
-const CAMERAS_SOURCE: DevicePickerSource = { kind: 'cameras' }
-/**
- * A device-events rule's devices are EVERY device: liveness, batteries and
- * consumables are device facts, and a vacuum is not a camera (D636). The fleet
- * is read only while the picker's sheet is open.
+/*
+ * An alarm rule's `deviceIds` is the CAMERA whose rule set the alarm off
+ * (`CAMERA_REQUIRES`). A device-events rule's devices are EVERY device (no
+ * `requires`): liveness, batteries and consumables are device facts, and a
+ * vacuum is not a camera (D636). The fleet is asked only while the sheet is open.
  */
-const FLEET_SOURCE: DevicePickerSource = { kind: 'fleet' }
 /** The alarm settings screen (`app/(app)/settings/alarm.tsx`). */
 const ALARM_SETTINGS_HREF = '/settings/alarm'
 
@@ -225,7 +224,7 @@ function ConsumableThresholdField({ value, onChange }: ConsumableThresholdFieldP
 interface SystemEventFieldProps {
   readonly descriptor: NcConditionDescriptor
   readonly value: NcSystemEventCondition | undefined
-  /** Whether the SAVED rule filtered on devices — see `DevicePicker`. */
+  /** Whether the SAVED rule filtered on devices — see `DeviceValueField`. */
   readonly savedHadDevices: boolean
   /** The rule's family — never derived from `value` (review M1, D636). */
   readonly family: NcSystemEventFamily
@@ -340,13 +339,18 @@ export function SystemEventField({
       {visible.devices ? (
         <View style={{ gap: SPACING.sm }}>
           <Hint text={t(isAlarm ? `${FILTERS}.cameras` : `${FILTERS}.devices`)} />
-          <DevicePicker
+          <DeviceValueField
             testID="system-event-include"
-            source={isAlarm ? CAMERAS_SOURCE : FLEET_SOURCE}
-            value={value?.deviceIds ?? []}
+            kind="device"
+            {...(isAlarm ? { requires: CAMERA_REQUIRES } : {})}
+            recentKey="nc-system-devices"
+            value={pickedDevices(value?.deviceIds ?? [])}
             emptyMeansAll
-            savedHadDevices={savedHadDevices}
-            onChange={(next) => patch({ deviceIds: next.length > 0 ? next : undefined })}
+            savedHadValues={savedHadDevices}
+            onChange={(picked) => {
+              const next = deviceIdsOf(picked)
+              patch({ deviceIds: next.length > 0 ? next : undefined })
+            }}
           />
         </View>
       ) : null}
@@ -354,12 +358,16 @@ export function SystemEventField({
       {visible.excludeDevices ? (
         <View style={{ gap: SPACING.sm }}>
           <Hint text={t(`${FILTERS}.excludeDevices`)} />
-          <DevicePicker
+          <DeviceValueField
             testID="system-event-exclude"
-            source={FLEET_SOURCE}
-            value={value?.excludeDeviceIds ?? []}
+            kind="device"
+            recentKey="nc-system-devices"
+            value={pickedDevices(value?.excludeDeviceIds ?? [])}
             emptyLabel={t(`${FILTERS}.noExcluded`)}
-            onChange={(next) => patch({ excludeDeviceIds: next.length > 0 ? next : undefined })}
+            onChange={(picked) => {
+              const next = deviceIdsOf(picked)
+              patch({ excludeDeviceIds: next.length > 0 ? next : undefined })
+            }}
           />
           <Hint text={t(`${FILTERS}.excludeHint`)} />
         </View>

@@ -4,9 +4,10 @@
  * 2026-10-01: one selection list, each item included or excluded, never both):
  *
  *  - {@link DeviceScopeField} — `devices` (Only) / `devicesExclude` (Except),
- *    the `DevicePicker` over the list the rule's KIND can target
- *    (`rule-device-source.ts`: cameras, or a sensor rule's sensors) with
- *    "Group by".
+ *    the device → value picker (`DeviceValueField`, kind `device`) asking
+ *    `deviceManager.search` for the devices the rule's KIND can target
+ *    (`rule-device-source.ts`: cameras, or a sensor rule's sensors), with
+ *    the Location / Integration / Type facets.
  *  - {@link ClassScopeField} — `classes` (Only) / `classesExclude` (Except),
  *    an `ItemPicker<string>` over the SHARED class taxonomy
  *    (`classPickerItems`, sounds left out), grouped by taxonomy category and
@@ -35,14 +36,15 @@ import { useCameraZoneLists } from '../../data/use-zones.js'
 import { zonePickerItems } from '../../data/zone-choices.js'
 import type { NcTaxonomy } from '../../data/notification-center.js'
 import { TagsInput } from './ConditionField.js'
-import { DevicePicker, type DevicePickerSource } from './DevicePicker.js'
+import { DeviceValueField } from '../device-value-picker/DeviceValueField.js'
+import { deviceIdsOf, pickedDevices } from '../device-value-picker/picked-devices.js'
 import type { PickerGroup } from './device-picker-model.js'
 import { deviceListStateOf, offListSelections } from './device-selection.js'
 import { ItemPicker } from './ItemPicker.js'
 import { classPickerItems } from './rule-scope-form.js'
 import { ruleScopeList, type RuleScopeDraft } from './rule-scope-model.js'
 import { RuleScopeField } from './RuleScopeField.js'
-import type { RuleDeviceSource } from './rule-device-source.js'
+import { deviceSourceRequires, type RuleDeviceSource } from './rule-device-source.js'
 
 const SCOPE = 'v2.nc.rules.scope'
 
@@ -91,7 +93,8 @@ export function DeviceScopeField({
 }: DeviceScopeBinding): React.JSX.Element {
   const { t } = useTranslation()
   const names = useScopeNames(source, draft)
-  const pickerSource: DevicePickerSource = source
+  const sensors = source.kind === 'caps' && source.subject === 'sensor'
+  const requires = useMemo(() => deviceSourceRequires(source), [source])
   return (
     <RuleScopeField<number>
       draft={draft}
@@ -105,12 +108,15 @@ export function DeviceScopeField({
       describe={(id) => names.get(id) ?? t('v2.nc.rules.editor.deviceUnknown', { id })}
       testID="rule-device-scope"
       renderPicker={(value, change) => (
-        <DevicePicker
-          source={pickerSource}
-          value={value}
+        <DeviceValueField
+          kind="device"
+          requires={requires}
+          recentKey="nc-rule-devices"
+          value={pickedDevices(value)}
           emptyMeansAll
-          savedHadDevices={savedHad}
-          onChange={change}
+          savedHadValues={savedHad}
+          {...(sensors ? { widensLabel: t('v2.nc.rules.editor.sensorsEmptyWidens') } : {})}
+          onChange={(next) => change(deviceIdsOf(next))}
         />
       )}
     />

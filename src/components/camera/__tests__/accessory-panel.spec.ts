@@ -17,6 +17,7 @@ import React from 'react'
 
 import { mountScreen } from '../../../testing/mount.js'
 import { hubCalls } from '../../../testing/hub-stub.js'
+import { deviceSearchHub } from '../../../testing/device-search-hub.js'
 import { CameraAccessoryPanel } from '../accessory-panel/CameraAccessoryPanel.js'
 import { useCameraPrefsStore, cameraAccessoryPrefs } from '../../../store/camera-prefs-store.js'
 
@@ -35,6 +36,8 @@ const SRC = (...parts: readonly string[]): string => readFileSync(join(ROOT, 'sr
 const ADD_SHEET = SRC('components', 'camera', 'accessory-panel', 'AccessoryAddSheet.tsx')
 /** The sheet frame the add sheet (and the notification device picker) opens. */
 const PICKER_SHEET = SRC('components', 'ui', 'PickerSheet.tsx')
+/** The list inside it: the device → value picker's (issue #496). */
+const DEVICE_VALUE_LIST = SRC('components', 'device-value-picker', 'DeviceValueList.tsx')
 const SHEET_MODAL = SRC('components', 'ui', 'SheetModal.tsx')
 
 const CAMERA_ID = 701
@@ -116,6 +119,8 @@ function hub(opts: { readonly admin: boolean; readonly linked: readonly number[]
       if (Array.isArray(i.deviceIds)) return FLEET.filter((d) => i.deviceIds?.includes(d.id))
       return FLEET
     },
+    // The "+" sheet's list (issue #496): the picker asks the hub's search.
+    ...deviceSearchHub(FLEET),
     'pipelineOrchestrator.getCameraSwitches': { deviceId: CAMERA_ID, switches: [] },
   }
 }
@@ -148,18 +153,19 @@ describe('the pencil is for everyone', () => {
 
 describe('the "+" is a LOCAL addition', () => {
   it('saving writes the prefs document and sends the hub NO mutation', async () => {
-    const { findByLabelText, findByText } = mountScreen(panel(), {
+    const { findByLabelText, findByText, findByTestId, queryByTestId } = mountScreen(panel(), {
       hub: hub({ admin: false, linked: [800] }),
     })
     fireEvent.click(await findByLabelText('Customise the devices'))
     fireEvent.click(await findByLabelText('Add devices'))
     // The picker: the fountain plug is suggested (same room); the linked siren
     // is NOT offered again; the humidity reading is withheld (no control).
-    const plug = await findByText(/Fountain plug/)
-    expect(await waitFor(() => document.body.textContent)).not.toContain('Patio siren (Garden)')
-    expect(document.body.textContent).not.toContain('Humidity')
+    const plug = await findByTestId('dvp-row-900')
+    expect(await findByTestId('dvp-section-suggested')).toBeTruthy()
+    expect(queryByTestId('dvp-row-800')).toBeNull()
+    expect(queryByTestId('dvp-row-901')).toBeNull()
     fireEvent.click(plug)
-    fireEvent.click(await findByLabelText('Keep these additions'))
+    fireEvent.click(await findByLabelText('Done (1)'))
 
     await waitFor(() => {
       expect(cameraAccessoryPrefs(useCameraPrefsStore.getState().prefs, CAMERA_ID).added).toEqual([900])
@@ -274,7 +280,7 @@ describe('the keyboard does not cover the picker (inherited from the old sheet)'
     expect(PICKER_SHEET).toContain('if (keyboardUp) {')
     expect(PICKER_SHEET).toContain('Keyboard.dismiss()')
     expect(PICKER_SHEET).toContain('paddingBottom: (keyboardUp ? 0 : insets.bottom) + SPACING.md')
-    expect(ADD_SHEET).toContain('keyboardShouldPersistTaps="handled"')
+    expect(DEVICE_VALUE_LIST).toContain('keyboardShouldPersistTaps="handled"')
   })
 })
 

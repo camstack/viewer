@@ -20,9 +20,12 @@
  *
  * Changed 2026-10-01 (fix round 1, review): a sensor rule's picker ALSO
  * offers cameras — the engine matches a sensor rule scoped to a camera
- * (`rowCameraIds`, D630 §6) — via a SECOND `listDeviceIdsByCaps` query for
- * `camera-streams` (`extraCapNames`, `rule-device-source.ts`), unioned with
- * the sensor/control one.
+ * (`rowCameraIds`, D630 §6) — via `camera-streams` (`extraCapNames`,
+ * `rule-device-source.ts`), unioned with the sensor/control one.
+ *
+ * Changed 2026-11-11 (issue #496): the field is the device → value picker,
+ * so both lists are ONE `deviceManager.search` asking for a device bound to
+ * ANY of those caps; picked ids are resolved by the same method (`ids`).
  */
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, screen as dom } from '@testing-library/react'
@@ -32,7 +35,8 @@ import { mountScreen } from '../../../testing/mount.js'
 import { hubCalls } from '../../../testing/hub-stub.js'
 import { resetRuleDrafts } from '../../../testing/rule-draft-harness.js'
 import { RuleSectionScreen } from '../rule-editor/RuleSectionScreen.js'
-import { PICKER_SEARCH_DEBOUNCE_MS } from '../../../components/notifications/device-picker-model.js'
+import { SEARCH_DEBOUNCE_MS } from '../../../components/device-value-picker/use-device-search.js'
+import { deviceSearchHub, type FleetDevice } from '../../../testing/device-search-hub.js'
 import { instanceRows } from '../../../testing/nc-target-rows.js'
 
 vi.mock('../../../connection/ConnectionProvider.js', async () =>
@@ -47,6 +51,10 @@ const SENSORS = [
   { id: 3300, name: 'Allagamento laundry', type: 'sensor', isCamera: false, online: true },
 ]
 const CAMERA = { id: 1, name: 'Front door', type: 'camera', isCamera: true, online: true }
+const FLEET: readonly FleetDevice[] = [
+  { ...CAMERA, caps: ['detection-pipeline', 'camera-streams'] },
+  ...SENSORS.map((sensor) => ({ ...sensor, caps: ['flood'] })),
+]
 
 const DEVICES_DESCRIPTOR = {
   id: 'devices',
@@ -96,14 +104,7 @@ function hub(rule: ReturnType<typeof ruleOf>) {
       const all = [CAMERA, ...SENSORS]
       return ids === null ? all : all.filter((device) => ids.includes(device.id))
     },
-    'deviceManager.listDeviceIdsByCaps': (input?: unknown) => {
-      const caps = field(input, 'capNames')
-      if (!Array.isArray(caps)) return []
-      if (caps.includes('flood')) return SENSORS.map((s) => s.id)
-      if (caps.includes('detection-pipeline')) return [CAMERA.id]
-      if (caps.includes('camera-streams')) return [CAMERA.id]
-      return []
-    },
+    ...deviceSearchHub(FLEET),
     'integrationInstances.listInstances': (): unknown => instanceRows([]),
     'addons.custom': (input?: unknown): unknown => {
       const action = field(input, 'action')
@@ -115,11 +116,17 @@ function hub(rule: ReturnType<typeof ruleOf>) {
   }
 }
 
-function capsAsked(): readonly unknown[] {
+/** Every cap a `deviceManager.search` asked a device to be bound to. */
+function capsAsked(): readonly string[] {
   return hubCalls()
-    .filter((call) => call.path === 'deviceManager.listDeviceIdsByCaps')
-    .map((call) => field(call.input, 'capNames'))
+    .filter((call) => call.path === 'deviceManager.search')
+    .flatMap((call) => {
+      const caps = field(field(call.input, 'requires'), 'caps')
+      return Array.isArray(caps) ? caps.filter((c): c is string => typeof c === 'string') : []
+    })
 }
+
+const SEARCH_LABEL = 'Search name, room, type or id'
 
 afterEach(() => {
   cleanup()
@@ -133,9 +140,9 @@ describe('the Devices section of a SENSOR rule', () => {
     expect(await dom.findByText('Allagamento cantina')).toBeTruthy()
     expect(dom.getByText('Allagamento bathroom')).toBeTruthy()
     expect(dom.getByText('Allagamento kitchen')).toBeTruthy()
-    expect(dom.queryByText(/removed/)).toBeNull()
+    expect(dom.queryByText(/removed|not found/)).toBeNull()
     // Asked by the rule's sensor kind — the flood cap.
-    expect(capsAsked()).toContainEqual(['flood'])
+    expect(capsAsked()).toContain('flood')
   })
 
   it('offers the sensors — not the cameras — to pick from', async () => {
@@ -143,23 +150,22 @@ describe('the Devices section of a SENSOR rule', () => {
     mountScreen(React.createElement(RuleSectionScreen, { id: rule.id, section: 'devices' }), { hub: hub(rule) })
     await dom.findByText('Allagamento cantina')
     await act(async () => {
-      fireEvent.click(dom.getByTestId('device-picker-add'))
+      fireEvent.click(dom.getByTestId('dvp-add'))
     })
-    // The sheet opens on collapsed groups: search to reach the rows.
-    const search = dom.getByLabelText('Search by name, room or type')
+    const search = await dom.findByLabelText(SEARCH_LABEL)
     await act(async () => {
       fireEvent.change(search, { target: { value: 'allagamento' } })
-      await new Promise<void>((resolve) => setTimeout(resolve, PICKER_SEARCH_DEBOUNCE_MS + 50))
+      await new Promise<void>((resolve) => setTimeout(resolve, SEARCH_DEBOUNCE_MS + 50))
     })
-    expect(await dom.findByTestId('device-picker-row-3300')).toBeTruthy()
-    expect(dom.queryByTestId('device-picker-row-1')).toBeNull()
+    expect(await dom.findByTestId('dvp-row-3300')).toBeTruthy()
+    expect(dom.queryByTestId('dvp-row-1')).toBeNull()
   })
 
   it('a detection rule now asks the detection-pipeline cap, and still names the camera', async () => {
     const rule = ruleOf('track-end', { devices: [1] })
     mountScreen(React.createElement(RuleSectionScreen, { id: rule.id, section: 'devices' }), { hub: hub(rule) })
     expect(await dom.findByText('Front door')).toBeTruthy()
-    expect(capsAsked()).toContainEqual(['detection-pipeline'])
+    expect(capsAsked()).toContain('detection-pipeline')
     // The wording stays a CAMERA scope — not "Every sensor" or "no sensors".
     expect(dom.queryByText(/sensor/i)).toBeNull()
   })
@@ -168,17 +174,17 @@ describe('the Devices section of a SENSOR rule', () => {
     const rule = ruleOf('device-event', { devices: FLOOD_IDS, sensorKinds: ['flood'] })
     mountScreen(React.createElement(RuleSectionScreen, { id: rule.id, section: 'devices' }), { hub: hub(rule) })
     await dom.findByText('Allagamento cantina')
-    // The picker asked BOTH caps: the narrowed sensor one and camera-streams.
-    expect(capsAsked()).toContainEqual(['flood'])
-    expect(capsAsked()).toContainEqual(['camera-streams'])
+    // The picker asks BOTH caps: the narrowed sensor one and camera-streams.
+    expect(capsAsked()).toContain('flood')
+    expect(capsAsked()).toContain('camera-streams')
     await act(async () => {
-      fireEvent.click(dom.getByTestId('device-picker-add'))
+      fireEvent.click(dom.getByTestId('dvp-add'))
     })
-    const search = dom.getByLabelText('Search by name, room or type')
+    const search = await dom.findByLabelText(SEARCH_LABEL)
     await act(async () => {
       fireEvent.change(search, { target: { value: 'front door' } })
-      await new Promise<void>((resolve) => setTimeout(resolve, PICKER_SEARCH_DEBOUNCE_MS + 50))
+      await new Promise<void>((resolve) => setTimeout(resolve, SEARCH_DEBOUNCE_MS + 50))
     })
-    expect(await dom.findByTestId('device-picker-row-1')).toBeTruthy()
+    expect(await dom.findByTestId('dvp-row-1')).toBeTruthy()
   })
 })

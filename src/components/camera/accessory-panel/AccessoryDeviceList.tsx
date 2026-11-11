@@ -34,7 +34,6 @@ import { useTranslation } from 'react-i18next'
 import { Plus } from '../../../lib/icons.js'
 import { useTheme } from '../../../theme/theme-provider.js'
 import { SPACING } from '../../../theme/tokens.js'
-import { useCameras } from '../../../data/use-cameras.js'
 import { useCanActuate } from '../../../hooks/use-user-scope.js'
 import { useHeroRowModels } from '../../../hero/use-hero.js'
 import { rowModelFor } from '../../../hero/hero-view.js'
@@ -72,10 +71,6 @@ export function AccessoryDeviceList({
   // ONE request for every row of the list (the hub's hero model, projected).
   const canActuate = useCanActuate()
   const rowModels = useHeroRowModels(rows.map((r) => r.device.id), canActuate)
-  // The camera's location seeds the picker's suggestions. `includeHidden`: a
-  // hidden camera still has a room.
-  const { data: cameras = [] } = useCameras({ includeHidden: true })
-  const cameraLocation = cameras.find((c) => c.id === deviceId)?.location ?? null
   const [adding, setAdding] = useState(false)
   const [iconTarget, setIconTarget] = useState<IconTarget | null>(null)
 
@@ -112,7 +107,6 @@ export function AccessoryDeviceList({
         <AccessoryAddSheet
           deviceId={deviceId}
           cameraName={cameraName}
-          cameraLocation={cameraLocation}
           serverIds={serverIds}
           added={prefs.added}
           onSave={actions.setAdditions}

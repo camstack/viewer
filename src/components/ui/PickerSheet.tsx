@@ -41,6 +41,8 @@ export interface PickerSheetProps {
   readonly onClose: () => void
   /** The header's buttons — close, save, done: the caller's to decide. */
   readonly headerRight: React.ReactNode
+  /** Before the title: a pushed page's Back. */
+  readonly headerLeft?: React.ReactNode
   /** Absent while there is nothing to search (loading, failed). */
   readonly search?: PickerSheetSearch
   readonly children: React.ReactNode
@@ -52,6 +54,7 @@ export function PickerSheet({
   subtitle,
   onClose,
   headerRight,
+  headerLeft,
   search,
   children,
   testID,
@@ -98,6 +101,7 @@ export function PickerSheet({
       ]}
     >
       <View style={styles.header}>
+        {headerLeft}
         <View style={styles.headerText}>
           <Text numberOfLines={1} style={[styles.title, { color: colors.foreground }]}>
             {title}
@@ -110,22 +114,38 @@ export function PickerSheet({
         </View>
         {headerRight}
       </View>
-      {search !== undefined ? (
-        <View style={[styles.searchRow, { backgroundColor: colors.surface }]}>
-          <Search size={14} color={colors.foregroundMuted} />
-          <TextInput
-            value={search.value}
-            onChangeText={search.onChange}
-            autoCorrect={false}
-            placeholder={search.placeholder}
-            placeholderTextColor={colors.foregroundSubtle}
-            accessibilityLabel={search.placeholder}
-            style={[styles.searchInput, { color: colors.foreground }]}
-          />
-        </View>
-      ) : null}
+      {search !== undefined ? <PickerSearchRow search={search} /> : null}
       {children}
     </SheetModal>
+  )
+}
+
+/**
+ * The sheet's search row, on its own for a list that owns its search (the
+ * device → value picker draws it above its facet chips, in a sheet or inline).
+ */
+export function PickerSearchRow({
+  search,
+  testID,
+}: {
+  readonly search: PickerSheetSearch
+  readonly testID?: string
+}): React.JSX.Element {
+  const { colors } = useTheme()
+  return (
+    <View style={[styles.searchRow, { backgroundColor: colors.surface }]}>
+      <Search size={14} color={colors.foregroundMuted} />
+      <TextInput
+        testID={testID}
+        value={search.value}
+        onChangeText={search.onChange}
+        autoCorrect={false}
+        placeholder={search.placeholder}
+        placeholderTextColor={colors.foregroundSubtle}
+        accessibilityLabel={search.placeholder}
+        style={[styles.searchInput, { color: colors.foreground }]}
+      />
+    </View>
   )
 }
 

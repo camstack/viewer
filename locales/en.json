@@ -3717,7 +3717,8 @@
       "show": "Show {{device}}",
       "moveUp": "Move {{device}} up",
       "moveDown": "Move {{device}} down",
-      "remove": "Remove {{device}} from this list"
+      "remove": "Remove {{device}} from this list",
+      "nothingToAdd": "No device here has a control this panel can show."
     },
     "servers": {
       "title": "Servers",
@@ -4446,6 +4447,50 @@
         "noPowerSource": "No power source is linked.",
         "generic": "The request was refused."
       }
+    },
+    "deviceValuePicker": {
+      "title": "Choose a device",
+      "search": "Search name, room, type or id",
+      "or": "or",
+      "matchesOf_one": "{{cap}} · {{count}} match of {{total}}",
+      "matchesOf_other": "{{cap}} · {{count}} matches of {{total}}",
+      "devicesCount_one": "{{count}} device",
+      "devicesCount_other": "{{count}} devices",
+      "showIncompatible_one": "show the {{count}} that doesn’t",
+      "showIncompatible_other": "show the {{count}} that don’t",
+      "hideIncompatible": "hide the ones that don’t",
+      "facet": {
+        "location": "Location",
+        "integration": "Integration",
+        "type": "Type",
+        "any": "any",
+        "none": "Nothing to choose here",
+        "more": "{{count}} more"
+      },
+      "failed": "Could not load the devices.",
+      "failedBody": "The hub did not answer. Try again.",
+      "empty": "No device provides {{cap}}",
+      "emptyAny": "No devices",
+      "showAll": "Show all devices",
+      "filterMiss": "No device with {{cap}} matches these filters",
+      "filterMissAny": "No device matches these filters",
+      "searchMiss": "No device with {{cap}} matches “{{query}}”",
+      "searchMissAny": "No device matches “{{query}}”",
+      "clearSearch": "Clear search and filters",
+      "suggested": "Suggested",
+      "recent": "Recent",
+      "offline": "offline",
+      "valuesCount_one": "{{count}} value",
+      "valuesCount_other": "{{count}} values",
+      "chooseValue": "Choose a value",
+      "doneCount": "Done ({{count}})",
+      "selectedCount_one": "{{count}} selected",
+      "selectedCount_other": "{{count}} selected",
+      "gone": "Device #{{id}} not found",
+      "deviceId": "Device #{{id}}",
+      "moreChips": "+{{count}}",
+      "resolveFailed": "Could not check the chosen devices.",
+      "inContainer": "in {{name}}"
     }
   },
   "prototype": {
