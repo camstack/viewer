@@ -10,7 +10,8 @@
  * Framed on the hub's origin, the page shares this origin's localStorage with
  * the admin UI. A session the admin already keeps there is left alone — it is
  * this browser's own sign-in and owns its refresh; only when there is none is
- * the viewer's access token seeded, without a refresh token.
+ * the viewer's access token seeded, without a refresh token. The viewer's
+ * sign-out removes what it seeded (`seeded-session.ts`).
  */
 import React, { useEffect, useRef, useState } from 'react'
 import { ActivityIndicator, StyleSheet, View } from 'react-native'
@@ -20,8 +21,9 @@ import { useLiveHubUrl } from '../connection/use-live-hub-url.js'
 import { EmptyState } from '../components/ui/EmptyState.js'
 import { SlidersHorizontal } from '../lib/icons.js'
 import { useTheme } from '../theme/theme-provider.js'
-import { ADMIN_ACCESS_TOKEN_KEY, buildDeviceEmbedUrl, deviceEmbedLang, isDeviceEmbedPath } from './device-embed-url.js'
+import { buildDeviceEmbedUrl, deviceEmbedLang, isDeviceEmbedPath } from './device-embed-url.js'
 import type { DeviceCardEmbedProps } from './DeviceCardEmbed.js'
+import { browserStorage, seedSessionIfAbsent } from './seeded-session.js'
 
 /** How often the framed path is checked for a navigation off the card. */
 const LEFT_CARD_POLL_MS = 1000
@@ -31,12 +33,11 @@ function pageOrigin(): string | null {
 }
 
 /** Seed the admin session on this origin when it holds none. */
-function seedSessionIfAbsent(token: string | null): void {
-  if (token === null || token.length === 0) return
+function seedSession(token: string | null): void {
+  const storage = browserStorage()
+  if (storage === null) return
   try {
-    if (window.localStorage.getItem(ADMIN_ACCESS_TOKEN_KEY) === null) {
-      window.localStorage.setItem(ADMIN_ACCESS_TOKEN_KEY, token)
-    }
+    seedSessionIfAbsent(storage, token)
   } catch {
     // Storage blocked: the card shows its own sign-in failure below.
   }
@@ -98,7 +99,7 @@ export function DeviceCardEmbed({ deviceId }: DeviceCardEmbedProps): React.JSX.E
     return <EmptyState icon={SlidersHorizontal} tone="danger" title={t('v2.deviceDetail.unavailable')} testID="device-card-error" />
   }
 
-  seedSessionIfAbsent(token)
+  seedSession(token)
   return (
     <View style={[styles.fill, { backgroundColor: colors.background }]}>
       <iframe

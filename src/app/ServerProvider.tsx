@@ -12,6 +12,7 @@ import {
 import { secureKvStore } from './kv-secure-storage.js'
 import { log } from '../lib/logger.js'
 import { clearHubSession } from '../auth/hub-session-exchange.js'
+import { browserStorage, clearSeededSession } from '../device-embed/seeded-session.js'
 import {
   endpointsToCandidates,
   isIpv6Url,
@@ -358,6 +359,16 @@ export function ServerProvider({ children }: { children: React.ReactNode }) {
       sameOrigin(server.serverUrl, window.location.origin)
     ) {
       await clearHubSession(window.location.origin)
+    }
+    // The device card's frame shares the hub origin's storage with the admin
+    // UI; the access token the viewer seeded there for it ends here too.
+    if (Platform.OS === 'web') {
+      const storage = browserStorage()
+      try {
+        if (storage !== null) clearSeededSession(storage)
+      } catch {
+        // Storage blocked: nothing was seeded.
+      }
     }
     if (server !== null) {
       renewer.forget(server.id)
