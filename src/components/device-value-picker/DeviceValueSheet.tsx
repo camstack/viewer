@@ -6,7 +6,8 @@
  * above both pages.
  *
  * A single field closes on the pick. A multi field edits a draft: ✓ toggles,
- * "Done (N)" saves, ✕ discards.
+ * "Done (N)" saves — enabled only once the draft differs from the saved
+ * value — and ✕ discards.
  */
 import React, { useState } from 'react'
 import { StyleSheet, View } from 'react-native'
@@ -18,7 +19,7 @@ import { useTheme } from '../../theme/theme-provider.js'
 import { SPACING } from '../../theme/tokens.js'
 import { PickerSheet, PickerSheetButton } from '../ui/PickerSheet.js'
 import { capabilityListLabel } from './capability-label.js'
-import { toggleValue, type PickedValue, type PickKind } from './device-value-picker-model.js'
+import { toggleValue, valueKey, type PickedValue, type PickKind } from './device-value-picker-model.js'
 import { DeviceValueList } from './DeviceValueList.js'
 import { ValuesPage } from './DeviceValueRows.js'
 import { useDeviceValueBrowse } from './use-device-value-browse.js'
@@ -51,6 +52,12 @@ export interface DeviceValueSheetProps extends DeviceValueAsk {
   readonly onChange: (next: readonly PickedValue[]) => void
   readonly onClose: () => void
   readonly testID?: string
+}
+
+/** Whether two selections hold the same values, in any order. */
+export function sameSelection(a: readonly PickedValue[], b: readonly PickedValue[]): boolean {
+  const keys = new Set(a.map(valueKey))
+  return keys.size === new Set(b.map(valueKey)).size && b.every((v) => keys.has(valueKey(v)))
 }
 
 export function DeviceValueSheet({
@@ -109,6 +116,7 @@ export function DeviceValueSheet({
         }}
         label={t(`${UI}.doneCount`, { count: draft.length })}
         primary
+        disabled={sameSelection(draft, value)}
       >
         <Check size={18} color={colors.primaryForeground} />
       </PickerSheetButton>

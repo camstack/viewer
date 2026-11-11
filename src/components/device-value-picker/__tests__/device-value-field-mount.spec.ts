@@ -256,6 +256,26 @@ describe('DeviceValueSheet — the list', () => {
     })
     expect(onChange).toHaveBeenLastCalledWith([{ deviceId: 1 }, { deviceId: 5 }])
   })
+
+  it('Done is disabled until the draft differs from the saved value — toggling back disables it again', async () => {
+    const onChange = mountField([{ deviceId: 1 }], deviceSearchHub(FLEET))
+    await openSheet()
+    const row = await dom.findByTestId('dvp-row-5')
+    expect(dom.getByLabelText('Done (1)').getAttribute('aria-disabled')).toBe('true')
+    await act(async () => {
+      fireEvent.click(row)
+    })
+    expect(dom.getByLabelText('Done (2)').getAttribute('aria-disabled')).not.toBe('true')
+    await act(async () => {
+      fireEvent.click(dom.getByTestId('dvp-row-5'))
+    })
+    const done = dom.getByLabelText('Done (1)')
+    expect(done.getAttribute('aria-disabled')).toBe('true')
+    await act(async () => {
+      fireEvent.click(done)
+    })
+    expect(onChange).not.toHaveBeenCalled()
+  })
 })
 
 describe('DeviceValueSheet — a device with several values (Flow · Phone)', () => {

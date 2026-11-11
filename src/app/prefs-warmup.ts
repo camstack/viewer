@@ -35,7 +35,6 @@ import { useSettingsStore } from '../store/settings-store.js'
 import { useLanguageStore } from '../store/language-store.js'
 import { useReelFilterStore } from '../store/reel-filter-store.js'
 import { useReelHighlightStore } from '../store/reel-highlight-store.js'
-import { useDevicePickerGroupStore } from '../store/device-picker-group-store.js'
 import { useEventsFilterStore } from '../store/events-filter-store.js'
 
 void useCameraPrefsStore.getState().hydrate()
@@ -62,5 +61,4 @@ void useSettingsStore.getState().hydrate()
 void useLanguageStore.getState().hydrate()
 void useReelFilterStore.getState().hydrate()
 void useReelHighlightStore.getState().hydrate()
-void useDevicePickerGroupStore.getState().hydrate()
 void useEventsFilterStore.getState().hydrate()

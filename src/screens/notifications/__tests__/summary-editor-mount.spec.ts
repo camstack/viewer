@@ -25,6 +25,14 @@ import { routerCalls } from '../../../testing/native-stubs/expo-router.js'
 import { resetStubConnection, setStubConnection } from '../../../testing/connection-stub.js'
 import { SummaryEditorScreen } from '../rule-editor/SummaryEditorScreen.js'
 import { instanceRows } from '../../../testing/nc-target-rows.js'
+import { deviceSearchHub, searchRequires, type FleetDevice } from '../../../testing/device-search-hub.js'
+
+/** The cameras the rule's field picks from (101 is the rule's). */
+const EDITOR_CAMERAS: readonly FleetDevice[] = [
+  { id: 101, name: 'Front door', type: 'camera', location: 'Hall', caps: ['camera-streams'] },
+  { id: 102, name: 'Garage', type: 'camera', location: 'Garage', caps: ['camera-streams'] },
+  { id: 200, name: 'Hall light', type: 'switch', location: 'Hall', caps: ['switch'] },
+]
 
 vi.mock('../../../connection/ConnectionProvider.js', async () =>
   (await import('../../../testing/connection-stub.js')).connectionStubModule(),
@@ -259,5 +267,23 @@ describe('digest editor with no hub answer (review m1/m6, D315)', () => {
     mountScreen(React.createElement(SummaryEditorScreen, { id: 'new' }), { hub: hub() })
     await dom.findByText(/Couldn't load this summary/)
     expect(dom.queryByText(/only lets an administrator/)).toBeNull()
+  })
+
+  it('the camera field asks the hub for camera-streams, and a picked camera is saved by id', async () => {
+    mountScreen(React.createElement(SummaryEditorScreen, { id: 'sum1' }), {
+      hub: { ...hub(), ...deviceSearchHub(EDITOR_CAMERAS) },
+    })
+    await dom.findByDisplayValue('Notte')
+    await settle()
+    await dom.findByText('Front door')
+    fireEvent.click(dom.getByTestId('dvp-add'))
+    fireEvent.click(await dom.findByTestId('dvp-row-102'))
+    fireEvent.click(dom.getByLabelText('Done (2)'))
+    // Every ask — the chips' resolve and the sheet's list — is for cameras.
+    expect(searchRequires(hubCalls()).length).toBeGreaterThan(1)
+    for (const requires of searchRequires(hubCalls())) expect(requires).toEqual({ caps: ['camera-streams'] })
+    fireEvent.click(dom.getByText('Save changes'))
+    await vi.waitFor(() => expect(upserts()).toHaveLength(1))
+    expect(upserts()[0]).toEqual({ ruleId: 'sum1', patch: { deviceIds: [101, 102] } })
   })
 })

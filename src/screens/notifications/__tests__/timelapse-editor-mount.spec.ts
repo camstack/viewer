@@ -26,6 +26,14 @@ import { hubCalls } from '../../../testing/hub-stub.js'
 import { routerCalls } from '../../../testing/native-stubs/expo-router.js'
 import { TimelapseEditorScreen } from '../rule-editor/TimelapseEditorScreen.js'
 import { instanceRows } from '../../../testing/nc-target-rows.js'
+import { deviceSearchHub, searchRequires, type FleetDevice } from '../../../testing/device-search-hub.js'
+
+/** The cameras the rule's field picks from (101 is the rule's). */
+const EDITOR_CAMERAS: readonly FleetDevice[] = [
+  { id: 101, name: 'Front door', type: 'camera', location: 'Hall', caps: ['camera-streams'] },
+  { id: 102, name: 'Garage', type: 'camera', location: 'Garage', caps: ['camera-streams'] },
+  { id: 200, name: 'Hall light', type: 'switch', location: 'Hall', caps: ['switch'] },
+]
 
 vi.mock('../../../connection/ConnectionProvider.js', async () =>
   (await import('../../../testing/connection-stub.js')).connectionStubModule(),
@@ -255,5 +263,23 @@ describe('timelapse editor (mounted)', () => {
     fireEvent.click(dom.getByText('Save changes'))
     await dom.findByText('Pick at least one target.')
     expect(upserts()).toEqual([])
+  })
+
+  it('the camera field asks the hub for camera-streams, and a picked camera is saved by id', async () => {
+    mountScreen(React.createElement(TimelapseEditorScreen, { id: 'tl1' }), {
+      hub: { ...hub(), ...deviceSearchHub(EDITOR_CAMERAS) },
+    })
+    await dom.findByDisplayValue('Notte')
+    await settle()
+    await dom.findByText('Front door')
+    fireEvent.click(dom.getByTestId('dvp-add'))
+    fireEvent.click(await dom.findByTestId('dvp-row-102'))
+    fireEvent.click(dom.getByLabelText('Done (2)'))
+    // Every ask — the chips' resolve and the sheet's list — is for cameras.
+    expect(searchRequires(hubCalls()).length).toBeGreaterThan(1)
+    for (const requires of searchRequires(hubCalls())) expect(requires).toEqual({ caps: ['camera-streams'] })
+    fireEvent.click(dom.getByText('Save changes'))
+    await vi.waitFor(() => expect(upserts()).toHaveLength(1))
+    expect(upserts()[0]).toEqual({ ruleId: 'tl1', patch: { deviceIds: [101, 102] } })
   })
 })

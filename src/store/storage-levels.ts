@@ -37,7 +37,6 @@ export const STORAGE_KEY_LEVELS: readonly StorageKeyLevel[] = [
   { key: 'v2.language', match: 'per-hub', level: 'account', what: 'app language (viewer.app)' },
   { key: 'camstack.v2.reel-filter', match: 'per-hub', level: 'account', what: 'Recent reel filter (viewer.app)' },
   { key: 'camstack.v2.reel-highlight', match: 'per-hub', level: 'account', what: 'reel highlight (viewer.app)' },
-  { key: 'camstack.v2.device-picker.group-by', match: 'per-hub', level: 'account', what: 'device picker grouping (viewer.app)' },
   { key: 'camstack.v2.events-filter', match: 'per-hub', level: 'account', what: 'events parked rows (viewer.app)' },
   { key: '@camstack/v2/camera-prefs', match: 'per-hub', level: 'account', what: 'camera names, order, overlays (viewer.cameras)' },
   // One list; every grid carries its hub (`Grid.serverId`).
@@ -83,6 +82,7 @@ export const STORAGE_KEY_LEVELS: readonly StorageKeyLevel[] = [
   { key: 'v2.token', match: 'exact', level: 'retired', what: 'the pre-switcher single token (read once, deleted)' },
   { key: 'v2.settingsTemplateLink', match: 'exact', level: 'retired', what: 'settings-template link (mechanism deleted)' },
   { key: 'camstack.v2.nc-rules-strip', match: 'exact', level: 'retired', what: 'Rules strip tab (ephemeral now)' },
+  { key: 'camstack.v2.device-picker.group-by', match: 'per-hub', level: 'retired', what: 'device picker grouping (the picker that offered it was replaced)' },
 ]
 
 /** The declared level of a stored key (scoped, prefixed or exact); `undefined` = undeclared. */

@@ -9,9 +9,9 @@
  * It reads nothing. The caller hands it the list (`items`, with whether it
  * answered) and its verdict on every selected id the list does not hold
  * (`judged`, from `offListSelections` — D315 lives there, not here). It is
- * generic over the id: `DevicePicker` is `ItemPicker<number>` over its
- * sources, and the system family's node and package pickers
- * (`ScopePickers.tsx`) are `ItemPicker<string>`.
+ * generic over the id: the system family's node and package pickers
+ * (`ScopePickers.tsx`) are `ItemPicker<string>`; device fields use
+ * `DeviceValueField` instead.
  *
  * A chip is the list's name for the id; otherwise the caller's verdict —
  * `removedLabel(id)` when an answered list lacks it, else the name the verdict
@@ -30,7 +30,7 @@ import {
   type DeviceListState,
   type SelectedDeviceRow,
 } from './device-selection.js'
-import { DevicePickerSheet, type PickerGroupingControl } from './DevicePickerSheet.js'
+import { DevicePickerSheet } from './DevicePickerSheet.js'
 
 const UI = 'v2.nc.rules.editor'
 const PICKER = 'v2.nc.devicePicker'
@@ -71,8 +71,6 @@ export interface ItemPickerProps<Id extends PickerId> {
   readonly notice?: string
   /** Told when the sheet opens or closes — a source read only while open. */
   readonly onOpenChange?: (open: boolean) => void
-  /** The sheet's "Group by" — the device picker only (`DevicePicker`). */
-  readonly grouping?: PickerGroupingControl
   /** Exactly one choice: a tap in the sheet replaces the value and closes it; chips are not removable. */
   readonly single?: boolean
 }
@@ -105,7 +103,6 @@ export function ItemPicker<Id extends PickerId>({
   noMatchesLabel,
   notice,
   onOpenChange,
-  grouping,
   single = false,
 }: ItemPickerProps<Id>): React.JSX.Element {
   const { t } = useTranslation()
@@ -166,7 +163,6 @@ export function ItemPicker<Id extends PickerId>({
           {...(unavailableLabel !== undefined ? { unavailableLabel } : {})}
           {...(searchLabel !== undefined ? { searchLabel } : {})}
           {...(noMatchesLabel !== undefined ? { noMatchesLabel } : {})}
-          {...(grouping !== undefined ? { grouping } : {})}
           single={single}
           onClose={() => setOpen(false)}
         />

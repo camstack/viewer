@@ -1,6 +1,6 @@
 /**
  * DevicePickerSheet — the searchable, grouped, VIRTUALISED list the device
- * picker opens (`DevicePicker.tsx`, D636).
+ * picker opens (`ItemPicker.tsx`, D636).
  *
  * Built for hundreds of devices of one type (a fleet of HA sensors): the
  * search is debounced, groups are (type, room) and big ones start collapsed
@@ -21,12 +21,8 @@
  * pickers (`ScopePickers.tsx`) open this same sheet over string ids, with
  * their own group titles (`groupTitle`).
  *
- * "Group by" (Zone | Location | None) is the DEVICE picker's only: given a
- * {@link PickerGroupingControl}, the sheet draws the control at its top and
- * groups by site zone, location or nothing (`groupPickerDevicesBy`); without
- * one it keeps the (type, room) groups the node and package pickers use. A
- * zone read that has not answered groups by location with a one-line note —
- * never "No zone" from a read that did not answer (D315).
+ * Groups are (type, room). The node and package pickers have no zones and no
+ * places, so the Zone and Location chips draw nothing for them.
  */
 import React, { useCallback, useMemo, useState } from 'react'
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native'
@@ -40,26 +36,21 @@ import { DeviceFilterBar } from './DeviceFilterBar.js'
 import {
   clearPickerGroup,
   applyPickerFilters,
-  flattenPickerGrouping,
   flattenPickerRows,
   groupPickerDevices,
-  groupPickerDevicesBy,
   PICKER_NO_FILTERS,
   PICKER_WINDOW,
   pickerFacetOptions,
   pickerHiddenSelectedCount,
   pickerQueryTokens,
-  pickerRowFacts,
   selectPickerGroup,
   togglePickerDevice,
   type PickerGroup,
   type PickerFilters,
-  type PickerGroupBy,
-  type PickerGroupHeading,
-  type PickerGrouping,
   type PickerId,
   type PickerItem,
   type PickerRow,
+  type PickerFacetOption,
   type PickerZonesRead,
 } from './device-picker-model.js'
 import { pickSingle } from './single-pick.js'
@@ -67,18 +58,12 @@ import type { DeviceListState } from './device-selection.js'
 
 const UI = 'v2.nc.devicePicker'
 
-/** An answered read with no zones: what the pickers without "Group by" are judged against. */
+/** An answered read with no zones: what these pickers are judged against. */
 const NO_ZONES: PickerZonesRead = { state: 'answered', zones: [] }
+const NO_OPTIONS: readonly PickerFacetOption[] = []
 
 /** Every row — header or device — is this tall, so the list can skip measuring. */
 export const PICKER_ROW_HEIGHT = 48
-
-/** The device picker's "Group by": the chosen mode, how to change it, and the zone read. */
-export interface PickerGroupingControl {
-  readonly groupBy: PickerGroupBy
-  readonly onGroupByChange: (next: PickerGroupBy) => void
-  readonly zones: PickerZonesRead
-}
 
 export interface DevicePickerSheetProps<Id extends PickerId = number> {
   readonly title: string
@@ -95,8 +80,6 @@ export interface DevicePickerSheetProps<Id extends PickerId = number> {
   readonly searchLabel?: string
   /** What a search that matches nothing says; the default speaks of devices. */
   readonly noMatchesLabel?: string
-  /** "Group by" — the device picker only; absent keeps the (type, room) groups. */
-  readonly grouping?: PickerGroupingControl
   /** Pick exactly one: a tap replaces the value and closes the sheet; no per-group select/clear. */
   readonly single?: boolean
   readonly onClose: () => void
@@ -131,7 +114,6 @@ export function DevicePickerSheet<Id extends PickerId = number>({
   unavailableLabel,
   searchLabel,
   noMatchesLabel,
-  grouping,
   single = false,
   onClose,
 }: DevicePickerSheetProps<Id>): React.JSX.Element {
@@ -141,18 +123,12 @@ export function DevicePickerSheet<Id extends PickerId = number>({
   const [filters, setFilters] = useState<PickerFilters>(PICKER_NO_FILTERS)
   const [toggles, setToggles] = useState<ReadonlyMap<string, boolean>>(new Map())
   const searching = pickerQueryTokens(filters.query).length > 0
-  const groupBy = grouping?.groupBy
   // The node and package pickers have no zones, and their `location` is a
   // liveness, not a place: they are judged against an answered, empty read so
   // Zone and Location draw nothing for them.
-  const zones: PickerZonesRead = grouping?.zones ?? NO_ZONES
+  const zones = NO_ZONES
   const list = useMemo((): readonly PickerItem<Id>[] => devices ?? [], [devices])
   const matches = useMemo(() => applyPickerFilters(list, filters, zones), [list, filters, zones])
-  const grouped = useMemo(
-    (): PickerGrouping<Id> | null =>
-      groupBy !== undefined ? groupPickerDevicesBy(matches, value, groupBy, zones) : null,
-    [matches, value, groupBy, zones],
-  )
   const typeOptions = useMemo(
     () => pickerFacetOptions(list, 'type', filters.types, zones),
     [list, filters.types, zones],
@@ -161,22 +137,14 @@ export function DevicePickerSheet<Id extends PickerId = number>({
     () => pickerFacetOptions(list, 'zone', filters.zones, zones),
     [list, filters.zones, zones],
   )
-  const locationOptions = useMemo(
-    () => (grouping === undefined ? [] : pickerFacetOptions(list, 'location', filters.locations, zones)),
-    [list, filters.locations, zones, grouping],
-  )
   const hiddenSelected = useMemo(
     () => pickerHiddenSelectedCount(value, list, matches),
     [list, value, matches],
   )
   const rows = useMemo(
-    () =>
-      grouped !== null
-        ? flattenPickerGrouping(grouped, value, toggles, searching)
-        : flattenPickerRows(groupPickerDevices(matches, value), value, toggles, searching),
-    [grouped, matches, value, toggles, searching],
+    () => flattenPickerRows(groupPickerDevices(matches, value), value, toggles, searching),
+    [matches, value, toggles, searching],
   )
-  const shownBy = grouped?.groupBy ?? null
   const toggleGroup = useCallback((group: PickerGroup<Id>, expanded: boolean): void => {
     setToggles((current) => new Map([...current, [group.key, !expanded]]))
   }, [])
@@ -197,7 +165,6 @@ export function DevicePickerSheet<Id extends PickerId = number>({
         <DeviceRow<Id>
           device={item.device}
           selected={item.selected}
-          groupBy={shownBy}
           onPress={() => {
             if (single) {
               onChange(pickSingle(item.device.id))
@@ -208,7 +175,7 @@ export function DevicePickerSheet<Id extends PickerId = number>({
           }}
         />
       ),
-    [groupTitle, onChange, onClose, single, toggleGroup, value, shownBy],
+    [groupTitle, onChange, onClose, single, toggleGroup, value],
   )
 
   const answered = state === 'answered' && devices !== undefined
@@ -240,17 +207,8 @@ export function DevicePickerSheet<Id extends PickerId = number>({
             onFiltersChange={setFilters}
             typeOptions={typeOptions}
             zoneOptions={zoneOptions}
-            locationOptions={locationOptions}
+            locationOptions={NO_OPTIONS}
             zones={zones}
-            {...(grouping !== undefined
-              ? {
-                  grouping: {
-                    groupBy: grouping.groupBy,
-                    onGroupByChange: grouping.onGroupByChange,
-                    fallback: grouped?.fallback ?? null,
-                  },
-                }
-              : {})}
             searchPlaceholder={searchLabel ?? t(`${UI}.search`)}
           />
           <Text style={[styles.hint, { color: colors.foregroundSubtle }]}>
@@ -316,9 +274,7 @@ function GroupHeader<Id extends PickerId>({
   const text =
     title !== undefined
       ? title(group)
-      : group.heading !== undefined
-        ? headingText(group.heading, t)
-        : `${group.type ?? t(`${UI}.noType`)} · ${group.location ?? t(`${UI}.noRoom`)}`
+      : `${group.type ?? t(`${UI}.noType`)} · ${group.location ?? t(`${UI}.noRoom`)}`
   const Chevron = expanded ? ChevronDown : ChevronRight
   return (
     <View
@@ -357,32 +313,16 @@ function GroupHeader<Id extends PickerId>({
 interface DeviceRowProps<Id extends PickerId> {
   readonly device: PickerItem<Id>
   readonly selected: boolean
-  /** The "Group by" mode the list is drawn in; null for (type, room) groups. */
-  readonly groupBy: PickerGroupBy | null
   readonly onPress: () => void
-}
-
-/** The second line: under "Group by" the room (where the header lacks it) and type, then the container. */
-function secondLine<Id extends PickerId>(
-  device: PickerItem<Id>,
-  groupBy: PickerGroupBy | null,
-): string | undefined {
-  if (groupBy === null) return device.detail
-  const facts = pickerRowFacts(device, groupBy)
-  const parts = [facts.location, facts.type, device.detail ?? null].filter(
-    (part): part is string => part !== null,
-  )
-  return parts.length > 0 ? parts.join(' · ') : undefined
 }
 
 function DeviceRow<Id extends PickerId>({
   device,
   selected,
-  groupBy,
   onPress,
 }: DeviceRowProps<Id>) {
   const { colors } = useTheme()
-  const second = secondLine(device, groupBy)
+  const second = device.detail
   return (
     <Pressable
       testID={`device-picker-row-${String(device.id)}`}
@@ -424,20 +364,6 @@ function DeviceRow<Id extends PickerId>({
       </View>
     </Pressable>
   )
-}
-
-type Translate = ReturnType<typeof useTranslation>['t']
-
-function headingText(heading: PickerGroupHeading, t: Translate): string {
-  switch (heading.kind) {
-    case 'zone':
-    case 'location':
-      return heading.label
-    case 'no-zone':
-      return t(`${UI}.groupBy.noZone`)
-    case 'no-location':
-      return t(`${UI}.groupBy.noLocation`)
-  }
 }
 
 const styles = StyleSheet.create({

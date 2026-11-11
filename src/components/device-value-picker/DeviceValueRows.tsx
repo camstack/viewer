@@ -15,7 +15,7 @@ import type { DeviceSearchItem, DeviceValueOption } from '@camstack/types'
 
 import { Check, ChevronRight } from '../../lib/icons.js'
 import { useTheme } from '../../theme/theme-provider.js'
-import { RADIUS, SPACING, TABULAR, TYPOGRAPHY } from '../../theme/tokens.js'
+import { RADIUS, SPACING, TABULAR, TYPOGRAPHY, withAlpha } from '../../theme/tokens.js'
 import { deviceTypeLabel, deviceTypeLabelKey } from '../notifications/rule-editor.js'
 import {
   isPicked,
@@ -116,7 +116,7 @@ export function DeviceRow({
         styles.row,
         {
           borderBottomColor: colors.borderSubtle,
-          backgroundColor: pressed ? colors.surfaceHover : selected ? `${colors.primary}14` : 'transparent',
+          backgroundColor: pressed ? colors.surfaceHover : selected ? withAlpha(colors.primary, 0.08) : 'transparent',
           opacity: inert ? 0.4 : 1,
         },
       ]}
@@ -201,7 +201,7 @@ export function ValuesPage({ item, multiple, picked, onPick }: ValuesPageProps):
               styles.row,
               {
                 borderBottomColor: colors.borderSubtle,
-                backgroundColor: pressed ? colors.surfaceHover : selected ? `${colors.primary}14` : 'transparent',
+                backgroundColor: pressed ? colors.surfaceHover : selected ? withAlpha(colors.primary, 0.08) : 'transparent',
               },
             ]}
           >

@@ -3,7 +3,7 @@
  * namespace, and how each is read, applied and found in another hub's cache.
  *
  *   viewer.app      settings (account half) · language · reelFilter ·
- *                   reelHighlight · devicePickerGroupBy · eventsView
+ *                   reelHighlight · eventsView
  *   viewer.cameras  prefs (names, hidden, order, highlight, overlay,
  *                   clip / recording source, accessories)
  *   viewer.grids    grids (definitions; the layout is per device)
@@ -25,8 +25,6 @@ import {
 import { REEL_DEFAULTS, REEL_FILTER_STORAGE_KEY, useReelFilterStore } from '../store/reel-filter-store.js'
 import { REEL_HIGHLIGHT_STORAGE_KEY, useReelHighlightStore } from '../store/reel-highlight-store.js'
 import { REEL_HIGHLIGHT_DEFAULTS } from '../store/reel-highlight.js'
-import { DEVICE_PICKER_GROUP_KEY, useDevicePickerGroupStore } from '../store/device-picker-group-store.js'
-import { PICKER_DEFAULT_GROUP_BY } from '../components/notifications/device-picker-model.js'
 import {
   DEFAULTS as EVENTS_DEFAULTS,
   EVENTS_FILTER_STORAGE_KEY,
@@ -123,17 +121,6 @@ export function buildAccountSections(): readonly AccountSection[] {
       read: (s) => s.highlight,
       apply: (v) => useReelHighlightStore.getState().applyAccount(v),
       readCached: (id) => cachedJson(REEL_HIGHLIGHT_STORAGE_KEY, id, REEL_HIGHLIGHT_DEFAULTS),
-    }),
-    section({
-      namespace: 'viewer.app',
-      name: 'devicePickerGroupBy',
-      store: useDevicePickerGroupStore,
-      slice: (s) => s.groupBy,
-      scope: (s) => (s.hydrated ? s.serverId : null),
-      read: (s) => s.groupBy,
-      apply: (v) => useDevicePickerGroupStore.getState().applyAccount(v),
-      readCached: async (id) =>
-        (await AsyncStorage.getItem(scopedStorageKey(DEVICE_PICKER_GROUP_KEY, id))) ?? PICKER_DEFAULT_GROUP_BY,
     }),
     section({
       namespace: 'viewer.app',

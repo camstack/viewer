@@ -126,3 +126,12 @@ export function deviceSearchAnswer(fleet: readonly FleetDevice[], raw: unknown):
 export function deviceSearchHub(fleet: readonly FleetDevice[]): Record<string, unknown> {
   return { 'deviceManager.search': (input?: unknown) => deviceSearchAnswer(fleet, input) }
 }
+
+/** The `requires` of every `deviceManager.search` call so far, in order. */
+export function searchRequires(
+  calls: readonly { readonly path: string; readonly input: unknown }[],
+): readonly unknown[] {
+  return calls
+    .filter((call) => call.path === 'deviceManager.search')
+    .map((call) => (isAsk(call.input) ? call.input.requires : undefined))
+}

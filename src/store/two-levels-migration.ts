@@ -34,7 +34,6 @@ import { pickSettingsLevel } from './settings-levels.js'
 import { LANGUAGE_STORAGE_KEY } from './language-store.js'
 import { REEL_FILTER_STORAGE_KEY } from './reel-filter-store.js'
 import { REEL_HIGHLIGHT_STORAGE_KEY } from './reel-highlight-store.js'
-import { DEVICE_PICKER_GROUP_KEY } from './device-picker-group-store.js'
 import { EVENTS_FILTER_LEVELS, EVENTS_FILTER_STORAGE_KEY } from './events-filter-store.js'
 import { CAMERA_LOCAL_LEVELS, CAMERA_LOCAL_STORAGE_KEY } from './camera-local-store.js'
 import { GRIDS_STORAGE_KEY } from './grid-store.js'
@@ -48,14 +47,18 @@ export const RETIRED_STORAGE_KEYS = {
   settingsTemplateLink: 'v2.settingsTemplateLink',
   /** The Rules tab's strip tab — ephemeral now. */
   rulesStripTab: 'camstack.v2.nc-rules-strip',
+  /** The device picker's "Group by" — the picker that offered it was replaced (issue 496). */
+  devicePickerGroupBy: 'camstack.v2.device-picker.group-by',
 } as const
+
+/** Retired keys that also had a copy per hub: every copy goes. */
+const RETIRED_PER_HUB_KEYS: readonly string[] = [RETIRED_STORAGE_KEYS.devicePickerGroupBy]
 
 /** The device-wide values that become one account copy per hub. */
 const UNSCOPED_ACCOUNT_KEYS: readonly string[] = [
   LANGUAGE_STORAGE_KEY,
   REEL_FILTER_STORAGE_KEY,
   REEL_HIGHLIGHT_STORAGE_KEY,
-  DEVICE_PICKER_GROUP_KEY,
 ]
 
 /** What the pass reads: key → stored string (null = absent). */
@@ -84,7 +87,13 @@ function parseJson(raw: string | null | undefined): unknown {
 /** Every key the pass needs to read for these hubs. */
 export function twoLevelsMigrationKeys(serverIds: readonly string[]): readonly string[] {
   const perHub = serverIds.flatMap((id) =>
-    [SETTINGS_ACCOUNT_STORAGE_KEY, EVENTS_FILTER_STORAGE_KEY, CAMERA_LOCAL_STORAGE_KEY, ...UNSCOPED_ACCOUNT_KEYS].map(
+    [
+      SETTINGS_ACCOUNT_STORAGE_KEY,
+      EVENTS_FILTER_STORAGE_KEY,
+      CAMERA_LOCAL_STORAGE_KEY,
+      ...UNSCOPED_ACCOUNT_KEYS,
+      ...RETIRED_PER_HUB_KEYS,
+    ].map(
       (base) => scopedStorageKey(base, id),
     ),
   )
@@ -213,6 +222,12 @@ export function planTwoLevelsMigration(docs: TwoLevelsDocs, serverIds: readonly 
   const device = dropEphemeral(docs[DEVICE_SETTINGS_STORAGE_KEY], DEVICE_SETTINGS_LEVELS)
   if (device !== null) set[DEVICE_SETTINGS_STORAGE_KEY] = JSON.stringify(device)
   for (const key of Object.values(RETIRED_STORAGE_KEYS)) if (present(docs, key)) remove.push(key)
+  for (const base of RETIRED_PER_HUB_KEYS) {
+    for (const id of serverIds) {
+      const key = scopedStorageKey(base, id)
+      if (present(docs, key)) remove.push(key)
+    }
+  }
   return { set, remove }
 }
 

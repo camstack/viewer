@@ -2391,14 +2391,8 @@
         "none": "None selected",
         "remove": "Remove {{name}}",
         "groupBy": {
-          "label": "Group by",
-          "zone": "Zone",
-          "location": "Location",
-          "none": "None",
           "noZone": "No zone",
-          "noLocation": "No location",
-          "zonesPending": "Loading zones — grouped by location for now",
-          "zonesUnavailable": "Zones unavailable — grouped by location"
+          "noLocation": "No location"
         },
         "filter": {
           "type": "Type",

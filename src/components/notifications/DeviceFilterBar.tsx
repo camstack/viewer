@@ -1,7 +1,6 @@
 /**
  * DeviceFilterBar — the controls above a picker sheet's list (D697): the
- * search field, "Group by" (when the list offers it), the Type / Zone /
- * Location chips and "Reset filters".
+ * search field, the Type / Zone / Location chips and "Reset filters".
  *
  * It owns no filter state: the sheet holds `PickerFilters` and applies them
  * (`applyPickerFilters`); this only draws the controls and reports changes.
@@ -16,8 +15,7 @@
  *  - D315: a zones read that has not answered draws the Zone chip DISABLED
  *    ("Loading zones…" / "Zones unavailable"), never empty, and a chosen zone
  *    is reported as paused, not as matching nothing.
- *  - "Reset filters" clears search, Type, Zone and Location and leaves the
- *    Group-by choice alone.
+ *  - "Reset filters" clears search, Type, Zone and Location.
  */
 import React, { useEffect, useRef, useState } from 'react'
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
@@ -28,10 +26,8 @@ import { useTheme } from '../../theme/theme-provider.js'
 import { RADIUS, SPACING } from '../../theme/tokens.js'
 import { AnchoredMenu } from '../ui/AnchoredMenu.js'
 import { FilterChip } from '../ui/FilterChip.js'
-import { SegmentedControl, type SegmentOption } from '../ui/SegmentedControl.js'
 import type { AnchorRect } from '../ui/dropdown-placement.js'
 import {
-  PICKER_GROUP_BY_MODES,
   PICKER_NONE_KEY,
   PICKER_SEARCH_DEBOUNCE_MS,
   pickerFacetFilterShown,
@@ -42,20 +38,11 @@ import {
   type PickerFacet,
   type PickerFacetOption,
   type PickerFilters,
-  type PickerGroupBy,
-  type PickerZonesFallback,
   type PickerZonesRead,
 } from './device-picker-model.js'
 import { deviceTypeLabel, deviceTypeLabelKey } from './rule-editor.js'
 
 const UI = 'v2.nc.devicePicker'
-
-export interface DeviceFilterBarGrouping {
-  readonly groupBy: PickerGroupBy
-  readonly onGroupByChange: (next: PickerGroupBy) => void
-  /** Set when Zone mode is showing locations because the zones had not answered. */
-  readonly fallback?: PickerZonesFallback | null
-}
 
 export interface DeviceFilterBarProps {
   readonly filters: PickerFilters
@@ -65,7 +52,6 @@ export interface DeviceFilterBarProps {
   readonly locationOptions: readonly PickerFacetOption[]
   /** The zones read — decides whether the Zone chip is enabled and what it says. */
   readonly zones: PickerZonesRead
-  readonly grouping?: DeviceFilterBarGrouping
   readonly searchPlaceholder: string
   readonly disabled?: boolean
 }
@@ -86,38 +72,6 @@ function zoneUnavailable(zones: PickerZonesRead, t: Translate): string | null {
   if (zones.state === 'pending') return t(`${UI}.filter.zonesLoading`)
   if (zones.state === 'failed') return t(`${UI}.filter.zonesUnavailable`)
   return null
-}
-
-interface GroupByControlProps {
-  readonly grouping: DeviceFilterBarGrouping
-}
-
-/** "Group by: Zone | Location | None", and why Zone is showing locations. */
-function GroupByControl({ grouping }: GroupByControlProps) {
-  const { t } = useTranslation()
-  const { colors } = useTheme()
-  const options: readonly SegmentOption<PickerGroupBy>[] = PICKER_GROUP_BY_MODES.map((mode) => ({
-    value: mode,
-    label: t(`${UI}.groupBy.${mode}`),
-  }))
-  const fallback = grouping.fallback ?? null
-  return (
-    <View style={styles.groupBy} testID="device-picker-grouping">
-      <Text style={[styles.groupByLabel, { color: colors.foregroundSubtle }]}>
-        {t(`${UI}.groupBy.label`)}
-      </Text>
-      <SegmentedControl<PickerGroupBy>
-        options={options}
-        value={grouping.groupBy}
-        onChange={grouping.onGroupByChange}
-      />
-      {fallback !== null ? (
-        <Text style={[styles.note, { color: colors.foregroundSubtle }]}>
-          {t(fallback === 'pending' ? `${UI}.groupBy.zonesPending` : `${UI}.groupBy.zonesUnavailable`)}
-        </Text>
-      ) : null}
-    </View>
-  )
 }
 
 interface FacetChipProps {
@@ -205,7 +159,6 @@ export function DeviceFilterBar({
   zoneOptions,
   locationOptions,
   zones,
-  grouping,
   searchPlaceholder,
   disabled = false,
 }: DeviceFilterBarProps): React.JSX.Element {
@@ -242,7 +195,6 @@ export function DeviceFilterBar({
 
   return (
     <View style={styles.bar} testID="device-filter-bar">
-      {grouping !== undefined ? <GroupByControl grouping={grouping} /> : null}
       <View style={[styles.searchRow, { backgroundColor: colors.surface }]}>
         <Search size={14} color={colors.foregroundMuted} />
         <TextInput
@@ -355,8 +307,6 @@ const styles = StyleSheet.create({
     gap: SPACING.xs,
     paddingHorizontal: SPACING.lg,
   },
-  groupBy: { gap: SPACING.xs, paddingHorizontal: SPACING.lg, paddingTop: SPACING.sm },
-  groupByLabel: { fontSize: 12, fontWeight: '600' },
   menuCount: { fontSize: 12 },
   menuLabel: { flex: 1, fontSize: 14 },
   menuRow: {

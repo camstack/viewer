@@ -25,7 +25,6 @@ import {
 import { LANGUAGE_STORAGE_KEY, useLanguageStore } from '../language-store.js'
 import { REEL_FILTER_STORAGE_KEY } from '../reel-filter-store.js'
 import { REEL_HIGHLIGHT_STORAGE_KEY } from '../reel-highlight-store.js'
-import { DEVICE_PICKER_GROUP_KEY } from '../device-picker-group-store.js'
 import { EVENTS_FILTER_STORAGE_KEY, useEventsFilterStore, DEFAULTS as EVENTS_DEFAULTS } from '../events-filter-store.js'
 import { CAMERA_LOCAL_STORAGE_KEY } from '../camera-local-store.js'
 import { GRIDS_STORAGE_KEY } from '../grid-store.js'
@@ -52,7 +51,8 @@ function legacyDocs(): Record<string, string | null> {
     [LANGUAGE_STORAGE_KEY]: 'it',
     [REEL_FILTER_STORAGE_KEY]: JSON.stringify({ classes: ['MARK-ACCOUNT-person'] }),
     [REEL_HIGHLIGHT_STORAGE_KEY]: JSON.stringify({ motion: false, audio: 'level' }),
-    [DEVICE_PICKER_GROUP_KEY]: 'location',
+    [RETIRED_STORAGE_KEYS.devicePickerGroupBy]: 'location',
+    [scopedStorageKey(RETIRED_STORAGE_KEYS.devicePickerGroupBy, 'hub-a')]: 'zone',
     [scopedStorageKey(EVENTS_FILTER_STORAGE_KEY, 'hub-a')]: JSON.stringify({
       showStationary: true,
       cameraIds: [101],
@@ -116,11 +116,10 @@ describe('planTwoLevelsMigration (pure)', () => {
     for (const hub of HUBS) {
       expect(plan.set[scopedStorageKey(LANGUAGE_STORAGE_KEY, hub)]).toBe('it')
       expect(parsed(plan.set[scopedStorageKey(REEL_FILTER_STORAGE_KEY, hub)])).toEqual({ classes: ['MARK-ACCOUNT-person'] })
-      expect(plan.set[scopedStorageKey(DEVICE_PICKER_GROUP_KEY, hub)]).toBe('location')
       expect(plan.set[scopedStorageKey(REEL_HIGHLIGHT_STORAGE_KEY, hub)]).toBeDefined()
     }
     expect(plan.remove).toEqual(
-      expect.arrayContaining([LANGUAGE_STORAGE_KEY, REEL_FILTER_STORAGE_KEY, REEL_HIGHLIGHT_STORAGE_KEY, DEVICE_PICKER_GROUP_KEY]),
+      expect.arrayContaining([LANGUAGE_STORAGE_KEY, REEL_FILTER_STORAGE_KEY, REEL_HIGHLIGHT_STORAGE_KEY]),
     )
   })
 
@@ -151,6 +150,13 @@ describe('planTwoLevelsMigration (pure)', () => {
     expect(plan.remove).toEqual(
       expect.arrayContaining([RETIRED_STORAGE_KEYS.settingsTemplateLink, RETIRED_STORAGE_KEYS.rulesStripTab]),
     )
+  })
+
+  it('the retired picker "Group by" goes everywhere: the device-wide key and every hub copy, none re-written', () => {
+    expect(plan.remove).toEqual(
+      expect.arrayContaining([RETIRED_STORAGE_KEYS.devicePickerGroupBy, scopedStorageKey(RETIRED_STORAGE_KEYS.devicePickerGroupBy, 'hub-a')]),
+    )
+    expect(Object.keys(plan.set).filter((k) => k.startsWith(RETIRED_STORAGE_KEYS.devicePickerGroupBy))).toEqual([])
   })
 
   it('a per-hub copy that already exists WINS over the device-wide value', () => {

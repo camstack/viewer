@@ -2388,14 +2388,8 @@
         "none": "Nessuno selezionato",
         "remove": "Rimuovi {{name}}",
         "groupBy": {
-          "label": "Raggruppa per",
-          "zone": "Zona",
-          "location": "Luogo",
-          "none": "Nessuno",
           "noZone": "Senza zona",
-          "noLocation": "Senza luogo",
-          "zonesPending": "Caricamento zone — raggruppati per luogo",
-          "zonesUnavailable": "Zone non disponibili — raggruppati per luogo"
+          "noLocation": "Senza luogo"
         },
         "filter": {
           "type": "Tipo",

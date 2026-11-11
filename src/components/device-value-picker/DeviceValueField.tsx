@@ -14,7 +14,7 @@ import { useTranslation } from 'react-i18next'
 
 import { Plus, X } from '../../lib/icons.js'
 import { useTheme } from '../../theme/theme-provider.js'
-import { RADIUS, SPACING, TYPOGRAPHY } from '../../theme/tokens.js'
+import { RADIUS, SPACING, TYPOGRAPHY, withAlpha } from '../../theme/tokens.js'
 import { emptyDevicesWidens } from '../notifications/device-selection.js'
 import { PickerLine } from '../notifications/ItemPicker.js'
 import {
@@ -156,7 +156,7 @@ function Chip({ label, warning, disabled, onRemove, testID }: ChipProps): React.
       accessibilityLabel={t('v2.nc.devicePicker.remove', { name: label })}
       disabled={disabled}
       onPress={onRemove}
-      style={[styles.chip, { backgroundColor: `${tone}1f` }]}
+      style={[styles.chip, { backgroundColor: withAlpha(tone, 0.12) }]}
     >
       <Text numberOfLines={1} style={[styles.chipText, { color: tone }]}>
         {label}
@@ -185,7 +185,7 @@ function SmallButton({ label, onPress, disabled = false, dashed = false, testID 
       onPress={onPress}
       style={[
         styles.button,
-        { borderStyle: dashed ? 'dashed' : 'solid', borderColor: colors.border, opacity: disabled ? 0.5 : 1 },
+        { borderStyle: dashed ? 'dashed' : 'solid', borderColor: colors.border, opacity: disabled ? 0.4 : 1 },
       ]}
     >
       {dashed ? <Plus size={12} color={colors.foreground} /> : null}

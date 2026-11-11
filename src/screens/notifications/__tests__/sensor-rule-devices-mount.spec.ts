@@ -126,6 +126,13 @@ function capsAsked(): readonly string[] {
     })
 }
 
+/** The `requires.mode` of every `deviceManager.search` call. */
+function modesAsked(): readonly unknown[] {
+  return hubCalls()
+    .filter((call) => call.path === 'deviceManager.search')
+    .map((call) => field(field(call.input, 'requires'), 'mode'))
+}
+
 const SEARCH_LABEL = 'Search name, room, type or id'
 
 afterEach(() => {
@@ -177,6 +184,9 @@ describe('the Devices section of a SENSOR rule', () => {
     // The picker asks BOTH caps: the narrowed sensor one and camera-streams.
     expect(capsAsked()).toContain('flood')
     expect(capsAsked()).toContain('camera-streams')
+    // EITHER cap qualifies a device: a flood sensor has no camera-streams.
+    expect(modesAsked().length).toBeGreaterThan(0)
+    expect(modesAsked().every((mode) => mode === 'any')).toBe(true)
     await act(async () => {
       fireEvent.click(dom.getByTestId('dvp-add'))
     })
