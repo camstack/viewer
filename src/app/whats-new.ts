@@ -30,6 +30,20 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.703',
+    date: '2026-11-11',
+    notes: {
+      en: [
+        'Device detail is the same device card as the hub, with its controls and history.',
+        'One device and value picker on every device field.',
+      ],
+      it: [
+        'Il dettaglio dispositivo è la stessa card dell\'hub, con comandi e storico.',
+        'Un unico selettore dispositivo e valore su ogni campo dispositivo.',
+      ],
+    },
+  },
+  {
     version: '1.0.702',
     date: '2026-11-10',
     notes: {
