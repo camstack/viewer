@@ -4351,64 +4351,9 @@
       "openFor": "Details of {{device}}",
       "offline": "Offline",
       "online": "Online",
-      "battery": "Battery {{level}}%",
-      "link": "Signal {{signal}}%",
-      "linkWired": "Wired",
-      "power": "{{watts}} W",
-      "runningFor": "Running for {{duration}}",
-      "idleFor": "Idle for {{duration}}",
-      "running": "Running",
-      "idle": "Idle",
-      "stateUnknown": "State unknown",
-      "contactOpen": "Open for {{duration}}",
-      "contactClosed": "Closed for {{duration}}",
-      "contactOpenNow": "Open",
-      "contactClosedNow": "Closed",
-      "consumables": "Consumables",
-      "consumableLow": "Running low",
-      "consumableEmpty": "Empty",
-      "consumableReplace": "Replace",
-      "sections": {
-        "readings": "Readings",
-        "secondary": "Options",
-        "timer": "Timer",
-        "consumables": "Consumables"
-      },
-      "noAccess": "This account cannot control this device.",
       "unavailable": "This device could not be read.",
-      "reading": {
-        "temperature-sensor": "Temperature",
-        "humidity-sensor": "Humidity",
-        "ambient-light-sensor": "Light",
-        "numeric-sensor": "Value",
-        "enum-sensor": "State"
-      },
-      "tabs": {
-        "overview": "Overview",
-        "history": "History",
-        "transitions": "Transitions"
-      },
-      "transitions": {
-        "soon": "Transitions are coming soon"
-      },
-      "history": {
-        "window": {
-          "24h": "24 h",
-          "7d": "7 days",
-          "30d": "30 days"
-        },
-        "now": "now",
-        "on": "On",
-        "off": "Off",
-        "run": "Run",
-        "runs": "Runs",
-        "noRuns": "No runs in this window",
-        "empty": "No data in this window",
-        "failed": "Could not load this series",
-        "unavailable": "History is unavailable",
-        "none": "This device keeps no history yet",
-        "range": "Min {{min}} · Max {{max}}"
-      }
+      "openOnHub": "This device's card opens on the hub.",
+      "openOnHubAction": "Open on the hub"
     },
     "hero": {
       "remote": "Remote",

@@ -4348,64 +4348,9 @@
       "openFor": "Dettagli di {{device}}",
       "offline": "Offline",
       "online": "Online",
-      "battery": "Batteria {{level}}%",
-      "link": "Segnale {{signal}}%",
-      "linkWired": "Cablato",
-      "power": "{{watts}} W",
-      "runningFor": "In funzione da {{duration}}",
-      "idleFor": "Ferma da {{duration}}",
-      "running": "In funzione",
-      "idle": "Ferma",
-      "stateUnknown": "Stato sconosciuto",
-      "contactOpen": "Aperta da {{duration}}",
-      "contactClosed": "Chiusa da {{duration}}",
-      "contactOpenNow": "Aperta",
-      "contactClosedNow": "Chiusa",
-      "consumables": "Consumabili",
-      "consumableLow": "In esaurimento",
-      "consumableEmpty": "Esaurito",
-      "consumableReplace": "Da sostituire",
-      "sections": {
-        "readings": "Letture",
-        "secondary": "Opzioni",
-        "timer": "Timer",
-        "consumables": "Consumabili"
-      },
-      "noAccess": "Questo account non può controllare il dispositivo.",
       "unavailable": "Impossibile leggere il dispositivo.",
-      "reading": {
-        "temperature-sensor": "Temperatura",
-        "humidity-sensor": "Umidità",
-        "ambient-light-sensor": "Luce",
-        "numeric-sensor": "Valore",
-        "enum-sensor": "Stato"
-      },
-      "tabs": {
-        "overview": "Panoramica",
-        "history": "Storico",
-        "transitions": "Transizioni"
-      },
-      "transitions": {
-        "soon": "Le transizioni arriveranno presto"
-      },
-      "history": {
-        "window": {
-          "24h": "24 h",
-          "7d": "7 giorni",
-          "30d": "30 giorni"
-        },
-        "now": "ora",
-        "on": "Acceso",
-        "off": "Spento",
-        "run": "Ciclo",
-        "runs": "Cicli",
-        "noRuns": "Nessun ciclo in questo periodo",
-        "empty": "Nessun dato in questo periodo",
-        "failed": "Impossibile caricare questa serie",
-        "unavailable": "Lo storico non è disponibile",
-        "none": "Questo dispositivo non ha ancora uno storico",
-        "range": "Min {{min}} · Max {{max}}"
-      }
+      "openOnHub": "La scheda di questo dispositivo si apre sull’hub.",
+      "openOnHubAction": "Apri sull’hub"
     },
     "hero": {
       "remote": "Telecomando",
