@@ -13,8 +13,8 @@
  * copy lagged it, and the same host will carry addon dashboards built for the
  * admin UI.
  */
-import React, { useCallback, useRef, useState } from 'react'
-import { Platform, StyleSheet, Text, useWindowDimensions, View } from 'react-native'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -25,7 +25,7 @@ import { useDeviceIdentity } from '../data/device-detail-status.js'
 import { useDeviceProviderLabel } from '../data/device-provider-label.js'
 import { DeviceCardEmbed } from '../device-embed/DeviceCardEmbed.js'
 import { useTheme } from '../theme/theme-provider.js'
-import { RADIUS, SPACING, TYPOGRAPHY } from '../theme/tokens.js'
+import { RADIUS, SPACING } from '../theme/tokens.js'
 import { deviceSheetHeight } from './device-sheet-size.js'
 
 export interface DeviceDetailScreenProps {
@@ -37,14 +37,11 @@ export interface DeviceDetailScreenProps {
 /** Reachability for the header: unanswered draws nothing (D315). */
 function ReachLine({ online }: { readonly online: boolean | null }): React.JSX.Element | null {
   const { t } = useTranslation()
-  const { colors } = useTheme()
   if (online === null) return null
-  if (!online) return <Badge label={t('v2.deviceDetail.offline')} tone="danger" look="tint" size="sm" />
-  return (
-    <View style={styles.reach} testID="device-sheet-online">
-      <View style={[styles.dot, { backgroundColor: colors.foregroundMuted }]} />
-      <Text style={[styles.reachText, { color: colors.foregroundMuted }]}>{t('v2.deviceDetail.online')}</Text>
-    </View>
+  return online ? (
+    <Badge label={t('v2.deviceDetail.online')} tone="neutral" look="outline" size="sm" />
+  ) : (
+    <Badge label={t('v2.deviceDetail.offline')} tone="danger" look="tint" size="sm" />
   )
 }
 
@@ -60,14 +57,32 @@ export function DeviceDetailScreen({ deviceId, deviceName }: DeviceDetailScreenP
   const name = device?.name ?? (deviceName === '' ? `#${deviceId}` : deviceName)
   const [visible, setVisible] = useState(true)
   const closing = useRef(false)
+  const leaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // The sheet slides out first; the route pops when it is gone. A dialog fades
-  // with the Modal itself, so the route can go at once.
+  // A screen that unmounts mid-close must not pop whatever replaced it.
+  useEffect(
+    () => () => {
+      if (leaveTimer.current !== null) clearTimeout(leaveTimer.current)
+    },
+    [],
+  )
+
+  // The sheet slides out first; the route leaves when it is gone. A dialog
+  // fades with the Modal itself, so the route can go at once. Reached cold (a
+  // web deep link, a native cold link) there is nothing underneath the
+  // transparent modal, so it lands on home instead of a blank screen.
   const close = useCallback(() => {
     if (closing.current) return
     closing.current = true
     setVisible(false)
-    setTimeout(() => router.back(), presentation === 'sheet' ? SHEET_ANIMATION_MS : 0)
+    leaveTimer.current = setTimeout(
+      () => {
+        leaveTimer.current = null
+        if (router.canGoBack()) router.back()
+        else router.replace('/')
+      },
+      presentation === 'sheet' ? SHEET_ANIMATION_MS : 0,
+    )
   }, [router, presentation])
 
   return (
@@ -111,7 +126,4 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.xl,
   },
   card: { flex: 1, marginTop: SPACING.md },
-  reach: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm },
-  dot: { width: 8, height: 8, borderRadius: RADIUS.sm },
-  reachText: { fontSize: TYPOGRAPHY.size.xs },
 })

@@ -13,7 +13,7 @@ import React from 'react'
 import { mountScreen } from '../../testing/mount.js'
 import { DeviceDetailScreen } from '../DeviceDetailScreen.js'
 import { ADMIN_ACCESS_TOKEN_KEY } from '../../device-embed/device-embed-url.js'
-import { routerCalls } from '../../testing/native-stubs/expo-router.js'
+import { routerCalls, setTestCanGoBack } from '../../testing/native-stubs/expo-router.js'
 
 interface CapturedWebView {
   readonly source: { readonly uri: string }
@@ -124,7 +124,7 @@ describe('DeviceDetailScreen', () => {
     const header = screen.getByTestId('device-sheet-header')
     expect(header.textContent).toContain('Washer plug')
     expect(await screen.findByText('Homematic (Casa)')).toBeTruthy()
-    expect(screen.getByTestId('device-sheet-online')).toBeTruthy()
+    expect(within(header).getByText(/online/i)).toBeTruthy()
   })
 
   it('closing the sheet goes back to the screen it was opened over', async () => {
@@ -136,6 +136,37 @@ describe('DeviceDetailScreen', () => {
         vi.advanceTimersByTime(1000)
       })
       expect(routerCalls().filter((c) => c.kind === 'back')).toHaveLength(1)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('closing a sheet reached cold (no history) lands on the home screen, never a blank one', async () => {
+    vi.useFakeTimers()
+    try {
+      mountPlug()
+      setTestCanGoBack(false)
+      fireEvent.click(within(screen.getByTestId('device-sheet-header')).getByLabelText('Close'))
+      await act(async () => {
+        vi.advanceTimersByTime(1000)
+      })
+      expect(routerCalls().filter((c) => c.kind === 'back')).toHaveLength(0)
+      expect(routerCalls().filter((c) => c.kind === 'replace').map((c) => c.target)).toEqual(['/'])
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('a sheet unmounted mid-close never pops the screen that replaced it', async () => {
+    vi.useFakeTimers()
+    try {
+      mountPlug()
+      fireEvent.click(within(screen.getByTestId('device-sheet-header')).getByLabelText('Close'))
+      cleanup()
+      await act(async () => {
+        vi.advanceTimersByTime(1000)
+      })
+      expect(routerCalls().filter((c) => c.kind === 'back' || c.kind === 'replace')).toHaveLength(0)
     } finally {
       vi.useRealTimers()
     }
