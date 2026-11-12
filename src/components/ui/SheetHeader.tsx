@@ -58,6 +58,8 @@ export interface SheetHeaderProps {
   readonly icon?: LucideIcon
   /** Icon actions before the close button. */
   readonly actions?: React.ReactNode
+  /** A line of chips beside the title (a device's integration and status); wraps under it when narrow. */
+  readonly meta?: React.ReactNode
   /** Absent ⇒ no close button (the sheet closes another way). */
   readonly onClose?: () => void
   /** Defaults to "Close". */
@@ -69,6 +71,7 @@ export function SheetHeader({
   title,
   icon: Icon,
   actions,
+  meta,
   onClose,
   closeLabel,
   testID,
@@ -78,9 +81,18 @@ export function SheetHeader({
   return (
     <View style={styles.header} testID={testID}>
       {Icon !== undefined ? <Icon size={16} color={colors.primary} /> : null}
-      <Text style={[styles.title, { color: colors.foreground }]} numberOfLines={2}>
-        {title}
-      </Text>
+      {meta === undefined ? (
+        <Text style={[styles.title, { color: colors.foreground }]} numberOfLines={2}>
+          {title}
+        </Text>
+      ) : (
+        <View style={styles.titleLine}>
+          <Text style={[styles.titleText, { color: colors.foreground }]} numberOfLines={2}>
+            {title}
+          </Text>
+          {meta}
+        </View>
+      )}
       {actions}
       {onClose !== undefined ? (
         <SheetIconButton icon={X} label={closeLabel ?? t('v2.common.close')} onPress={onClose} />
@@ -92,6 +104,8 @@ export function SheetHeader({
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, paddingBottom: SPACING.sm },
   title: { flex: 1, fontSize: TYPOGRAPHY.size.lg, fontWeight: TYPOGRAPHY.weight.bold },
+  titleLine: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: SPACING.md, rowGap: SPACING.sm },
+  titleText: { flexShrink: 1, fontSize: TYPOGRAPHY.size.lg, fontWeight: TYPOGRAPHY.weight.bold },
   iconBtn: {
     width: SHEET_ICON_BUTTON_SIZE,
     height: SHEET_ICON_BUTTON_SIZE,

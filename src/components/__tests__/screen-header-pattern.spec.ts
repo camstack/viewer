@@ -35,9 +35,12 @@ describe('one header pattern', () => {
     // AddServerScreen: the sign-in flow has no app chrome yet. The detail
     // screens reach back through the stream chrome (CameraDetailScreen) or the
     // wall bar (GridViewScreen), which are glass buttons of their own.
+    // DeviceDetailScreen is a sheet over the screen it opened from: it closes
+    // through the sheet's own header (`SheetHeader`), and then pops its route.
     const EXEMPT = new Set([
       'screens/AddServerScreen.tsx',
       'screens/CameraDetailScreen.tsx',
+      'screens/DeviceDetailScreen.tsx',
     ])
     const offenders = SCREENS.filter(
       (s) =>

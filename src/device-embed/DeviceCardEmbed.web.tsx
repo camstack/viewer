@@ -101,7 +101,8 @@ export function DeviceCardEmbed({ deviceId }: DeviceCardEmbedProps): React.JSX.E
 
   seedSession(token)
   return (
-    <View style={[styles.fill, { backgroundColor: colors.background }]}>
+    // Transparent: the page is too (`?host=viewer`), so the dialog is the background.
+    <View style={[styles.fill, styles.clear]}>
       <iframe
         key={src}
         ref={frameRef}
@@ -113,7 +114,7 @@ export function DeviceCardEmbed({ deviceId }: DeviceCardEmbedProps): React.JSX.E
           if (href !== null && !isDeviceEmbedPath(href)) setFailed(true)
           else setLoaded(true)
         }}
-        style={{ width: '100%', height: '100%', border: 'none', background: colors.background }}
+        style={FRAME_STYLE}
       />
       {!loaded ? (
         <View style={styles.overlay} pointerEvents="none">
@@ -124,7 +125,10 @@ export function DeviceCardEmbed({ deviceId }: DeviceCardEmbedProps): React.JSX.E
   )
 }
 
+const FRAME_STYLE: React.CSSProperties = { width: '100%', height: '100%', border: 'none', background: 'transparent' }
+
 const styles = StyleSheet.create({
   fill: { flex: 1 },
+  clear: { backgroundColor: 'transparent' },
   overlay: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, alignItems: 'center', justifyContent: 'center' },
 })

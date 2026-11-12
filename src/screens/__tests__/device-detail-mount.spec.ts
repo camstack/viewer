@@ -1,17 +1,19 @@
 /**
  * @vitest-environment jsdom
  *
- * The device detail, mounted against a stub hub: the header is the viewer's,
- * everything under it is the hub's device card (`/embed/device/<id>`) in a
- * WebView, signed in through the seeded admin session — never the URL.
+ * The device detail, mounted against a stub hub: a sheet whose header is the
+ * viewer's (name, integration chip, reachability) and whose body is the hub's
+ * device card (`/embed/device/<id>?host=viewer`) in a WebView, signed in
+ * through the seeded admin session — never the URL.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { act, cleanup, fireEvent, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, screen, within } from '@testing-library/react'
 import React from 'react'
 
 import { mountScreen } from '../../testing/mount.js'
 import { DeviceDetailScreen } from '../DeviceDetailScreen.js'
 import { ADMIN_ACCESS_TOKEN_KEY } from '../../device-embed/device-embed-url.js'
+import { routerCalls } from '../../testing/native-stubs/expo-router.js'
 
 interface CapturedWebView {
   readonly source: { readonly uri: string }
@@ -51,7 +53,19 @@ function lastWebView(): CapturedWebView {
 }
 
 const PLUG_HUB = {
-  'deviceManager.listAll': [{ id: 22, name: 'Washer plug', type: 'switch', online: true, features: ['switch'] }],
+  'deviceManager.listAll': [
+    {
+      id: 22,
+      name: 'Washer plug',
+      type: 'switch',
+      online: true,
+      features: ['switch'],
+      addonId: 'provider-homematic',
+      integrationId: 'int-1',
+    },
+  ],
+  'addons.list': [{ manifest: { id: 'provider-homematic', name: 'Homematic' } }],
+  'integrations.get': { id: 'int-1', addonId: 'provider-homematic', name: 'Casa' },
 }
 
 function mountPlug(): void {
@@ -104,16 +118,26 @@ describe('DeviceDetailScreen', () => {
     expect(screen.queryByTestId('device-card-loading')).toBeNull()
   })
 
-  it('keeps clear of the notch and the home indicator', () => {
+  it('opens as a sheet whose header carries the integration and the reachability', async () => {
     mountPlug()
-    const card = screen.getByTestId('card-webview').parentElement as HTMLElement
-    expect(parseFloat(getComputedStyle(card).paddingBottom)).toBeGreaterThanOrEqual(34)
-    let node: HTMLElement | null = screen.getByTestId('header-back')
-    let top = 0
-    while (node !== null && top < 47) {
-      top = parseFloat(getComputedStyle(node).paddingTop) || 0
-      node = node.parentElement
+    expect(screen.getByTestId('device-sheet')).toBeTruthy()
+    const header = screen.getByTestId('device-sheet-header')
+    expect(header.textContent).toContain('Washer plug')
+    expect(await screen.findByText('Homematic (Casa)')).toBeTruthy()
+    expect(screen.getByTestId('device-sheet-online')).toBeTruthy()
+  })
+
+  it('closing the sheet goes back to the screen it was opened over', async () => {
+    vi.useFakeTimers()
+    try {
+      mountPlug()
+      fireEvent.click(within(screen.getByTestId('device-sheet-header')).getByLabelText('Close'))
+      await act(async () => {
+        vi.advanceTimersByTime(1000)
+      })
+      expect(routerCalls().filter((c) => c.kind === 'back')).toHaveLength(1)
+    } finally {
+      vi.useRealTimers()
     }
-    expect(top).toBeGreaterThanOrEqual(47)
   })
 })

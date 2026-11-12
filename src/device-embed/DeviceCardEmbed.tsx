@@ -87,7 +87,8 @@ export function DeviceCardEmbed({ deviceId, bottomInset }: DeviceCardEmbedProps)
   }
 
   return (
-    <View style={[styles.fill, { paddingBottom: bottomInset, backgroundColor: colors.background }]}>
+    // Transparent: the page is too (`?host=viewer`), so the sheet is the background.
+    <View style={[styles.fill, styles.clear, { paddingBottom: bottomInset }]}>
       <WebView
         // A new document per token: the page reads its session once, at boot,
         // and the viewer renews its token in place (about hourly).
@@ -100,7 +101,7 @@ export function DeviceCardEmbed({ deviceId, bottomInset }: DeviceCardEmbedProps)
         onLoadEnd={() => setState((s) => (s === 'loading' ? 'ready' : s))}
         onError={() => setState('failed')}
         onHttpError={() => setState('failed')}
-        style={[styles.fill, { backgroundColor: colors.background }]}
+        style={[styles.fill, styles.clear]}
         originWhitelist={['http://*', 'https://*']}
         javaScriptEnabled
         domStorageEnabled
@@ -117,5 +118,6 @@ export function DeviceCardEmbed({ deviceId, bottomInset }: DeviceCardEmbedProps)
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
+  clear: { backgroundColor: 'transparent' },
   overlay: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, alignItems: 'center', justifyContent: 'center' },
 })
