@@ -30,6 +30,18 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.704',
+    date: '2026-11-12',
+    notes: {
+      en: [
+        'Device detail opens as a sheet on phones and a dialog on the web.',
+      ],
+      it: [
+        'Il dettaglio dispositivo si apre come foglio sul telefono e finestra sul web.',
+      ],
+    },
+  },
+  {
     version: '1.0.703',
     date: '2026-11-11',
     notes: {
