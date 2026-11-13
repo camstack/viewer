@@ -3294,6 +3294,7 @@
       "occupancy": "Occupancy",
       "deviceInfo": "Device information",
       "liveViewers": "Live viewers",
+      "doorbell": "Doorbell",
       "liveViewersCount_one": "{{count}} person watching live",
       "liveViewersCount_other": "{{count}} people watching live",
       "addReadout": "Add a readout",

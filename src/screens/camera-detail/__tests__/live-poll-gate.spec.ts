@@ -19,9 +19,7 @@ describe('camera detail does not poll live surfaces during recorded/scrub', () =
   })
 
   it('doorbell badge is live-only', () => {
-    expect(screen).toContain(
-      'enabled={hasDoorbell && liveOverlaysVisible}',
-    )
+    expect(screen).toMatch(/doorbellBadgeEnabled\(\{[^}]*overlaysVisible: liveOverlaysVisible/)
   })
 
   it('PausedPoster does not enrol snapshot demand off the live edge', () => {

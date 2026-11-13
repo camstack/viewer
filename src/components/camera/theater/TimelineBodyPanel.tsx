@@ -244,6 +244,8 @@ export interface TimelineSingleCameraBindings {
   /** Whether that panel is up — the toolbar chip's active state. Its host is
    *  outside the timeline, so the state cannot be derived from `panel`. */
   readonly linkedDevicesOpen?: boolean
+  /** The camera has the doorbell feature: the view options offer its overlay. */
+  readonly hasDoorbell?: boolean
 }
 
 export interface TimelineBodyPanelProps {
@@ -386,6 +388,7 @@ export function TimelineBodyPanel({
           onOpenEventStore={managementBinding.onOpenEventStore}
           onOpenLegend={managementBinding.onOpenLegend}
           onClose={onClose}
+          hasDoorbell={singleCamera.hasDoorbell}
         />
       )
     case 'legend':

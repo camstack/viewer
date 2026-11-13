@@ -161,6 +161,11 @@ export interface CameraOverlayConfig {
    *  Hidden while the count is 0 or unanswered — an unanswered query must never
    *  read as "nobody watching". */
   readonly viewers: OverlayPosition
+  /** The live doorbell badge (top-left, "last ring N ago", pulses while
+   *  ringing). OPT-IN: off until the operator asks for it, and offered only for
+   *  a camera with the doorbell feature. A switch and not a position — the badge
+   *  has one place. */
+  readonly doorbell: boolean
   readonly readouts: readonly OverlayReadout[]
 }
 
@@ -179,6 +184,7 @@ export const OVERLAY_DEFAULTS: CameraOverlayConfig = Object.freeze({
   occupancy: 'off',
   stats: 'off',
   viewers: 'off',
+  doorbell: false,
   readouts: Object.freeze([]) as readonly OverlayReadout[],
 }) as CameraOverlayConfig
 
@@ -438,8 +444,21 @@ export function normaliseOverlay(raw: unknown): CameraOverlayConfig | undefined 
     occupancy,
     stats,
     viewers,
+    // Strictly `true`: a document stored before the field existed reads as off.
+    doorbell: raw.doorbell === true,
     readouts,
   }
+}
+
+/** Does the screen draw the doorbell badge? Only for a doorbell camera whose
+ *  operator switched it on, while the live overlays are showing. */
+export function doorbellBadgeEnabled(input: {
+  readonly hasDoorbell: boolean
+  /** `CameraOverlayConfig.doorbell` */
+  readonly switchedOn: boolean
+  readonly overlaysVisible: boolean
+}): boolean {
+  return input.hasDoorbell && input.switchedOn && input.overlaysVisible
 }
 
 /** True when the config is indistinguishable from the defaults — the store
@@ -453,6 +472,7 @@ export function isDefaultOverlay(config: CameraOverlayConfig): boolean {
     config.occupancy === OVERLAY_DEFAULTS.occupancy &&
     config.stats === OVERLAY_DEFAULTS.stats &&
     config.viewers === OVERLAY_DEFAULTS.viewers &&
+    config.doorbell === OVERLAY_DEFAULTS.doorbell &&
     config.readouts.length === 0
   )
 }

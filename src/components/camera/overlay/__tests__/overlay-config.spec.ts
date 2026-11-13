@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import {
   addReadout,
+  doorbellBadgeEnabled,
   isDefaultOverlay,
   normaliseOverlay,
   LEGACY_STATS_POSITION,
@@ -335,3 +336,29 @@ describe('live viewers is placed like every other overlay', () => {
   })
 })
 
+
+describe('the doorbell badge is an opt-in overlay', () => {
+  const live = { hasDoorbell: true, overlaysVisible: true }
+
+  it('is off by default, so the default config draws no badge', () => {
+    expect(OVERLAY_DEFAULTS.doorbell).toBe(false)
+    expect(doorbellBadgeEnabled({ ...live, switchedOn: OVERLAY_DEFAULTS.doorbell })).toBe(false)
+  })
+
+  it('a document stored before the field existed reads as off', () => {
+    const stored = normaliseOverlay({ audioMeter: 'top-center', occupancy: 'off' })
+    expect(stored?.doorbell).toBe(false)
+  })
+
+  it('draws on a doorbell camera once switched on, and persists', () => {
+    const on = patchOverlay(OVERLAY_DEFAULTS, { doorbell: true })
+    expect(isDefaultOverlay(on)).toBe(false)
+    expect(normaliseOverlay(on)?.doorbell).toBe(true)
+    expect(doorbellBadgeEnabled({ ...live, switchedOn: on.doorbell })).toBe(true)
+  })
+
+  it('never draws on a camera without a doorbell, or while overlays are hidden', () => {
+    expect(doorbellBadgeEnabled({ hasDoorbell: false, switchedOn: true, overlaysVisible: true })).toBe(false)
+    expect(doorbellBadgeEnabled({ hasDoorbell: true, switchedOn: true, overlaysVisible: false })).toBe(false)
+  })
+})

@@ -284,7 +284,7 @@ import { useHeld } from '../data/use-held.js'
 import { useCameraLocalStore } from '../store/camera-local-store.js'
 import { useDeviceSettingsStore } from '../store/device-settings-store.js'
 import { opensMuted } from '../live/audio-on-open.js'
-import { hasLayer, patchOverlay } from '../components/camera/overlay/overlay-config.js'
+import { doorbellBadgeEnabled, hasLayer, patchOverlay } from '../components/camera/overlay/overlay-config.js'
 import { OverlayReadouts } from '../components/camera/overlay/OverlayReadouts.js'
 import { useCameraViewOptions } from '../hooks/use-camera-view-options.js'
 import { useCanActuate } from '../hooks/use-user-scope.js'
@@ -2933,10 +2933,14 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
 
             {/* Live doorbell badge — top-left, non-interactive sibling overlay.
                 Pulses while ringing (a press within RING_WINDOW_MS), otherwise a
-                subtle "last ring N ago" pill. Gated on the `doorbell-button`
-                feature so non-doorbell cameras render nothing (the hook stays idle
-                when `enabled` is false, and self-hides when it never rang). */}
-            <DoorbellBadge deviceId={deviceId} enabled={hasDoorbell && liveOverlaysVisible} />
+                subtle "last ring N ago" pill. Opt-in per camera (`overlay.doorbell`,
+                off by default) and gated on the `doorbell-button` feature, so
+                non-doorbell cameras render nothing (the hook stays idle when
+                `enabled` is false, and self-hides when it never rang). */}
+            <DoorbellBadge
+              deviceId={deviceId}
+              enabled={doorbellBadgeEnabled({ hasDoorbell, switchedOn: overlay.doorbell, overlaysVisible: liveOverlaysVisible })}
+            />
 
             {/* Live occupancy — class chips (glyph + count) from the
                 zone-analytics current snapshot. LIVE only: the snapshot is the
@@ -3306,6 +3310,7 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
           onSetHighlight: onSetCameraHighlight,
         },
         overlayBinding: { config: overlay, onChange: onSetOverlay },
+        hasDoorbell,
         // The linked-devices route the 2026-09-02 toolbar removal assumed was
         // already covered. It was not on THIS screen: the surfaces it named —
         // the shelf and the wall tile — are the two the single-camera player

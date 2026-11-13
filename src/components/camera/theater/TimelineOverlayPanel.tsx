@@ -66,6 +66,7 @@ import {
   Frame,
   Activity,
   Eye,
+  BellRing,
   AudioLines,
   BatteryFull,
   Users,
@@ -117,6 +118,9 @@ export interface OverlaySettingsSectionsProps {
    *  rendered by the hosting menu below these sections, not here). */
   readonly highlight: GridHighlightSettings
   readonly onSetHighlight: (patch: Partial<GridHighlightSettings>) => void
+  /** The camera has the doorbell feature AND this host paints the badge (the
+   *  single-camera player). Absent ⟺ the doorbell switch is not offered. */
+  readonly hasDoorbell?: boolean
 }
 
 /** Everything drawn ON the picture — the two groups above the readouts. Derived
@@ -134,6 +138,7 @@ export function OverlaySettingsSections({
   onChange,
   highlight,
   onSetHighlight,
+  hasDoorbell = false,
 }: OverlaySettingsSectionsProps): React.JSX.Element {
   const { t } = useTranslation()
   const { colors } = useTheme()
@@ -268,6 +273,14 @@ export function OverlaySettingsSections({
               label={t('v2.overlay.liveViewers')}
               value={config.viewers}
               onChange={(viewers) => patch({ viewers })}
+            />
+          ) : null}
+          {hasDoorbell ? (
+            <PanelToggleRow
+              icon={BellRing}
+              label={t('v2.overlay.doorbell')}
+              value={config.doorbell}
+              onValueChange={() => patch({ doorbell: !config.doorbell })}
             />
           ) : null}
           {shows('deviceInfo') ? (

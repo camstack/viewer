@@ -45,6 +45,8 @@ export interface TimelineViewOptionsPanelProps {
   /** Hand the body to the timeline legend panel. */
   readonly onOpenLegend: () => void
   readonly onClose: () => void
+  /** The camera has a doorbell: offer its overlay switch. */
+  readonly hasDoorbell?: boolean
 }
 
 export function TimelineViewOptionsPanel({
@@ -57,6 +59,7 @@ export function TimelineViewOptionsPanel({
   onOpenEventStore,
   onOpenLegend,
   onClose,
+  hasDoorbell,
 }: TimelineViewOptionsPanelProps): React.JSX.Element {
   const { t } = useTranslation()
 
@@ -74,6 +77,7 @@ export function TimelineViewOptionsPanel({
         onOpenStorage={onOpenStorage}
         onOpenEventStore={onOpenEventStore}
         onOpenLegend={onOpenLegend}
+        hasDoorbell={hasDoorbell}
       />
     </TimelinePanelHost>
   )

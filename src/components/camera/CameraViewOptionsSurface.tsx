@@ -98,6 +98,8 @@ export interface CameraViewOptionsSurfaceProps {
   /** Hand the body to the timeline legend panel. Omitted where there is no
    *  timeline body (the grid cell) — the row is then not rendered. */
   readonly onOpenLegend?: () => void
+  /** Offer the doorbell overlay switch (single-camera player, doorbell camera). */
+  readonly hasDoorbell?: boolean
 }
 
 export function CameraViewOptionsSurface({
@@ -110,6 +112,7 @@ export function CameraViewOptionsSurface({
   onOpenStorage,
   onOpenEventStore,
   onOpenLegend,
+  hasDoorbell,
 }: CameraViewOptionsSurfaceProps): React.JSX.Element {
   const { t } = useTranslation()
   const { colors } = useTheme()
@@ -136,6 +139,7 @@ export function CameraViewOptionsSurface({
         onChange={onChangeOverlay}
         highlight={highlight}
         onSetHighlight={onSetHighlight}
+        hasDoorbell={hasDoorbell}
       />
 
       {/* Cluster-card label mode: shares the per-camera highlight DOCUMENT with

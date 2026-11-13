@@ -3291,6 +3291,7 @@
       "occupancy": "Occupazione",
       "deviceInfo": "Informazioni dispositivo",
       "liveViewers": "Spettatori in diretta",
+      "doorbell": "Campanello",
       "liveViewersCount_one": "{{count}} persona guarda in diretta",
       "liveViewersCount_other": "{{count}} persone guardano in diretta",
       "addReadout": "Aggiungi un valore",
