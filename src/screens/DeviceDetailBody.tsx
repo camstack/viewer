@@ -1,6 +1,6 @@
 /**
  * DeviceDetailBody — what one device's detail IS: a header that names the
- * device (integration chip and reachability beside it) over the hub's device
+ * device (the integration chip beside it; reachability is the card's own Offline chip) over the hub's device
  * card (`/embed/device/<id>?host=viewer`, drawn `bare`) in a WebView / iframe.
  *
  * ONE body for every home it has: the `/device/:id` route's sheet
@@ -30,17 +30,6 @@ export interface DeviceDetailBodyProps {
   readonly cardHeight?: number
 }
 
-/** Reachability for the header: unanswered draws nothing (D315). */
-function ReachLine({ online }: { readonly online: boolean | null }): React.JSX.Element | null {
-  const { t } = useTranslation()
-  if (online === null) return null
-  return online ? (
-    <Badge label={t('v2.deviceDetail.online')} tone="neutral" look="outline" size="sm" />
-  ) : (
-    <Badge label={t('v2.deviceDetail.offline')} tone="danger" look="tint" size="sm" />
-  )
-}
-
 export function DeviceDetailBody({
   deviceId,
   deviceName,
@@ -63,7 +52,6 @@ export function DeviceDetailBody({
             meta={
               <>
                 {integration === null ? null : <Badge label={integration} look="tint" size="sm" />}
-                <ReachLine online={device == null ? null : device.online} />
               </>
             }
           />

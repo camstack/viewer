@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  *
  * The device detail, mounted against a stub hub: a sheet whose header is the
- * viewer's (name, integration chip, reachability) and whose body is the hub's
+ * viewer's (name, integration chip) and whose body is the hub's
  * device card (`/embed/device/<id>?host=viewer`) in a WebView, signed in
  * through the seeded admin session — never the URL.
  */
@@ -83,7 +83,11 @@ describe('DeviceDetailScreen', () => {
   it('keeps the header and loads the hub card for the device, theme and language', async () => {
     mountPlug()
     expect(screen.getByText('Washer plug')).toBeTruthy()
-    expect(await screen.findByText('Online')).toBeTruthy()
+    // An online device draws no reachability badge in the header (the card
+    // owns the Offline chip).
+    expect(await screen.findByTestId('card-webview')).toBeTruthy()
+    expect(screen.queryByText('Online')).toBeNull()
+    expect(screen.queryByText('Offline')).toBeNull()
     const view = lastWebView()
     expect(view.source.uri).toMatch(/^http:\/\/hub\.test:8080\/embed\/device\/22\?theme=(light|dark)&lang=en&host=viewer$/)
     // No native copy of the card is drawn any more.
@@ -118,13 +122,14 @@ describe('DeviceDetailScreen', () => {
     expect(screen.queryByTestId('device-card-loading')).toBeNull()
   })
 
-  it('opens as a sheet whose header carries the integration and the reachability', async () => {
+  it('opens as a sheet whose header carries the integration and no reachability badge', async () => {
     mountPlug()
     expect(screen.getByTestId('device-sheet')).toBeTruthy()
     const header = screen.getByTestId('device-sheet-header')
     expect(header.textContent).toContain('Washer plug')
     expect(await screen.findByText('Homematic (Casa)')).toBeTruthy()
-    expect(within(header).getByText(/online/i)).toBeTruthy()
+    // The card's own chip is the only reachability mark.
+    expect(within(header).queryByText(/online|offline/i)).toBeNull()
   })
 
   it('closing the sheet goes back to the screen it was opened over', async () => {

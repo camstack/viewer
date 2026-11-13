@@ -4376,8 +4376,6 @@
     },
     "deviceDetail": {
       "openFor": "Details of {{device}}",
-      "offline": "Offline",
-      "online": "Online",
       "unavailable": "This device could not be read.",
       "openOnHub": "This device's card opens on the hub.",
       "openOnHubAction": "Open on the hub"
