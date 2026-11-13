@@ -4381,6 +4381,8 @@
       "remote": "Telecomando",
       "stepDown": "Diminuisci {{name}}",
       "stepUp": "Aumenta {{name}}",
+      "editValue": "Modifica {{name}}",
+      "save": "Salva",
       "confirmOffWhileRunning": "Il dispositivo è in funzione. Spegnerlo comunque?"
     },
     "powerSource": {

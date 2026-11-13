@@ -1,11 +1,11 @@
 /**
  * @vitest-environment jsdom
  *
- * Number and text hero controls exist on the hub model (types 1.2.559+); the
- * viewer does not draw typed inputs for them until layout is co-designed.
+ * Number and text hero controls (types 1.2.559+): the row shows the value, a tap
+ * opens a sheet with the editor, Save sends it to the control's own call.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, screen } from '@testing-library/react'
+import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react'
 import React from 'react'
 import type { HeroControl, HeroRowModel } from '@camstack/types'
 import { mountScreen } from '../../testing/mount.js'
@@ -18,7 +18,10 @@ vi.mock('../../connection/ConnectionProvider.js', async () =>
   (await import('../../testing/connection-stub.js')).connectionStubModule(),
 )
 
-afterEach(() => cleanup())
+afterEach(() => {
+  cleanup()
+  runValue.mockClear()
+})
 
 const call = { cap: 'climate-control', method: 'setTarget', args: {} }
 
@@ -42,11 +45,12 @@ const textControl: HeroControl = {
   valueArg: 'name',
 }
 
+const runValue = vi.fn(async () => undefined)
 const stubCaller: HeroCaller = {
   pending: false,
   error: null,
   runAction: async () => undefined,
-  runValue: async () => undefined,
+  runValue,
 }
 
 const rowShell = (primary: HeroControl, extras?: HeroControl[]): HeroRowModel => ({
@@ -64,43 +68,18 @@ const rowShell = (primary: HeroControl, extras?: HeroControl[]): HeroRowModel =>
   trailing: null,
 })
 
-describe('number and text hero controls are not drawn', () => {
-  it('controlView skips them without a drawable view', () => {
-    expect(controlView(numberControl)).toBeNull()
-    expect(controlView(textControl)).toBeNull()
+describe('number and text hero controls', () => {
+  it('controlView maps them to a value view the row can draw', () => {
+    expect(controlView(numberControl)).toMatchObject({ kind: 'value', valueKind: 'number', value: 21 })
+    expect(controlView(textControl)).toMatchObject({ kind: 'value', valueKind: 'text', value: 'Kitchen' })
   })
 
-  it('a row whose primary is number or text has no control widget', () => {
-    expect(rowView(rowShell(numberControl), 'en').control).toBeNull()
-    expect(rowView(rowShell(textControl), 'en').control).toBeNull()
+  it('a row whose primary is number or text has a control', () => {
+    expect(rowView(rowShell(numberControl), 'en').control).not.toBeNull()
+    expect(rowView(rowShell(textControl), 'en').control).not.toBeNull()
   })
 
-  it('HeroControlView renders no text inputs for number or text', () => {
-    mountScreen(
-      React.createElement(React.Fragment, null, [
-        React.createElement(HeroControlView, {
-          key: 'n',
-          control: numberControl,
-          locale: 'en',
-          caller: stubCaller,
-          online: true,
-        }),
-        React.createElement(HeroControlView, {
-          key: 't',
-          control: textControl,
-          locale: 'en',
-          caller: stubCaller,
-          online: true,
-        }),
-      ]),
-      { hub: {} },
-    )
-    expect(screen.queryByTestId('hero-value-setpoint')).toBeNull()
-    expect(screen.queryByTestId('hero-value-label')).toBeNull()
-    expect(screen.queryByRole('textbox')).toBeNull()
-  })
-
-  it('a row with number primary and text extra draws neither input', () => {
+  it('the row shows the value and no field until it is tapped', () => {
     mountScreen(
       React.createElement(HeroRowBody, {
         deviceId: 9,
@@ -112,8 +91,48 @@ describe('number and text hero controls are not drawn', () => {
       }),
       { hub: {} },
     )
-    expect(screen.queryByTestId('hero-value-setpoint')).toBeNull()
-    expect(screen.queryByTestId('hero-value-label')).toBeNull()
+    expect(screen.getByTestId('hero-value-setpoint').textContent).toContain('21 °C')
+    expect(screen.getByTestId('hero-value-label').textContent).toContain('Kitchen')
     expect(screen.queryByRole('textbox')).toBeNull()
+  })
+
+  const mountEditor = (control: HeroControl): void => {
+    mountScreen(
+      React.createElement(HeroControlView, { control, locale: 'en', caller: stubCaller, online: true }),
+      { hub: {} },
+    )
+  }
+
+  it('a number opens a sheet, steps, and saves the number to its call', async () => {
+    mountEditor(numberControl)
+    fireEvent.click(screen.getByTestId('hero-value-setpoint'))
+    const input = screen.getByTestId('hero-value-input-setpoint')
+    fireEvent.change(input, { target: { value: '22,5' } })
+    fireEvent.click(screen.getByLabelText('Increase Setpoint'))
+    fireEvent.click(screen.getByText('Save'))
+    await waitFor(() =>
+      expect(runValue).toHaveBeenCalledWith(
+        { cap: 'climate-control', method: 'setTarget', valueArg: 'temperature' },
+        23,
+      ),
+    )
+  })
+
+  it('a text opens a sheet and saves the string to its call', async () => {
+    mountEditor(textControl)
+    fireEvent.click(screen.getByTestId('hero-value-label'))
+    fireEvent.change(screen.getByTestId('hero-value-input-label'), { target: { value: 'Pantry' } })
+    fireEvent.click(screen.getByText('Save'))
+    await waitFor(() =>
+      expect(runValue).toHaveBeenCalledWith({ cap: 'switch', method: 'setLabel', valueArg: 'name' }, 'Pantry'),
+    )
+  })
+
+  it('a number that is not a number cannot be saved', () => {
+    mountEditor(numberControl)
+    fireEvent.click(screen.getByTestId('hero-value-setpoint'))
+    fireEvent.change(screen.getByTestId('hero-value-input-setpoint'), { target: { value: 'abc' } })
+    fireEvent.click(screen.getByText('Save'))
+    expect(runValue).not.toHaveBeenCalled()
   })
 })

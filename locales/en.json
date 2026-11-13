@@ -4384,6 +4384,8 @@
       "remote": "Remote",
       "stepDown": "Decrease {{name}}",
       "stepUp": "Increase {{name}}",
+      "editValue": "Edit {{name}}",
+      "save": "Save",
       "confirmOffWhileRunning": "The device is running. Turn it off anyway?"
     },
     "powerSource": {

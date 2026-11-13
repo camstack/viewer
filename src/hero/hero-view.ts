@@ -110,6 +110,17 @@ export type ControlView =
       readonly call: { readonly cap: string; readonly method: string; readonly valueArg: string }
     }
 
+  | {
+      readonly kind: 'value'
+      readonly id: string
+      readonly label: HeroText
+      readonly valueKind: 'number' | 'text'
+      readonly value: number | string | null
+      readonly unit: string
+      readonly step: number | null
+      readonly call: { readonly cap: string; readonly method: string; readonly valueArg: string }
+    }
+
 /** The value one step from `value`, clamped; `null` when it would not move or the level is unknown. */
 export function stepTarget(
   control: Extract<HeroControl, { kind: 'slider' }>,
@@ -127,7 +138,6 @@ export function nextOption(options: readonly string[], current: string | null): 
   return options[(at + 1) % options.length] ?? null
 }
 
-/** Number and text controls exist on the hub model; the viewer does not draw them yet. */
 export function controlView(control: HeroControl): ControlView | null {
   switch (control.kind) {
     case 'toggle':
@@ -161,8 +171,27 @@ export function controlView(control: HeroControl): ControlView | null {
         call: { cap: control.call.cap, method: control.call.method, valueArg: control.valueArg },
       }
     case 'number':
+      return {
+        kind: 'value',
+        id: control.id,
+        label: control.label,
+        valueKind: 'number',
+        value: control.value,
+        unit: control.unit,
+        step: control.step,
+        call: { cap: control.call.cap, method: control.call.method, valueArg: control.valueArg },
+      }
     case 'text':
-      return null
+      return {
+        kind: 'value',
+        id: control.id,
+        label: control.label,
+        valueKind: 'text',
+        value: control.value,
+        unit: '',
+        step: null,
+        call: { cap: control.call.cap, method: control.call.method, valueArg: control.valueArg },
+      }
   }
 }
 

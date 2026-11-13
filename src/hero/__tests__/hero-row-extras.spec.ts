@@ -68,3 +68,33 @@ describe('the remote extra', () => {
     expect(JSON.stringify(calls[0])).toContain('4')
   })
 })
+
+describe('an automation row', () => {
+  const enabled = (on: boolean): HeroControl => ({
+    kind: 'toggle',
+    id: 'automation.enabled',
+    label: { en: 'Enabled', it: 'Attiva' },
+    on,
+    turnOn: act('automation.enable'),
+    turnOff: act('automation.disable'),
+  })
+  const run: HeroControl = { kind: 'action', action: { ...act('automation.run'), label: { en: 'Run now', it: 'Esegui ora' } } }
+
+  it('draws Run now and the enabled switch once each, the switch named by what it does', () => {
+    mountScreen(
+      React.createElement(HeroRowBody, {
+        deviceId: 4,
+        name: 'Night light',
+        online: true,
+        model: { ...base, type: 'automation', primary: run, extras: [enabled(true)] },
+        onOpen: () => undefined,
+        openLabel: 'Open',
+      }),
+      { hub: {} },
+    )
+    expect(screen.getAllByTestId('hero-action-automation.run')).toHaveLength(1)
+    const power = screen.getAllByTestId('hero-power-automation.enabled')
+    expect(power).toHaveLength(1)
+    expect(power[0]?.getAttribute('aria-label')).toBe('automation.disable')
+  })
+})

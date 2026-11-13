@@ -19,6 +19,7 @@ import { RADIUS, SPACING, TYPOGRAPHY } from '../theme/tokens.js'
 import { controlView, heroText, powerPaint, type ControlView, type HeroLocale } from './hero-view.js'
 import type { HeroCaller } from './use-hero.js'
 import type { HeroControl } from '@camstack/types'
+import { HeroValueEditor } from './HeroValueEditor.js'
 
 export const ROW_BUTTON = 40
 export const CARD_POWER_BUTTON = 96
@@ -50,6 +51,14 @@ export function HeroControlView({ control, locale, caller, online, large = false
       return <ActionPill action={view.action} locale={locale} disabled={disabled} onPress={() => void send(view.action)} />
     case 'stepper':
       return <Stepper view={view} locale={locale} disabled={disabled} onValue={(v) => void caller.runValue(view.call, v)} />
+    case 'value':
+      return (
+        <HeroValueEditor
+          spec={{ ...view, label: heroText(view.label, locale), kind: view.valueKind }}
+          caller={caller}
+          disabled={disabled}
+        />
+      )
     case 'picker':
       return (
         <Pill
@@ -99,7 +108,7 @@ function PowerButton({
         },
       ]}
     >
-      {view.id === 'own-power' ? (
+      {view.id === 'own-power' || view.id === 'automation.enabled' ? (
         <Power size={iconSize} color={paint.foreground} />
       ) : (
         <CatalogIcon iconKey={view.press.icon} size={iconSize} color={paint.foreground} />
