@@ -77,9 +77,9 @@ describe('controlView', () => {
     const on = controlView(toggle(true))
     const off = controlView(toggle(false))
     const unknown = controlView(toggle(null))
-    expect(on.kind === 'power' && on.press.id).toBe('turnOff')
-    expect(off.kind === 'power' && off.press.id).toBe('turnOn')
-    expect(unknown.kind === 'power' && unknown.press.id).toBe('turnOn')
+    expect(on?.kind === 'power' && on.press.id).toBe('turnOff')
+    expect(off?.kind === 'power' && off.press.id).toBe('turnOn')
+    expect(unknown?.kind === 'power' && unknown.press.id).toBe('turnOn')
   })
 
   it('a slider steps within its range and refuses an unknown level', () => {

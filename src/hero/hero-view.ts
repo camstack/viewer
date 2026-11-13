@@ -109,22 +109,6 @@ export type ControlView =
       readonly next: string | null
       readonly call: { readonly cap: string; readonly method: string; readonly valueArg: string }
     }
-  | {
-      readonly kind: 'number'
-      readonly id: string
-      readonly label: HeroText
-      readonly value: number | null
-      readonly unit: string
-      readonly step: number | null
-      readonly call: { readonly cap: string; readonly method: string; readonly valueArg: string }
-    }
-  | {
-      readonly kind: 'text'
-      readonly id: string
-      readonly label: HeroText
-      readonly value: string | null
-      readonly call: { readonly cap: string; readonly method: string; readonly valueArg: string }
-    }
 
 /** The value one step from `value`, clamped; `null` when it would not move or the level is unknown. */
 export function stepTarget(
@@ -143,7 +127,8 @@ export function nextOption(options: readonly string[], current: string | null): 
   return options[(at + 1) % options.length] ?? null
 }
 
-export function controlView(control: HeroControl): ControlView {
+/** Number and text controls exist on the hub model; the viewer does not draw them yet. */
+export function controlView(control: HeroControl): ControlView | null {
   switch (control.kind) {
     case 'toggle':
       return {
@@ -176,23 +161,8 @@ export function controlView(control: HeroControl): ControlView {
         call: { cap: control.call.cap, method: control.call.method, valueArg: control.valueArg },
       }
     case 'number':
-      return {
-        kind: 'number',
-        id: control.id,
-        label: control.label,
-        value: control.value,
-        unit: control.unit,
-        step: control.step,
-        call: { cap: control.call.cap, method: control.call.method, valueArg: control.valueArg },
-      }
     case 'text':
-      return {
-        kind: 'text',
-        id: control.id,
-        label: control.label,
-        value: control.value,
-        call: { cap: control.call.cap, method: control.call.method, valueArg: control.valueArg },
-      }
+      return null
   }
 }
 

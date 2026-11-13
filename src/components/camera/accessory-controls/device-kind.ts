@@ -8,7 +8,8 @@
  */
 import { DeviceType } from '@camstack/types/client'
 
-const CLIMATE_ROLES = [
+/** Hand copy of hub `CLIMATE_ROLES` (`device/device-kind.ts`); guarded by `device-kind.spec.ts`. */
+export const VIEWER_CLIMATE_ROLES = [
   'climate-thermostat',
   'climate-ac',
   'climate-radiator',
@@ -17,7 +18,7 @@ const CLIMATE_ROLES = [
   'climate-heat-pump-circuit',
 ] as const
 
-export type ClimateRole = (typeof CLIMATE_ROLES)[number]
+export type ClimateRole = (typeof VIEWER_CLIMATE_ROLES)[number]
 
 /** `thermostat` was retired into `climate`. A stored row is read as the live type. */
 const RETIRED_DEVICE_TYPES: Readonly<Record<string, string>> = {
@@ -30,7 +31,7 @@ export function canonicalStoredDeviceType(stored: string): string {
 }
 
 function isClimateRole(role: string): role is ClimateRole {
-  return CLIMATE_ROLES.some((candidate) => candidate === role)
+  return VIEWER_CLIMATE_ROLES.some((candidate) => candidate === role)
 }
 
 /**
