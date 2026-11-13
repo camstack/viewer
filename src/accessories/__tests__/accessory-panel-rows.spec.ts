@@ -133,7 +133,7 @@ describe('icon precedence', () => {
   it('type icon when nothing else names one', () => {
     expect(resolveAccessoryIconKey(base)).toBe('lightbulb')
     expect(resolveAccessoryIconKey({ ...base, type: 'cover' })).toBe('blinds')
-    expect(resolveAccessoryIconKey({ ...base, type: 'something-new' })).toBe('cpu')
+    expect(resolveAccessoryIconKey({ ...base, type: 'something-new' })).toBe('box')
   })
 
   it('built-in role glyph beats the type; the operator role default beats the built-in', () => {
