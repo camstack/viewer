@@ -30,6 +30,18 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.706',
+    date: '2026-11-13',
+    notes: {
+      en: [
+        'Zoom on a camera no longer snaps back to 1x after a pinch or while you move the picture: only a real double tap resets it.',
+      ],
+      it: [
+        'Lo zoom sulla camera non torna più a 1x dopo un pinch o mentre sposti l’immagine: lo azzera solo un vero doppio tap.',
+      ],
+    },
+  },
+  {
     version: '1.0.705',
     date: '2026-11-13',
     notes: {
