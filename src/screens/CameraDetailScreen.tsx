@@ -169,6 +169,7 @@ import { captureFileExtension } from '../live/live-capture-protocol.js'
 import { formatSelectionDuration } from '../recording/export-selection.js'
 import type { LiveCaptureFlow } from '../recording/record-control.js'
 import { useStreamZoom } from '../live/use-stream-zoom.js'
+import { DOUBLE_TAP_MAX_DELAY_MS } from '../live/zoom-touch-sequence.js'
 import { zoomBoxHeight, type ZoomBoxParams } from './camera-detail/zoom-box.js'
 import { useDeviceCapNames } from '../data/use-device-cap-names.js'
 import { useExportSelection } from '../recording/use-export-selection.js'
@@ -360,9 +361,9 @@ const NEVER_HIDE = (): void => undefined
 const MAX_HEIGHT_FRACTION = 0.5
 /** Pinch scale at which the box reaches its max height (default→max over 1×→this). */
 const HEIGHT_GROW_SCALE = 2.5
-/** A double tap's two taps stay within this travel (pt) and this gap (ms). */
+/** A double tap's two taps stay within this travel (pt). Their gap is
+ *  `DOUBLE_TAP_MAX_DELAY_MS`, owned by the touch record that must outlast it. */
 const DOUBLE_TAP_MAX_DISTANCE = 24
-const DOUBLE_TAP_MAX_DELAY_MS = 300
 
 /** Resolve name + feature flags + status inputs from the authoritative camera list. */
 function useCameraMeta(deviceId: number): {

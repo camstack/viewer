@@ -132,6 +132,23 @@ function cornerGrowPan(scaleStart: number, scaleAfter: number): { x: number; y: 
   }
 }
 
+/**
+ * A real double tap as the hook's touch record sees it: two single-finger
+ * touches in one sequence, then the recogniser's call. Needs fake timers: the
+ * clock moves past the sequence gap afterwards so the next one is fresh.
+ */
+function doubleTap(zoom: StreamZoom, x: number, y: number): void {
+  const tracker = (zoom.composeWith() as unknown as StubGesture).__children[2]
+  const touch = (name: 'onTouchesDown' | 'onTouchesUp'): void =>
+    (tracker?.__handlers[name] as unknown as (e: object) => void)({ numberOfTouches: 1 })
+  touch('onTouchesDown')
+  touch('onTouchesUp')
+  touch('onTouchesDown')
+  touch('onTouchesUp')
+  zoom.doubleTapZoomAt(x, y)
+  vi.advanceTimersByTime(1000)
+}
+
 function mount(heightFor: (s: number) => number, trace = false) {
   return renderHook(() =>
     useStreamZoom({ contentAspect: ASPECT, fit: 'cover', viewport: { width: WIDTH, heightFor }, trace }),
@@ -243,11 +260,12 @@ describe('useStreamZoom — one result, one viewport', () => {
   })
 
   it('double tap from the whole picture: FULL zoom (the max), anchored; again: back to fit', () => {
+    vi.useFakeTimers()
     const { result, rerender } = mount(growingBox)
     // Plain call: under the stub a worklet is a function, and on the device it
     // is what the tap gesture's `onEnd` calls without `runOnJS`.
     act(() => {
-      result.current.doubleTapZoomAt(0, 0)
+      doubleTap(result.current, 0, 0)
     })
     rerender()
     expect(result.current.committedScale.value).toBe(4)
@@ -259,11 +277,12 @@ describe('useStreamZoom — one result, one viewport', () => {
     expect(t.ty).toBeCloseTo(want.y, 6)
     // Anywhere above the minimum: the next double tap is the whole picture.
     act(() => {
-      result.current.doubleTapZoomAt(0, 0)
+      doubleTap(result.current, 0, 0)
     })
     rerender()
     expect(result.current.committedScale.value).toBe(1)
     expect(transformOf(result.current, growingBox)).toEqual({ scale: 1, tx: 0, ty: 0 })
+    vi.useRealTimers()
   })
 
   it('double tap in a letterboxing box also goes to full zoom, not to the scale that fills it', () => {
@@ -271,9 +290,11 @@ describe('useStreamZoom — one result, one viewport', () => {
     const { result, rerender } = renderHook(() =>
       useStreamZoom({ contentAspect: ASPECT, fit: 'contain', viewport: { width: WIDTH, heightFor: wideBox } }),
     )
+    vi.useFakeTimers()
     act(() => {
-      result.current.doubleTapZoomAt(300, 40)
+      doubleTap(result.current, 300, 40)
     })
+    vi.useRealTimers()
     rerender()
     expect(result.current.committedScale.value).toBe(4)
   })
@@ -294,9 +315,7 @@ describe('useStreamZoom — one result, one viewport', () => {
       })
       // The double tap is a NEW touch sequence (a finger lands a second later).
       act(() => {
-        const tracker = (result.current.composeWith() as unknown as StubGesture).__children[2]
-        ;(tracker?.__handlers['onTouchesDown'] as unknown as (e: object) => void)({ numberOfTouches: 1 })
-        result.current.doubleTapZoomAt(50, 50)
+        doubleTap(result.current, 50, 50)
       })
       rerender()
       expect(result.current.committedScale.value).toBe(1)

@@ -51,7 +51,7 @@ export function tapStepAccepted(input: TapStepGateInput): boolean {
   return since >= TAP_AFTER_PINCH_MS
 }
 
-export type DoubleTapRefusal = 'after-pinch' | 'multi-touch' | 'pinch-seen' | 'pan-seen'
+export type DoubleTapRefusal = 'after-pinch' | 'multi-touch' | 'pinch-seen' | 'pan-seen' | 'not-two-taps'
 
 export interface DoubleTapGateInput extends TapStepGateInput {
   readonly sequence: TouchSequence
@@ -70,6 +70,9 @@ export function doubleTapRefusal(input: DoubleTapGateInput): DoubleTapRefusal | 
   if (input.sequence.pinchSeen) return 'pinch-seen'
   if (input.sequence.maxTouches > 1) return 'multi-touch'
   if (input.sequence.panSeen) return 'pan-seen'
+  // The recogniser's "two taps" are two touches-began events; only the record
+  // knows whether they were two single-finger touches of ONE sequence.
+  if (input.sequence.downs !== 2) return 'not-two-taps'
   if (!tapStepAccepted(input)) return 'after-pinch'
   return null
 }

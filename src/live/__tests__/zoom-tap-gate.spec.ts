@@ -58,7 +58,7 @@ describe('tapStepAccepted', () => {
 })
 
 describe('doubleTapRefusal', () => {
-  const calm = { pinchSeen: false, panSeen: false, maxTouches: 1, lastTouchMs: 0 }
+  const calm = { pinchSeen: false, panSeen: false, maxTouches: 1, downs: 2, lastTouchMs: 0 }
   const at = { nowMs: 10_000, lastPinchEndMs: 0 }
 
   it('lets a plain one-finger double tap through', () => {
@@ -69,6 +69,11 @@ describe('doubleTapRefusal', () => {
     expect(doubleTapRefusal({ ...at, sequence: { ...calm, pinchSeen: true } })).toBe('pinch-seen')
     expect(doubleTapRefusal({ ...at, sequence: { ...calm, maxTouches: 2 } })).toBe('multi-touch')
     expect(doubleTapRefusal({ ...at, sequence: { ...calm, panSeen: true } })).toBe('pan-seen')
+  })
+
+  it('refuses unless the record saw exactly two touches — the recogniser counts events, not taps', () => {
+    expect(doubleTapRefusal({ ...at, sequence: { ...calm, downs: 1 } })).toBe('not-two-taps')
+    expect(doubleTapRefusal({ ...at, sequence: { ...calm, downs: 3 } })).toBe('not-two-taps')
   })
 
   it('keeps the post-pinch clock as the last line', () => {

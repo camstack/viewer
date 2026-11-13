@@ -137,6 +137,11 @@ describe('double tap refusal', () => {
 
   it('zooms in on a clean one-finger double tap', () => {
     const { result } = setup()
+    act(() => {
+      call(trackerOf(result.current), 'onTouchesUp', {})
+      call(trackerOf(result.current), 'onTouchesDown', { numberOfTouches: 1 })
+      call(trackerOf(result.current), 'onTouchesUp', {})
+    })
     act(() => result.current.doubleTapZoomAt(100, 100))
     expect(result.current.scale.value).toBeGreaterThan(1)
   })

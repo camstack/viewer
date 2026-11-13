@@ -14,7 +14,12 @@
  *    reset the zoom to 1x.
  *
  * The record answers one question for each of them: "did a pinch, a pan or a
- * second finger take part in THIS touch?".
+ * second finger take part in THIS touch?". For the double tap it answers a
+ * second one, because the recogniser cannot: Gesture Handler's iOS tap handler
+ * counts touches-began EVENTS, not taps — two fingers landing a few ms apart
+ * are its "two taps" — and it knows nothing of the pinch or the pan beside it.
+ * `downs` is the hook's own count, and a double tap is two single-finger
+ * touches in one sequence, never fewer, never more.
  *
  * ## Reset rule
  *
@@ -25,17 +30,31 @@
  * after the last touch event. A bounce right after a pinch is therefore still
  * part of the pinch's sequence, which is what both checks want.
  *
+ * The gap is the double tap's own window plus a margin, never a number of its
+ * own. It was 250 ms against the recogniser's 300 ms: a touch landing in
+ * between started a clean record while the recogniser still paired it with the
+ * pinch or the drag before it, and the zoom went back to 1x.
+ *
  * Pure and worklet-safe: values in, values out.
  */
 
-/** A single touch landing this long after the last touch event is a new sequence. */
-export const SEQUENCE_GAP_MS = 250
+/** A double tap's second touch lands within this long of the first one's lift. */
+export const DOUBLE_TAP_MAX_DELAY_MS = 300
+
+/**
+ * A single touch landing this long after the last touch event is a new
+ * sequence. Longer than the double tap's window, so both touches of anything
+ * the recogniser can call a double tap are always in ONE record.
+ */
+export const SEQUENCE_GAP_MS = DOUBLE_TAP_MAX_DELAY_MS + 50
 
 export interface TouchSequence {
   readonly pinchSeen: boolean
   readonly panSeen: boolean
   /** Most fingers down at once during the sequence. */
   readonly maxTouches: number
+  /** Touch-down events in the sequence: a clean double tap has exactly two. */
+  readonly downs: number
   readonly lastTouchMs: number
 }
 
@@ -43,6 +62,7 @@ export const EMPTY_TOUCH_SEQUENCE: TouchSequence = {
   pinchSeen: false,
   panSeen: false,
   maxTouches: 0,
+  downs: 0,
   lastTouchMs: 0,
 }
 
@@ -55,6 +75,7 @@ export function touchDown(seq: TouchSequence, touches: number, nowMs: number): T
     pinchSeen: base.pinchSeen,
     panSeen: base.panSeen,
     maxTouches: Math.max(base.maxTouches, touches),
+    downs: base.downs + 1,
     lastTouchMs: nowMs,
   }
 }
@@ -66,6 +87,7 @@ export function touchUp(seq: TouchSequence, nowMs: number): TouchSequence {
     pinchSeen: seq.pinchSeen,
     panSeen: seq.panSeen,
     maxTouches: seq.maxTouches,
+    downs: seq.downs,
     lastTouchMs: nowMs,
   }
 }
@@ -76,6 +98,7 @@ export function markPinch(seq: TouchSequence, nowMs: number): TouchSequence {
     pinchSeen: true,
     panSeen: seq.panSeen,
     maxTouches: Math.max(seq.maxTouches, 2),
+    downs: seq.downs,
     lastTouchMs: nowMs,
   }
 }
@@ -86,9 +109,7 @@ export function markPan(seq: TouchSequence): TouchSequence {
     pinchSeen: seq.pinchSeen,
     panSeen: true,
     maxTouches: seq.maxTouches,
+    downs: seq.downs,
     lastTouchMs: seq.lastTouchMs,
   }
 }
-
-/** Travel (pt) of a one-finger pan past which it counts as a pan, not a tap's jitter. */
-export const PAN_SEEN_DISTANCE = 12

@@ -65,7 +65,6 @@ import {
   EMPTY_TOUCH_SEQUENCE,
   markPan,
   markPinch,
-  PAN_SEEN_DISTANCE,
   touchDown,
   touchUp,
   type TouchSequence,
@@ -640,6 +639,11 @@ export function useStreamZoom({
             savedTx.set(tx.value)
             savedTy.set(ty.value)
             panActive.set(true)
+            // The pan activated on a zoomed picture: the picture MOVED, so this
+            // touch is not a tap, whatever its travel. A mark at 12 pt left a
+            // 4–12 pt drag (the pan's own threshold is 4) free to count as one
+            // half of a double tap — which, zoomed, returns to 1x.
+            touchSequence.set(markPan(touchSequence.value))
             lastUpdateLogMs.set(0)
             traceEvent('zoom pan start', snapshot({ pointers: 1 }))
             traceBegin('pan')
@@ -659,12 +663,6 @@ export function useStreamZoom({
             const clamped = clampPan({ tx: rawX, ty: rawY, w, h, aspect: contentAspect, scale: s, fit })
             tx.set(clamped.x)
             ty.set(clamped.y)
-            if (
-              !touchSequence.value.panSeen &&
-              Math.abs(e.translationX) + Math.abs(e.translationY) > PAN_SEEN_DISTANCE
-            ) {
-              touchSequence.set(markPan(touchSequence.value))
-            }
             const nowMs = Date.now()
             if (trace && nowMs - lastUpdateLogMs.value >= TRACE_UPDATE_THROTTLE_MS) {
               lastUpdateLogMs.set(nowMs)
