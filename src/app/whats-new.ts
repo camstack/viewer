@@ -30,6 +30,20 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.710',
+    date: '2026-11-13',
+    notes: {
+      en: [
+        'Number and text devices show their value in the row; tap it to edit.',
+        'Automation rows carry Run and an on/off switch, as in the admin.',
+      ],
+      it: [
+        'I dispositivi numero e testo mostrano il valore nella riga; toccala per modificarlo.',
+        'Le righe delle automazioni hanno Esegui e un interruttore, come in admin.',
+      ],
+    },
+  },
+  {
     version: '1.0.709',
     date: '2026-11-13',
     notes: {
