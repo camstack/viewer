@@ -4371,6 +4371,20 @@
         "current": "Sorgente attuale: {{name}}"
       }
     },
+    "deviceInfo": {
+      "open": "Informazioni dispositivo",
+      "provider": "Fornitore",
+      "type": "Tipo",
+      "role": "Ruolo",
+      "id": "ID dispositivo",
+      "parent": "Dispositivo padre",
+      "reachability": "Raggiungibilità",
+      "online": "Online",
+      "offline": "Offline",
+      "unknown": "Sconosciuto",
+      "lastSeen": "Ultimo contatto",
+      "lastUpdate": "Ultimo aggiornamento"
+    },
     "deviceDetail": {
       "openFor": "Dettagli di {{device}}",
       "unavailable": "Impossibile leggere il dispositivo.",

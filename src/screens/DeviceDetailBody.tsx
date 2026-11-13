@@ -1,7 +1,9 @@
 /**
  * DeviceDetailBody — what one device's detail IS: a header that names the
- * device by its name alone (no provider chip; reachability is the card's own Offline chip) over the hub's device
- * card (`/embed/device/<id>?host=viewer`, drawn `bare`) in a WebView / iframe.
+ * device by its name alone (no provider chip; reachability is the card's own
+ * Offline chip). An info button at the top-right opens those facts. Under the
+ * header is the hub's device card (`/embed/device/<id>?host=viewer`, drawn
+ * `bare`) in a WebView / iframe.
  *
  * ONE body for every home it has: the `/device/:id` route's sheet
  * ({@link DeviceDetailScreen}) and the Devices panel, where it REPLACES the list
@@ -14,6 +16,7 @@ import { SheetHeader } from '../components/ui/SheetHeader.js'
 import { useDeviceIdentity } from '../data/device-detail-status.js'
 import { DeviceCardEmbed } from '../device-embed/DeviceCardEmbed.js'
 import { SPACING } from '../theme/tokens.js'
+import { DeviceInfoButton } from './DeviceInfoButton.js'
 
 export interface DeviceDetailBodyProps {
   readonly deviceId: number
@@ -43,6 +46,7 @@ export function DeviceDetailBody({
         <View style={styles.headerTitle}>
           <SheetHeader
             title={name}
+            actions={<DeviceInfoButton deviceId={deviceId} />}
             onClose={onClose}
             testID="device-sheet-header"
           />

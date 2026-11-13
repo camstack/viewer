@@ -4374,6 +4374,20 @@
         "current": "Current source: {{name}}"
       }
     },
+    "deviceInfo": {
+      "open": "Device info",
+      "provider": "Provider",
+      "type": "Type",
+      "role": "Role",
+      "id": "Device id",
+      "parent": "Parent",
+      "reachability": "Reachability",
+      "online": "Online",
+      "offline": "Offline",
+      "unknown": "Unknown",
+      "lastSeen": "Last seen",
+      "lastUpdate": "Last update"
+    },
     "deviceDetail": {
       "openFor": "Details of {{device}}",
       "unavailable": "This device could not be read.",
