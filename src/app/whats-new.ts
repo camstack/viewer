@@ -30,6 +30,20 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.708',
+    date: '2026-11-13',
+    notes: {
+      en: [
+        'Gallery: a pinch or a drag no longer counts as a double tap.',
+        'The doorbell badge is an overlay option per camera, off by default.',
+      ],
+      it: [
+        'Galleria: un pinch o un trascinamento non vale più come doppio tap.',
+        'Il badge del campanello è un’opzione overlay per camera, spenta di default.',
+      ],
+    },
+  },
+  {
     version: '1.0.707',
     date: '2026-11-13',
     notes: {
