@@ -29,10 +29,15 @@
  *    off switch is REPORTED off; disabled must never look like broken.
  */
 import React, { useState } from 'react'
-import { Pressable, StyleSheet, Text, View } from 'react-native'
+import { Platform, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 
-import { Check, Pencil } from '../../../lib/icons.js'
+import { Check, ChevronLeft, Pencil } from '../../../lib/icons.js'
+import { SheetIconButton } from '../../ui/SheetHeader.js'
+import { sheetPresentation } from '../../ui/SheetModal.js'
+import { DeviceDetailBody } from '../../../screens/DeviceDetailBody.js'
+import { deviceSheetHeight } from '../../../screens/device-sheet-size.js'
+import type { AccessoryPanelRow } from '../../../accessories/accessory-panel-rows.js'
 import { useTheme } from '../../../theme/theme-provider.js'
 import { SPACING } from '../../../theme/tokens.js'
 import { hapticTap } from '../../../lib/haptics.js'
@@ -48,15 +53,20 @@ export interface CameraAccessoryPanelProps {
   /** The camera's display name — the picker's subtitle. A host that cannot
    *  name the camera passes what it has; the panel never invents one. */
   readonly cameraName: string
-  /** Closes the hosting sheet; called before a row opens a full-screen route. */
-  readonly onClose?: () => void
 }
 
-export function CameraAccessoryPanel({ deviceId, cameraName, onClose }: CameraAccessoryPanelProps): React.JSX.Element {
+export function CameraAccessoryPanel({ deviceId, cameraName }: CameraAccessoryPanelProps): React.JSX.Element {
   const { t } = useTranslation()
   const { colors } = useTheme()
   const isAdmin = useIsAdmin()
   const [editing, setEditing] = useState(false)
+  // A device's detail REPLACES the list inside this panel (operator decision
+  // 2026-11-13) and Back returns to it. The list stays mounted underneath, so
+  // its edit mode and loaded rows are exactly as they were left; closing the
+  // hosting panel closes both.
+  const [detail, setDetail] = useState<{ readonly id: number; readonly name: string } | null>(null)
+  const { height: windowHeight } = useWindowDimensions()
+  const openDetails = (row: AccessoryPanelRow): void => setDetail({ id: row.device.id, name: row.label })
   // The badge's read, for the non-admin only: an admin's group shares the
   // same cache entry (`cameraSwitchesKey`) and reports the fact itself.
   const switchedOffMap = useSwitchedOffMap(isAdmin ? [] : [deviceId], !isAdmin)
@@ -64,6 +74,22 @@ export function CameraAccessoryPanel({ deviceId, cameraName, onClose }: CameraAc
 
   return (
     <View style={styles.panel}>
+      {detail === null ? null : (
+        <DeviceDetailBody
+          deviceId={detail.id}
+          deviceName={detail.name}
+          cardHeight={deviceSheetHeight(sheetPresentation(Platform.OS), windowHeight)}
+          leading={
+            <SheetIconButton
+              icon={ChevronLeft}
+              label={t('v2.common.back')}
+              onPress={() => setDetail(null)}
+              testID="accessory-detail-back"
+            />
+          }
+        />
+      )}
+      <View style={detail === null ? styles.panel : styles.hidden}>
       <View style={styles.sectionHeader}>
         <Text style={[styles.sectionLabel, { color: colors.foregroundMuted }]}>
           {t('v2.cameraDetail.devices')}
@@ -89,7 +115,7 @@ export function CameraAccessoryPanel({ deviceId, cameraName, onClose }: CameraAc
           )}
         </Pressable>
       </View>
-      <AccessoryDeviceList deviceId={deviceId} cameraName={cameraName} editing={editing} onClose={onClose} />
+      <AccessoryDeviceList deviceId={deviceId} cameraName={cameraName} editing={editing} onOpenDetails={openDetails} />
 
       <PowerSourceRow deviceId={deviceId} />
 
@@ -108,12 +134,14 @@ export function CameraAccessoryPanel({ deviceId, cameraName, onClose }: CameraAc
           </View>
         </View>
       ) : null}
+      </View>
     </View>
   )
 }
 
 const styles = StyleSheet.create({
   panel: { gap: SPACING.md },
+  hidden: { display: 'none' },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   sectionLabel: {
     fontSize: 12,

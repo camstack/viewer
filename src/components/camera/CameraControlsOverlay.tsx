@@ -134,7 +134,7 @@ export const CameraControlsOverlay = memo(function CameraControlsOverlay({
             labels and owns its loading / empty states. */}
         <Section>
           <View style={styles.sectionBody}>
-            <CameraAccessoryPanel deviceId={camera.id} cameraName={camera.name} onClose={onClose} />
+            <CameraAccessoryPanel deviceId={camera.id} cameraName={camera.name} />
           </View>
         </Section>
       </KeyboardAwareScrollView>

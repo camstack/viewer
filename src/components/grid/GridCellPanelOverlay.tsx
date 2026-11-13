@@ -123,7 +123,7 @@ function PanelBody({ panel, cameraName, hasPtz, onSelect, onClose }: PanelBodyPr
       // This host IS the single-camera screen's linked-devices panel (the
       // shelf route), and on the wall it is one cell — one camera either way,
       // so the panel's "+" (a LOCAL addition) is never ambiguous.
-      return <CameraAccessoryPanel deviceId={panel.deviceId} cameraName={cameraName} onClose={onClose} />
+      return <CameraAccessoryPanel deviceId={panel.deviceId} cameraName={cameraName} />
     case 'viewOptions':
       return <CellViewOptions deviceId={panel.deviceId} />
     case 'actions':

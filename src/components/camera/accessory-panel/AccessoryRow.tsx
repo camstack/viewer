@@ -80,8 +80,9 @@ export interface AccessoryRowProps {
   readonly onMove: (row: AccessoryPanelRow, delta: -1 | 1) => void
   readonly onToggleHidden: (row: AccessoryPanelRow) => void
   readonly onRemove: (row: AccessoryPanelRow) => void
-  /** Closes the hosting sheet before the detail route is pushed (the remote's order). */
-  readonly onClose?: () => void
+  /** The host's way to show this device's detail IN PLACE of the list. Absent
+   *  (no host panel to replace) ⇒ the `/device/:id` route. */
+  readonly onOpenDetails?: (row: AccessoryPanelRow) => void
   /**
    * The hub's row model for this device (`hero-layout.getRowModels`, one batch
    * for the whole list). Only a model draws the hero row; `undefined` (pending
@@ -129,7 +130,7 @@ export const AccessoryRow = memo(function AccessoryRow({
   onMove,
   onToggleHidden,
   onRemove,
-  onClose,
+  onOpenDetails,
   model,
   customIcon = null,
 }: AccessoryRowProps): React.JSX.Element {
@@ -187,8 +188,8 @@ export const AccessoryRow = memo(function AccessoryRow({
     ) : null
 
   const openDetail = (): void => {
-    onClose?.()
-    router.push(deviceRoute(row.device.id, row.label, row.device.type))
+    if (onOpenDetails !== undefined) onOpenDetails(row)
+    else router.push(deviceRoute(row.device.id, row.label, row.device.type))
   }
 
   if (!editing && model != null) {

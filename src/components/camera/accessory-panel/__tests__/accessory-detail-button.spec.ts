@@ -26,7 +26,7 @@ const HUB = {
 afterEach(() => cleanup())
 
 describe('the row opens the device detail', () => {
-  it('pushes /device/<id> with the name and type', async () => {
+  it('with no host panel, pushes /device/<id> with the name and type', async () => {
     mountScreen(
       React.createElement(AccessoryDeviceList, { deviceId: 101, cameraName: 'Front door', editing: false}),
       { hub: HUB },
@@ -36,20 +36,20 @@ describe('the row opens the device detail', () => {
     expect(routerCalls().find((c) => c.kind === 'push')?.target).toBe('/device/900?name=Faretto&type=light')
   })
 
-  it('closes the hosting sheet BEFORE the route is pushed', async () => {
-    const seen: string[] = []
+  it('inside a panel, hands the row to the host: no route, no close', async () => {
+    const opened: number[] = []
     mountScreen(
       React.createElement(AccessoryDeviceList, {
         deviceId: 101,
         cameraName: 'Front door',
         editing: false,
-        onClose: () => { seen.push(`close(pushes=${routerCalls().filter((c) => c.kind === 'push').length})`) },
+        onOpenDetails: (row) => { opened.push(row.device.id) },
       }),
       { hub: HUB },
     )
     fireEvent.click(await screen.findByLabelText('Details of Faretto'))
-    await waitFor(() => expect(routerCalls().some((c) => c.kind === 'push')).toBe(true))
-    expect(seen).toEqual(['close(pushes=0)'])
+    await waitFor(() => expect(opened).toEqual([900]))
+    expect(routerCalls().some((c) => c.kind === 'push')).toBe(false)
   })
 
   it('is not offered while editing the list', async () => {
