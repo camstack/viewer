@@ -30,6 +30,18 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.707',
+    date: '2026-11-13',
+    notes: {
+      en: [
+        'Zoom stays after you move the picture: resizing the stream no longer counts as a camera change.',
+      ],
+      it: [
+        'Lo zoom resta quando sposti l’immagine: il riquadro che cambia non vale più come cambio camera.',
+      ],
+    },
+  },
+  {
     version: '1.0.706',
     date: '2026-11-13',
     notes: {

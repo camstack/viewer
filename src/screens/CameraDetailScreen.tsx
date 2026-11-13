@@ -276,6 +276,7 @@ import { timelineDockDisc } from '../components/camera/stream-control-items.js'
 import { CameraStatusDot } from '../components/camera/CameraStatusDot.js'
 import { OccupancyBadge } from '../components/camera/OccupancyBadge.js'
 import { DoorbellBadge } from '../components/camera/DoorbellBadge.js'
+import { useRunOnKeyChange } from '../hooks/use-run-on-key-change.js'
 import { useDetections } from '../data/use-detections.js'
 import { useAudioActive } from '../data/use-audio.js'
 import { AUDIO_HIGHLIGHT_HOLD_SEC } from '../components/camera/audio-level.js'
@@ -2234,9 +2235,11 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
   // Keyed on the camera rather than on focus: switching camera is exactly when
   // a retained pan is meaningless, and it fires on the way IN, which also
   // covers the return to a screen that was left zoomed.
-  useEffect(() => {
-    snapZoom('camera change')
-  }, [deviceId, snapZoom])
+  //
+  // Keyed on `deviceId` ONLY: `snapZoom` is rebuilt whenever the zoom box
+  // changes height, and an effect on `[deviceId, snapZoom]` wiped the zoom
+  // after every pan that resized the stream (2026-11-13, `useRunOnKeyChange`).
+  useRunOnKeyChange(deviceId, () => snapZoom('camera change'))
 
   // The fling does not CLOSE the camera and it does not LEAVE it either: it
   // asks for system PiP exactly as the PiP disc does, and the screen stays.
