@@ -7,6 +7,9 @@ describe('device provider label', () => {
     expect(formatProviderLabel('Homematic', null)).toBe('Homematic')
     expect(formatProviderLabel('Homematic', '  ')).toBe('Homematic')
     expect(formatProviderLabel('Homematic', 'Homematic')).toBe('Homematic')
+    // An instance whose name repeats the addon's ("Home Assistant provider") says nothing more.
+    expect(formatProviderLabel('Home Assistant', 'Home Assistant provider')).toBe('Home Assistant')
+    expect(formatProviderLabel('Home Assistant', 'home assistant')).toBe('Home Assistant')
   })
 
   it('reads the provider off a listAll row, and nothing off a row without an addon', () => {
