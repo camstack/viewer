@@ -2108,6 +2108,9 @@
         "nodeName": "Node name",
         "offlineFor": "Offline for",
         "device": "Device",
+        "headline": "Subject and place",
+        "offlineCount": "Summary: how many went offline",
+        "onlineCount": "Summary: how many came back",
         "duration": "Cycle duration",
         "energy": "Cycle energy",
         "afterDuration": "\"after <duration>\" fragment",
@@ -2269,7 +2272,8 @@
         "heater": "Heater",
         "gateway": "Gateway",
         "pet-fountain": "Pet fountain",
-        "heat-pump": "Heat pump"
+        "heat-pump": "Heat pump",
+        "energy-system": "Energy system"
       },
       "prune": {
         "device": "Disabled on {{date}}: its last device (#{{id}}) was deleted.",

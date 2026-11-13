@@ -9,7 +9,7 @@ import type { DeviceSearchRequires } from '@camstack/types'
 import type { PickedValue } from './device-value-picker-model.js'
 
 /** A camera field's ask: the devices bound to `camera-streams`. */
-export const CAMERA_REQUIRES: DeviceSearchRequires = { caps: [NC_CAMERA_SCOPE_CAP_NAME] }
+export const CAMERA_REQUIRES = { caps: [NC_CAMERA_SCOPE_CAP_NAME] } as const satisfies DeviceSearchRequires
 
 export function pickedDevices(ids: readonly number[]): readonly PickedValue[] {
   return ids.map((deviceId) => ({ deviceId }))

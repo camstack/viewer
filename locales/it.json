@@ -2105,6 +2105,9 @@
         "nodeName": "Nome del nodo",
         "offlineFor": "Offline da",
         "device": "Dispositivo",
+        "headline": "Soggetto e luogo",
+        "offlineCount": "Riepilogo: quanti sono andati offline",
+        "onlineCount": "Riepilogo: quanti sono tornati",
         "duration": "Durata del ciclo",
         "energy": "Energia del ciclo",
         "afterDuration": "Frammento \"dopo <durata>\"",
@@ -2266,7 +2269,8 @@
         "heater": "Riscaldatore",
         "gateway": "Gateway",
         "pet-fountain": "Fontana per animali",
-        "heat-pump": "Pompa di calore"
+        "heat-pump": "Pompa di calore",
+        "energy-system": "Impianto energetico"
       },
       "prune": {
         "device": "Disattivata il {{date}}: il suo ultimo dispositivo (#{{id}}) è stato eliminato.",

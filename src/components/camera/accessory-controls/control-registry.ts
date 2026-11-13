@@ -218,6 +218,8 @@ const CONTROL_BY_DEVICE_TYPE = {
   [DeviceType.PetFountain]: 'none',
   // A heat pump is a container: Circuit N and Hot water are the controls.
   [DeviceType.HeatPump]: 'none',
+  // A read-only home energy bus (the `energy-system` cap): nothing to operate.
+  [DeviceType.EnergySystem]: 'none',
 } as const satisfies Record<DeviceType, AccessoryControlKind>
 
 /** Appliance types whose on/off is the plain `switch` cap they bind. A plug-in
