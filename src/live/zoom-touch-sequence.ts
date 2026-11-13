@@ -41,6 +41,9 @@
 /** A double tap's second touch lands within this long of the first one's lift. */
 export const DOUBLE_TAP_MAX_DELAY_MS = 300
 
+/** A double tap's two taps stay within this travel (pt). */
+export const DOUBLE_TAP_MAX_DISTANCE = 24
+
 /**
  * A single touch landing this long after the last touch event is a new
  * sequence. Longer than the double tap's window, so both touches of anything

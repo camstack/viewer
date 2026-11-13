@@ -35,6 +35,17 @@ import Animated, { runOnJS, useAnimatedReaction, useAnimatedStyle, useSharedValu
 import { useTheme } from '../../../../theme/theme-provider.js'
 import { RenderErrorBoundary } from '../../../ui/RenderErrorBoundary.js'
 import { focalPan, nextZoomStep } from '../../../../live/zoom-steps.js'
+import { doubleTapRefusal } from '../../../../live/zoom-tap-gate.js'
+import {
+  DOUBLE_TAP_MAX_DELAY_MS,
+  DOUBLE_TAP_MAX_DISTANCE,
+  EMPTY_TOUCH_SEQUENCE,
+  markPan,
+  markPinch,
+  touchDown,
+  touchUp,
+  type TouchSequence,
+} from '../../../../live/zoom-touch-sequence.js'
 import {
   clampPanContent,
   clampZoom,
@@ -109,6 +120,11 @@ export const ZoomableImage = memo(function ZoomableImage({
   const panDownX = useSharedValue(0)
   const panDownY = useSharedValue(0)
   const panDecided = useSharedValue(false)
+  /** What the fingers did in THIS touch sequence, and when the last pinch let
+   *  go: the double tap's recogniser counts touch events, not taps, so these
+   *  decide whether its "two taps" were two clean single-finger touches. */
+  const touchSequence = useSharedValue<TouchSequence>(EMPTY_TOUCH_SEQUENCE)
+  const lastPinchEndMs = useSharedValue(0)
 
   const containerRef = useRef<View>(null)
 
@@ -152,6 +168,23 @@ export const ZoomableImage = memo(function ZoomableImage({
     [w, h],
   )
 
+  // Only listens (a Manual recogniser never activates), so it competes with
+  // nothing in the Simultaneous below.
+  const touchTracker = useMemo(
+    () =>
+      Gesture.Manual()
+        .onTouchesDown((e) => {
+          touchSequence.set(touchDown(touchSequence.value, e.numberOfTouches, Date.now()))
+        })
+        .onTouchesUp(() => {
+          touchSequence.set(touchUp(touchSequence.value, Date.now()))
+        })
+        .onTouchesCancelled(() => {
+          touchSequence.set(touchUp(touchSequence.value, Date.now()))
+        }),
+    [touchSequence],
+  )
+
   const pinch = useMemo(
     () =>
       Gesture.Pinch()
@@ -177,6 +210,7 @@ export const ZoomableImage = memo(function ZoomableImage({
           else if (decision === 'fail') state.fail()
         })
         .onStart((e) => {
+          touchSequence.set(markPinch(touchSequence.value, Date.now()))
           pinchStart.value = savedScale.value
           pinchFocalX.value = e.focalX
           pinchFocalY.value = e.focalY
@@ -229,11 +263,12 @@ export const ZoomableImage = memo(function ZoomableImage({
           savedScale.value = scale.value
           savedTx.value = tx.value
           savedTy.value = ty.value
+          lastPinchEndMs.set(Date.now())
         })
         // The host scroll view waits for this pinch to fail before it may
         // scroll: two fingers on the picture are a zoom, never a page scroll.
         .blocksExternalGesture(...blocked),
-    [pinchStart, pinchFocalX, pinchFocalY, savedScale, w, h, aspect, scale, tx, ty, savedTx, savedTy, panDownX, panDownY, blocked],
+    [pinchStart, pinchFocalX, pinchFocalY, savedScale, w, h, aspect, scale, tx, ty, savedTx, savedTy, panDownX, panDownY, blocked, touchSequence, lastPinchEndMs],
   )
 
   const pan = useMemo(
@@ -267,6 +302,11 @@ export const ZoomableImage = memo(function ZoomableImage({
           if (decision === 'activate') state.activate()
           else state.fail()
         })
+        .onStart(() => {
+          // The pan activated: the picture is about to MOVE, so this touch is
+          // not half of a double tap, whatever its travel.
+          touchSequence.set(markPan(touchSequence.value))
+        })
         .onUpdate((e) => {
           if (scale.value <= MIN_ZOOM) return
           if (!Number.isFinite(e.translationX) || !Number.isFinite(e.translationY)) return
@@ -287,7 +327,7 @@ export const ZoomableImage = memo(function ZoomableImage({
         // Zoomed: the picture pans and the page holds still. At 1× the pan
         // has failed by now, so the scroll view is free to take the drag.
         .blocksExternalGesture(...blocked),
-    [scale, w, h, aspect, tx, ty, savedTx, savedTy, panDownX, panDownY, panDecided, blocked],
+    [scale, w, h, aspect, tx, ty, savedTx, savedTy, panDownX, panDownY, panDecided, blocked, touchSequence],
   )
 
   const doubleTap = useMemo(
@@ -295,7 +335,17 @@ export const ZoomableImage = memo(function ZoomableImage({
       Gesture.Tap()
         .numberOfTaps(2)
         .maxDuration(300)
+        .maxDelay(DOUBLE_TAP_MAX_DELAY_MS)
+        .maxDistance(DOUBLE_TAP_MAX_DISTANCE)
         .onEnd((e) => {
+          // Two fingers of a pinch, or two short drags, are two touch events to
+          // the recogniser; only the touch record knows they were not two taps.
+          const refusal = doubleTapRefusal({
+            nowMs: Date.now(),
+            lastPinchEndMs: lastPinchEndMs.value,
+            sequence: touchSequence.value,
+          })
+          if (refusal !== null) return
           // The SAME ladder the live player climbs (1x -> 2x -> 3x -> 4x -> 1x),
           // anchored ON THE TAP. It used to be a 1x/2x toggle that zoomed about
           // the CENTRE, so the detail an operator double-tapped was pushed off
@@ -346,12 +396,12 @@ export const ZoomableImage = memo(function ZoomableImage({
           ty.value = withTiming(ny)
           savedTy.value = ny
         }),
-    [scale, tx, ty, savedScale, savedTx, savedTy, w, h, aspect],
+    [scale, tx, ty, savedScale, savedTx, savedTy, w, h, aspect, touchSequence, lastPinchEndMs],
   )
 
   const gesture = useMemo(
-    () => Gesture.Simultaneous(pinch, pan, doubleTap),
-    [pinch, pan, doubleTap],
+    () => Gesture.Simultaneous(pinch, pan, doubleTap, touchTracker),
+    [pinch, pan, doubleTap, touchTracker],
   )
 
   // Web-only: bridge the mouse wheel to a zoom around the content center, then
