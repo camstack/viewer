@@ -36,10 +36,12 @@ export const WHATS_NEW: readonly WhatsNewEntry[] = [
       en: [
         'Number and text devices show their value in the row; tap it to edit.',
         'Automation rows carry Run and an on/off switch, as in the admin.',
+        'Device details show just the name; the info button lists provider, type and status.',
       ],
       it: [
         'I dispositivi numero e testo mostrano il valore nella riga; toccala per modificarlo.',
         'Le righe delle automazioni hanno Esegui e un interruttore, come in admin.',
+        'I dettagli mostrano solo il nome; il pulsante info elenca provider, tipo e stato.',
       ],
     },
   },
