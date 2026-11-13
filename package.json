@@ -1,7 +1,7 @@
 {
   "name": "camstack",
   "main": "index.js",
-  "version": "1.0.704",
+  "version": "1.0.705",
   "scripts": {
     "start": "expo start",
     "start:dev": "expo start --dev-client",
