@@ -30,6 +30,20 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.709',
+    date: '2026-11-13',
+    notes: {
+      en: [
+        'Device details open inside the Devices panel; Back returns to the list.',
+        'Device details no longer show an Online badge.',
+      ],
+      it: [
+        'I dettagli di un dispositivo si aprono nel pannello Devices; Indietro torna alla lista.',
+        'I dettagli di un dispositivo non mostrano più il badge Online.',
+      ],
+    },
+  },
+  {
     version: '1.0.708',
     date: '2026-11-13',
     notes: {
