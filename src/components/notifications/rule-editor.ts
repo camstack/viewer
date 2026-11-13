@@ -166,6 +166,12 @@ export interface NcRuleFormState {
    * stepper can be walked; {@link ruleFormProblems} blocks the save.
    */
   readonly groupingSec: number | undefined
+  /**
+   * Seconds to hold deliveries before sending them together. `undefined` = the
+   * kind's default (not sent). Carried through an edit; this editor has no box
+   * for it yet, so a stored window must not disappear on save.
+   */
+  readonly groupWithinSec: number | undefined
   /** The AI confirm gate. */
   readonly confirm: NcConfirmFormState
   /** Device actions + notification buttons. ADMIN-ONLY, like `targetUsers`. */
@@ -202,6 +208,7 @@ export function emptyRuleForm(): NcRuleFormState {
     askVerdict: undefined,
     // Plain Immediate: grouping is a deliberate choice on the trigger.
     groupingSec: undefined,
+    groupWithinSec: undefined,
     confirm: NC_CONFIRM_FORM_DEFAULT,
     actions: NC_ACTIONS_EMPTY_FORM,
   }
@@ -234,6 +241,7 @@ export function inputToForm(rule: NcRule): NcRuleFormState {
     snoozeAllowGlobal: rule.snoozeAllowGlobal === true,
     askVerdict: rule.askVerdict,
     groupingSec: rule.groupingSec,
+    groupWithinSec: rule.groupWithinSec,
     confirm: confirmToForm(rule.confirm),
     actions: actionsToForm(rule.actions),
   }
@@ -741,6 +749,7 @@ export function formToInput(form: NcRuleFormState, options: FormToInputOptions =
     ...(form.snoozeAllowGlobal ? { snoozeAllowGlobal: true } : {}),
     ...(form.askVerdict !== undefined && verdictApplies(form) ? { askVerdict: form.askVerdict } : {}),
     ...(groupingIsSent(form) && form.groupingSec !== undefined ? { groupingSec: form.groupingSec } : {}),
+    ...(form.groupWithinSec !== undefined ? { groupWithinSec: form.groupWithinSec } : {}),
     ...(confirm !== undefined ? { confirm } : {}),
     ...adminOnlyFields(form, options.isAdmin === true),
   }
@@ -1015,6 +1024,10 @@ export interface NcSystemEventFilterVisibility {
   readonly packages: boolean
   /** The rule's consumable threshold (D642) → `consumableLowPercent`. */
   readonly consumableThreshold: boolean
+  /** `device-command` filters (D1022) → `commandActions` / `commandOutcomes` / `commandActorKinds`. */
+  readonly commandActions: boolean
+  readonly commandOutcomes: boolean
+  readonly commandActorKinds: boolean
 }
 
 /**

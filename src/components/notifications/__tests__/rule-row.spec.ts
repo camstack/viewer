@@ -461,7 +461,11 @@ describe('the list Snooze switch reads live rule-scoped windows', () => {
     expect(buildRuleRowModel(alarm, []).actions.snoozeSwitch).toBe(false)
     const arms = makeRule({ actions: { onTrigger: ['act-arm'] } })
     const listed = [
-      { id: 'act-arm', name: 'Arm', steps: [{ kind: 'cap' as const, deviceId: 9, cap: 'alarm-panel', method: 'arm' }] },
+      {
+        id: 'act-arm',
+        name: 'Arm',
+        steps: [{ kind: 'command' as const, target: { kind: 'devices' as const, ids: [9] }, actionId: 'alarm.arm.away' }],
+      },
     ]
     expect(buildRuleRowModel(arms, [], listed).actions.snoozeSwitch).toBe(false)
   })
@@ -469,7 +473,11 @@ describe('the list Snooze switch reads live rule-scoped windows', () => {
   it('a BUTTON whose Action arms the panel counts — resolved through the Action list', () => {
     const viaButton = makeRule({ actions: { buttons: [{ id: 'b', label: 'Arm', actionId: 'act-arm' }] } })
     const listed = [
-      { id: 'act-arm', name: 'arm', steps: [{ kind: 'cap' as const, deviceId: 9, cap: 'alarm-panel', method: 'arm' }] },
+      {
+        id: 'act-arm',
+        name: 'arm',
+        steps: [{ kind: 'command' as const, target: { kind: 'devices' as const, ids: [9] }, actionId: 'alarm.arm.home' }],
+      },
     ]
     expect(buildRuleRowModel(viaButton, [], listed).actions.snoozeSwitch).toBe(false)
     // Without the list (a non-admin), the id proves nothing.

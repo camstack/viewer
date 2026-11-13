@@ -14,14 +14,14 @@ export interface NcListedAction {
 
 /**
  * A hub step the alarm and snooze questions can read. Those questions look at
- * `kind`, `cap` and `method` only; a step that is neither a wait nor a cap
- * cannot answer them, so it is left out rather than guessed.
+ * a command's `actionId` (and a wait). A step that is neither is left out
+ * rather than guessed.
  */
 function isActionStep(value: unknown): value is ActionStep {
   if (typeof value !== 'object' || value === null || !('kind' in value)) return false
   if (value.kind === 'wait') return true
-  if (value.kind !== 'cap') return false
-  return 'cap' in value && typeof value.cap === 'string' && 'method' in value && typeof value.method === 'string'
+  if (value.kind !== 'command') return false
+  return 'actionId' in value && typeof value.actionId === 'string' && 'target' in value
 }
 
 const ListedActionSchema = z.object({

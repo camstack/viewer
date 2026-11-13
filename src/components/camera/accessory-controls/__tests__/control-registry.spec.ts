@@ -44,8 +44,11 @@ describe('pickAccessoryControl (by DeviceType)', () => {
   })
 
   it('picks climate for a thermostat or air-conditioner', () => {
-    expect(pick('thermostat')).toEqual({ kind: 'climate' })
-    expect(pick('climate')).toEqual({ kind: 'climate' })
+    expect(pickAccessoryControl({ type: 'climate', role: 'climate-thermostat', features: [] })).toEqual({
+      kind: 'climate',
+    })
+    expect(pickAccessoryControl({ type: 'climate', role: null, features: [] })).toEqual({ kind: 'climate' })
+    expect(pickAccessoryControl({ type: 'climate', role: 'climate-ac', features: [] })).toEqual({ kind: 'climate' })
   })
 
   it('picks fan for a fan', () => {
@@ -114,7 +117,7 @@ describe('DeviceType parity', () => {
     'heat-pump',
   ]
   // Controllable, but the viewer has no row for it yet (its page is the hub's).
-  const NO_VIEWER_CONTROL_YET: readonly string[] = ['dishwasher', 'washer', 'dryer', 'heater', 'pet-fountain']
+  const NO_VIEWER_CONTROL_YET: readonly string[] = ['dishwasher', 'washer', 'dryer', 'pet-fountain']
 
   it('resolves a control kind for every shared DeviceType', () => {
     for (const type of Object.values(DeviceType)) {
@@ -208,7 +211,9 @@ describe('isActuatingControlKind', () => {
 
 describe('appliance types that bind a plain switch', () => {
   it('a heater with switch + timed-run gets the switch as its primary control', () => {
-    expect(pick('heater', ['switch', 'timed-run'])).toEqual({ kind: 'switch' })
+    expect(
+      pickAccessoryControl({ type: 'switch', role: 'switch-heater', features: ['switch', 'timed-run'] }),
+    ).toEqual({ kind: 'switch' })
   })
   it('washer, dryer and dishwasher with a switch get the switch too', () => {
     for (const type of ['washer', 'dryer', 'dishwasher']) {
@@ -216,6 +221,8 @@ describe('appliance types that bind a plain switch', () => {
     }
   })
   it('a heater without a switch cap keeps no primary control', () => {
-    expect(pick('heater', ['timed-run'])).toEqual({ kind: 'none' })
+    expect(pickAccessoryControl({ type: 'switch', role: 'switch-heater', features: ['timed-run'] })).toEqual({
+      kind: 'none',
+    })
   })
 })

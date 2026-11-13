@@ -16,7 +16,11 @@ import {
   unknownActionRefs,
 } from '../rule-action-form.js'
 
-const PANEL = { kind: 'cap' as const, cap: 'alarm-panel', method: 'trigger', deviceId: 1 }
+const PANEL = {
+  kind: 'command' as const,
+  target: { kind: 'devices' as const, ids: [1] },
+  actionId: 'alarm.trigger',
+}
 
 describe('actions form — hook edges name Actions by id', () => {
   it('round-trips a stored block, including a button icon', () => {

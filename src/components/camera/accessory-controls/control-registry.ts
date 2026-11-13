@@ -35,6 +35,7 @@
 
 import { DeviceType } from '@camstack/types/client'
 import { TIMED_RUN_FEATURE } from '../../../data/timed-run.js'
+import { canonicalStoredDeviceType, climateRoleOf, isSwitchHeater } from './device-kind.js'
 
 /** Identifier of the control kind a row should render. `'none'` = no control. */
 export type AccessoryControlKind =
@@ -138,11 +139,13 @@ export interface AccessoryControlPick {
   readonly sensorFeature?: string
 }
 
-/** The accessory fields the pick needs: its canonical `DeviceType` plus the
- *  secondary cap `features` (used only to refine a light or sensor). */
+/** The accessory fields the pick needs: its canonical `DeviceType`, the role
+ *  that tells a climate device or a plug-in heater apart (D1033), plus the
+ *  secondary cap `features` (used only to refine a light, a sensor, or a heater). */
 export interface AccessoryControlInput {
   readonly type: string
   readonly features: readonly string[]
+  readonly role?: string | null
 }
 
 /**
@@ -181,7 +184,6 @@ const CONTROL_BY_DEVICE_TYPE = {
   [DeviceType.Siren]: 'switch',
   [DeviceType.Switch]: 'switch',
   [DeviceType.Sensor]: 'sensor', // → specific sensor value, or none
-  [DeviceType.Thermostat]: 'climate',
   [DeviceType.Climate]: 'climate',
   [DeviceType.Button]: 'button',
   [DeviceType.EventEmitter]: 'event-emitter',
@@ -211,7 +213,6 @@ const CONTROL_BY_DEVICE_TYPE = {
   [DeviceType.Dishwasher]: 'none',
   [DeviceType.Washer]: 'none',
   [DeviceType.Dryer]: 'none',
-  [DeviceType.Heater]: 'none',
   // Its pump is the `pet-fountain` cap (setPump), not the `switch` cap the
   // switch control drives; no viewer row for it yet.
   [DeviceType.PetFountain]: 'none',
@@ -219,20 +220,35 @@ const CONTROL_BY_DEVICE_TYPE = {
   [DeviceType.HeatPump]: 'none',
 } as const satisfies Record<DeviceType, AccessoryControlKind>
 
-/** Appliance types whose on/off is the plain `switch` cap they bind. */
+/** Appliance types whose on/off is the plain `switch` cap they bind. A plug-in
+ *  heater is not one of these: it is a `switch` with role `switch-heater`. */
 const APPLIANCE_TYPES: ReadonlySet<string> = new Set([
-  DeviceType.Heater,
   DeviceType.Washer,
   DeviceType.Dryer,
   DeviceType.Dishwasher,
 ])
 
+/** Every climate role draws the climate control. The role is what tells a
+ *  room thermostat from an air conditioner (D1033). */
+function climatePick(role: string | null): AccessoryControlPick {
+  switch (climateRoleOf(role)) {
+    case 'climate-thermostat':
+    case 'climate-ac':
+    case 'climate-radiator':
+    case 'climate-floor':
+    case 'climate-heater':
+    case 'climate-heat-pump-circuit':
+      return { kind: 'climate' }
+  }
+}
+
 /** Resolve a raw device-type string to its base control kind via the guarded
  *  map, else `'none'` for an unknown future type. */
 function baseControlKind(type: string): AccessoryControlKind {
-  if (Object.prototype.hasOwnProperty.call(CONTROL_BY_DEVICE_TYPE, type)) {
+  const live = canonicalStoredDeviceType(type)
+  if (Object.prototype.hasOwnProperty.call(CONTROL_BY_DEVICE_TYPE, live)) {
     // Guarded above to be exactly the DeviceType key set.
-    return CONTROL_BY_DEVICE_TYPE[type as DeviceType]
+    return CONTROL_BY_DEVICE_TYPE[live as DeviceType]
   }
   return 'none'
 }
@@ -247,9 +263,20 @@ function baseControlKind(type: string): AccessoryControlKind {
  */
 export function pickAccessoryControl(device: AccessoryControlInput): AccessoryControlPick {
   const set = new Set(device.features)
+  const role = device.role ?? null
+  // A plug-in heater is a switch by type. Without the switch cap its only
+  // control is the timed run, which is drawn beside this pick, not as it.
+  if (isSwitchHeater(device.type, role)) {
+    return { kind: set.has('switch') ? 'switch' : 'none' }
+  }
   const base = baseControlKind(device.type)
+  // A thermostat and an air conditioner are both `climate`; the role tells
+  // them apart and both draw this control.
+  if (base === 'climate') {
+    return climatePick(role)
+  }
   // An appliance has no control of its own, but it binds a plain `switch`
-  // (a stove forwarded to a smart plug): that switch is its on/off.
+  // (a washer forwarded to a smart plug): that switch is its on/off.
   if (base === 'none' && APPLIANCE_TYPES.has(device.type) && set.has('switch')) {
     return { kind: 'switch' }
   }

@@ -22,6 +22,7 @@ import {
   sensorTransitionOffered,
 } from '@camstack/types/client'
 import type { NcDroppedCondition, NcRuleKind } from '@camstack/types'
+import { stepPullsAlarmTrigger } from '@camstack/types/client'
 import type { ActionStep } from '@camstack/types'
 import type {
   NcConditionDescriptor,
@@ -174,8 +175,6 @@ export interface NcSensorTransitionAlarmSubject extends NcSensorTransitionAlarmA
  * value is not on the client entry the phone loads.
  */
 const ALARM_OPENING_KINDS: readonly string[] = ['contact', 'cover', 'lock', 'switch']
-const ALARM_PANEL_CAP = 'alarm-panel'
-const ALARM_PANEL_TRIGGER = 'trigger'
 
 function isOpeningKind(kind: string): boolean {
   const normalized = kind.trim().toLowerCase()
@@ -187,13 +186,7 @@ function onTriggerPullsAlarm(subject: NcSensorTransitionAlarmSubject): boolean {
   const resolve = subject.actionStepsOf
   for (const actionId of subject.actions?.onTrigger ?? []) {
     const steps = resolve?.(actionId)
-    if (
-      steps?.some(
-        (step) => step.kind === 'cap' && step.cap === ALARM_PANEL_CAP && step.method === ALARM_PANEL_TRIGGER,
-      )
-    ) {
-      return true
-    }
+    if (steps?.some(stepPullsAlarmTrigger)) return true
   }
   return false
 }

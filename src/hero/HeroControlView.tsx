@@ -8,7 +8,7 @@
  * the same.
  */
 import React from 'react'
-import { Pressable, StyleSheet, Text, View } from 'react-native'
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import type { HeroAction } from '@camstack/types'
 import { CatalogIcon } from '../components/CatalogIcon.js'
@@ -58,7 +58,69 @@ export function HeroControlView({ control, locale, caller, online, large = false
           testID={`hero-picker-${view.id}`}
         />
       )
+    case 'number':
+      return (
+        <TypedValue
+          id={view.id}
+          label={heroText(view.label, locale)}
+          shown={view.value === null ? '' : String(view.value)}
+          disabled={disabled}
+          keyboard="decimal-pad"
+          onCommit={(text) => {
+            const value = Number(text)
+            if (text.trim() !== '' && Number.isFinite(value)) void caller.runValue(view.call, value)
+          }}
+        />
+      )
+    case 'text':
+      return (
+        <TypedValue
+          id={view.id}
+          label={heroText(view.label, locale)}
+          shown={view.value ?? ''}
+          disabled={disabled}
+          keyboard="default"
+          onCommit={(text) => void caller.runValue(view.call, text)}
+        />
+      )
   }
+}
+
+function TypedValue({
+  id,
+  label,
+  shown,
+  disabled,
+  keyboard,
+  onCommit,
+}: {
+  readonly id: string
+  readonly label: string
+  readonly shown: string
+  readonly disabled: boolean
+  readonly keyboard: 'decimal-pad' | 'default'
+  readonly onCommit: (text: string) => void
+}): React.JSX.Element {
+  const { colors } = useTheme()
+  const [draft, setDraft] = React.useState(shown)
+  React.useEffect(() => {
+    setDraft(shown)
+  }, [shown])
+  return (
+    <TextInput
+      accessibilityLabel={label}
+      testID={`hero-value-${id}`}
+      value={draft}
+      editable={!disabled}
+      keyboardType={keyboard}
+      onChangeText={setDraft}
+      onBlur={() => onCommit(draft)}
+      onSubmitEditing={() => onCommit(draft)}
+      placeholder={label}
+      placeholderTextColor={colors.foregroundSubtle}
+      style={[styles.value, { color: colors.foreground, borderColor: colors.border, backgroundColor: colors.backgroundElevated, opacity: disabled ? 0.45 : 1 }]}
+    />
+  )
 }
 
 function PowerButton({
@@ -251,4 +313,13 @@ const styles = StyleSheet.create({
   stepper: { flexDirection: 'row', alignItems: 'center', height: 36, borderRadius: RADIUS.pill, borderWidth: 1 },
   stepButton: { width: 32, height: 34, alignItems: 'center', justifyContent: 'center' },
   stepValue: { minWidth: 36, textAlign: 'center', fontSize: TYPOGRAPHY.size.sm, fontWeight: TYPOGRAPHY.weight.medium },
+  value: {
+    height: 36,
+    minWidth: 72,
+    maxWidth: 160,
+    borderWidth: 1,
+    borderRadius: RADIUS.md,
+    paddingHorizontal: SPACING.md,
+    fontSize: TYPOGRAPHY.size.sm,
+  },
 })

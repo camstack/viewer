@@ -26,6 +26,8 @@ export interface AccessoryDevice {
    * from this list. Empty when the child exposes no controllable caps.
    */
   readonly features: readonly string[]
+  /** `DeviceInfo.role`, when the row carried one. A plug-in heater is a switch with `switch-heater`. */
+  readonly role?: string | null
 }
 
 
@@ -48,7 +50,7 @@ const EMPTY_FEATURES: readonly string[] = []
  *  `use-linked-devices`' children fallback so both paths map identically. */
 export function toAccessory(raw: unknown): AccessoryDevice | null {
   if (!isRecord(raw)) return null
-  const { id, name, type, online, features } = raw
+  const { id, name, type, online, features, role } = raw
   if (typeof id !== 'number' || typeof type !== 'string') return null
   return {
     id,
@@ -56,6 +58,7 @@ export function toAccessory(raw: unknown): AccessoryDevice | null {
     type,
     online: online === true,
     features: toFeatures(features),
+    ...(typeof role === 'string' || role === null ? { role } : {}),
   }
 }
 

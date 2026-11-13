@@ -166,7 +166,11 @@ describe('the alarm rule that can never fire', () => {
     })
 
   const cleared = sensorForm({ sensorKinds: ['contact'], sensorTransition: 'cleared' }).conditions
-  const TRIGGER = { kind: 'cap' as const, deviceId: 900, cap: 'alarm-panel', method: 'trigger' }
+  const TRIGGER = {
+    kind: 'command' as const,
+    target: { kind: 'devices' as const, ids: [900] },
+    actionId: 'alarm.trigger',
+  }
 
   it('warns for "only when it clears" on an alarm rule over openings', () => {
     expect(sensorTransitionNeverFiresFor({ conditions: alarm('cleared').conditions })).toBe(true)

@@ -754,6 +754,9 @@ describe('helpers', () => {
     nodeIds: 'nodes',
     packageNames: 'packages',
     consumableLowPercent: 'consumableThreshold',
+    commandActions: 'commandActions',
+    commandOutcomes: 'commandOutcomes',
+    commandActorKinds: 'commandActorKinds',
   }
 
   it('shows exactly the filters the shared predicate scopes to each kind', () => {

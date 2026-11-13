@@ -138,6 +138,9 @@ export const NcSystemEventKindSchema = z.enum([
   // PIN) — raised and resolved, in the devices family.
   'device-attention-required',
   'device-attention-resolved',
+  // D1022: a vocabulary command somebody gave a device, and how it settled.
+  // A device's own change is never this kind.
+  'device-command',
   // Recording that should be writing and is not (stall / restart storm), plus
   // recovery. Split kinds so a "stall only" rule does not announce cameras
   // that came back. Missing here, a rule carrying one vanishes on the phone.
@@ -203,6 +206,14 @@ export const NcSystemEventKindSchema = z.enum([
 ])
 export type NcSystemEventKind = z.infer<typeof NcSystemEventKindSchema>
 
+/** How a settled command can be filtered (D1022). Mirrors `NC_COMMAND_OUTCOMES`. */
+export const NC_COMMAND_OUTCOMES = ['confirmed', 'already', 'unconfirmed', 'failed'] as const
+/** Who gave a command, as the transition audit names the actor (D1022). */
+export const NC_COMMAND_ACTOR_KINDS = ['user', 'addon', 'action', 'scheduler', 'composition', 'node'] as const
+
+/** Hold window bounds (operator 2026-11-12). Absent = the kind's default. Mirrors the cap. */
+export const NC_GROUP_WITHIN_MAX_SEC = 300
+
 export const NcSystemEventConditionSchema = z.object({
   kinds: z.array(NcSystemEventKindSchema).min(1),
   deviceIds: z.array(z.number().int()).min(1).optional(),
@@ -225,6 +236,15 @@ export const NcSystemEventConditionSchema = z.object({
   excludeDeviceIds: z.array(z.number().int()).min(1).optional(),
   nodeIds: z.array(z.string().min(1)).min(1).optional(),
   packageNames: z.array(z.string().min(1)).min(1).optional(),
+  /**
+   * `device-command` only: vocabulary action ids this rule speaks about.
+   * Unmirrored, a phone save strips them (`formToInput` re-emits the condition).
+   */
+  commandActions: z.array(z.string().min(1)).min(1).optional(),
+  /** `device-command` only: how the command settled. */
+  commandOutcomes: z.array(z.enum(NC_COMMAND_OUTCOMES)).min(1).optional(),
+  /** `device-command` only: who asked. */
+  commandActorKinds: z.array(z.enum(NC_COMMAND_ACTOR_KINDS)).min(1).optional(),
   /**
    * The rule's own consumable threshold (D642): an item at or below this
    * percentage is low FOR THIS RULE. Absent = the hub's default (15). Speaks
@@ -882,6 +902,13 @@ export const NcRuleInputSchema = z.object({
    * The bounds are the cap's own.
    */
   groupingSec: z.number().int().min(NC_GROUPING_MIN_SEC).max(NC_GROUPING_MAX_SEC).optional(),
+  /**
+   * Hold deliveries of this rule to one target and, when two or more arrive
+   * before the window ends, send them as one summary. Absent = the kind's
+   * default. `0` sends each delivery as it arrives. Unmirrored, a phone save
+   * would drop a window an admin set.
+   */
+  groupWithinSec: z.number().int().min(0).max(NC_GROUP_WITHIN_MAX_SEC).optional(),
   /** Mirror of the hub's `askVerdict` (#243): absent and `false` mean off. */
   askVerdict: z.boolean().optional(),
 })
@@ -930,6 +957,7 @@ export const NcRulePatchSchema = z.object({
   actions: NcRuleActionsSchema.optional(),
   confirm: NcConfirmSchema.optional(),
   groupingSec: z.number().int().min(NC_GROUPING_MIN_SEC).max(NC_GROUPING_MAX_SEC).optional(),
+  groupWithinSec: z.number().int().min(0).max(NC_GROUP_WITHIN_MAX_SEC).optional(),
   /** Mirror of the hub's `askVerdict` (#243): absent and `false` mean off. */
   askVerdict: z.boolean().optional(),
 })

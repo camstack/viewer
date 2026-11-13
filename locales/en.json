@@ -1122,6 +1122,7 @@
             "motion-calm": "Motion calmed down",
             "device-attention-required": "Device needs attention",
             "device-attention-resolved": "Device attention resolved",
+            "device-command": "Command given to a device",
             "addon-crash-loop": "Addon crash loop (runner gave up)",
             "alarm-arm-refused": "Alarm arming refused",
             "alarm-arming": "Alarm arming",
@@ -1211,7 +1212,22 @@
             "rule-health": "Notification rules",
             "motion-noise": "Motion without a subject",
             "device-attention": "Needs attention",
+            "device-command": "Commands given to devices",
             "package-llm": "Package confirm"
+          },
+          "commandOutcomes": {
+            "confirmed": "Confirmed",
+            "already": "Already in that state",
+            "unconfirmed": "Unconfirmed",
+            "failed": "Failed"
+          },
+          "commandActorKinds": {
+            "user": "A person",
+            "addon": "An addon",
+            "action": "An action",
+            "scheduler": "A schedule",
+            "composition": "A composition",
+            "node": "A node"
           },
           "systemFilters": {
             "summaryClassHint": "At the scheduled time you get the list of what is in the bad state, not each change.",
@@ -1221,6 +1237,9 @@
             "deviceTypes": "Only these device types (optional)",
             "nodes": "Only these nodes (optional)",
             "packages": "Only these packages (optional)",
+            "commandActions": "Only these commands (optional)",
+            "commandOutcomes": "Only these outcomes (optional)",
+            "commandActorKinds": "Only these actors (optional)",
             "devices": "Only these devices (optional)",
             "excludeDevices": "Never these devices (optional)",
             "excludeHint": "Applied after the list above: a device here is never reported, whatever else matches.",
@@ -2120,6 +2139,9 @@
         "ai": "AI sentence",
         "eventKind": "Event kind",
         "deviceName": "Device",
+        "actionLabel": "Command",
+        "actorLabel": "Who asked",
+        "deviceLabel": "Device with type",
         "deviceId": "Device id",
         "percentage": "Percentage",
         "item": "Consumable",

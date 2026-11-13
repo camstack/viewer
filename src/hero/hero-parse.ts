@@ -20,7 +20,7 @@ export function isHeroText(value: unknown): value is HeroText {
   return isRecord(value) && typeof value.en === 'string' && typeof value.it === 'string'
 }
 
-const CONTROL_KINDS: readonly string[] = ['action', 'toggle', 'slider', 'picker']
+const CONTROL_KINDS: readonly string[] = ['action', 'toggle', 'slider', 'picker', 'number', 'text']
 
 export function isHeroControl(value: unknown): value is HeroControl {
   return isRecord(value) && typeof value.kind === 'string' && CONTROL_KINDS.includes(value.kind)

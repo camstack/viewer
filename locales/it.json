@@ -1119,6 +1119,7 @@
             "motion-calm": "Movimento tornato calmo",
             "device-attention-required": "Dispositivo richiede intervento",
             "device-attention-resolved": "Intervento sul dispositivo risolto",
+            "device-command": "Comando dato a un dispositivo",
             "addon-crash-loop": "Crash loop addon (runner arreso)",
             "alarm-arm-refused": "Inserimento allarme rifiutato",
             "alarm-arming": "Allarme in inserimento",
@@ -1208,7 +1209,22 @@
             "rule-health": "Regole di notifica",
             "motion-noise": "Movimento senza soggetto",
             "device-attention": "Richiede intervento",
+            "device-command": "Comandi dati ai dispositivi",
             "package-llm": "Conferma pacchi"
+          },
+          "commandOutcomes": {
+            "confirmed": "Confermato",
+            "already": "Già in quello stato",
+            "unconfirmed": "Non confermato",
+            "failed": "Fallito"
+          },
+          "commandActorKinds": {
+            "user": "Una persona",
+            "addon": "Un addon",
+            "action": "Un'azione",
+            "scheduler": "Una programmazione",
+            "composition": "Una composizione",
+            "node": "Un nodo"
           },
           "systemFilters": {
             "summaryClassHint": "All'ora programmata ricevi l'elenco di ciò che è nello stato di errore, non ogni cambiamento.",
@@ -1218,6 +1234,9 @@
             "deviceTypes": "Solo questi tipi di dispositivo (facoltativo)",
             "nodes": "Solo questi nodi (facoltativo)",
             "packages": "Solo questi pacchetti (facoltativo)",
+            "commandActions": "Solo questi comandi (facoltativo)",
+            "commandOutcomes": "Solo questi esiti (facoltativo)",
+            "commandActorKinds": "Solo questi autori (facoltativo)",
             "devices": "Solo questi dispositivi (facoltativo)",
             "excludeDevices": "Mai questi dispositivi (facoltativo)",
             "excludeHint": "Applicato dopo l'elenco sopra: un dispositivo qui non viene mai segnalato, qualunque altra cosa corrisponda.",
@@ -2117,6 +2136,9 @@
         "ai": "Frase AI",
         "eventKind": "Tipo di evento di sistema",
         "deviceName": "Dispositivo",
+        "actionLabel": "Comando",
+        "actorLabel": "Chi ha chiesto",
+        "deviceLabel": "Dispositivo con tipo",
         "deviceId": "ID dispositivo",
         "percentage": "Percentuale",
         "item": "Materiale di consumo",

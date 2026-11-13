@@ -9,9 +9,12 @@ import {
   NC_ALARM_SYSTEM_EVENT_KINDS,
   NC_GROUPING_MAX_SEC,
   NC_GROUPING_MIN_SEC,
+  stepActuatesAlarmPanel,
 } from '@camstack/types/client'
 import type { ActionStep, NcRuleKind } from '@camstack/types'
 import {
+  NC_COMMAND_ACTOR_KINDS,
+  NC_COMMAND_OUTCOMES,
   NcConfirmExpectSchema,
   type NcConditions,
   type NcConfirmExpect,
@@ -79,20 +82,35 @@ export function timeZoneChoices(): readonly string[] | null {
 }
 
 const ALARM_KINDS: ReadonlySet<string> = new Set<string>(NC_ALARM_SYSTEM_EVENT_KINDS)
-const ALARM_PANEL_CAP = 'alarm-panel'
+
+/** Vocabulary outcomes a `device-command` rule can be narrowed to (D1022). */
+export const NC_COMMAND_OUTCOME_CHOICES: readonly string[] = NC_COMMAND_OUTCOMES
+
+/** Who gave the command, as the transition audit names the actor (D1022). */
+export const NC_COMMAND_ACTOR_KIND_CHOICES: readonly string[] = NC_COMMAND_ACTOR_KINDS
+
+/** i18n key for one command outcome (`v2.nc.rules.editor.commandOutcomes.<outcome>`). */
+export function commandOutcomeLabelKey(outcome: string): string {
+  return `v2.nc.rules.editor.commandOutcomes.${outcome}`
+}
+
+/** i18n key for one command actor (`v2.nc.rules.editor.commandActorKinds.<kind>`). */
+export function commandActorKindLabelKey(kind: string): string {
+  return `v2.nc.rules.editor.commandActorKinds.${kind}`
+}
 
 /**
  * Is this rule one a snooze can never silence? The admin's
  * `isRuleSnoozeExempt`: true when the rule is ABOUT the panel (a system-event
- * alarm kind — the PUBLISHED list) or ACTUATES it (a step on the `alarm-panel`
- * cap, among the steps of the Actions its hooks and buttons name —
- * `formActionSteps` / `storedActionSteps`). Derived, never stored — the hub's
- * `snooze-exempt` is the authority, and this exists so the editor does not
- * offer what the hub ignores.
+ * alarm kind — the PUBLISHED list) or ACTUATES it (a command step whose
+ * vocabulary action is on the alarm panel, among the steps of the Actions its
+ * hooks and buttons name — `formActionSteps` / `storedActionSteps`). Derived,
+ * never stored — the hub's `snooze-exempt` is the authority, and this exists
+ * so the editor does not offer what the hub ignores.
  */
 export function isSnoozeExempt(conditions: NcConditions, steps: readonly ActionStep[]): boolean {
   if (isAboutAlarm(conditions)) return true
-  return steps.some((step) => step.kind === 'cap' && step.cap === ALARM_PANEL_CAP)
+  return steps.some(stepActuatesAlarmPanel)
 }
 
 function isAboutAlarm(conditions: NcConditions): boolean {

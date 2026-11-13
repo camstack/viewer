@@ -273,6 +273,9 @@ export function SystemEventField({
     const deviceTypes = carried(next, value, 'deviceTypes')
     const nodeIds = carried(next, value, 'nodeIds')
     const packageNames = carried(next, value, 'packageNames')
+    const commandActions = carried(next, value, 'commandActions')
+    const commandOutcomes = carried(next, value, 'commandOutcomes')
+    const commandActorKinds = carried(next, value, 'commandActorKinds')
     const consumableLowPercent = carried(next, value, 'consumableLowPercent')
     onChange({
       kinds: nextKinds,
@@ -281,6 +284,9 @@ export function SystemEventField({
       ...(deviceTypes !== undefined ? { deviceTypes } : {}),
       ...(nodeIds !== undefined ? { nodeIds } : {}),
       ...(packageNames !== undefined ? { packageNames } : {}),
+      ...(commandActions !== undefined ? { commandActions } : {}),
+      ...(commandOutcomes !== undefined ? { commandOutcomes } : {}),
+      ...(commandActorKinds !== undefined ? { commandActorKinds } : {}),
       ...(consumableLowPercent !== undefined ? { consumableLowPercent } : {}),
     })
   }

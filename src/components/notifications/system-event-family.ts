@@ -208,6 +208,10 @@ export function familyFilterVisibility(
     consumableThreshold:
       allowed.includes('consumableLowPercent') &&
       systemEventFilterAppliesToAnyKind(kinds, 'consumableLowPercent'),
+    commandActions: allowed.includes('commandActions') && systemEventFilterAppliesToAnyKind(kinds, 'commandActions'),
+    commandOutcomes: allowed.includes('commandOutcomes') && systemEventFilterAppliesToAnyKind(kinds, 'commandOutcomes'),
+    commandActorKinds:
+      allowed.includes('commandActorKinds') && systemEventFilterAppliesToAnyKind(kinds, 'commandActorKinds'),
   }
 }
 
@@ -235,6 +239,9 @@ export function pruneSystemEventForFamily(
   const deviceTypes = keep(visible.deviceTypes, value.deviceTypes)
   const nodeIds = keep(visible.nodes, value.nodeIds)
   const packageNames = keep(visible.packages, value.packageNames)
+  const commandActions = keep(visible.commandActions, value.commandActions)
+  const commandOutcomes = keep(visible.commandOutcomes, value.commandOutcomes)
+  const commandActorKinds = keep(visible.commandActorKinds, value.commandActorKinds)
   // A threshold is a number, not a list: kept only while its box shows.
   const consumableLowPercent = visible.consumableThreshold ? value.consumableLowPercent : undefined
   return {
@@ -244,6 +251,9 @@ export function pruneSystemEventForFamily(
     ...(deviceTypes !== undefined ? { deviceTypes } : {}),
     ...(nodeIds !== undefined ? { nodeIds } : {}),
     ...(packageNames !== undefined ? { packageNames } : {}),
+    ...(commandActions !== undefined ? { commandActions } : {}),
+    ...(commandOutcomes !== undefined ? { commandOutcomes } : {}),
+    ...(commandActorKinds !== undefined ? { commandActorKinds } : {}),
     ...(consumableLowPercent !== undefined ? { consumableLowPercent } : {}),
   }
 }

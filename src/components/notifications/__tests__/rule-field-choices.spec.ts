@@ -98,8 +98,12 @@ describe('confirm expectation operator', () => {
 })
 
 describe('isSnoozeExempt — the admin’s isRuleSnoozeExempt, on the viewer form', () => {
-  const steps = (caps: readonly string[]): readonly ActionStep[] =>
-    caps.map((cap) => ({ kind: 'cap' as const, deviceId: 7, cap, method: 'arm' }))
+  const steps = (actionIds: readonly string[]): readonly ActionStep[] =>
+    actionIds.map((actionId) => ({
+      kind: 'command' as const,
+      target: { kind: 'devices' as const, ids: [7] },
+      actionId,
+    }))
 
   it('every published alarm kind makes a system rule exempt', () => {
     expect(NC_ALARM_SYSTEM_EVENT_KINDS.length).toBeGreaterThan(0)
@@ -114,8 +118,8 @@ describe('isSnoozeExempt — the admin’s isRuleSnoozeExempt, on the viewer for
   })
 
   it('a rule that ACTUATES the panel is exempt — any step its bindings or buttons run', () => {
-    expect(isSnoozeExempt({}, steps(['light', 'alarm-panel']))).toBe(true)
-    expect(isSnoozeExempt({}, steps(['light', 'siren']))).toBe(false)
+    expect(isSnoozeExempt({}, steps(['switch.on', 'alarm.arm.away']))).toBe(true)
+    expect(isSnoozeExempt({}, steps(['switch.on', 'siren.turnOn']))).toBe(false)
   })
 
   it('resolves an Action by id, and nothing for one the list lacks', () => {

@@ -42,7 +42,7 @@ export interface NcViewerEditorSection {
 export const NC_VIEWER_SECTION_FIELDS: Readonly<
   Record<NcRuleEditorSectionKey, readonly NcRuleFormField[]>
 > = {
-  rule: ['name', 'enabled', 'delivery', 'groupingSec', 'targetIds', 'targetParams', 'targetUsers'],
+  rule: ['name', 'enabled', 'delivery', 'groupingSec', 'groupWithinSec', 'targetIds', 'targetParams', 'targetUsers'],
   devices: ['deviceScope'],
   conditions: [
     'conditions',

@@ -71,7 +71,7 @@ const NO_SERVER_DEVICES: readonly LinkedPanelDevice[] = Object.freeze([])
 export function accessoryActuates(device: AccessoryPanelDevice): boolean {
   if (hasTimedRun(device.features)) return true
   return isActuatingControlKind(
-    pickAccessoryControl({ type: device.type, features: device.features }).kind,
+    pickAccessoryControl({ type: device.type, features: device.features, role: device.role }).kind,
   )
 }
 
