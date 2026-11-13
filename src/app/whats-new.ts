@@ -30,6 +30,20 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.705',
+    date: '2026-11-13',
+    notes: {
+      en: [
+        'Device icons follow the device type and role, the same as on the hub: a light switch shows a light.',
+        'Climate devices and plug-in heaters keep their controls with the hub’s new device kinds.',
+      ],
+      it: [
+        'Le icone dei dispositivi seguono tipo e ruolo, come sull’hub: un interruttore luce mostra una luce.',
+        'Clima e stufette su presa mantengono i loro comandi con i nuovi tipi di dispositivo dell’hub.',
+      ],
+    },
+  },
+  {
     version: '1.0.704',
     date: '2026-11-12',
     notes: {
