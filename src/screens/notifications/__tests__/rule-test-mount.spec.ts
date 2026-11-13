@@ -132,14 +132,15 @@ describe('the section blurb (review M3)', () => {
 describe('dry-run (mounted)', () => {
   it('sends the CURRENT draft through the save conversion and draws each record', async () => {
     mountScreen(React.createElement(Harness, { kind: 'detection' }), { hub: hub(true) })
-    const button = await dom.findByText('Dry-run (last 60 min)')
+    await dom.findByText('Dry-run (last 60 min)')
+    // The hub call is recorded before React Query applies it (notify is a
+    // setTimeout). A click in that gap hits a still-disabled button and the
+    // dry-run never starts — under load that gap is the whole failure. Wait
+    // until the live button is enabled, which is the targets list having answered.
     await vi.waitFor(() =>
-      expect(hubCalls().some((call) => call.path === 'integrationInstances.listInstances')).toBe(true),
+      expect(dom.getByText('Dry-run (last 60 min)').closest('[aria-disabled="true"]')).toBeNull(),
     )
-    await act(async () => {
-      await Promise.resolve()
-    })
-    fireEvent.click(button)
+    fireEvent.click(dom.getByText('Dry-run (last 60 min)'))
 
     await dom.findByText('1 of 2 evaluated records would fire')
     expect(dom.getByText('Would fire')).toBeTruthy()
