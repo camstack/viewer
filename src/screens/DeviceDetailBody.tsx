@@ -1,6 +1,6 @@
 /**
  * DeviceDetailBody — what one device's detail IS: a header that names the
- * device (the integration chip beside it; reachability is the card's own Offline chip) over the hub's device
+ * device by its name alone (no provider chip; reachability is the card's own Offline chip) over the hub's device
  * card (`/embed/device/<id>?host=viewer`, drawn `bare`) in a WebView / iframe.
  *
  * ONE body for every home it has: the `/device/:id` route's sheet
@@ -10,11 +10,8 @@
  */
 import React from 'react'
 import { StyleSheet, View } from 'react-native'
-import { useTranslation } from 'react-i18next'
-import { Badge } from '../components/ui/Badge.js'
 import { SheetHeader } from '../components/ui/SheetHeader.js'
 import { useDeviceIdentity } from '../data/device-detail-status.js'
-import { useDeviceProviderLabel } from '../data/device-provider-label.js'
 import { DeviceCardEmbed } from '../device-embed/DeviceCardEmbed.js'
 import { SPACING } from '../theme/tokens.js'
 
@@ -38,7 +35,6 @@ export function DeviceDetailBody({
   cardHeight,
 }: DeviceDetailBodyProps): React.JSX.Element {
   const device = useDeviceIdentity(deviceId).data
-  const integration = useDeviceProviderLabel(device?.provider ?? null)
   const name = device?.name ?? (deviceName === '' ? `#${deviceId}` : deviceName)
   return (
     <>
@@ -49,11 +45,6 @@ export function DeviceDetailBody({
             title={name}
             onClose={onClose}
             testID="device-sheet-header"
-            meta={
-              <>
-                {integration === null ? null : <Badge label={integration} look="tint" size="sm" />}
-              </>
-            }
           />
         </View>
       </View>

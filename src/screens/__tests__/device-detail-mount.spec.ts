@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  *
  * The device detail, mounted against a stub hub: a sheet whose header is the
- * viewer's (name, integration chip) and whose body is the hub's
+ * viewer's (the name alone) and whose body is the hub's
  * device card (`/embed/device/<id>?host=viewer`) in a WebView, signed in
  * through the seeded admin session — never the URL.
  */
@@ -122,12 +122,15 @@ describe('DeviceDetailScreen', () => {
     expect(screen.queryByTestId('device-card-loading')).toBeNull()
   })
 
-  it('opens as a sheet whose header carries the integration and no reachability badge', async () => {
+  it('opens as a sheet whose header names the device alone: no provider, no reachability badge', async () => {
     mountPlug()
     expect(screen.getByTestId('device-sheet')).toBeTruthy()
     const header = screen.getByTestId('device-sheet-header')
     expect(header.textContent).toContain('Washer plug')
-    expect(await screen.findByText('Homematic (Casa)')).toBeTruthy()
+    await act(async () => {
+      await Promise.resolve()
+    })
+    expect(within(header).queryByText(/Homematic|Casa/)).toBeNull()
     // The card's own chip is the only reachability mark.
     expect(within(header).queryByText(/online|offline/i)).toBeNull()
   })

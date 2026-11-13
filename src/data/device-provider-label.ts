@@ -20,13 +20,11 @@ export interface DeviceProviderRef {
 }
 
 /**
- * "Home Assistant (Casa)", or "Home Assistant" when the instance has no name of
- * its own: empty, or one that repeats the addon's ("Home Assistant provider").
+ * The provider is named by its addon alone ("Home Assistant"): the integration
+ * instance's name is never part of the label (operator, 2026-11-13).
  */
-export function formatProviderLabel(addonName: string, integrationName: string | null): string {
-  const instance = integrationName?.trim() ?? ''
-  const repeatsAddon = instance.toLowerCase().includes(addonName.trim().toLowerCase())
-  return instance === '' || repeatsAddon ? addonName : `${addonName} (${instance})`
+export function formatProviderLabel(addonName: string, _integrationName: string | null): string {
+  return addonName
 }
 
 /** The providing addon and integration of a `deviceManager.listAll` row, or null. */

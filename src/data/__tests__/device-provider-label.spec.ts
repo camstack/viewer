@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { addonNameOf, formatProviderLabel, integrationNameOf, toProviderRef } from '../device-provider-label.js'
 
 describe('device provider label', () => {
-  it('names the integration instance after the addon, and only when it says more', () => {
-    expect(formatProviderLabel('Homematic', 'Casa')).toBe('Homematic (Casa)')
+  it('names the provider by its addon alone, never by the instance', () => {
+    expect(formatProviderLabel('Homematic', 'Casa')).toBe('Homematic')
     expect(formatProviderLabel('Homematic', null)).toBe('Homematic')
     expect(formatProviderLabel('Homematic', '  ')).toBe('Homematic')
     expect(formatProviderLabel('Homematic', 'Homematic')).toBe('Homematic')
