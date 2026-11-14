@@ -2842,6 +2842,11 @@ export const TheaterTimeline = memo(function TheaterTimeline(props: TheaterTimel
             hasNetworkLink: props.deviceBinding.hasNetworkLink,
             hasNavigation: props.deviceBinding.hasNavigation,
             cameraJump: cameraJumpBinding,
+            // The Library timeline's multi-select: dropped here, the panel had
+            // nothing to render and the camera chip opened an empty body.
+            ...(props.deviceBinding.cameraScope !== undefined
+              ? { cameraScope: props.deviceBinding.cameraScope }
+              : {}),
           }}
           singleCamera={singleCamera}
           // Supplied HERE, not by the screen: these are panel-to-panel

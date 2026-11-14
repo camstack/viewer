@@ -7,7 +7,7 @@
  * per camera at the cursor, and that an empty fleet is said, not drawn.
  */
 import React from 'react'
-import { cleanup, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { mountScreen } from '../../../testing/mount.js'
@@ -15,6 +15,7 @@ import { hubCalls } from '../../../testing/hub-stub.js'
 import { TimelineLibraryScreen } from '../../TimelineLibraryScreen.js'
 import { IPAD_LANDSCAPE, IPHONE_PORTRAIT, setTestViewport } from '../../../testing/viewport-control.js'
 import { CURSOR_FRAME_TILE_TEST_ID } from '../CursorFramesGrid.js'
+import { CAMERA_SCOPE_ALL_TEST_ID } from '../../../components/camera/CameraSwitcherPanel.js'
 
 vi.mock('../../../connection/ConnectionProvider.js', async () =>
   (await import('../../../testing/connection-stub.js')).connectionStubModule(),
@@ -82,5 +83,17 @@ describe('TimelineLibraryScreen', () => {
     await waitFor(() => expect(view.queryByTestId('timeline-library-column')).not.toBeNull())
     expect(view.queryByTestId('timeline-library-column-handle')).not.toBeNull()
     expect(view.queryByTestId('timeline-library-strip')).toBeNull()
+  })
+  it('the camera chip opens the scope picker, and unticking a camera drops its still', async () => {
+    const view = mountScreen(React.createElement(TimelineLibraryScreen), {
+      hub: { 'deviceManager.listAll': CAMERAS },
+    })
+    await waitFor(() => expect(view.queryByTestId(`${CURSOR_FRAME_TILE_TEST_ID}-12`)).not.toBeNull())
+    fireEvent.click(view.getByTestId('timeline-nav-camera'))
+    // The panel used to open EMPTY: the scope binding was not forwarded to it.
+    await waitFor(() => expect(view.queryByTestId(CAMERA_SCOPE_ALL_TEST_ID)).not.toBeNull())
+    fireEvent.click(view.getByLabelText('Select Garage'))
+    await waitFor(() => expect(view.queryByTestId(`${CURSOR_FRAME_TILE_TEST_ID}-12`)).toBeNull())
+    expect(view.queryByTestId(`${CURSOR_FRAME_TILE_TEST_ID}-11`)).not.toBeNull()
   })
 })
