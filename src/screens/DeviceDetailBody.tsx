@@ -10,11 +10,12 @@
  * (`CameraAccessoryPanel`). A host adds only what is its own: a close button, or
  * a back button before the title.
  */
-import React from 'react'
+import React, { useEffect } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { SheetHeader } from '../components/ui/SheetHeader.js'
 import { useDeviceIdentity } from '../data/device-detail-status.js'
 import { DeviceCardEmbed } from '../device-embed/DeviceCardEmbed.js'
+import { noteDeviceEmbedTap, resetDeviceEmbedClock } from '../device-embed/device-embed-timing.js'
 import { SPACING } from '../theme/tokens.js'
 import { DeviceInfoButton } from './DeviceInfoButton.js'
 
@@ -39,6 +40,11 @@ export function DeviceDetailBody({
 }: DeviceDetailBodyProps): React.JSX.Element {
   const device = useDeviceIdentity(deviceId).data
   const name = device?.name ?? (deviceName === '' ? `#${deviceId}` : deviceName)
+  // A row press notes the tap first; a cold route (deep link) starts the clock here.
+  useEffect(() => {
+    noteDeviceEmbedTap(deviceId)
+    return () => resetDeviceEmbedClock()
+  }, [deviceId])
   return (
     <>
       <View style={styles.headerRow}>

@@ -24,6 +24,7 @@ import { useTheme } from '../theme/theme-provider.js'
 import { buildDeviceEmbedUrl, deviceEmbedLang, isDeviceEmbedPath } from './device-embed-url.js'
 import type { DeviceCardEmbedProps } from './DeviceCardEmbed.js'
 import { browserStorage, seedSessionIfAbsent } from './seeded-session.js'
+import { deviceEmbedMessageMark, markDeviceEmbed } from './device-embed-timing.js'
 
 /** How often the framed path is checked for a navigation off the card. */
 const LEFT_CARD_POLL_MS = 1000
@@ -64,6 +65,30 @@ export function DeviceCardEmbed({ deviceId }: DeviceCardEmbedProps): React.JSX.E
   // The admin's sign-in guard leaves the card with a client-side navigation
   // (`/login`), which fires no load event: look at the framed path while the
   // card is up, and show a failure rather than a login form in the viewer.
+  useEffect(() => {
+    if (serverUrl === null) return
+    if (pageOrigin() !== new URL(serverUrl).origin) return
+    markDeviceEmbed('webview-created', deviceId)
+    markDeviceEmbed('load-start', deviceId)
+  }, [serverUrl, deviceId])
+
+  useEffect(() => {
+    if (!loaded) return
+    markDeviceEmbed('load-end', deviceId)
+    markDeviceEmbed('visible', deviceId)
+  }, [loaded, deviceId])
+
+  useEffect(() => {
+    const onMessage = (event: MessageEvent): void => {
+      if (frameRef.current?.contentWindow !== event.source) return
+      if (typeof event.data !== 'string') return
+      const mark = deviceEmbedMessageMark(event.data)
+      if (mark !== null) markDeviceEmbed(mark, deviceId)
+    }
+    window.addEventListener('message', onMessage)
+    return () => window.removeEventListener('message', onMessage)
+  }, [deviceId])
+
   useEffect(() => {
     if (!loaded || failed) return
     const timer = setInterval(() => {

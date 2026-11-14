@@ -12,7 +12,7 @@
  * anywhere but the card (the guard's `/login`, a link off the hub) is shown as
  * the card being unavailable, never followed.
  */
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import { WebView } from 'react-native-webview'
 import { useTranslation } from 'react-i18next'
@@ -28,6 +28,7 @@ import {
   isDeviceEmbedPath,
   isSameHubOrigin,
 } from './device-embed-url.js'
+import { deviceEmbedMessageMark, markDeviceEmbed } from './device-embed-timing.js'
 
 export interface DeviceCardEmbedProps {
   readonly deviceId: number
@@ -62,6 +63,15 @@ export function DeviceCardEmbed({ deviceId, bottomInset }: DeviceCardEmbedProps)
     (nav: NavigationLike): boolean => serverUrl !== null && isSameHubOrigin(nav.url, serverUrl),
     [serverUrl],
   )
+
+  useEffect(() => {
+    if (uri === null) return
+    markDeviceEmbed('webview-created', deviceId)
+  }, [uri, deviceId])
+
+  useEffect(() => {
+    if (state === 'ready') markDeviceEmbed('visible', deviceId)
+  }, [state, deviceId])
 
   if (uri === null || state === 'failed') {
     return (
@@ -98,7 +108,15 @@ export function DeviceCardEmbed({ deviceId, bottomInset }: DeviceCardEmbedProps)
         injectedJavaScriptBeforeContentLoaded={buildSessionSeedScript(token)}
         onShouldStartLoadWithRequest={allowLoad}
         onNavigationStateChange={onNavigation}
-        onLoadEnd={() => setState((s) => (s === 'loading' ? 'ready' : s))}
+        onLoadStart={() => markDeviceEmbed('load-start', deviceId)}
+        onLoadEnd={() => {
+          markDeviceEmbed('load-end', deviceId)
+          setState((s) => (s === 'loading' ? 'ready' : s))
+        }}
+        onMessage={(event) => {
+          const mark = deviceEmbedMessageMark(event.nativeEvent.data)
+          if (mark !== null) markDeviceEmbed(mark, deviceId)
+        }}
         onError={() => setState('failed')}
         onHttpError={() => setState('failed')}
         style={[styles.fill, styles.clear]}

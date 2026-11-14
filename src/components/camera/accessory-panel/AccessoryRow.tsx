@@ -55,6 +55,7 @@ import { useRouter } from 'expo-router'
 import { ArrowDown, ArrowUp, ChevronRight, Eye, EyeOff, Trash2 } from '../../../lib/icons.js'
 import { useTheme } from '../../../theme/theme-provider.js'
 import { SPACING } from '../../../theme/tokens.js'
+import { noteDeviceEmbedTap } from '../../../device-embed/device-embed-timing.js'
 import { hapticTap } from '../../../lib/haptics.js'
 import type { AccessoryPanelRow } from '../../../accessories/accessory-panel-rows.js'
 import { useTimelineScale } from '../theater/TimelineScaleProvider.js'
@@ -188,6 +189,7 @@ export const AccessoryRow = memo(function AccessoryRow({
     ) : null
 
   const openDetail = (): void => {
+    noteDeviceEmbedTap(row.device.id)
     if (onOpenDetails !== undefined) onOpenDetails(row)
     else router.push(deviceRoute(row.device.id, row.label, row.device.type))
   }
