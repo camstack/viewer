@@ -29,6 +29,8 @@ export interface DeviceDetailBodyProps {
   readonly leading?: React.ReactNode
   /** A fixed card height. Absent ⇒ the card fills the space left by its host. */
   readonly cardHeight?: number
+  /** False while the sheet is parked: the card is not on screen. */
+  readonly active?: boolean
 }
 
 export function DeviceDetailBody({
@@ -37,6 +39,7 @@ export function DeviceDetailBody({
   onClose,
   leading,
   cardHeight,
+  active = true,
 }: DeviceDetailBodyProps): React.JSX.Element {
   const device = useDeviceIdentity(deviceId).data
   const name = device?.name ?? (deviceName === '' ? `#${deviceId}` : deviceName)
@@ -59,7 +62,7 @@ export function DeviceDetailBody({
         </View>
       </View>
       <View style={cardHeight === undefined ? styles.cardFill : { height: cardHeight, marginTop: SPACING.md }}>
-        <DeviceCardEmbed deviceId={deviceId} bottomInset={0} />
+        <DeviceCardEmbed deviceId={deviceId} bottomInset={0} active={active} />
       </View>
     </>
   )

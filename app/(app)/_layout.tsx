@@ -26,6 +26,7 @@ import {
   ReopenLastCameraBridge,
 } from '../../src/navigation/LastCameraBridge';
 import { OnDemandPlayerHost } from '../../src/components/camera/OnDemandPlayerHost';
+import { DeviceCardSheetHost } from '../../src/device-embed/DeviceCardSheetHost';
 import { DeviceEnrollmentProvider } from '../../src/device-cert/DeviceEnrollmentProvider';
 import { useActivityHost } from '../../src/activity/use-activity-host';
 
@@ -191,6 +192,11 @@ export default function AppLayout() {
               stacked route. That is the same property that makes it survive
               navigation at all. */}
           <OnDemandPlayerHost />
+          {/* The device sheet, same reason as the player above it: the card
+              is a document, and the route popping must not throw it away.
+              Paint order puts it over routes; the connection note stays
+              above this so a dead hub is still the top layer. */}
+          <DeviceCardSheetHost />
           {/* THE hub-connection status, once for the whole app and over
               every route (after the player host in paint order). Screens
               keep their content and never render a connection state of their

@@ -3,6 +3,11 @@
  * `<iframe>` that fills the space it is given. The native twin is
  * `DeviceCardEmbed.tsx`; the auth path is in `device-embed-url.ts`.
  *
+ * Same document rule as the native card: a later device or token is a
+ * `postMessage`, and the spinner waits for `card-ready`. The retained sheet
+ * host keeps this frame mounted across opens; the frame is not keyed on the
+ * device URL.
+ *
  * The hub refuses to be framed by another origin (`frame-ancestors 'self'`),
  * so the card is framed only when this web build is served BY the hub (its
  * `/viewer/` mount). Anywhere else the card opens on the hub in a new tab.
@@ -13,7 +18,7 @@
  * the viewer's access token seeded, without a refresh token. The viewer's
  * sign-out removes what it seeded (`seeded-session.ts`).
  */
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef } from 'react'
 import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useServer } from '../app/ServerProvider.js'
@@ -24,7 +29,8 @@ import { useTheme } from '../theme/theme-provider.js'
 import { buildDeviceEmbedUrl, deviceEmbedLang, isDeviceEmbedPath } from './device-embed-url.js'
 import type { DeviceCardEmbedProps } from './DeviceCardEmbed.js'
 import { browserStorage, seedSessionIfAbsent } from './seeded-session.js'
-import { deviceEmbedMessageMark, markDeviceEmbed } from './device-embed-timing.js'
+import { markDeviceEmbed } from './device-embed-timing.js'
+import { useDeviceCardDocument, type DeviceCardHostCommand } from './use-device-card-document.js'
 
 /** How often the framed path is checked for a navigation off the card. */
 const LEFT_CARD_POLL_MS = 1000
@@ -53,55 +59,68 @@ function framedPath(frame: HTMLIFrameElement): string | null {
   }
 }
 
-export function DeviceCardEmbed({ deviceId }: DeviceCardEmbedProps): React.JSX.Element {
+export function DeviceCardEmbed({ deviceId, active = true }: DeviceCardEmbedProps): React.JSX.Element {
   const { t, i18n } = useTranslation()
   const { colors, mode } = useTheme()
   const { token } = useServer()
   const serverUrl = useLiveHubUrl()
-  const [loaded, setLoaded] = useState(false)
-  const [failed, setFailed] = useState(false)
   const frameRef = useRef<HTMLIFrameElement | null>(null)
+  const uri =
+    serverUrl === null
+      ? null
+      : buildDeviceEmbedUrl({ serverUrl, deviceId, theme: mode, lang: deviceEmbedLang(i18n.language) })
+  const deliver = useCallback((command: DeviceCardHostCommand): void => {
+    const frame = frameRef.current
+    const origin = pageOrigin()
+    if (frame?.contentWindow == null || origin === null) return
+    frame.contentWindow.postMessage(command, origin)
+  }, [])
+  const doc = useDeviceCardDocument({
+    deviceId,
+    uri,
+    token,
+    theme: mode,
+    lang: deviceEmbedLang(i18n.language),
+    deliver,
+  })
 
-  // The admin's sign-in guard leaves the card with a client-side navigation
-  // (`/login`), which fires no load event: look at the framed path while the
-  // card is up, and show a failure rather than a login form in the viewer.
+  const startedFor = useRef<string | null>(null)
   useEffect(() => {
     if (serverUrl === null) return
     if (pageOrigin() !== new URL(serverUrl).origin) return
-    markDeviceEmbed('webview-created', deviceId)
+    if (startedFor.current === doc.webViewKey) return
+    startedFor.current = doc.webViewKey
     markDeviceEmbed('load-start', deviceId)
-  }, [serverUrl, deviceId])
+  }, [deviceId, doc.webViewKey, serverUrl])
 
   useEffect(() => {
-    if (!loaded) return
-    markDeviceEmbed('load-end', deviceId)
-    markDeviceEmbed('visible', deviceId)
-  }, [loaded, deviceId])
+    if (active && doc.state === 'ready') markDeviceEmbed('visible', deviceId)
+  }, [active, deviceId, doc.state])
 
   useEffect(() => {
     const onMessage = (event: MessageEvent): void => {
       if (frameRef.current?.contentWindow !== event.source) return
       if (typeof event.data !== 'string') return
-      const mark = deviceEmbedMessageMark(event.data)
-      if (mark !== null) markDeviceEmbed(mark, deviceId)
+      doc.onPageMessage(event.data)
     }
     window.addEventListener('message', onMessage)
     return () => window.removeEventListener('message', onMessage)
-  }, [deviceId])
+  }, [doc.onPageMessage])
 
   useEffect(() => {
-    if (!loaded || failed) return
+    if (doc.state !== 'ready') return
     const timer = setInterval(() => {
       const href = frameRef.current === null ? null : framedPath(frameRef.current)
-      if (href !== null && !isDeviceEmbedPath(href)) setFailed(true)
+      if (href !== null && !isDeviceEmbedPath(href)) doc.fail()
     }, LEFT_CARD_POLL_MS)
     return () => clearInterval(timer)
-  }, [loaded, failed])
+  }, [doc.fail, doc.state])
 
-  if (serverUrl === null) {
-    return <EmptyState icon={SlidersHorizontal} tone="danger" title={t('v2.deviceDetail.unavailable')} testID="device-card-error" />
+  if (serverUrl === null || doc.documentUri === null) {
+    return (
+      <EmptyState icon={SlidersHorizontal} tone="danger" title={t('v2.deviceDetail.unavailable')} testID="device-card-error" />
+    )
   }
-  const src = buildDeviceEmbedUrl({ serverUrl, deviceId, theme: mode, lang: deviceEmbedLang(i18n.language) })
   const sameOrigin = pageOrigin() === new URL(serverUrl).origin
 
   if (!sameOrigin) {
@@ -112,7 +131,9 @@ export function DeviceCardEmbed({ deviceId }: DeviceCardEmbedProps): React.JSX.E
         action={{
           label: t('v2.deviceDetail.openOnHubAction'),
           onPress: () => {
-            window.open(src, '_blank', 'noopener')
+            const href = uri ?? doc.documentUri
+            if (href === null) return
+            window.open(href, '_blank', 'noopener')
           },
           testID: 'device-card-open-hub',
         }}
@@ -120,7 +141,7 @@ export function DeviceCardEmbed({ deviceId }: DeviceCardEmbedProps): React.JSX.E
       />
     )
   }
-  if (failed) {
+  if (doc.state === 'failed') {
     return <EmptyState icon={SlidersHorizontal} tone="danger" title={t('v2.deviceDetail.unavailable')} testID="device-card-error" />
   }
 
@@ -129,19 +150,19 @@ export function DeviceCardEmbed({ deviceId }: DeviceCardEmbedProps): React.JSX.E
     // Transparent: the page is too (`?host=viewer`), so the dialog is the background.
     <View style={[styles.fill, styles.clear]}>
       <iframe
-        key={src}
+        key={doc.webViewKey}
         ref={frameRef}
-        src={src}
+        src={doc.documentUri}
         title="device-card"
         data-testid="device-card-iframe"
         onLoad={(e) => {
           const href = framedPath(e.currentTarget)
-          if (href !== null && !isDeviceEmbedPath(href)) setFailed(true)
-          else setLoaded(true)
+          if (href !== null && !isDeviceEmbedPath(href)) doc.fail()
+          else doc.onLoadEnd()
         }}
         style={FRAME_STYLE}
       />
-      {!loaded ? (
+      {doc.state === 'loading' ? (
         <View style={styles.overlay} pointerEvents="none">
           <ActivityIndicator color={colors.foregroundMuted} />
         </View>
@@ -155,5 +176,13 @@ const FRAME_STYLE: React.CSSProperties = { width: '100%', height: '100%', border
 const styles = StyleSheet.create({
   fill: { flex: 1 },
   clear: { backgroundColor: 'transparent' },
-  overlay: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, alignItems: 'center', justifyContent: 'center' },
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 })

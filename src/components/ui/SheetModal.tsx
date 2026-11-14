@@ -158,6 +158,12 @@ export interface SheetModalProps {
   readonly testID?: string
   /** A centred card with a fade on every platform (a notice, not a sheet). */
   readonly centered?: boolean
+  /**
+   * Draw the sheet in the tree instead of a native modal, and keep its
+   * children mounted after it closes. The device card uses this so its
+   * document survives the sheet leaving the screen.
+   */
+  readonly retain?: boolean
 }
 
 export function SheetModal({
@@ -170,6 +176,7 @@ export function SheetModal({
   backdropLabel,
   testID,
   centered = false,
+  retain = false,
 }: SheetModalProps): React.JSX.Element {
   const presentation = centered ? 'dialog' : sheetPresentation(Platform.OS)
   const isDialog = presentation === 'dialog'
@@ -184,23 +191,33 @@ export function SheetModal({
   const dragY = useSharedValue(0)
   const touchStartY = useSharedValue(0)
   const [mounted, setMounted] = useState(visible)
+  const [interactive, setInteractive] = useState(visible)
 
   useEffect(() => {
-    if (isDialog) return
+    if (isDialog && !retain) return
     if (visible) {
       dragY.value = 0
       setMounted(true)
+      setInteractive(true)
       progress.value = withTiming(1, { duration: SHEET_ANIMATION_MS })
-    } else {
-      progress.value = withTiming(0, { duration: SHEET_ANIMATION_MS }, (finished) => {
-        if (finished) runOnJS(setMounted)(false)
-      })
+      return
     }
-  }, [visible, isDialog, progress, dragY])
+    if (retain) {
+      progress.value = withTiming(0, { duration: SHEET_ANIMATION_MS })
+      const timer = setTimeout(() => setInteractive(false), SHEET_ANIMATION_MS)
+      return () => clearTimeout(timer)
+    }
+    progress.value = withTiming(0, { duration: SHEET_ANIMATION_MS }, (finished) => {
+      if (finished) runOnJS(setMounted)(false)
+    })
+    return undefined
+  }, [dragY, isDialog, progress, retain, visible])
 
   const scrimStyle = useAnimatedStyle(() => ({
     opacity: scrimOpacity(progress.value) * dragScrimFactor(dragY.value, cardHeight.value),
   }))
+  // A retained dialog has no native modal to fade, so the frame fades itself.
+  const dialogFade = useAnimatedStyle(() => ({ opacity: progress.value }))
   const cardAnimated = useAnimatedStyle(() => ({
     transform: [{ translateY: cardTranslateY(progress.value, cardHeight.value) + dragY.value }],
   }))
@@ -301,6 +318,20 @@ export function SheetModal({
     </KeyboardInsetView>
   )
 
+  const shell = isDialog ? body : <GestureHandlerRootView style={styles.root}>{body}</GestureHandlerRootView>
+  // A native modal unmounts its children when it hides, and it is a window of
+  // its own, so a parent cannot park it off-screen. The retained sheet stays
+  // in this tree: closed, it keeps the card and lets touches through.
+  if (retain) {
+    return (
+      <View
+        pointerEvents={interactive ? 'box-none' : 'none'}
+        style={interactive ? styles.retained : styles.retainedHidden}
+      >
+        {isDialog ? <Animated.View style={[styles.retained, dialogFade]}>{shell}</Animated.View> : shell}
+      </View>
+    )
+  }
   return (
     <Modal
       visible={isDialog ? visible : mounted}
@@ -309,9 +340,13 @@ export function SheetModal({
       onRequestClose={onClose}
     >
       {/* A Modal is a separate native window outside the app's gesture root. */}
-      {isDialog ? body : <GestureHandlerRootView style={styles.root}>{body}</GestureHandlerRootView>}
+      {shell}
     </Modal>
   )
 }
 
-const styles = StyleSheet.create({ root: { flex: 1 } })
+const styles = StyleSheet.create({
+  root: { flex: 1 },
+  retained: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 },
+  retainedHidden: { position: 'absolute', width: 1, height: 1, opacity: 0, overflow: 'hidden' },
+})

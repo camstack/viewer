@@ -8,10 +8,10 @@
  * row's press). A different device, or {@link resetDeviceEmbedClock} when the
  * card unmounts, starts a new open.
  *
- * The hub page posts no ready message today (the host learns "loaded" from
- * the WebView / iframe load event, which fires before the card's data has
- * painted). {@link deviceEmbedMessageMark} recognises `{ "type": "card-ready" }`
- * so the mark exists the moment the page starts posting it.
+ * The hub page posts `{ "type": "card-ready", "deviceId" }` once that device's
+ * card has left its skeleton. The host shows the card then — the document's
+ * load event fires earlier, before the card has painted. A second open of a
+ * kept document logs `show-device` instead of `webview-created` / `load-*`.
  */
 import { log } from '../lib/logger.js'
 
@@ -22,8 +22,11 @@ export const DEVICE_EMBED_MARKS = [
   'webview-created',
   'load-start',
   'load-end',
+  'show-device',
+  'token-refresh',
   'card-ready',
   'visible',
+  'document-dropped',
 ] as const
 
 export type DeviceEmbedMark = (typeof DEVICE_EMBED_MARKS)[number]
@@ -63,20 +66,33 @@ export function markDeviceEmbed(mark: Exclude<DeviceEmbedMark, 'tap'>, deviceId:
   emit(mark, deviceId)
 }
 
-function isCardReadyMessage(value: unknown): boolean {
-  if (typeof value !== 'object' || value === null) return false
-  return 'type' in value && value.type === 'card-ready'
+export interface DeviceEmbedCardReady {
+  readonly deviceId: number
+}
+
+function cardReadyDeviceId(value: unknown): number | null {
+  if (typeof value !== 'object' || value === null) return null
+  if (!('type' in value) || value.type !== 'card-ready') return null
+  if (!('deviceId' in value) || typeof value.deviceId !== 'number') return null
+  if (!Number.isInteger(value.deviceId) || value.deviceId <= 0) return null
+  return value.deviceId
+}
+
+/** The card-ready message, or null when it does not name a device. */
+export function deviceEmbedCardReady(raw: string): DeviceEmbedCardReady | null {
+  try {
+    const parsed: unknown = JSON.parse(raw)
+    const deviceId = cardReadyDeviceId(parsed)
+    return deviceId === null ? null : { deviceId }
+  } catch {
+    return null
+  }
 }
 
 /**
  * The mark a host message represents, or null when it is not the card-ready
- * signal. Non-JSON payloads are not a signal.
+ * signal. A card-ready without a device id is not a signal.
  */
 export function deviceEmbedMessageMark(raw: string): 'card-ready' | null {
-  try {
-    const parsed: unknown = JSON.parse(raw)
-    return isCardReadyMessage(parsed) ? 'card-ready' : null
-  } catch {
-    return null
-  }
+  return deviceEmbedCardReady(raw) === null ? null : 'card-ready'
 }

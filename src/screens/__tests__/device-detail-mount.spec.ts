@@ -21,17 +21,39 @@ interface CapturedWebView {
   readonly onNavigationStateChange: (nav: { url: string }) => void
   readonly onShouldStartLoadWithRequest: (nav: { url: string }) => boolean
   readonly onLoadEnd: () => void
+  readonly onMessage: (event: { nativeEvent: { data: string } }) => void
 }
 
-const webviews = vi.hoisted(() => ({ last: null as unknown }))
+const webviews = vi.hoisted(() => ({ last: null as unknown, scripts: [] as string[] }))
+
+const tokenBox = vi.hoisted(() => {
+  let token = 'viewer-token'
+  const listeners = new Set<() => void>()
+  return {
+    get: (): string => token,
+    set: (next: string): void => {
+      token = next
+      for (const listener of listeners) listener()
+    },
+    subscribe: (listener: () => void): (() => void) => {
+      listeners.add(listener)
+      return () => listeners.delete(listener)
+    },
+  }
+})
 
 vi.mock('react-native-webview', async () => {
   const { View } = await import('react-native')
   const ReactMod = await import('react')
-  const WebView = (props: Record<string, unknown>) => {
+  const WebView = ReactMod.forwardRef((props: { readonly [key: string]: unknown }, ref: React.Ref<unknown>) => {
     webviews.last = props
+    ReactMod.useImperativeHandle(ref, () => ({
+      injectJavaScript: (script: string): void => {
+        webviews.scripts.push(script)
+      },
+    }))
     return ReactMod.createElement(View, { testID: 'card-webview' })
-  }
+  })
   return { __esModule: true, WebView, default: WebView }
 })
 
@@ -41,9 +63,13 @@ vi.mock('../../connection/ConnectionProvider.js', async () =>
 
 vi.mock('../../app/ServerProvider.js', async (importOriginal) => {
   const original = await importOriginal<typeof import('../../app/ServerProvider.js')>()
+  const ReactMod = await import('react')
   return {
     ...original,
-    useServer: () => ({ ...original.useServer(), token: 'viewer-token' }),
+    useServer: () => {
+      const token = ReactMod.useSyncExternalStore(tokenBox.subscribe, tokenBox.get, tokenBox.get)
+      return { ...original.useServer(), token }
+    },
   }
 })
 
@@ -77,6 +103,8 @@ function mountPlug(): void {
 afterEach(() => {
   cleanup()
   webviews.last = null
+  webviews.scripts = []
+  tokenBox.set('viewer-token')
 })
 
 describe('DeviceDetailScreen', () => {
@@ -115,11 +143,44 @@ describe('DeviceDetailScreen', () => {
     expect(screen.getByTestId('card-webview')).toBeTruthy()
   })
 
-  it('shows a spinner until the card has loaded', () => {
+  it('shows a spinner until the card for this device is ready, not when the document loads', () => {
     mountPlug()
     expect(screen.getByTestId('device-card-loading')).toBeTruthy()
     act(() => lastWebView().onLoadEnd())
+    expect(screen.getByTestId('device-card-loading')).toBeTruthy()
+    act(() => lastWebView().onMessage({ nativeEvent: { data: '{"type":"card-ready","deviceId":99}' } }))
+    expect(screen.getByTestId('device-card-loading')).toBeTruthy()
+    act(() => lastWebView().onMessage({ nativeEvent: { data: '{"type":"card-ready","deviceId":22}' } }))
     expect(screen.queryByTestId('device-card-loading')).toBeNull()
+  })
+
+  it('keeps one document when the token or the device changes, and messages the page', () => {
+    let setId: ((id: number) => void) | null = null
+    function Harness(): React.ReactElement {
+      const [id, set] = React.useState(22)
+      React.useEffect(() => {
+        setId = set
+        return () => {
+          setId = null
+        }
+      }, [])
+      return React.createElement(DeviceDetailScreen, {
+        deviceId: id,
+        deviceName: 'Washer plug',
+        deviceType: 'switch',
+      })
+    }
+    mountScreen(React.createElement(Harness), { hub: PLUG_HUB })
+    const node = screen.getByTestId('card-webview')
+    act(() => lastWebView().onLoadEnd())
+    act(() => tokenBox.set('viewer-token-2'))
+    expect(screen.getByTestId('card-webview')).toBe(node)
+    expect(webviews.scripts.some((script) => script.includes('set-token') && script.includes('viewer-token-2'))).toBe(
+      true,
+    )
+    act(() => setId?.(23))
+    expect(screen.getByTestId('card-webview')).toBe(node)
+    expect(webviews.scripts.some((script) => script.includes('show-device') && script.includes('23'))).toBe(true)
   })
 
   it('opens as a sheet whose header names the device alone: no provider, no reachability badge', async () => {

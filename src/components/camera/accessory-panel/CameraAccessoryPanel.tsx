@@ -28,7 +28,7 @@
  *    camera tile, reporting the same fact, silent when nothing is off. An
  *    off switch is REPORTED off; disabled must never look like broken.
  */
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Platform, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 
@@ -37,6 +37,13 @@ import { SheetIconButton } from '../../ui/SheetHeader.js'
 import { sheetPresentation } from '../../ui/SheetModal.js'
 import { DeviceDetailBody } from '../../../screens/DeviceDetailBody.js'
 import { deviceSheetHeight } from '../../../screens/device-sheet-size.js'
+import {
+  deviceCardSession,
+  dropParkedDeviceCard,
+  subscribeDeviceCardSession,
+} from '../../../device-embed/device-card-session.js'
+import { markDeviceEmbed, resetDeviceEmbedClock } from '../../../device-embed/device-embed-timing.js'
+import { useDropHiddenDocument } from '../../../device-embed/use-hidden-device-document.js'
 import type { AccessoryPanelRow } from '../../../accessories/accessory-panel-rows.js'
 import { useTheme } from '../../../theme/theme-provider.js'
 import { SPACING } from '../../../theme/tokens.js'
@@ -65,8 +72,39 @@ export function CameraAccessoryPanel({ deviceId, cameraName }: CameraAccessoryPa
   // its edit mode and loaded rows are exactly as they were left; closing the
   // hosting panel closes both.
   const [detail, setDetail] = useState<{ readonly id: number; readonly name: string } | null>(null)
+  // Back returns to the list, but the card document stays mounted (hidden)
+  // so the next device in this panel does not parse the page again. The
+  // route sheet is the other owner: opening it drops this one, and opening
+  // a device here drops a parked route document. One card at a time.
+  const [retained, setRetained] = useState<{ readonly id: number; readonly name: string } | null>(null)
+  useEffect(() => {
+    return subscribeDeviceCardSession(() => {
+      if (deviceCardSession()?.phase === 'open') {
+        setDetail(null)
+        setRetained(null)
+      }
+    })
+  }, [])
+  useDropHiddenDocument(detail === null && retained !== null, () => {
+    if (retained !== null) {
+      markDeviceEmbed('document-dropped', retained.id)
+      resetDeviceEmbedClock()
+    }
+    setRetained(null)
+  })
   const { height: windowHeight } = useWindowDimensions()
-  const openDetails = (row: AccessoryPanelRow): void => setDetail({ id: row.device.id, name: row.label })
+  const openDetails = (row: AccessoryPanelRow): void => {
+    const parked = deviceCardSession()
+    if (parked?.phase === 'parked') {
+      markDeviceEmbed('document-dropped', parked.deviceId)
+      resetDeviceEmbedClock()
+    }
+    dropParkedDeviceCard()
+    const next = { id: row.device.id, name: row.label }
+    setDetail(next)
+    setRetained(next)
+  }
+  const card = detail ?? retained
   // The badge's read, for the non-admin only: an admin's group shares the
   // same cache entry (`cameraSwitchesKey`) and reports the fact itself.
   const switchedOffMap = useSwitchedOffMap(isAdmin ? [] : [deviceId], !isAdmin)
@@ -74,20 +112,23 @@ export function CameraAccessoryPanel({ deviceId, cameraName }: CameraAccessoryPa
 
   return (
     <View style={styles.panel}>
-      {detail === null ? null : (
-        <DeviceDetailBody
-          deviceId={detail.id}
-          deviceName={detail.name}
-          cardHeight={deviceSheetHeight(sheetPresentation(Platform.OS), windowHeight)}
-          leading={
-            <SheetIconButton
-              icon={ChevronLeft}
-              label={t('v2.common.back')}
-              onPress={() => setDetail(null)}
-              testID="accessory-detail-back"
-            />
-          }
-        />
+      {card === null ? null : (
+        <View style={detail === null ? styles.parked : undefined} pointerEvents={detail === null ? 'none' : 'auto'}>
+          <DeviceDetailBody
+            deviceId={card.id}
+            deviceName={card.name}
+            active={detail !== null}
+            cardHeight={deviceSheetHeight(sheetPresentation(Platform.OS), windowHeight)}
+            leading={
+              <SheetIconButton
+                icon={ChevronLeft}
+                label={t('v2.common.back')}
+                onPress={() => setDetail(null)}
+                testID="accessory-detail-back"
+              />
+            }
+          />
+        </View>
       )}
       <View style={detail === null ? styles.panel : styles.hidden}>
       <View style={styles.sectionHeader}>
@@ -142,6 +183,7 @@ export function CameraAccessoryPanel({ deviceId, cameraName }: CameraAccessoryPa
 const styles = StyleSheet.create({
   panel: { gap: SPACING.md },
   hidden: { display: 'none' },
+  parked: { position: 'absolute', width: 1, height: 1, opacity: 0, overflow: 'hidden' },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   sectionLabel: {
     fontSize: 12,

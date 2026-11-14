@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { setLogVerbose, useLogStore } from '../../lib/logger.js'
 import {
   DEVICE_EMBED_SCOPE,
+  deviceEmbedCardReady,
   deviceEmbedMessageMark,
   markDeviceEmbed,
   noteDeviceEmbedTap,
@@ -79,8 +80,11 @@ describe('device embed timing marks', () => {
     expect(embedLines()[1]).toEqual({ msg: 'tap', data: { deviceId: 2, sinceTapMs: 0 } })
   })
 
-  it('treats only a card-ready JSON message as the ready signal', () => {
-    expect(deviceEmbedMessageMark('{"type":"card-ready"}')).toBe('card-ready')
+  it('treats only a card-ready JSON message that names a device as the ready signal', () => {
+    expect(deviceEmbedMessageMark('{"type":"card-ready"}')).toBeNull()
+    expect(deviceEmbedMessageMark('{"type":"card-ready","deviceId":22}')).toBe('card-ready')
+    expect(deviceEmbedCardReady('{"type":"card-ready","deviceId":22}')).toEqual({ deviceId: 22 })
+    expect(deviceEmbedCardReady('{"type":"card-ready","deviceId":0}')).toBeNull()
     expect(deviceEmbedMessageMark('{"type":"state","state":"playing"}')).toBeNull()
     expect(deviceEmbedMessageMark('not-json')).toBeNull()
   })

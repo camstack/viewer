@@ -18,8 +18,8 @@
  *
  * Only the access token is seeded: the viewer owns the refresh. The refresh
  * and expiry keys are cleared so the page never rotates a refresh token the
- * viewer did not hand it; when the viewer renews its token the host reloads
- * the page with the new one.
+ * viewer did not hand it. When the viewer renews its token, or opens another
+ * device, it messages the document that is already up — it does not reload.
  */
 import type { ThemeMode } from '../theme/tokens.js'
 

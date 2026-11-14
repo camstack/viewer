@@ -49,8 +49,10 @@ describe('Devices panel: list -> detail -> back', () => {
     // The list is still mounted (hidden), not rebuilt.
     expect(screen.getByLabelText('Details of Faretto')).toBe(details)
 
+    const card = screen.getByTestId('card-webview')
     fireEvent.click(screen.getByLabelText('Back'))
-    await waitFor(() => expect(screen.queryByTestId('card-webview')).toBeNull())
+    // The list is back. The document stays mounted, hidden, for the next device.
+    await waitFor(() => expect(screen.getByTestId('card-webview')).toBe(card))
     expect(screen.getByLabelText('Details of Faretto')).toBe(details)
   })
 })

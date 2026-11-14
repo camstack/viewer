@@ -28,16 +28,33 @@ export interface DeviceDetailScreenProps {
   readonly deviceId: number
   readonly deviceName: string
   readonly deviceType: string
+  /**
+   * Keep the sheet mounted after it closes. The route host uses this so the
+   * card document survives the route being popped. Absent: the sheet unmounts
+   * with the route, which is what a screen mounted on its own does.
+   */
+  readonly retain?: boolean
+  /** Controlled visibility, for the retained host. Absent: the screen owns it. */
+  readonly shown?: boolean
+  /** The host parks the document and pops the route. */
+  readonly onRequestClose?: () => void
 }
 
-export function DeviceDetailScreen({ deviceId, deviceName }: DeviceDetailScreenProps): React.JSX.Element {
+export function DeviceDetailScreen({
+  deviceId,
+  deviceName,
+  retain = false,
+  shown,
+  onRequestClose,
+}: DeviceDetailScreenProps): React.JSX.Element {
   const { t } = useTranslation()
   const router = useRouter()
   const { colors } = useTheme()
   const insets = useSafeAreaInsets()
   const { height: windowHeight } = useWindowDimensions()
   const presentation = sheetPresentation(Platform.OS)
-  const [visible, setVisible] = useState(true)
+  const [ownedVisible, setOwnedVisible] = useState(true)
+  const visible = shown ?? ownedVisible
   const closing = useRef(false)
   const leaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -49,6 +66,11 @@ export function DeviceDetailScreen({ deviceId, deviceName }: DeviceDetailScreenP
     [],
   )
 
+  // A retained sheet is shown again; the close latch is per open.
+  useEffect(() => {
+    if (shown === true) closing.current = false
+  }, [shown])
+
   // The sheet slides out first; the route leaves when it is gone. A dialog
   // fades with the Modal itself, so the route can go at once. Reached cold (a
   // web deep link, a native cold link) there is nothing underneath the
@@ -56,7 +78,11 @@ export function DeviceDetailScreen({ deviceId, deviceName }: DeviceDetailScreenP
   const close = useCallback(() => {
     if (closing.current) return
     closing.current = true
-    setVisible(false)
+    if (onRequestClose !== undefined) {
+      onRequestClose()
+      return
+    }
+    setOwnedVisible(false)
     leaveTimer.current = setTimeout(
       () => {
         leaveTimer.current = null
@@ -65,11 +91,12 @@ export function DeviceDetailScreen({ deviceId, deviceName }: DeviceDetailScreenP
       },
       presentation === 'sheet' ? SHEET_ANIMATION_MS : 0,
     )
-  }, [router, presentation])
+  }, [onRequestClose, presentation, router])
 
   return (
     <SheetModal
       visible={visible}
+      retain={retain}
       onClose={close}
       testID="device-sheet"
       backdropLabel={t('v2.common.close')}
@@ -82,7 +109,7 @@ export function DeviceDetailScreen({ deviceId, deviceName }: DeviceDetailScreenP
         },
       ]}
     >
-      <DeviceDetailBody deviceId={deviceId} deviceName={deviceName} onClose={close} />
+      <DeviceDetailBody deviceId={deviceId} deviceName={deviceName} onClose={close} active={visible} />
     </SheetModal>
   )
 }
