@@ -1150,6 +1150,8 @@
             "storage-location-low": "Spazio in esaurimento su un archivio",
             "storage-location-critical": "Archivio quasi pieno",
             "storage-location-ok": "Spazio archivio tornato normale",
+            "storage-drain-progress": "Svuotamento archivio in corso",
+            "storage-drain-complete": "Svuotamento archivio completato",
             "alert-critical": "Avviso critico aperto",
             "alert-error": "Avviso di errore aperto",
             "alert-critical-resolved": "Avviso critico risolto",
@@ -1199,6 +1201,7 @@
             "detection-blind": "Nessun rilevamento",
             "recording": "Registrazione",
             "storage": "Archiviazione",
+            "storage-drain": "Svuotamento archivio",
             "nodes": "Nodi",
             "addons": "Addon",
             "addon-updates": "Aggiornamenti addon",
@@ -2204,6 +2207,9 @@
         "locationName": "Posizione di archiviazione",
         "locationId": "ID posizione di archiviazione",
         "freePercent": "Spazio libero (%)",
+        "bytesRemainingGb": "Dati rimanenti (GB)",
+        "rateGbPerDay": "Ritmo di svuotamento (GB/giorno)",
+        "etaDate": "Data stimata di svuotamento",
         "reason": "Motivo",
         "severity": "Gravità dell'avviso",
         "category": "Categoria dell'avviso",
@@ -2270,7 +2276,8 @@
         "gateway": "Gateway",
         "pet-fountain": "Fontana per animali",
         "heat-pump": "Pompa di calore",
-        "energy-system": "Impianto energetico"
+        "energy-system": "Impianto energetico",
+        "weather-station": "Stazione meteo"
       },
       "prune": {
         "device": "Disattivata il {{date}}: il suo ultimo dispositivo (#{{id}}) è stato eliminato.",

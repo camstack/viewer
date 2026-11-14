@@ -1153,6 +1153,8 @@
             "storage-location-low": "Storage location low on space",
             "storage-location-critical": "Storage location critically full",
             "storage-location-ok": "Storage location space back to normal",
+            "storage-drain-progress": "Storage location emptying: progress",
+            "storage-drain-complete": "Storage location emptied",
             "alert-critical": "Critical alert raised",
             "alert-error": "Error alert raised",
             "alert-critical-resolved": "Critical alert resolved",
@@ -1202,6 +1204,7 @@
             "detection-blind": "Detecting nothing",
             "recording": "Recording",
             "storage": "Storage",
+            "storage-drain": "Storage emptying",
             "nodes": "Nodes",
             "addons": "Addons",
             "addon-updates": "Addon updates",
@@ -2207,6 +2210,9 @@
         "locationName": "Storage location",
         "locationId": "Storage location id",
         "freePercent": "Free space (%)",
+        "bytesRemainingGb": "Bytes remaining (GB)",
+        "rateGbPerDay": "Drain rate (GB/day)",
+        "etaDate": "Estimated empty date",
         "reason": "Reason",
         "severity": "Alert severity",
         "category": "Alert category",
@@ -2273,7 +2279,8 @@
         "gateway": "Gateway",
         "pet-fountain": "Pet fountain",
         "heat-pump": "Heat pump",
-        "energy-system": "Energy system"
+        "energy-system": "Energy system",
+        "weather-station": "Weather station"
       },
       "prune": {
         "device": "Disabled on {{date}}: its last device (#{{id}}) was deleted.",

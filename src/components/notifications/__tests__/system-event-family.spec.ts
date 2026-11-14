@@ -29,6 +29,7 @@ describe('viewer system-event families (D637)', () => {
       'server-update-available', 'node-updating', 'server-updated', 'wrapper-update-available',
       'backup-completed', 'export-completed',
       'storage-location-low', 'storage-location-critical', 'storage-location-ok',
+      'storage-drain-progress', 'storage-drain-complete',
       'alert-critical', 'alert-critical-resolved', 'alert-error',
       'rule-broken', 'rule-repaired',
     ])

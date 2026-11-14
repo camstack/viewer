@@ -219,6 +219,8 @@ const CONTROL_BY_DEVICE_TYPE = {
   [DeviceType.HeatPump]: 'none',
   // A read-only home energy bus (the `energy-system` cap): nothing to operate.
   [DeviceType.EnergySystem]: 'none',
+  // A read-only multi-sensor weather station (the `weather-station` cap): nothing to operate.
+  [DeviceType.WeatherStation]: 'none',
 } as const satisfies Record<DeviceType, AccessoryControlKind>
 
 /** Appliance types whose on/off is the plain `switch` cap they bind. A plug-in

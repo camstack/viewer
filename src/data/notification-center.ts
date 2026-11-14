@@ -151,6 +151,9 @@ export const NcSystemEventKindSchema = z.enum([
   'storage-location-low',
   'storage-location-critical',
   'storage-location-ok',
+  // A location draining: a regular progress ping, then once when it is empty.
+  'storage-drain-progress',
+  'storage-drain-complete',
   // `addon-crash-loop`: the D6 crash circuit-breaker having given up — NODE
   // scoped, carries no device, terminal until an operator acts. Missing from
   // this mirror until 2026-08-19: a rule authored with it in the admin UI
