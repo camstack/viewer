@@ -15,6 +15,7 @@
 import React, { useCallback, useEffect, useMemo } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
+import { useControlDragActive } from './control-drag-lock.js'
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
 import { useTheme } from '../../theme/theme-provider.js'
 import { RADIUS, SPACING } from '../../theme/tokens.js'
@@ -60,9 +61,11 @@ export function SnapSheet({
     offset.value = withTiming(snapOffset(heights, snap), { duration: ANIMATION_MS })
   }, [heights, snap, offset])
 
+  const controlDragging = useControlDragActive()
   const drag = useMemo(
     () =>
       Gesture.Pan()
+        .enabled(!controlDragging)
         .runOnJS(true)
         .onStart(() => {
           start.value = offset.value
@@ -76,7 +79,7 @@ export function SnapSheet({
           offset.value = withTiming(snapOffset(heights, next), { duration: ANIMATION_MS })
           if (next !== snap) onSnapChange(next)
         }),
-    [heights, offset, start, snap, onSnapChange],
+    [heights, offset, start, snap, onSnapChange, controlDragging],
   )
 
   const step = useCallback(() => onSnapChange(nextSnap(snap)), [onSnapChange, snap])

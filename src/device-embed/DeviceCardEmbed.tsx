@@ -35,6 +35,12 @@ import {
 } from './device-embed-url.js'
 import { markDeviceEmbed } from './device-embed-timing.js'
 import {
+  beginControlDrag,
+  CONTROL_DRAG_BRIDGE_SCRIPT,
+  endControlDrag,
+  parseControlDragMessage,
+} from '../components/ui/control-drag-lock.js'
+import {
   deviceCardCommandScript,
   useDeviceCardDocument,
   type DeviceCardHostCommand,
@@ -90,6 +96,33 @@ export function DeviceCardEmbed({
     [serverUrl],
   )
 
+  // The page reports a control's drag; this card holds at most ONE claim on the
+  // lock and gives it up with the card, so a sheet is never left frozen.
+  const claimedRef = useRef(false)
+  const onMessage = useCallback(
+    (raw: string): void => {
+      const drag = parseControlDragMessage(raw)
+      if (drag === null) {
+        doc.onPageMessage(raw)
+        return
+      }
+      if (drag.active === claimedRef.current) return
+      claimedRef.current = drag.active
+      if (drag.active) beginControlDrag()
+      else endControlDrag()
+    },
+    [doc.onPageMessage],
+  )
+  useEffect(
+    () => () => {
+      if (claimedRef.current) {
+        claimedRef.current = false
+        endControlDrag()
+      }
+    },
+    [],
+  )
+
   useEffect(() => {
     if (active && doc.state === 'ready') markDeviceEmbed('visible', deviceId)
   }, [active, deviceId, doc.state])
@@ -123,11 +156,12 @@ export function DeviceCardEmbed({
         testID="device-card-webview"
         source={{ uri: doc.documentUri }}
         injectedJavaScriptBeforeContentLoaded={buildSessionSeedScript(token)}
+        injectedJavaScript={CONTROL_DRAG_BRIDGE_SCRIPT}
         onShouldStartLoadWithRequest={allowLoad}
         onNavigationStateChange={onNavigation}
         onLoadStart={doc.onLoadStart}
         onLoadEnd={doc.onLoadEnd}
-        onMessage={(event) => doc.onPageMessage(event.nativeEvent.data)}
+        onMessage={(event) => onMessage(event.nativeEvent.data)}
         onError={doc.fail}
         onHttpError={doc.fail}
         style={[styles.fill, styles.clear]}

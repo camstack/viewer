@@ -60,9 +60,17 @@ export interface CameraAccessoryPanelProps {
   /** The camera's display name — the picker's subtitle. A host that cannot
    *  name the camera passes what it has; the panel never invents one. */
   readonly cameraName: string
+  /** Told whenever a device's detail opens or closes. A host that stacks other
+   *  sections above this panel (the controls sheet's PTZ pad) uses it to give
+   *  the detail the whole panel instead of nesting it under them. */
+  readonly onDetailOpenChange?: (open: boolean) => void
 }
 
-export function CameraAccessoryPanel({ deviceId, cameraName }: CameraAccessoryPanelProps): React.JSX.Element {
+export function CameraAccessoryPanel({
+  deviceId,
+  cameraName,
+  onDetailOpenChange,
+}: CameraAccessoryPanelProps): React.JSX.Element {
   const { t } = useTranslation()
   const { colors } = useTheme()
   const isAdmin = useIsAdmin()
@@ -105,6 +113,12 @@ export function CameraAccessoryPanel({ deviceId, cameraName }: CameraAccessoryPa
     setRetained(next)
   }
   const card = detail ?? retained
+  const detailOpen = detail !== null
+  useEffect(() => {
+    onDetailOpenChange?.(detailOpen)
+  }, [detailOpen, onDetailOpenChange])
+  // A panel that goes away with its detail open must not leave the host believing it is.
+  useEffect(() => () => onDetailOpenChange?.(false), [onDetailOpenChange])
   // The badge's read, for the non-admin only: an admin's group shares the
   // same cache entry (`cameraSwitchesKey`) and reports the fact itself.
   const switchedOffMap = useSwitchedOffMap(isAdmin ? [] : [deviceId], !isAdmin)

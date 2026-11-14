@@ -22,19 +22,24 @@ export interface StubGesture {
   readonly __handlers: Readonly<Record<string, StubHandler>>
   /** A composer's members, in the order they were given. */
   readonly __children: readonly StubGesture[]
+  /** The arguments of the last call under each builder name (`enabled(false)`). */
+  readonly __args: Readonly<Record<string, readonly unknown[]>>
 }
 
 function chainable(children: readonly StubGesture[] = []): StubGesture {
   const handlers: Record<string, StubHandler> = {}
+  const calls: Record<string, readonly unknown[]> = {}
   const target: Record<string, unknown> = {
     __stubGesture: true,
     __handlers: handlers,
     __children: children,
+    __args: calls,
   }
   const proxy: StubGesture = new Proxy(target, {
     get(obj, prop) {
       if (prop in obj) return obj[String(prop)]
       return (...args: unknown[]) => {
+        calls[String(prop)] = args
         if (args.length === 1 && typeof args[0] === 'function') {
           handlers[String(prop)] = args[0] as StubHandler
         }
@@ -65,7 +70,13 @@ export type GestureType = StubGesture
 export type ComposedGesture = StubGesture
 export type SimultaneousGesture = StubGesture
 
-export const GestureDetector = ({ children }: ViewProps): React.ReactElement => <View>{children}</View>
+/** Every gesture a `GestureDetector` was given on its latest render, newest last. */
+export const detectedGestures: StubGesture[] = []
+
+export const GestureDetector = ({ children, gesture }: ViewProps & { gesture?: StubGesture }): React.ReactElement => {
+  if (gesture !== undefined) detectedGestures.push(gesture)
+  return <View>{children}</View>
+}
 
 export const GestureHandlerRootView = ({ children, style }: ViewProps): React.ReactElement => (
   <View style={style}>{children}</View>

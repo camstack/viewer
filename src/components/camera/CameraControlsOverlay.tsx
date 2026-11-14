@@ -31,7 +31,8 @@
  * greyed, because a control the hub would refuse advertises a capability the
  * session does not have and offers nothing to do about it.
  */
-import React, { memo } from 'react'
+import React, { memo, useState } from 'react'
+import { useControlDragActive } from '../ui/control-drag-lock.js'
 import { View, Text, Pressable, StyleSheet } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useTranslation } from 'react-i18next'
@@ -66,6 +67,11 @@ export const CameraControlsOverlay = memo(function CameraControlsOverlay({
   const { colors } = useTheme()
   const insets = useSafeAreaInsets()
   const canActuate = useCanActuate()
+
+  // A linked device's detail takes the WHOLE sheet body (PTZ included) while it
+  // is open; Back returns to the controls exactly as they were left.
+  const [detailOpen, setDetailOpen] = useState(false)
+  const controlDragging = useControlDragActive()
 
   const open = visible && camera !== null
   const deviceId = camera?.id ?? -1
@@ -108,25 +114,31 @@ export const CameraControlsOverlay = memo(function CameraControlsOverlay({
         // and scrolls the focused field into view on iOS and Android; the
         // default `handled` taps keep every other control usable while it is up.
         keyboardDismissMode="interactive"
+        // A dial or slider in a device card owns the drag, never the scroll.
+        scrollEnabled={!controlDragging}
       >
-        {/* PTZ — conditional on the camera advertising it (never an empty
-            or disabled section for a camera without one). */}
-        {hasPtz ? (
-          <Section title={t('v2.cameraDetail.ptz')}>
-            <View style={styles.sectionBody}>
-              <PtzControls deviceId={camera.id} hasFeature={hasPtz} />
-            </View>
-          </Section>
-        ) : null}
+        {/* The camera's own controls. Kept MOUNTED while a linked device's
+            detail is open (display none) so Back finds the pad as it was. */}
+        <View style={detailOpen ? styles.hidden : styles.controls} testID="camera-controls-pads">
+          {/* PTZ — conditional on the camera advertising it (never an empty
+              or disabled section for a camera without one). */}
+          {hasPtz ? (
+            <Section title={t('v2.cameraDetail.ptz')}>
+              <View style={styles.sectionBody}>
+                <PtzControls deviceId={camera.id} hasFeature={hasPtz} />
+              </View>
+            </Section>
+          ) : null}
 
-        {/* Navigation — a robot camera (its own cap, never PTZ in disguise). */}
-        {hasNavigation ? (
-          <Section title={t('v2.navigation.title')}>
-            <View style={styles.sectionBody}>
-              <NavigationControls deviceId={camera.id} hasCap={hasNavigation} />
-            </View>
-          </Section>
-        ) : null}
+          {/* Navigation — a robot camera (its own cap, never PTZ in disguise). */}
+          {hasNavigation ? (
+            <Section title={t('v2.navigation.title')}>
+              <View style={styles.sectionBody}>
+                <NavigationControls deviceId={camera.id} hasCap={hasNavigation} />
+              </View>
+            </Section>
+          ) : null}
+        </View>
 
         {/* The accessory panel — linked devices, the local edit mode and
             the function switches (D62) — the SAME composition the
@@ -134,7 +146,11 @@ export const CameraControlsOverlay = memo(function CameraControlsOverlay({
             labels and owns its loading / empty states. */}
         <Section>
           <View style={styles.sectionBody}>
-            <CameraAccessoryPanel deviceId={camera.id} cameraName={camera.name} />
+            <CameraAccessoryPanel
+              deviceId={camera.id}
+              cameraName={camera.name}
+              onDetailOpenChange={setDetailOpen}
+            />
           </View>
         </Section>
       </KeyboardAwareScrollView>
@@ -160,5 +176,7 @@ const styles = StyleSheet.create({
   title: { flex: 1, fontSize: 18, fontWeight: '700' },
   iconBtn: { width: 32, height: 32, borderRadius: RADIUS.md, alignItems: 'center', justifyContent: 'center' },
   scroll: { gap: SPACING.lg, paddingVertical: SPACING.sm },
+  controls: { gap: SPACING.lg },
+  hidden: { display: 'none' },
   sectionBody: { padding: SPACING.md },
 })

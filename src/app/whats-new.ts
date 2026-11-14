@@ -30,6 +30,20 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.713',
+    date: '2026-11-14',
+    notes: {
+      en: [
+        'A linked device opened from a camera now fills the whole panel.',
+        'Dragging a dial or slider in a device card no longer moves the sheet.',
+      ],
+      it: [
+        'Un dispositivo collegato aperto da una telecamera riempie tutto il pannello.',
+        'Trascinare un quadrante o uno slider in una scheda non sposta più il foglio.',
+      ],
+    },
+  },
+  {
     version: '1.0.712',
     date: '2026-11-14',
     notes: {

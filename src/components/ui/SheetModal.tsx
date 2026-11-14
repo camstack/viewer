@@ -45,6 +45,7 @@ import {
 } from 'react-native'
 
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler'
+import { useControlDragActive } from './control-drag-lock.js'
 import Animated, {
   runOnJS,
   useAnimatedStyle,
@@ -225,7 +226,10 @@ export function SheetModal({
   // The drag may only start in the card's top strip, so a ScrollView inside the
   // sheet keeps every touch below it. Activation is manual: a tap or a sideways
   // swipe in the strip fails the gesture instead of being swallowed.
+  const controlDragging = useControlDragActive()
   const closeDrag = Gesture.Pan()
+    // A control being dragged inside the sheet owns the finger (control-drag-lock).
+    .enabled(!controlDragging)
     .manualActivation(true)
     .onTouchesDown((e, manager) => {
       const y = e.allTouches[0]?.y ?? 0
