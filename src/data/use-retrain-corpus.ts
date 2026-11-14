@@ -88,7 +88,17 @@ export function nextRetrainCorpusPage(page: RetrainCorpusPageResult): number | u
   return page.page + 1
 }
 
-/** Walk the paged corpus (one `collectionId` per call), merged by `frameId`. */
+/** How many corpus pages the full walk asks for at once. */
+export const CORPUS_WALK_CONCURRENCY = 4
+
+/**
+ * Walk the paged corpus (one `collectionId` per call), merged by `frameId`.
+ *
+ * Page one says how many frames there are; the rest are asked for
+ * {@link CORPUS_WALK_CONCURRENCY} at a time. The walk used to be strictly
+ * sequential, and the editor waits for it before it draws the frame: 11 pages
+ * of ~0.3-0.7 s each on the live hub (2026-11-15) — ~4 s to open one frame.
+ */
 export async function fetchRetrainCorpus(
   client: Record<string, unknown>,
   filter: CorpusFilter,
@@ -99,13 +109,38 @@ export async function fetchRetrainCorpus(
       : [undefined]
   const byId = new Map<string, RetrainFrame>()
   for (const collectionId of scopes) {
-    for (let page = 1; byId.size < CORPUS_FRAME_LIMIT; page += 1) {
-      const parsed = await requestCorpusPage(client, filter, page, collectionId)
-      for (const frame of parsed.frames) byId.set(frame.frameId, frame)
-      if (nextRetrainCorpusPage(parsed) === undefined) break
+    const first = await requestCorpusPage(client, filter, 1, collectionId)
+    for (const frame of first.frames) byId.set(frame.frameId, frame)
+    if (nextRetrainCorpusPage(first) === undefined) continue
+    const lastPage = Math.ceil(Math.min(first.total, CORPUS_FRAME_LIMIT) / Math.max(1, first.pageSize))
+    const pages = Array.from({ length: Math.max(0, lastPage - 1) }, (_, i) => i + 2)
+    for (let i = 0; i < pages.length; i += CORPUS_WALK_CONCURRENCY) {
+      const batch = await Promise.all(
+        pages.slice(i, i + CORPUS_WALK_CONCURRENCY).map((page) => requestCorpusPage(client, filter, page, collectionId)),
+      )
+      for (const parsed of batch) for (const frame of parsed.frames) byId.set(frame.frameId, frame)
     }
   }
   return [...byId.values()]
+}
+
+/**
+ * The frames the Library grid already holds for this filter, flattened and
+ * deduplicated — what the editor draws while its own full walk is in flight.
+ */
+export function framesFromPages(pages: readonly RetrainCorpusPageResult[] | undefined): readonly RetrainFrame[] {
+  const byId = new Map<string, RetrainFrame>()
+  for (const page of pages ?? []) for (const frame of page.frames) if (!byId.has(frame.frameId)) byId.set(frame.frameId, frame)
+  return [...byId.values()]
+}
+
+/** The same frame list with ONE frame's `complete` flag flipped. */
+export function withFrameComplete(
+  frames: readonly RetrainFrame[],
+  frameId: string,
+  complete: boolean,
+): readonly RetrainFrame[] {
+  return frames.map((f) => (f.frameId === frameId ? { ...f, complete } : f))
 }
 
 export interface RetrainCorpusGrid {
@@ -144,10 +179,9 @@ export function useRetrainCorpusPages(filter: CorpusFilter, enabled: boolean): R
     },
     getNextPageParam: (last) => nextRetrainCorpusPage(last),
   })
-  const frames = useMemo<readonly RetrainFrame[]>(
-    () => (query.data?.pages ?? []).flatMap((page) => [...page.frames]),
-    [query.data],
-  )
+  // Deduplicated: frames copied in at the head between two page reads shift
+  // the page boundaries, and the same frame then arrives on two pages.
+  const frames = useMemo<readonly RetrainFrame[]>(() => framesFromPages(query.data?.pages), [query.data])
   const total = query.data?.pages[query.data.pages.length - 1]?.total ?? 0
   const { fetchNextPage: fetchNext, refetch: refetchQuery, hasNextPage, isFetchingNextPage } = query
   const fetchNextPage = useCallback((): void => {
@@ -173,10 +207,25 @@ export function useRetrainCorpusFrames(filter: CorpusFilter, enabled: boolean) {
   const { controller, state } = useConnection()
   const deviceKey = filter.deviceIds?.join(',') ?? ''
   const collectionKey = filter.collectionIds?.join(',') ?? ''
+  const queryClient = useQueryClient()
   return useQuery<readonly RetrainFrame[]>({
     queryKey: ['v2', RETRAIN_CORPUS_QUERY_KEY, deviceKey, collectionKey],
     enabled: enabled && canRetrain && state === 'connected',
     staleTime: 20_000,
+    // The grid that opened the editor already holds the frames it painted:
+    // draw from them at once while the full walk (prev / next need it) runs.
+    placeholderData: (previous) => {
+      if (previous !== undefined) return previous
+      const pages = queryClient.getQueryData<{ readonly pages: readonly RetrainCorpusPageResult[] }>([
+        'v2',
+        RETRAIN_CORPUS_QUERY_KEY,
+        'pages',
+        deviceKey,
+        collectionKey,
+      ])
+      const seeded = framesFromPages(pages?.pages)
+      return seeded.length > 0 ? seeded : undefined
+    },
     queryFn: async () => {
       const client = trpcClient(controller)
       if (!client) throw new Error('not connected')

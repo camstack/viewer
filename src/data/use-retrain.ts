@@ -5,7 +5,7 @@
  * `capMutateOrThrow`, with `rethrow: true` on list reads so an unreadable
  * worklist surfaces as `isError` rather than an empty success.
  */
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query'
 import type {
   RetrainAnnotation,
   RetrainAnnotationDraft,
@@ -16,7 +16,8 @@ import type {
 } from '@camstack/types'
 import { useConnection } from '../connection/ConnectionProvider.js'
 import { BULK_QUERY_DEADLINE_MS, capMutateOrThrow, capQuery } from './cap-query.js'
-import { RETRAIN_CORPUS_QUERY_KEY } from './use-retrain-corpus.js'
+import { RETRAIN_CORPUS_QUERY_KEY, withFrameComplete } from './use-retrain-corpus.js'
+import type { RetrainCorpusPageResult } from './retrain-parse.js'
 import {
   parseRetrainAnnotations,
   parseRetrainFrameImage,
@@ -247,7 +248,29 @@ export function useSetRetrainFrameComplete() {
         complete: input.complete,
       })
     },
-    onSuccess: () => {
+    // Optimistic: the tick follows the tap. Its echo used to wait for the
+    // invalidation to re-walk the whole corpus (~4 s on the live hub), so the
+    // menu row looked as if it did nothing.
+    onMutate: (input: SetRetrainFrameCompleteInput) => {
+      queryClient.setQueriesData<readonly RetrainFrame[]>(
+        { queryKey: ['v2', RETRAIN_CORPUS_QUERY_KEY], predicate: (q) => Array.isArray(q.state.data) },
+        (frames) => (frames === undefined ? frames : withFrameComplete(frames, input.frameId, input.complete)),
+      )
+      queryClient.setQueriesData<InfiniteData<RetrainCorpusPageResult>>(
+        { queryKey: ['v2', RETRAIN_CORPUS_QUERY_KEY, 'pages'] },
+        (data) =>
+          data === undefined
+            ? data
+            : {
+                ...data,
+                pages: data.pages.map((page) => ({
+                  ...page,
+                  frames: withFrameComplete(page.frames, input.frameId, input.complete),
+                })),
+              },
+      )
+    },
+    onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: ['v2', RETRAIN_CORPUS_QUERY_KEY] })
     },
   })

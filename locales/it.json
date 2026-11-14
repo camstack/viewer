@@ -3966,7 +3966,6 @@
         "prev": "Frame precedente",
         "redo": "Ripeti",
         "reloadLatest": "Ricarica l'ultima versione",
-        "resetZoom": "Reimposta zoom",
         "save": "Salva",
         "saved": "Salvato.",
         "savedDrafts": "Salvato. Le bozze non confermate non sono state salvate.",
@@ -3982,7 +3981,8 @@
         "classSearch": "Cerca classi",
         "classNoMatches": "Nessuna classe corrisponde.",
         "noLabel": "Nessuna etichetta",
-        "clearLabel": "Rimuovi etichetta"
+        "clearLabel": "Rimuovi etichetta",
+        "completeFailed": "Impossibile segnare il fotogramma. Riprova."
       },
       "date": {
         "today": "Oggi {{time}}",

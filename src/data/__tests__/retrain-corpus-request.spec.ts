@@ -10,9 +10,13 @@ import { describe, expect, it } from 'vitest'
 import {
   fetchRetrainCorpus,
   fetchRetrainCorpusPage,
+  framesFromPages,
   nextRetrainCorpusPage,
+  withFrameComplete,
+  CORPUS_WALK_CONCURRENCY,
   RETRAIN_CORPUS_PAGE_SIZE,
 } from '../use-retrain-corpus.js'
+import { parseRetrainCorpusPage, type RetrainCorpusPageResult } from '../retrain-parse.js'
 
 const HUB_MAX_PAGE_SIZE = 100
 
@@ -71,6 +75,29 @@ describe('fetchRetrainCorpus', () => {
     expect(calls.map((c) => c.page)).toEqual([1, 2, 3])
   })
 
+  it('asks for the pages after the first several at a time, never more than the concurrency', async () => {
+    const calls: Req[] = []
+    let inFlight = 0
+    let peak = 0
+    const hub = fakeHub(1012, calls) as { pipelineAnalytics: { listRetrainCorpusPage: { query: (i: Req) => Promise<unknown> } } }
+    const inner = hub.pipelineAnalytics.listRetrainCorpusPage.query
+    hub.pipelineAnalytics.listRetrainCorpusPage.query = async (input: Req) => {
+      inFlight += 1
+      peak = Math.max(peak, inFlight)
+      await new Promise((r) => setTimeout(r, 1))
+      try {
+        return await inner(input)
+      } finally {
+        inFlight -= 1
+      }
+    }
+    const frames = await fetchRetrainCorpus(hub, {})
+    expect(frames).toHaveLength(1012)
+    expect(calls).toHaveLength(11)
+    expect(peak).toBeGreaterThan(1)
+    expect(peak).toBeLessThanOrEqual(CORPUS_WALK_CONCURRENCY)
+  })
+
   it('sends one collectionId per call', async () => {
     const calls: Req[] = []
     await fetchRetrainCorpus(fakeHub(3, calls), { collectionIds: ['a', 'b'], deviceIds: [7] })
@@ -94,5 +121,25 @@ describe('fetchRetrainCorpusPage', () => {
     const page = await fetchRetrainCorpusPage(fakeHub(3, calls), { deviceIds: [7] }, 1)
     expect(calls).toHaveLength(1)
     expect(nextRetrainCorpusPage(page)).toBeUndefined()
+  })
+})
+
+describe('framesFromPages / withFrameComplete', () => {
+  const page = (ids: readonly number[]): RetrainCorpusPageResult => {
+    const parsed = parseRetrainCorpusPage({ frames: ids.map((n) => frame(n)), total: 9, page: 1, pageSize: 3 })
+    if (parsed === undefined) throw new Error('fixture did not parse')
+    return parsed
+  }
+
+  it('keeps each frame once when a shift put it on two pages', () => {
+    const frames = framesFromPages([page([1, 2, 3]), page([3, 4, 5])])
+    expect(frames.map((f) => f.frameId)).toEqual(['f1', 'f2', 'f3', 'f4', 'f5'])
+  })
+
+  it('flips one frame and leaves the others untouched', () => {
+    const before = framesFromPages([page([1, 2])])
+    const after = withFrameComplete(before, 'f2', true)
+    expect(after.map((f) => f.complete)).toEqual([false, true])
+    expect(after[0]).toBe(before[0])
   })
 })

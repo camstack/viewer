@@ -3969,7 +3969,6 @@
         "prev": "Previous frame",
         "redo": "Redo",
         "reloadLatest": "Reload latest",
-        "resetZoom": "Reset zoom",
         "save": "Save",
         "saved": "Saved.",
         "savedDrafts": "Saved. Unconfirmed drafts were not saved.",
@@ -3985,7 +3984,8 @@
         "classSearch": "Search classes",
         "classNoMatches": "No class matches.",
         "noLabel": "No label",
-        "clearLabel": "Clear label"
+        "clearLabel": "Clear label",
+        "completeFailed": "Could not mark the frame. Try again."
       },
       "date": {
         "today": "Today {{time}}",

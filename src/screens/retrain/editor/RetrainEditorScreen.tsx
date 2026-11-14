@@ -22,7 +22,7 @@ import type { RetrainFrame } from '@camstack/types'
 import { ScreenHeader } from '../../../components/ScreenHeader.js'
 import { hubImageSource, type HubImageSource } from '../../../components/camera/theater/hub-image-source.js'
 import { AnchoredMenu } from '../../../components/ui/AnchoredMenu.js'
-import { useConfirm } from '../../../components/ui/confirm.js'
+import { useConfirm, useNotice } from '../../../components/ui/confirm.js'
 import { SnapSheet } from '../../../components/ui/SnapSheet.js'
 import { type SheetSnap, type SnapHeights } from '../../../components/ui/snap-sheet-math.js'
 import { useServer } from '../../../app/ServerProvider.js'
@@ -96,6 +96,7 @@ export function RetrainEditorScreen({ frameId, deviceId, collectionId }: Retrain
   const router = useRouter()
   const navigation = useNavigation()
   const confirm = useConfirm()
+  const notice = useNotice()
   const { token } = useServer()
   const { controller } = useConnection()
 
@@ -333,8 +334,10 @@ export function RetrainEditorScreen({ frameId, deviceId, collectionId }: Retrain
       ...(frame.trackId !== undefined ? { trackId: frame.trackId } : {}),
       frameId: frame.frameId,
       complete: frame.complete !== true,
+    }, {
+      onError: () => notice({ title: t('v2.retrain.editor.allBoxed'), message: t('v2.retrain.editor.completeFailed') }),
     })
-  }, [frame, setComplete])
+  }, [frame, setComplete, notice, t])
 
   const openMenu = useCallback(() => {
     menuButton.current?.measureInWindow((x, y, width, height) =>
@@ -563,13 +566,6 @@ export function RetrainEditorScreen({ frameId, deviceId, collectionId }: Retrain
           disabled={pendingDraftCount(editor) === 0}
           onPress={() => {
             session.apply(acceptAllDrafts)
-            setMenuAnchor(null)
-          }}
-        />
-        <MenuItem
-          label={t('v2.retrain.editor.resetZoom', 'Reset zoom')}
-          onPress={() => {
-            setViewport(IDENTITY_VIEWPORT)
             setMenuAnchor(null)
           }}
         />
