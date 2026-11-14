@@ -83,7 +83,7 @@ export function RetrainFrameThumb({
       loading={thumbUrl === undefined && legacy.isPending}
       when={when}
       where={cameraName}
-      imageBadges={<RetrainFrameChips review={frame.review} />}
+      imageBadges={<RetrainFrameChips frame={frame} />}
       title={origin}
       titleMuted
       badge={

@@ -6,7 +6,7 @@
  */
 import React from 'react'
 import { StyleSheet, View } from 'react-native'
-import type { RetrainFrame, RetrainMacroClass } from '@camstack/types'
+import type { RetrainMacroClass } from '@camstack/types'
 import { Badge } from '../../components/ui/Badge.js'
 import {
   Box,
@@ -18,7 +18,7 @@ import {
   ScanFace,
 } from '../../lib/icons.js'
 import { boxLook } from '../../retrain/box-look.js'
-import { summarizeFrameReview } from '../../retrain/frame-review-chips.js'
+import { type FrameReviewFacts, summarizeFrameReview } from '../../retrain/frame-review-chips.js'
 import { SPACING } from '../../theme/tokens.js'
 
 type Glyph = typeof Car
@@ -32,8 +32,12 @@ const GLYPH: Readonly<Record<RetrainMacroClass, Glyph>> = {
   plate: Box,
 }
 
-export function RetrainFrameChips({ review }: { readonly review: RetrainFrame['review'] }) {
-  const { shown, more } = summarizeFrameReview(review)
+export interface RetrainFrameChipsProps {
+  readonly frame: FrameReviewFacts
+}
+
+export function RetrainFrameChips({ frame }: RetrainFrameChipsProps) {
+  const { shown, more } = summarizeFrameReview(frame)
   if (shown.length === 0) return null
   return (
     <View style={styles.row} pointerEvents="none" testID="retrain-frame-chips">
