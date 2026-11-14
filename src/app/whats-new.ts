@@ -30,6 +30,14 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.711',
+    date: '2026-11-14',
+    notes: {
+      en: ['Debug mode times the device card from tap to visible.'],
+      it: ['La modalità debug misura la scheda dispositivo dal tocco alla comparsa.'],
+    },
+  },
+  {
     version: '1.0.710',
     date: '2026-11-13',
     notes: {
