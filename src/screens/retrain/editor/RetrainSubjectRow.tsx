@@ -13,6 +13,7 @@ import type { SubjectRow } from '../../../retrain/rows.js'
 import { useTheme } from '../../../theme/theme-provider.js'
 import { RADIUS, SPACING, TYPOGRAPHY } from '../../../theme/tokens.js'
 import { RetrainSourceIcon } from './RetrainSourceIcon.js'
+import { Check } from '../../../lib/icons.js'
 
 /** Wide enough for the longest review badge, so the class column lines up. */
 const BADGE_COLUMN = 104
@@ -22,6 +23,8 @@ export interface RetrainSubjectRowProps {
   readonly selected: boolean
   readonly onPress: (key: string) => void
   readonly onHover: (key: string | null) => void
+  /** Quick confirm: accept this draft without opening its editor. */
+  readonly onAccept?: ((key: string) => void) | undefined
 }
 
 export const RetrainSubjectRowView = memo(function RetrainSubjectRowView({
@@ -29,7 +32,9 @@ export const RetrainSubjectRowView = memo(function RetrainSubjectRowView({
   selected,
   onPress,
   onHover,
+  onAccept,
 }: RetrainSubjectRowProps) {
+  const isDraft = row.type !== 'removed' && row.diff.kind === 'draft'
   const { t } = useTranslation()
   const { colors } = useTheme()
   const removed = row.type === 'removed'
@@ -107,6 +112,18 @@ export const RetrainSubjectRowView = memo(function RetrainSubjectRowView({
         ) : null}
       </View>
       <RetrainSourceIcon source={source} size={14} color={colors.foregroundMuted} />
+      {isDraft && onAccept !== undefined ? (
+        <Pressable
+          testID={`retrain-row-accept-${row.key}`}
+          onPress={() => onAccept(row.key)}
+          accessibilityRole="button"
+          accessibilityLabel={t('v2.retrain.editor.accept', 'Accept')}
+          hitSlop={SPACING.sm}
+          style={[styles.quickAccept, { backgroundColor: colors.primaryFill }]}
+        >
+          <Check size={14} color={colors.primaryOn} />
+        </Pressable>
+      ) : null}
     </Pressable>
   )
 })
@@ -131,5 +148,12 @@ const styles = StyleSheet.create({
   },
   class: { fontSize: TYPOGRAPHY.size.md, fontWeight: TYPOGRAPHY.weight.medium },
   struck: { textDecorationLine: 'line-through' },
+  quickAccept: {
+    width: 28,
+    height: 28,
+    borderRadius: RADIUS.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   label: { flexShrink: 1, fontSize: TYPOGRAPHY.size.sm },
 })

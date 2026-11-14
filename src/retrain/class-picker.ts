@@ -66,3 +66,51 @@ export function originalClassText(input: OriginalClassInput): OriginalClassText 
     current: side(macroClass, nowLabel),
   }
 }
+
+/** Separates the class from the label in a {@link classLabelPickerItems} id. */
+const CLASS_LABEL_SEPARATOR = ':'
+
+/** The id a (class, label) pair carries in the one-step picker. */
+export function classLabelPickId(macro: RetrainMacroClass, label: string | undefined): string {
+  return label === undefined || label === '' ? macro : `${macro}${CLASS_LABEL_SEPARATOR}${label}`
+}
+
+/** What one pick in the one-step picker sets. */
+export interface ClassLabelPick {
+  readonly macroClass: RetrainMacroClass
+  readonly label: string
+}
+
+/** The (class, label) a picked id stands for; `null` for an id it never offered. */
+export function parseClassLabelPick(
+  id: string,
+  isMacro: (value: string) => value is RetrainMacroClass,
+): ClassLabelPick | null {
+  const at = id.indexOf(CLASS_LABEL_SEPARATOR)
+  const macro = at < 0 ? id : id.slice(0, at)
+  if (!isMacro(macro)) return null
+  return { macroClass: macro, label: at < 0 ? '' : id.slice(at + 1) }
+}
+
+/**
+ * The WHOLE label set in one single-pick list (issue 557): every offered class
+ * and, grouped under it, every label the taxonomy knows for it. One pick sets
+ * both the class and the label — the editor used to need a class picker and
+ * then a second label picker scoped to that class.
+ */
+export function classLabelPickerItems(
+  taxonomy: NcTaxonomy | undefined,
+  fallbackName: (macro: RetrainMacroClass) => string,
+): PickerItem<string>[] {
+  return macroPickerItems(taxonomy, fallbackName).flatMap((macroItem, index) => {
+    const macro = RETRAIN_OFFERED_MACROS[index]
+    if (macro === undefined) return []
+    return [
+      { id: macro, name: macroItem.name, type: macro },
+      ...subClassPickerItems(taxonomy, macro).map((item) => ({
+        ...item,
+        id: classLabelPickId(macro, item.id),
+      })),
+    ]
+  })
+}

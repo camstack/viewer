@@ -6,7 +6,7 @@
 import React from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
-import type { RetrainMacroClass } from '@camstack/types'
+import type { ClassLabelPick } from '../../../retrain/class-picker.js'
 import type { EditorBox, EditorState } from '../../../retrain/editor.js'
 import type { LiveReview } from '../../../retrain/live-review.js'
 import type { SubjectRow } from '../../../retrain/rows.js'
@@ -31,13 +31,17 @@ export interface RetrainEditorPanelProps {
   readonly listMode: 'list' | 'selected'
   readonly onSelectRow: (key: string) => void
   readonly onHover: (key: string | null) => void
-  readonly onClass: (macro: RetrainMacroClass) => void
+  readonly onClassLabel: (pick: ClassLabelPick) => void
   readonly onLabel: (label: string) => void
   readonly onSubLabel: (subLabel: string) => void
   readonly onTextFocus: () => void
   readonly onTextBlur: () => void
   readonly onModelError: () => void
   readonly onAccept: () => void
+  /** Accept, then open the next waiting draft; absent when none waits. */
+  readonly onAcceptNext?: (() => void) | undefined
+  /** The list's quick confirm: accept one draft row without opening it. */
+  readonly onAcceptRow: (key: string) => void
   readonly onDelete: () => void
 }
 
@@ -63,6 +67,7 @@ export function RetrainEditorPanel(props: RetrainEditorPanelProps): React.JSX.El
             selected={row.key === editor.selectedKey}
             onPress={onSelectRow}
             onHover={onHover}
+            onAccept={props.onAcceptRow}
           />
         ))
       )}
@@ -72,13 +77,14 @@ export function RetrainEditorPanel(props: RetrainEditorPanelProps): React.JSX.El
             box={selectedBox}
             vocabulary={vocabulary}
             diff={review.byKey.get(selectedBox.key)}
-            onClass={props.onClass}
+            onClassLabel={props.onClassLabel}
             onLabel={props.onLabel}
             onSubLabel={props.onSubLabel}
             onTextFocus={props.onTextFocus}
             onTextBlur={props.onTextBlur}
             onModelError={props.onModelError}
             onAccept={props.onAccept}
+            onAcceptNext={props.onAcceptNext}
             onDelete={props.onDelete}
           />
         </View>

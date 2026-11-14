@@ -3980,9 +3980,9 @@
         "saveFailed": "Salvataggio non riuscito. Le modifiche sono ancora qui; riprova.",
         "classSearch": "Cerca classi",
         "classNoMatches": "Nessuna classe corrisponde.",
-        "noLabel": "Nessuna etichetta",
-        "clearLabel": "Rimuovi etichetta",
-        "completeFailed": "Impossibile segnare il fotogramma. Riprova."
+        "completeFailed": "Impossibile segnare il fotogramma. Riprova.",
+        "classAndLabel": "Classe ed etichetta",
+        "acceptNext": "Accetta e prossimo"
       },
       "date": {
         "today": "Oggi {{time}}",

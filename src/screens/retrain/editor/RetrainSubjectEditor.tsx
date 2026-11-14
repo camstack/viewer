@@ -15,12 +15,15 @@ import { ToggleRow } from '../../../components/ui/ToggleRow.js'
 import { isRetrainMacroClass } from '../../../data/retrain-parse.js'
 import { useNcConditionTaxonomy } from '../../../data/use-notification-center.js'
 import {
-  macroPickerItems,
+  type ClassLabelPick,
+  classLabelPickerItems,
+  classLabelPickId,
   originalClassText,
+  parseClassLabelPick,
   subClassPickerItems,
 } from '../../../retrain/class-picker.js'
 import type { BoxDiff } from '../../../retrain/live-review.js'
-import { Check, Trash2 } from '../../../lib/icons.js'
+import { Check, ChevronRight, Trash2 } from '../../../lib/icons.js'
 import type { EditorBox } from '../../../retrain/editor.js'
 import { suggestLabels, type VocabularyEntry } from '../../../retrain/vocabulary.js'
 import { tierError } from '../../../retrain/validate.js'
@@ -33,13 +36,17 @@ export interface RetrainSubjectEditorProps {
   readonly vocabulary: readonly VocabularyEntry[]
   /** The box's live review verdict — says what a reclassified box used to be. */
   readonly diff?: BoxDiff | undefined
-  readonly onClass: (macro: RetrainMacroClass) => void
+  /** One pick in the class-and-label list: both fields, one undo step. */
+  readonly onClassLabel: (pick: ClassLabelPick) => void
   readonly onLabel: (label: string) => void
   readonly onSubLabel: (subLabel: string) => void
   readonly onTextFocus: () => void
   readonly onTextBlur: () => void
   readonly onModelError: () => void
+  /** Accept the draft and close the subject editor. */
   readonly onAccept: () => void
+  /** Accept, then open the next waiting draft; absent when none waits. */
+  readonly onAcceptNext?: (() => void) | undefined
   readonly onDelete: () => void
 }
 
@@ -47,13 +54,14 @@ export function RetrainSubjectEditor({
   box,
   vocabulary,
   diff,
-  onClass,
+  onClassLabel,
   onLabel,
   onSubLabel,
   onTextFocus,
   onTextBlur,
   onModelError,
   onAccept,
+  onAcceptNext,
   onDelete,
 }: RetrainSubjectEditorProps): React.JSX.Element {
   const { t } = useTranslation()
@@ -64,23 +72,25 @@ export function RetrainSubjectEditor({
   )
   const taxonomy = useNcConditionTaxonomy().data
   const macroName = (macro: RetrainMacroClass): string => t(`v2.retrain.class.${macro}`, macro)
-  const macroItems = useMemo(() => macroPickerItems(taxonomy, macroName), [taxonomy, t])
   const subItems = useMemo(
     () => subClassPickerItems(taxonomy, box.macroClass),
     [taxonomy, box.macroClass],
   )
   const subName = new Map(subItems.map((i) => [i.id, i.name]))
+  const classLabelItems = useMemo(() => classLabelPickerItems(taxonomy, macroName), [taxonomy, t])
+  // A label the taxonomy does not list (a name typed by hand) is still the
+  // box's label: the pick shows the class with that label beside it.
+  const pickedId = classLabelPickId(box.macroClass, box.label)
+  const pickedName =
+    box.label === undefined || box.label === ''
+      ? macroName(box.macroClass)
+      : `${macroName(box.macroClass)} · ${subName.get(box.label) ?? box.label}`
   const was = originalClassText({
     diff,
     macroClass: box.macroClass,
     label: box.label,
     macroName,
   })
-  const changeClass = (macro: RetrainMacroClass): void => {
-    onClass(macro)
-    // A taxonomy sub-class belongs to its macro: it does not follow to another.
-    if (macro !== box.macroClass && box.label !== undefined && subName.has(box.label)) onLabel('')
-  }
   const labelTier = tierError(box.label)
   const subLabelTier = tierError(box.subLabel)
   const source = SOURCE_LABEL[box.source]
@@ -108,28 +118,26 @@ export function RetrainSubjectEditor({
       </View>
 
       <Text style={[styles.title, { color: colors.foregroundMuted }]}>
-        {t('v2.retrain.editor.macroClass', 'Class')}
+        {t('v2.retrain.editor.classAndLabel')}
       </Text>
       <ItemPicker<string>
-        items={macroItems}
+        items={classLabelItems}
         state="answered"
-        judged={[
-          {
-            id: box.macroClass,
-            name: macroName(box.macroClass),
-            removed: false,
-          },
-        ]}
-        value={[box.macroClass]}
+        judged={[{ id: pickedId, name: pickedName, removed: false }]}
+        value={[pickedId]}
         onChange={(next) => {
-          const macro = next[0]
-          if (isRetrainMacroClass(macro)) changeClass(macro)
+          const pick = parseClassLabelPick(next[0] ?? '', isRetrainMacroClass)
+          if (pick === null) return
+          if (pick.macroClass === box.macroClass && pick.label === (box.label ?? '')) return
+          onClassLabel(pick)
         }}
         single
-        title={t('v2.retrain.editor.macroClass', 'Class')}
+        title={t('v2.retrain.editor.classAndLabel')}
         searchLabel={t('v2.retrain.editor.classSearch', 'Search classes')}
         noMatchesLabel={t('v2.retrain.editor.classNoMatches', 'No class matches.')}
-        groupTitle={() => t('v2.retrain.editor.macroClass', 'Class')}
+        groupTitle={(group) =>
+          group.type !== null && isRetrainMacroClass(group.type) ? macroName(group.type) : ''
+        }
         removedLabel={(id) => id}
         unknownLabel={(id) => id}
         testID="retrain-class-picker"
@@ -142,41 +150,11 @@ export function RetrainSubjectEditor({
         </Text>
       ) : null}
 
-      <Text style={[styles.title, { color: colors.foregroundMuted }]}>
-        {t('v2.retrain.editor.label', 'Label')}
-      </Text>
-      {subItems.length > 0 ? (
-        <View style={styles.chips}>
-          <ItemPicker<string>
-            items={subItems}
-            state="answered"
-            judged={
-              box.label !== undefined && box.label !== '' && !subName.has(box.label)
-                ? [{ id: box.label, name: box.label, removed: false }]
-                : []
-            }
-            value={box.label !== undefined && box.label !== '' ? [box.label] : []}
-            onChange={(next) => onLabel(next[0] ?? '')}
-            single
-            emptyLabel={t('v2.retrain.editor.noLabel', 'No label')}
-            title={t('v2.retrain.editor.label', 'Label')}
-            searchLabel={t('v2.retrain.editor.classSearch', 'Search classes')}
-            noMatchesLabel={t('v2.retrain.editor.classNoMatches', 'No class matches.')}
-            groupTitle={() => macroName(box.macroClass)}
-            removedLabel={(id) => id}
-            unknownLabel={(id) => id}
-            testID="retrain-label-picker"
-          />
-          {box.label !== undefined && box.label !== '' ? (
-            <FilterChip
-              label={t('v2.retrain.editor.clearLabel', 'Clear label')}
-              active={false}
-              onPress={() => onLabel('')}
-            />
-          ) : null}
-        </View>
-      ) : (
+      {subItems.length > 0 ? null : (
         <>
+          <Text style={[styles.title, { color: colors.foregroundMuted }]}>
+            {t('v2.retrain.editor.label', 'Label')}
+          </Text>
           <TextInput
             testID="retrain-label-input"
             value={box.label ?? ''}
@@ -254,6 +232,19 @@ export function RetrainSubjectEditor({
             </Text>
           </Pressable>
         ) : null}
+        {box.draft && onAcceptNext !== undefined ? (
+          <Pressable
+            onPress={onAcceptNext}
+            accessibilityRole="button"
+            style={[styles.action, styles.actionOutline, { borderColor: colors.primary }]}
+            testID="retrain-accept-next"
+          >
+            <ChevronRight size={16} color={colors.primary} />
+            <Text style={[styles.actionText, { color: colors.primary }]}>
+              {t('v2.retrain.editor.acceptNext')}
+            </Text>
+          </Pressable>
+        ) : null}
         <Pressable
           onPress={onDelete}
           accessibilityRole="button"
@@ -290,7 +281,8 @@ const styles = StyleSheet.create({
   },
   struck: { textDecorationLine: 'line-through' },
   error: { fontSize: TYPOGRAPHY.size.sm },
-  actions: { flexDirection: 'row', gap: SPACING.lg, marginTop: SPACING.md },
+  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.lg, marginTop: SPACING.md },
+  actionOutline: { borderWidth: 1 },
   action: {
     flex: 1,
     minHeight: 44,

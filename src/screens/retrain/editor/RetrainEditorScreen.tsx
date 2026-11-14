@@ -48,6 +48,7 @@ import { runGuarded } from '../../../retrain/dirty.js'
 import {
   acceptAllDrafts,
   acceptBox,
+  nextDraftKey,
   addOperatorBox,
   deleteBox,
   markModelError,
@@ -287,6 +288,28 @@ export function RetrainEditorScreen({ frameId, deviceId, collectionId }: Retrain
     [editor.selectedKey],
   )
 
+  // ── Confirming a draft. Accept closes the subject editor (issue 557: the
+  // operator was left in the editor of a box already done); "Accept and next"
+  // moves straight to the next waiting draft; the list's own check confirms a
+  // row without opening it.
+  const nextDraft = nextDraftKey(editor, editor.selectedKey)
+  const onAcceptAndClose = useCallback(() => {
+    withSelected((k) => session.apply((s) => acceptBox(s, k)))
+    session.select(null)
+    setSnap((s) => (s === 'full' ? 'half' : s))
+  }, [withSelected, session])
+  const onAcceptAndNext = useCallback(() => {
+    if (nextDraft === null) return
+    withSelected((k) => session.apply((s) => acceptBox(s, k)))
+    session.select(nextDraft)
+    const box = editor.boxes.find((b) => b.key === nextDraft)
+    if (box !== undefined) focusBox(box.bbox)
+  }, [withSelected, session, nextDraft, editor.boxes, focusBox])
+  const onAcceptRow = useCallback(
+    (key: string) => session.apply((s) => acceptBox(s, key)),
+    [session],
+  )
+
   // ── Save, and the conflict it can be refused with.
   const canSave = session.dirty && valid && frame !== undefined && !saving
   const onSave = useCallback(async () => {
@@ -363,7 +386,9 @@ export function RetrainEditorScreen({ frameId, deviceId, collectionId }: Retrain
       listMode={wide ? 'list' : 'selected'}
       onSelectRow={onSelectFromList}
       onHover={setHoverKey}
-      onClass={(macro) => withSelected((k) => session.apply((s) => updateBox(s, k, { macroClass: macro })))}
+      onClassLabel={(pick) =>
+        withSelected((k) => session.apply((s) => updateBox(s, k, { macroClass: pick.macroClass, label: pick.label })))
+      }
       onLabel={(label) => withSelected((k) => session.transientApply((s) => updateBox(s, k, { label })))}
       onSubLabel={(subLabel) =>
         withSelected((k) => session.transientApply((s) => updateBox(s, k, { subLabel })))
@@ -371,7 +396,9 @@ export function RetrainEditorScreen({ frameId, deviceId, collectionId }: Retrain
       onTextFocus={session.beginGesture}
       onTextBlur={session.endGesture}
       onModelError={() => withSelected((k) => session.apply((s) => markModelError(s, k)))}
-      onAccept={() => withSelected((k) => session.apply((s) => acceptBox(s, k)))}
+      onAccept={onAcceptAndClose}
+      onAcceptNext={nextDraft === null ? undefined : onAcceptAndNext}
+      onAcceptRow={onAcceptRow}
       onDelete={() => withSelected((k) => session.apply((s) => deleteBox(s, k)))}
     />
   )

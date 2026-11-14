@@ -17,6 +17,7 @@ import {
   flagBoxes,
   flagsFromReviews,
   markModelError,
+  nextDraftKey,
   pendingDraftCount,
   pipelineDrafts,
   seedEditor,
@@ -167,5 +168,27 @@ describe('AI reviews become flags on the boxes they name', () => {
     })
     expect(flagged.boxes[0]?.draft).toBe(true)
     expect(toSavePayload(flagged)).toEqual([])
+  })
+})
+
+describe('nextDraftKey', () => {
+  const state = seedEditor(
+    [saved()],
+    [
+      pipeline({ trackId: 'a', bbox: { x: 0.5, y: 0.0, w: 0.1, h: 0.1 } }),
+      pipeline({ trackId: 'b', bbox: { x: 0.7, y: 0.0, w: 0.1, h: 0.1 } }),
+      pipeline({ trackId: 'c', bbox: { x: 0.9, y: 0.0, w: 0.1, h: 0.1 } }),
+    ],
+  )
+  const drafts = state.boxes.filter((b) => b.draft).map((b) => b.key)
+  it('moves to the next waiting draft in list order, wrapping', () => {
+    expect(drafts).toHaveLength(3)
+    expect(nextDraftKey(state, drafts[0] ?? null)).toBe(drafts[1])
+    expect(nextDraftKey(state, drafts[2] ?? null)).toBe(drafts[0])
+    expect(nextDraftKey(state, state.boxes[0]?.key ?? null)).toBe(drafts[0])
+  })
+  it('has nowhere to go when no other draft waits', () => {
+    const one = acceptBox(acceptBox(state, drafts[0] ?? ''), drafts[1] ?? '')
+    expect(nextDraftKey(one, drafts[2] ?? null)).toBeNull()
   })
 })

@@ -6,7 +6,15 @@ import { describe, expect, it } from 'vitest'
 import type { NcTaxonomy } from '../../data/notification-center.js'
 import { RETRAIN_OFFERED_MACROS } from '../../data/retrain-parse.js'
 import { pickSingle } from '../../components/notifications/single-pick.js'
-import { macroPickerItems, originalClassText, subClassPickerItems } from '../class-picker.js'
+import {
+  classLabelPickerItems,
+  classLabelPickId,
+  macroPickerItems,
+  originalClassText,
+  parseClassLabelPick,
+  subClassPickerItems,
+} from '../class-picker.js'
+import { isRetrainMacroClass } from '../../data/retrain-parse.js'
 import type { BoxDiff } from '../live-review.js'
 
 const entry = (kind: string, parentKind: string | null) => ({
@@ -97,5 +105,28 @@ describe('originalClassText', () => {
         diff: diff({ originMacroClass: 'animal', originLabel: 'dog' }),
       }),
     ).toBeNull()
+  })
+})
+
+describe('the one-step class-and-label list', () => {
+  it('offers every class with its labels grouped under it, in one list', () => {
+    const items = classLabelPickerItems(taxonomy, name)
+    const animal = items.filter((i) => i.type === 'animal').map((i) => i.id)
+    expect(animal).toEqual(['animal', 'animal:dog', 'animal:cat'])
+    expect(items.filter((i) => i.type === 'vehicle').map((i) => i.id)).toEqual(['vehicle', 'vehicle:car'])
+    expect(new Set(items.map((i) => i.type))).toEqual(new Set(RETRAIN_OFFERED_MACROS))
+  })
+  it('one pick names both the class and the label', () => {
+    expect(parseClassLabelPick('animal:dog', isRetrainMacroClass)).toEqual({ macroClass: 'animal', label: 'dog' })
+    expect(parseClassLabelPick('vehicle', isRetrainMacroClass)).toEqual({ macroClass: 'vehicle', label: '' })
+    expect(parseClassLabelPick('nope:x', isRetrainMacroClass)).toBeNull()
+  })
+  it('round-trips the box it shows', () => {
+    expect(classLabelPickId('person', undefined)).toBe('person')
+    expect(classLabelPickId('person', '')).toBe('person')
+    expect(parseClassLabelPick(classLabelPickId('person', 'Marco: Rossi'), isRetrainMacroClass)).toEqual({
+      macroClass: 'person',
+      label: 'Marco: Rossi',
+    })
   })
 })

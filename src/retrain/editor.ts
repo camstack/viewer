@@ -354,6 +354,19 @@ export function pendingDraftCount(state: EditorState): number {
   return state.boxes.filter((b) => b.draft).length
 }
 
+/**
+ * The draft to review after `afterKey`: the next one in list order, wrapping to
+ * the first; `null` when no OTHER draft waits ("Accept and next" has nowhere
+ * to go).
+ */
+export function nextDraftKey(state: EditorState, afterKey: string | null): string | null {
+  const drafts = state.boxes.filter((b) => b.draft && b.key !== afterKey)
+  if (drafts.length === 0) return null
+  const at = state.boxes.findIndex((b) => b.key === afterKey)
+  const after = drafts.find((d) => state.boxes.indexOf(d) > at)
+  return (after ?? drafts[0] ?? null)?.key ?? null
+}
+
 function nonEmpty(value: string | undefined): string | undefined {
   const trimmed = value?.trim()
   return trimmed === undefined || trimmed === '' ? undefined : trimmed
