@@ -30,6 +30,14 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.712',
+    date: '2026-11-14',
+    notes: {
+      en: ['Switching device in the open card no longer reloads it.'],
+      it: ['Cambiare dispositivo nella scheda aperta non la ricarica più.'],
+    },
+  },
+  {
     version: '1.0.711',
     date: '2026-11-14',
     notes: {
