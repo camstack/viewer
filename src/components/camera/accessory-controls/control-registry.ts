@@ -179,7 +179,6 @@ export interface AccessoryControlInput {
  */
 const CONTROL_BY_DEVICE_TYPE = {
   [DeviceType.Camera]: 'none',
-  [DeviceType.Hub]: 'none',
   [DeviceType.Light]: 'switch', // → brightness when the device advertises it
   [DeviceType.Siren]: 'switch',
   [DeviceType.Switch]: 'switch',
