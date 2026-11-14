@@ -29,17 +29,18 @@ import React from 'react'
 // ui-check-ok: centred audit dialog; SheetModal is a layout change (pre-existing)
 import {
   ActivityIndicator,
-  Image,
+  FlatList,
   Modal,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native'
 import { useTranslation } from 'react-i18next'
+import { Image } from 'expo-image'
 
 import { buildMediaIdUrl } from '../../data/event-media-url.js'
+import { mediaImageSource } from '../../data/track-media-uri.js'
 import {
   type IdentityAuditRow,
   useIdentityAudit,
@@ -58,6 +59,15 @@ export interface IdentityAuditModalProps {
   readonly serverUrl: string | null
   readonly mediaHeaders?: Readonly<Record<string, string>>
   readonly onClose: () => void
+}
+
+/** Rows mounted on open and per render batch — about two screens of the dialog. */
+export const AUDIT_INITIAL_ROWS = 12
+/** Viewports kept mounted around the visible one (the FlatList default is 21). */
+const AUDIT_WINDOW_SIZE = 5
+
+function auditRowKey(row: IdentityAuditRow): string {
+  return row.sampleId
 }
 
 function percent(value: number): string {
@@ -132,9 +142,11 @@ function AuditRow({ row, identityId, flagThreshold, serverUrl, mediaHeaders }: R
         </View>
       ) : (
         <Image
-          source={mediaHeaders === undefined ? { uri } : { uri, headers: { ...mediaHeaders } }}
+          source={mediaImageSource(uri, mediaHeaders === undefined ? undefined : { ...mediaHeaders })}
           style={styles.thumb}
-          resizeMode="cover"
+          contentFit="cover"
+          cachePolicy="memory-disk"
+          recyclingKey={row.sampleId}
         />
       )}
       <View style={styles.rowBody}>
@@ -238,18 +250,28 @@ export function IdentityAuditModal({
                   total: data.totalSamples,
                 })}
               </Text>
-              <ScrollView style={styles.scroll}>
-                {data.rows.map((row) => (
+              {/* VIRTUALISED. The largest person on the operator's hub has 672
+                  enrolled samples; drawing every row at once — each with its
+                  own crop request — froze the UI for seconds after "Reanalyse
+                  samples" (issue 557). Only the rows near the viewport mount. */}
+              <FlatList
+                style={styles.scroll}
+                data={data.rows}
+                keyExtractor={auditRowKey}
+                initialNumToRender={AUDIT_INITIAL_ROWS}
+                maxToRenderPerBatch={AUDIT_INITIAL_ROWS}
+                windowSize={AUDIT_WINDOW_SIZE}
+                removeClippedSubviews
+                renderItem={({ item }) => (
                   <AuditRow
-                    key={row.sampleId}
-                    row={row}
+                    row={item}
                     identityId={data.identityId}
                     flagThreshold={data.flagThreshold}
                     serverUrl={serverUrl}
                     {...(mediaHeaders === undefined ? {} : { mediaHeaders })}
                   />
-                ))}
-              </ScrollView>
+                )}
+              />
             </>
           )}
           <Pressable
@@ -283,7 +305,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 16, fontWeight: '600' },
   summary: { fontSize: 12, marginTop: SPACING.xs, marginBottom: SPACING.sm },
   centre: { marginVertical: SPACING.lg, textAlign: 'center', fontSize: 13 },
-  scroll: { flexGrow: 0 },
+  scroll: { flexGrow: 0, flexShrink: 1 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
