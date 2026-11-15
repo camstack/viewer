@@ -47,7 +47,7 @@
  */
 import type { ServedProfileReport } from '../../../recording/recording-messages.js'
 import React, { useRef, useState } from 'react'
-import { View, Text, Pressable, StyleSheet, type LayoutChangeEvent } from 'react-native'
+import { ActivityIndicator, View, Text, Pressable, StyleSheet, type LayoutChangeEvent } from 'react-native'
 import Animated from 'react-native-reanimated'
 import { useDockTransitions } from '../../../theme/motion.js'
 import { useTranslation } from 'react-i18next'
@@ -76,6 +76,7 @@ import { TransportSpinnerRing } from './TransportSpinnerRing.js'
 import { ClipProgressBar } from './ClipProgressBar.js'
 import type { ClipProgressBinding } from '../../../clips/clip-progress.js'
 import type { ClipLoopBinding } from '../../../clips/clip-loop.js'
+import type { ClipSaveBinding } from './TimelineScroller.js'
 import type { PlaybackMode } from '../../../recording/playback-machine.js'
 import type { RecordMenuAction } from '../../../recording/record-menu.js'
 import type { RecordControlBinding } from '../../../recording/record-control.js'
@@ -179,6 +180,13 @@ export interface TimelinePlaybackBarProps {
    * state invented to look thorough.
    */
   readonly clipLoop?: ClipLoopBinding
+  /**
+   * Keep the held clip (#443): the SAME binding the clip's card carries, so
+   * the press opens the timeline's one `ClipExportModal`. Absent ⟺ nothing on
+   * the frame to keep (or a clip of our own footage, which the export control
+   * owns); `onSave: null` is a refusal, drawn disabled with its reason.
+   */
+  readonly clipDownload?: ClipSaveBinding
   /** Frame-step. Absent ⟺ the surface cannot step (a wall of N), and then the
    *  two step buttons are not drawn at all. */
   readonly onStepFrame?: (dir: 1 | -1) => void
@@ -283,6 +291,7 @@ export function TimelinePlaybackBar({
   clipHeld = false,
   clipProgress,
   clipLoop,
+  clipDownload,
   onStepFrame,
   onSelectRate,
   onGoLive,
@@ -355,6 +364,9 @@ export function TimelinePlaybackBar({
     scale: ui.scale,
     canWrap,
     trailingIcon: record !== undefined || clipLoop !== undefined,
+    // The download sits beside the loop: price both, or the narrowest panel
+    // overflows again.
+    trailingIcons: (record !== undefined || clipLoop !== undefined ? 1 : 0) + (clipDownload !== undefined ? 1 : 0),
     canStep: onStepFrame !== undefined,
     measured,
   }
@@ -382,6 +394,13 @@ export function TimelinePlaybackBar({
   const overflow = fit.secondary === 'overflow' && rateOffered
   const showRate = rateOffered && !overflow
   const showLoop = loopOffered && !overflow
+  // Same statement as the loop: a file is on screen and the surface binds it.
+  const downloadOffered = steppingClips && clipDownload !== undefined
+  const showDownload = downloadOffered && !overflow
+  const downloadLabel =
+    clipDownload === undefined || clipDownload.onSave !== null
+      ? t('v2.clips.saveClip')
+      : (clipDownload.reason ?? t('v2.clips.saveUnavailable'))
   const showRecordDot = recordIdle && !overflow
   // What the running thing is (a live clip, or a selection to export / delete)
   // is the BINDING's statement, not the layout's: the idle button is the same
@@ -615,6 +634,17 @@ export function TimelinePlaybackBar({
           <Repeat size={ui.px(15)} color={clipLoop.enabled ? colors.primaryForeground : colors.foreground} />,
           clipLoop.onToggle,
           clipLoop.enabled,
+        ),
+      )
+    }
+    if (downloadOffered && clipDownload !== undefined && clipDownload.onSave !== null) {
+      verbs.push(
+        verbRow(
+          'download',
+          downloadLabel,
+          <Download size={ui.px(15)} color={colors.foreground} />,
+          clipDownload.onSave,
+          false,
         ),
       )
     }
@@ -1032,6 +1062,31 @@ export function TimelinePlaybackBar({
             size={ui.px(15)}
             color={clipLoop.enabled ? colors.primaryForeground : colors.foreground}
           />
+        </Pressable>
+      ) : null}
+      {showDownload && clipDownload !== undefined ? (
+        <Pressable
+          onPress={() => {
+            hapticTap()
+            clipDownload.onSave?.()
+          }}
+          disabled={clipDownload.onSave === null || clipDownload.saving === true}
+          style={[
+            styles.chip,
+            iconBtn,
+            styles.bordered,
+            { opacity: clipDownload.onSave === null ? 0.4 : 1 },
+          ]}
+          hitSlop={4}
+          accessibilityRole="button"
+          accessibilityState={{ disabled: clipDownload.onSave === null }}
+          accessibilityLabel={downloadLabel}
+        >
+          {clipDownload.saving === true ? (
+            <ActivityIndicator size="small" color={colors.foreground} />
+          ) : (
+            <Download size={ui.px(15)} color={colors.foreground} />
+          )}
         </Pressable>
       ) : null}
       {showRate ? (

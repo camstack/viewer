@@ -1493,6 +1493,18 @@ export const TheaterTimeline = memo(function TheaterTimeline(props: TheaterTimel
     return out
   }, [clipsMode, derivedClips, clipExport, t])
 
+  /**
+   * The HELD clip's keep, for the playback bar (#443) — its card's entry of
+   * the very map above, so the bar's download and the card's open the same
+   * `ClipExportModal` and spin on the same job.
+   */
+  const heldClipSave = useMemo((): ClipSaveBinding | undefined => {
+    const heldId = props.clipOnFrameId ?? null
+    if (heldId === null) return undefined
+    const entry = derivedClips.find((d) => d.clip.clipId === heldId)
+    return entry === undefined ? undefined : clipSaves.get(cardIdForClip(entry))
+  }, [props.clipOnFrameId, derivedClips, clipSaves])
+
   // The `Clip` view of the same list — what the compressed axis lays out and
   // what the advance sequencer walks.
   const cameraClips = useMemo(
@@ -2643,6 +2655,8 @@ export const TheaterTimeline = memo(function TheaterTimeline(props: TheaterTimel
             // The loop switch, on the SAME statement: the bar draws it beside
             // that track and both mean "a file is on screen".
             clipLoop: clipsSurface.axis === 'clip' ? props.clipLoop : undefined,
+            // The keep, on the same statement: the bar's download beside the loop.
+            clipDownload: clipsSurface.axis === 'clip' ? heldClipSave : undefined,
             onJogForward: props.onJogForward,
             onStepFrame: props.onStepFrame,
             onSelectRate: props.onSelectRate,
