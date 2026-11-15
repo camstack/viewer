@@ -51,6 +51,7 @@ import { useConnection } from '../../../connection/ConnectionProvider.js'
 import { useServer } from '../../../app/ServerProvider.js'
 import { absoluteMediaPath } from '../../../data/event-media-url.js'
 import { useTheme } from '../../../theme/theme-provider.js'
+import { RADIUS, SPACING } from '../../../theme/tokens.js'
 import { log } from '../../../lib/logger.js'
 import type { ClipStage } from '../../../clips/clip-stage.js'
 import { clipSheetShows } from '../../../clips/clip-stage.js'
@@ -160,13 +161,13 @@ export function ClipStageView({
         {stage.kind === 'clip' && stage.inProgress ? (
           // The one thing an operator would otherwise file as a bug: this clip
           // did not repeat, and every other one does.
-          <Text style={[styles.badge, { color: colors.foregroundMuted }]}>
+          <Text style={[styles.badge, { color: colors.foreground, backgroundColor: colors.backgroundElevated }]}>
             {t('v2.clips.stillRecordingNoLoop')}
           </Text>
         ) : null}
         {playback.kind === 'ready' && playback.playback.mismatch !== null ? (
           // Never swallowed: on a phone on cellular it is 30x the bytes.
-          <Text style={[styles.badge, { color: colors.foregroundMuted }]}>
+          <Text style={[styles.badge, { color: colors.foreground, backgroundColor: colors.backgroundElevated }]}>
             {t('v2.clips.servedInstead', {
               asked: playback.playback.mismatch.asked,
               served: playback.playback.mismatch.served,
@@ -225,5 +226,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   btn: { padding: 6, borderRadius: 14 },
-  badge: { fontSize: 11 },
+  // Drawn over the video: an opaque token surface so it reads on any frame (#568).
+  badge: {
+    fontSize: 11,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.xs,
+    borderRadius: RADIUS.lg,
+    overflow: 'hidden',
+  },
 })

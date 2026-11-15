@@ -85,3 +85,12 @@ describe('the tile’s save control is the magnifier’s corner, and it never li
     expect(src).not.toContain('hidden')
   })
 })
+
+describe('a badge over the clip reads on any frame (#568)', () => {
+  it('every badge carries an opaque surface token, never only a muted colour', () => {
+    const src = code(STAGE)
+    const badges = src.match(/\[styles\.badge, \{[^}]*\}\]/g) ?? []
+    expect(badges.length).toBeGreaterThan(0)
+    for (const b of badges) expect(b).toContain('backgroundColor: colors.backgroundElevated')
+  })
+})

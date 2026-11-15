@@ -846,6 +846,10 @@ export function TimelinePlaybackBar({
             style={[
               styles.tierBadge,
               {
+                // Opaque (#568): the badge sits on the accent disc's corner and,
+                // when the bar floats, over the picture — a fill-less badge was
+                // unreadable on both.
+                backgroundColor: colors.backgroundElevated,
                 borderColor:
                   servedTier.profile === servedTier.requested ? colors.border : colors.warning,
               },
