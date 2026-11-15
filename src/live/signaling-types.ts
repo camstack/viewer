@@ -21,6 +21,11 @@ export interface ClientStreamHints {
   readonly viewportHeight?: number
   readonly devicePixelRatio?: number
   readonly downlinkMbps?: number
+  /** Why the session opens. `'clip'` on the FIRST offer tells the hub to serve
+   *  a CamStack-recorded clip without demanding live from the camera (a
+   *  sleeping battery camera's clips then play). Never set on a re-offer: the
+   *  re-offer after going live must be a normal live offer. */
+  readonly intent?: 'live' | 'clip'
 }
 
 /** Client-observed network conditions, sampled from the live PeerConnection.

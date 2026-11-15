@@ -18,6 +18,7 @@
  *   IN  (once mounted):     window.__camstackEmbed = { setMuted(b), setTarget(t), …, setMic(on) }
  */
 import { useEffect, useMemo, useRef, useState} from 'react'
+import { createClipOfferIntent } from './clip-offer-intent'
 import { useStallWatchdog } from '../embed/use-stall-watchdog'
 import { z } from 'zod'
 import {
@@ -432,6 +433,10 @@ function EmbedPlayer({
   // mirrors StreamPanel: the player ships only an SDP offer, we close over
   // the target. `reoffer` carries the SERVER-chosen downgrade target verbatim
   // (adaptive re-offer), so it does NOT close over `webrtcTarget`.
+  // Decided once at mount (the config-carried clip), consumed by the first
+  // offer. `initialClipRef` is declared later and cleared on send, so it
+  // cannot answer this. The re-offer below never carries the intent.
+  const clipOfferIntentRef = useRef(createClipOfferIntent(initialClipId !== undefined))
   const playerHandleOffer = useMemo(
     () =>
       (
@@ -439,7 +444,12 @@ function EmbedPlayer({
         sessionId?: string,
         hints?: ClientStreamHints,
       ): Promise<ClientOfferResult> =>
-        handleOffer(webrtcTarget, sdpOffer, sessionId, hints),
+        handleOffer(
+          webrtcTarget,
+          sdpOffer,
+          sessionId,
+          clipOfferIntentRef.current.forOffer(hints),
+        ),
     [handleOffer, webrtcTarget],
   )
   const playerReoffer = useMemo(
