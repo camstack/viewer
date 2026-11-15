@@ -4352,8 +4352,6 @@
     },
     "timelineLibrary": {
       "allCameras": "All cameras",
-      "moreCameras_one": "+{{count}} more camera",
-      "moreCameras_other": "+{{count}} more cameras",
       "noFootage": "No footage at this time",
       "loading": "Loading cameras…",
       "noCameras": "No cameras to show"

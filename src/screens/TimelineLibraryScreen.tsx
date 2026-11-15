@@ -44,11 +44,10 @@ import {
   clampColumnWidth,
   clampStripHeight,
   resolveLibraryArrangement,
-  settleStripHeight,
   stripShowsGrid,
 } from './timeline-library/library-layout.js'
 import { CursorFramesGrid, type FrameCamera } from './timeline-library/CursorFramesGrid.js'
-import { cursorInstant } from './timeline-library/cursor-frames.js'
+import { cursorInstant, scrubsLive } from './timeline-library/cursor-frames.js'
 import {
   pickFromIds,
   resolveCameraScope,
@@ -111,7 +110,7 @@ export function TimelineLibraryScreen(): React.JSX.Element {
   // The stills follow the cursor, but only once it is released.
   const [nowMs] = useState(() => Date.now())
   const instant = cursorInstant(activeEpoch, nowMs)
-  const settled = useSettledInstant(instant, playback.state.mode === 'seeking')
+  const settled = useSettledInstant(instant, playback.state.mode === 'seeking', scrubsLive(scope.length))
   const frameCameras = useMemo<readonly FrameCamera[]>(() => targets.map((c) => ({ id: c.deviceId, name: c.name })), [targets])
 
   // Where the stills go: a collapsible strip over the timeline on a phone, a
@@ -137,7 +136,6 @@ export function TimelineLibraryScreen(): React.JSX.Element {
     (travel: number) => setStripHeight(clampStripHeight(dragStart.current + travel, winH)),
     [winH],
   )
-  const onStripEnd = useCallback(() => setStripHeight((h) => settleStripHeight(h, winH)), [winH])
   const onColumnStart = useCallback(() => {
     dragStart.current = showColumnWidth
   }, [showColumnWidth])
@@ -221,7 +219,7 @@ export function TimelineLibraryScreen(): React.JSX.Element {
       <View testID="timeline-library-strip" style={{ height: showStripHeight }}>
         {frames(stripShowsGrid(showStripHeight) ? 'grid' : 'strip')}
       </View>
-      <ResizeHandle axis="y" testID="timeline-library-strip-handle" onStart={onStripStart} onDrag={onStripDrag} onEnd={onStripEnd} />
+      <ResizeHandle axis="y" testID="timeline-library-strip-handle" onStart={onStripStart} onDrag={onStripDrag} onEnd={noop} />
       {timeline}
     </View>
   )

@@ -27,7 +27,7 @@ import { useDateLocale } from '../../lib/date-locale.js'
 import { useTheme } from '../../theme/theme-provider.js'
 import { RADIUS, SPACING } from '../../theme/tokens.js'
 import { buildStillMediaUrl, isStillPreviewFailed } from '../../data/still-media-url.js'
-import { frameTileCap, planFrameTiles } from './cursor-frames.js'
+import { fillFrameGrid } from './cursor-frames.js'
 
 export interface FrameCamera {
   readonly id: number
@@ -35,7 +35,7 @@ export interface FrameCamera {
 }
 
 export interface CursorFramesGridProps {
-  /** The scope, in order. The grid cuts it at the cap. */
+  /** The scope, in order: every camera gets a tile. */
   readonly cameras: readonly FrameCamera[]
   /** The settled instant (epoch ms) every tile is cut at. */
   readonly instant: number
@@ -64,8 +64,6 @@ function clock(atMs: number, locale: string): string {
 }
 
 export function CursorFramesGrid({ cameras, instant, variant = 'grid' }: CursorFramesGridProps): React.JSX.Element {
-  const { t } = useTranslation()
-  const { colors } = useTheme()
   const [box, setBox] = useState({ width: 0, height: 0 })
 
   const onLayout = (event: LayoutChangeEvent): void => {
@@ -73,18 +71,15 @@ export function CursorFramesGrid({ cameras, instant, variant = 'grid' }: CursorF
     setBox((prev) => (prev.width === width && prev.height === height ? prev : { width, height }))
   }
 
-  const plan = useMemo(() => planFrameTiles(cameras, frameTileCap(box.width)), [cameras, box.width])
-
-  // The note under the grid ("+3 more") takes a line when the cap bit.
-  const noteHeight = plan.hidden > 0 ? CAPTION_HEIGHT : 0
+  // The wall's own column split (16:9 area-maximising), then cells stretched
+  // over the whole box: no band of empty space around the tiles.
   const layout = useMemo(() => {
     const innerW = Math.max(0, box.width - GAP * 2)
-    const innerH = Math.max(0, box.height - GAP * 2 - noteHeight)
-    // The caption is part of the tile, so the picture's aspect is the tile's
-    // (16:9 picture + one caption line), found by asking for a wider cell.
-    return computeGridLayout(plan.shown.length, innerW, innerH, 'auto', 16 / 9)
-  }, [plan.shown.length, box.width, box.height, noteHeight])
-  const rows = useMemo(() => splitIntoRows(plan.shown, layout.cols), [plan.shown, layout.cols])
+    const innerH = Math.max(0, box.height - GAP * 2)
+    const cols = computeGridLayout(cameras.length, innerW, innerH, 'auto', 16 / 9).cols
+    return fillFrameGrid(cameras.length, innerW, innerH, GAP, cols)
+  }, [cameras.length, box.width, box.height])
+  const rows = useMemo(() => splitIntoRows(cameras, layout.cols), [cameras, layout.cols])
 
   if (variant === 'strip') {
     const tileH = Math.max(0, box.height - GAP * 2)
@@ -92,14 +87,9 @@ export function CursorFramesGrid({ cameras, instant, variant = 'grid' }: CursorF
     return (
       <View testID={CURSOR_FRAMES_TEST_ID} style={styles.fill} onLayout={onLayout}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.strip, { padding: GAP, gap: GAP }]}>
-          {plan.shown.map((camera) => (
+          {cameras.map((camera) => (
             <FrameTile key={camera.id} camera={camera} instant={instant} width={tileW} height={tileH} />
           ))}
-          {plan.hidden > 0 ? (
-            <Text style={[styles.note, { color: colors.foregroundSubtle }]} numberOfLines={1}>
-              {t('v2.timelineLibrary.moreCameras', { count: plan.hidden })}
-            </Text>
-          ) : null}
         </ScrollView>
       </View>
     )
@@ -115,17 +105,12 @@ export function CursorFramesGrid({ cameras, instant, variant = 'grid' }: CursorF
                 key={camera.id}
                 camera={camera}
                 instant={instant}
-                width={Math.max(0, layout.cellW - GAP)}
-                height={Math.max(0, layout.cellH - GAP)}
+                width={layout.cellW}
+                height={layout.cellH}
               />
             ))}
           </View>
         ))}
-        {plan.hidden > 0 ? (
-          <Text style={[styles.note, { color: colors.foregroundSubtle }]} numberOfLines={1}>
-            {t('v2.timelineLibrary.moreCameras', { count: plan.hidden })}
-          </Text>
-        ) : null}
       </View>
     </View>
   )
@@ -162,8 +147,9 @@ function FrameTile({ camera, instant, width, height }: FrameTileProps): React.JS
     >
       <View style={[styles.picture, { backgroundColor: colors.surfaceHover }]}>
         {uri !== null && !failed ? (
+          // NOT keyed by the URI: a live scrub changes it several times a
+          // second, and a remount would blank the tile between two stills.
           <Image
-            key={uri}
             source={headers ? { uri, headers } : { uri }}
             style={StyleSheet.absoluteFill}
             contentFit="cover"
@@ -214,5 +200,4 @@ const styles = StyleSheet.create({
   },
   name: { flexShrink: 1, fontSize: 12, fontWeight: '600' },
   time: { fontSize: 11, fontVariant: ['tabular-nums'] },
-  note: { fontSize: 12, textAlign: 'center' },
 })

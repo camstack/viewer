@@ -4349,8 +4349,6 @@
     },
     "timelineLibrary": {
       "allCameras": "Tutte le camere",
-      "moreCameras_one": "+{{count}} camera in più",
-      "moreCameras_other": "+{{count}} camere in più",
       "noFootage": "Nessuna registrazione a quest’ora",
       "loading": "Caricamento camere…",
       "noCameras": "Nessuna camera da mostrare"

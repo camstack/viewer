@@ -3,16 +3,21 @@
  * cursor, and WHEN it asks the recorder for them.
  *
  * The Library timeline has no picture of its own: its "stream slot" holds a
- * small grid of stills, one per camera, cut from the recorded footage at the
- * instant the cursor is on. Two rules keep that cheap enough to sit under a
- * finger that is scrubbing:
+ * grid of stills, one per camera in the scope, cut from the recorded footage at
+ * the instant the cursor is on. The grid draws EVERY camera the operator picked
+ * (issue 557 removed the per-width cap and its "+N more" note; the camera
+ * picker is what narrows the wall) and fills its box ({@link fillFrameGrid}).
  *
- *  - **A cap on tiles.** Twenty cameras are twenty ffmpeg one-shots on the hub
- *    per cursor move; the grid draws at most {@link frameTileCap} of them and
- *    says how many it left out. The cap follows the room, not the fleet.
- *  - **Frames wait for the release.** While a drag is in flight only the cursor
- *    and the bands move; the instant frames are loaded for does not change
- *    until the drag has ended and {@link FRAME_SETTLE_MS} has passed
+ *  - **Live scrub on a small scope.** With at most
+ *    {@link LIVE_SCRUB_MAX_CAMERAS} cameras the stills follow a drag, at most
+ *    once per {@link SCRUB_FRAME_INTERVAL_MS}. Measured on the operator's hub
+ *    (one request in flight per tile): 4 cameras answer at p50 32 ms / p90
+ *    43 ms (29 frames/s per tile), 8 cameras at p50 64 ms / p90 79 ms
+ *    (15 frames/s) — the hub copes with 8, but four tiles is where a phone
+ *    still keeps up.
+ *  - **Otherwise frames wait for the release.** While a drag is in flight only
+ *    the cursor and the bands move; the instant frames are loaded for changes
+ *    once the drag has ended and {@link FRAME_SETTLE_MS} has passed
  *    ({@link settleInstant}), so a scrub across a day costs zero still reads.
  *
  * Pure — no React, no network.
@@ -31,36 +36,46 @@ export const FRAME_SETTLE_MS = 250
  */
 export const LIVE_FRAME_LAG_MS = 15_000
 
-/** Tiles on a phone-wide box, a tablet-wide box and anything wider. */
-const TILE_CAP_PHONE = 4
-const TILE_CAP_TABLET = 6
-const TILE_CAP_DESKTOP = 9
+/** The largest scope whose stills follow a drag live. */
+export const LIVE_SCRUB_MAX_CAMERAS = 4
 
-/** Width thresholds (pt) of the three caps — the viewer's own breakpoints. */
-const PHONE_MAX_WIDTH = 600
-const TABLET_MAX_WIDTH = 1000
+/** At most one still request per tile per this interval while scrubbing live. */
+export const SCRUB_FRAME_INTERVAL_MS = 100
 
-/** The most tiles a box of this width may carry. */
-export function frameTileCap(boxWidth: number): number {
-  if (boxWidth < PHONE_MAX_WIDTH) return TILE_CAP_PHONE
-  if (boxWidth < TABLET_MAX_WIDTH) return TILE_CAP_TABLET
-  return TILE_CAP_DESKTOP
+/** Does a scope of this size scrub live? */
+export function scrubsLive(cameraCount: number): boolean {
+  return cameraCount > 0 && cameraCount <= LIVE_SCRUB_MAX_CAMERAS
 }
 
-export interface FrameTilePlan<T> {
-  /** The cameras that get a tile, in scope order. */
-  readonly shown: readonly T[]
-  /** How many the cap left out — never silently dropped, the grid says so. */
-  readonly hidden: number
+/** A grid of `count` tiles stretched over a box: every cell the same size. */
+export interface FrameGrid {
+  readonly cols: number
+  readonly rows: number
+  readonly cellW: number
+  readonly cellH: number
 }
 
-/** Cut a scope at the cap, keeping its order (the head is the first camera the
- *  operator picked, and the one an over-large scope may never cost). */
-export function planFrameTiles<T>(cameras: readonly T[], cap: number): FrameTilePlan<T> {
-  const limit = Math.max(0, Math.floor(cap))
+/**
+ * Fill the box: `cols` is the column split the wall's own area-maximising
+ * rule picks (`computeGridLayout`, passed in so this stays pure), and the cells
+ * then STRETCH to the whole box, gaps included — the picture is cropped to the
+ * cell, so no band of empty space is left around a 16:9 block.
+ */
+export function fillFrameGrid(
+  count: number,
+  boxW: number,
+  boxH: number,
+  gap: number,
+  cols: number,
+): FrameGrid {
+  if (count <= 0 || boxW <= 0 || boxH <= 0) return { cols: 0, rows: 0, cellW: 0, cellH: 0 }
+  const c = Math.max(1, Math.min(count, Math.floor(cols)))
+  const rows = Math.ceil(count / c)
   return {
-    shown: cameras.slice(0, limit),
-    hidden: Math.max(0, cameras.length - limit),
+    cols: c,
+    rows,
+    cellW: Math.max(0, Math.floor((boxW - gap * (c - 1)) / c)),
+    cellH: Math.max(0, Math.floor((boxH - gap * (rows - 1)) / rows)),
   }
 }
 
@@ -82,14 +97,15 @@ export interface SettleState {
   readonly pending: number
   /** A drag is in flight. */
   readonly scrubbing: boolean
+  /** The scope is small enough to follow a drag ({@link scrubsLive}). */
+  readonly live?: boolean
 }
 
 /**
- * The instant the frames should be loaded for after `pending` has been quiet:
- * the settled one while a drag is in flight (nothing moves), the pending one
- * once it has ended. The debounce itself is the hook's timer; this is the
- * decision it takes when the timer fires.
+ * The instant the frames should be loaded for when the hook's timer fires: the
+ * settled one while a drag is in flight on a large scope (nothing moves), the
+ * pending one once it has ended — or at once on a live-scrub scope.
  */
 export function settleInstant(state: SettleState): number {
-  return state.scrubbing ? state.settled : state.pending
+  return state.scrubbing && state.live !== true ? state.settled : state.pending
 }

@@ -6,7 +6,6 @@ import {
   clampColumnWidth,
   clampStripHeight,
   resolveLibraryArrangement,
-  settleStripHeight,
   stripShowsGrid,
 } from '../library-layout.js'
 
@@ -34,23 +33,23 @@ describe('strip height', () => {
   it('starts collapsed: a strip, not the grid', () => {
     expect(stripShowsGrid(STRIP_COLLAPSED_HEIGHT)).toBe(false)
   })
-  it('expanding clamps at half the window', () => {
-    expect(clampStripHeight(900, 844)).toBe(422)
+  it('expanding clamps at three quarters of the window', () => {
+    expect(clampStripHeight(900, 844)).toBe(633)
     expect(clampStripHeight(10, 844)).toBe(STRIP_COLLAPSED_HEIGHT)
-    expect(stripShowsGrid(422)).toBe(true)
+    expect(stripShowsGrid(633)).toBe(true)
   })
-  it('a release settles to collapsed or fully expanded', () => {
-    expect(settleStripHeight(150, 844)).toBe(STRIP_COLLAPSED_HEIGHT)
-    expect(settleStripHeight(300, 844)).toBe(422)
-    expect(settleStripHeight(5000, 844)).toBe(422)
+  it('any height in between is a height the strip keeps (no snapping)', () => {
+    expect(clampStripHeight(150, 844)).toBe(150)
+    expect(clampStripHeight(300, 844)).toBe(300)
   })
 })
 
 describe('column width', () => {
-  it('clamps between the floor and half the window', () => {
+  it('clamps between the floor and three quarters of the window', () => {
     expect(clampColumnWidth(40, 1440)).toBe(COLUMN_MIN_WIDTH)
     expect(clampColumnWidth(280, 1440)).toBe(280)
-    expect(clampColumnWidth(2000, 1440)).toBe(720)
-    expect(clampColumnWidth(2000, 1024)).toBe(512)
+    expect(clampColumnWidth(900, 1440)).toBe(900)
+    expect(clampColumnWidth(2000, 1440)).toBe(1080)
+    expect(clampColumnWidth(2000, 1024)).toBe(768)
   })
 })
