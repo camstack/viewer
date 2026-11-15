@@ -19,6 +19,7 @@ import {
   artifactItem,
   libraryItemActions,
   libraryItemMatches,
+  libraryRuleOptions,
   mergeLibraryItems,
   wantsArtifacts,
   wantsExports,
@@ -202,5 +203,27 @@ describe('a source nobody asked for is not fetched', () => {
   it('stops listing exports when only artifact kinds are selected', () => {
     expect(wantsExports(['timelapse'])).toBe(false)
     expect(wantsArtifacts(['timelapse'])).toBe(true)
+  })
+})
+
+describe('rule filter (issue 557)', () => {
+  it('keeps only the picked rule, and leaves exports out while a rule is picked', () => {
+    const byRule = { ...ALL, ruleId: 'r1' }
+    expect(libraryItemMatches(artifactItem(artifact({ ruleId: 'r1' })), byRule)).toBe(true)
+    expect(libraryItemMatches(artifactItem(artifact({ ruleId: 'r2' })), byRule)).toBe(false)
+    expect(libraryItemMatches(artifactItem(artifact()), byRule)).toBe(false)
+    expect(libraryItemMatches(exportItem(exp()), byRule)).toBe(false)
+    expect(libraryItemMatches(exportItem(exp()), ALL)).toBe(true)
+  })
+
+  it('lists the hub rules plus rules only named on loaded media, sorted by name', () => {
+    const options = libraryRuleOptions(
+      [{ id: 'r2', name: 'Porch' }],
+      [artifact({ ruleId: 'r9', ruleName: 'Gate (deleted)' }), artifact({ ruleId: 'r2', ruleName: 'stale' }), artifact()],
+    )
+    expect(options).toEqual([
+      { key: 'r9', label: 'Gate (deleted)' },
+      { key: 'r2', label: 'Porch' },
+    ])
   })
 })

@@ -45,6 +45,7 @@ import { ScreenHeader } from '../../components/ScreenHeader.js'
 import { useConfirm, useNotice } from '../../components/ui/confirm.js'
 import { useCameras } from '../../data/use-cameras.js'
 import { useArtifactMedia, useDeleteNcArtifact, useNcArtifacts } from '../../data/use-nc-artifacts.js'
+import { useNcRules } from '../../data/use-notification-center.js'
 import type { NcArtifactRecord } from '../../data/nc-artifacts.js'
 import type { NamedCamera } from '../../data/nc-artifact-format.js'
 import {
@@ -75,12 +76,14 @@ import {
   toArtifactFilters,
   toLibraryCriteria,
   toggleArtifactDevice,
+  toggleArtifactRule,
   toggleArtifactKind,
 } from './artifact-filters.js'
 import { useArtifactFilters } from './use-artifact-filters.js'
 import {
   LIBRARY_KIND_ORDER,
   libraryItemMatches,
+  libraryRuleOptions,
   libraryKindLabelKey,
   mergeLibraryItems,
   wantsArtifacts,
@@ -144,6 +147,7 @@ export function ArtifactsScreen({ embedded = false }: ArtifactsScreenProps) {
   const artifactsWanted = wantsArtifacts(filterState.kinds)
   const exportsWanted = wantsExports(filterState.kinds)
   const feed = useNcArtifacts(filters, { enabled: artifactsWanted && filtersRead })
+  const rulesQuery = useNcRules()
   const exportsQuery = useExportsList()
   const liveEvents = useExportEvents()
   const cancel = useCancelExport()
@@ -178,6 +182,10 @@ export function ArtifactsScreen({ embedded = false }: ArtifactsScreenProps) {
   const onToggleKind = useCallback(
     (kind: Parameters<typeof toggleArtifactKind>[1]) =>
       setFilterState((prev) => toggleArtifactKind(prev, kind)),
+    [setFilterState],
+  )
+  const onToggleRule = useCallback(
+    (ruleId: string) => setFilterState((prev) => toggleArtifactRule(prev, ruleId)),
     [setFilterState],
   )
   const onToggleDevice = useCallback(
@@ -402,6 +410,7 @@ export function ArtifactsScreen({ embedded = false }: ArtifactsScreenProps) {
   ])
 
   const cameraOptions = namedCameras.map((c) => ({ key: String(c.id), label: c.name }))
+  const ruleOptions = libraryRuleOptions(rulesQuery.data ?? [], feed.artifacts)
   const libraryFilters: readonly LibraryFilterDef[] = [
     {
       id: 'cameras',
@@ -417,6 +426,26 @@ export function ArtifactsScreen({ embedded = false }: ArtifactsScreenProps) {
         },
       ],
     },
+    // Only when there is a rule to pick: media made by hand (an export) or by a
+    // rule-less job has no rule, and an empty facet is a dead control.
+    ...(ruleOptions.length > 0
+      ? [
+          {
+            id: 'rules',
+            label: t('v2.artifacts.filters.rule'),
+            count: filterState.ruleId !== null ? 1 : 0,
+            sections: [
+              {
+                title: t('v2.artifacts.filters.rule'),
+                options: ruleOptions,
+                selected: filterState.ruleId !== null ? [filterState.ruleId] : [],
+                onToggle: onToggleRule,
+                searchPlaceholder: t('v2.artifacts.filters.searchRules'),
+              },
+            ],
+          },
+        ]
+      : []),
     {
       id: 'kinds',
       label: t('v2.artifacts.filters.kind'),

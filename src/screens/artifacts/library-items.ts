@@ -150,6 +150,11 @@ export interface LibraryFilterCriteria {
   /** Inclusive day-window bounds (`artifactDayBounds`). */
   readonly fromMs: number
   readonly toMs: number
+  /**
+   * The picked notification rule. Absent means every rule. An export belongs to
+   * no rule, so a picked rule leaves exports out.
+   */
+  readonly ruleId?: string
 }
 
 /** Every camera an element covers. A mosaic covers many; `deviceId` names one. */
@@ -178,6 +183,9 @@ function itemKind(item: LibraryItem): LibraryItemKind {
 export function libraryItemMatches(item: LibraryItem, criteria: LibraryFilterCriteria): boolean {
   if (item.sortMs < criteria.fromMs || item.sortMs > criteria.toMs) return false
   if (criteria.kinds.length > 0 && !criteria.kinds.includes(itemKind(item))) return false
+  if (criteria.ruleId !== undefined) {
+    if (item.source === 'export' || item.record.ruleId !== criteria.ruleId) return false
+  }
   if (criteria.deviceIds.length > 0) {
     const ids = itemDeviceIds(item)
     if (!ids.some((id) => criteria.deviceIds.includes(id))) return false
@@ -214,4 +222,38 @@ export function mergeLibraryItems(
   exports: readonly ExportRecord[],
 ): readonly LibraryItem[] {
   return [...artifacts.map(artifactItem), ...exports.map(exportItem)].sort((a, b) => b.sortMs - a.sortMs)
+}
+
+/**
+ * The Rule facet's options: every rule the hub lists, plus any rule named on a
+ * loaded artifact that the list does not carry (deleted since, or not visible
+ * to this user) under the name the artifact recorded. Sorted by label.
+ */
+export interface LibraryRuleOption {
+  readonly key: string
+  readonly label: string
+}
+
+/** What the facet needs of a listed rule. */
+export interface LibraryRuleSource {
+  readonly id: string
+  readonly name: string
+}
+
+/** What the facet needs of a loaded artifact. */
+export type LibraryRuleRef = Pick<NcArtifactRecord, 'ruleId' | 'ruleName'>
+
+export function libraryRuleOptions(
+  rules: readonly LibraryRuleSource[],
+  artifacts: readonly LibraryRuleRef[],
+): readonly LibraryRuleOption[] {
+  const byId = new Map<string, string>()
+  for (const rule of rules) byId.set(rule.id, rule.name)
+  for (const a of artifacts) {
+    if (a.ruleId === undefined || byId.has(a.ruleId)) continue
+    byId.set(a.ruleId, a.ruleName ?? a.ruleId)
+  }
+  return [...byId.entries()]
+    .map(([key, label]) => ({ key, label }))
+    .sort((a, b) => a.label.localeCompare(b.label))
 }

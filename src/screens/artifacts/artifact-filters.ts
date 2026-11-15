@@ -34,6 +34,13 @@ export interface ArtifactFilterState {
   readonly deviceIds: readonly number[]
   /** 0 = today; N = N local calendar days back. Same cursor Events uses. */
   readonly dayOffset: number
+  /**
+   * The notification rule whose media to show, or `null` for every rule. One
+   * rule at a time: the hub filters `listArtifacts` by a single `ruleId`, so the
+   * pick narrows the query itself rather than a page already loaded. Session
+   * only, like the day — a rule can be deleted between two visits.
+   */
+  readonly ruleId: string | null
 }
 
 /** The unfiltered gallery — what the screen opens on. */
@@ -41,6 +48,7 @@ export const EMPTY_ARTIFACT_FILTERS: ArtifactFilterState = {
   kinds: [],
   deviceIds: [],
   dayOffset: 0,
+  ruleId: null,
 }
 
 /** The ARTIFACT half of the chip row — gallery tiles only, never posters. The
@@ -86,6 +94,7 @@ export function toArtifactFilters(state: ArtifactFilterState, nowMs: number): Nc
   return {
     ...(kinds.length > 0 ? { kinds } : {}),
     ...(state.deviceIds.length > 0 ? { deviceIds: state.deviceIds } : {}),
+    ...(state.ruleId !== null ? { ruleId: state.ruleId } : {}),
     fromMs,
     toMs,
   }
@@ -118,6 +127,11 @@ export function toggleArtifactDevice(
 }
 
 /** Set the day cursor. Returns a new state. */
+/** Pick a rule; picking the rule already picked clears it (single choice). */
+export function toggleArtifactRule(state: ArtifactFilterState, ruleId: string): ArtifactFilterState {
+  return { ...state, ruleId: state.ruleId === ruleId ? null : ruleId }
+}
+
 export function setArtifactDayOffset(
   state: ArtifactFilterState,
   dayOffset: number,
@@ -137,7 +151,9 @@ export function clearArtifactFilters(): ArtifactFilterState {
  * counts as one regardless of how many members it has.
  */
 export function activeArtifactFilterCount(state: ArtifactFilterState): number {
-  return (state.kinds.length > 0 ? 1 : 0) + (state.deviceIds.length > 0 ? 1 : 0)
+  return (
+    (state.kinds.length > 0 ? 1 : 0) + (state.deviceIds.length > 0 ? 1 : 0) + (state.ruleId !== null ? 1 : 0)
+  )
 }
 
 /**
@@ -161,5 +177,11 @@ export function bucketArtifactNow(nowMs: number): number {
  */
 export function toLibraryCriteria(state: ArtifactFilterState, nowMs: number): LibraryFilterCriteria {
   const { fromMs, toMs } = artifactDayBounds(state.dayOffset, nowMs)
-  return { kinds: state.kinds, deviceIds: state.deviceIds, fromMs, toMs }
+  return {
+    kinds: state.kinds,
+    deviceIds: state.deviceIds,
+    fromMs,
+    toMs,
+    ...(state.ruleId !== null ? { ruleId: state.ruleId } : {}),
+  }
 }

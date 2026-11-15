@@ -3174,7 +3174,9 @@
         "kind": "Tipo",
         "camera": "Telecamera",
         "range": "Periodo",
-        "clear": "Azzera filtri"
+        "clear": "Azzera filtri",
+        "rule": "Regola",
+        "searchRules": "Cerca regole"
       },
       "detail": {
         "kind": "Tipo",

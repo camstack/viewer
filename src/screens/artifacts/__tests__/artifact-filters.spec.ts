@@ -12,6 +12,8 @@ import {
   toArtifactFilters,
   toggleArtifactDevice,
   toggleArtifactKind,
+  toggleArtifactRule,
+  toLibraryCriteria,
 } from '../artifact-filters.js'
 
 const NOW = Date.UTC(2026, 7, 16, 18, 0, 0)
@@ -110,11 +112,12 @@ describe('activeArtifactFilterCount', () => {
   it('counts kind and camera once, and the day cursor as none', () => {
     expect(activeArtifactFilterCount(EMPTY_ARTIFACT_FILTERS)).toBe(0)
     expect(
-      activeArtifactFilterCount({ kinds: ['timelapse', 'event-gif'], deviceIds: [], dayOffset: 4 }),
+      activeArtifactFilterCount({ kinds: ['timelapse', 'event-gif'], deviceIds: [], dayOffset: 4, ruleId: null }),
     ).toBe(1)
     expect(
-      activeArtifactFilterCount({ kinds: ['timelapse'], deviceIds: [102], dayOffset: 0 }),
+      activeArtifactFilterCount({ kinds: ['timelapse'], deviceIds: [102], dayOffset: 0, ruleId: null }),
     ).toBe(2)
+    expect(activeArtifactFilterCount({ ...EMPTY_ARTIFACT_FILTERS, ruleId: 'r1' })).toBe(1)
   })
 })
 
@@ -125,5 +128,24 @@ describe('bucketArtifactNow', () => {
     expect(bucketArtifactNow(base + 1)).toBe(base)
     expect(bucketArtifactNow(base + ARTIFACT_RANGE_BUCKET_MS - 1)).toBe(base)
     expect(bucketArtifactNow(base + ARTIFACT_RANGE_BUCKET_MS)).toBe(base + ARTIFACT_RANGE_BUCKET_MS)
+  })
+})
+
+describe('the Rule facet (issue 557)', () => {
+  const NOW = 1_700_000_000_000
+
+  it('is single choice: picking another rule replaces, picking the same one clears', () => {
+    const one = toggleArtifactRule(EMPTY_ARTIFACT_FILTERS, 'r1')
+    expect(one.ruleId).toBe('r1')
+    expect(toggleArtifactRule(one, 'r2').ruleId).toBe('r2')
+    expect(toggleArtifactRule(one, 'r1').ruleId).toBeNull()
+  })
+
+  it('narrows the hub query and the client predicate, and is absent when unpicked', () => {
+    const picked = { ...EMPTY_ARTIFACT_FILTERS, ruleId: 'r1' }
+    expect(toArtifactFilters(picked, NOW).ruleId).toBe('r1')
+    expect(toLibraryCriteria(picked, NOW).ruleId).toBe('r1')
+    expect('ruleId' in toArtifactFilters(EMPTY_ARTIFACT_FILTERS, NOW)).toBe(false)
+    expect('ruleId' in toLibraryCriteria(EMPTY_ARTIFACT_FILTERS, NOW)).toBe(false)
   })
 })
