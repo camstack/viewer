@@ -30,6 +30,24 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.715',
+    date: '2026-11-15',
+    notes: {
+      en: [
+        'Clips: download the playing clip from the playback bar, same dialog as the timeline.',
+        'Clips mode: the selected clip has one tilted frame instead of two borders.',
+        'The quality badge over a playing clip has a solid background and reads on any picture.',
+        'Pinching inside a sheet no longer drags it closed.',
+      ],
+      it: [
+        'Clip: scarica la clip in riproduzione dalla barra, con la stessa finestra della timeline.',
+        'Modalità clip: la clip selezionata ha una sola cornice inclinata invece di due bordi.',
+        'Il badge di qualità sopra una clip ha uno sfondo pieno e si legge su ogni immagine.',
+        'Il pinch dentro un pannello non lo trascina più verso la chiusura.',
+      ],
+    },
+  },
+  {
     version: '1.0.714',
     date: '2026-11-15',
     notes: {
