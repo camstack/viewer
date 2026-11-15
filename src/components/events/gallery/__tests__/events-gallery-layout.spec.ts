@@ -115,6 +115,26 @@ describe('buildGalleryItems', () => {
     expect(buildGalleryItems({ rows: [], columns: 4, anchorMs: ANCHOR, exhausted: true, namedDayOffset: NO_NAMED_DAY })).toEqual([])
   })
 
+  it('keeps row keys when a later page fills a short tail of the same day', () => {
+    const sameDay = [
+      row('a', ANCHOR - 1 * HOUR),
+      row('b', ANCHOR - 2 * HOUR),
+      row('c', ANCHOR - 3 * HOUR),
+    ]
+    const before = buildGalleryItems({ rows: sameDay, columns: 2, anchorMs: ANCHOR, exhausted: false, namedDayOffset: NO_NAMED_DAY })
+    const after = buildGalleryItems({
+      rows: [...sameDay, row('d', ANCHOR - 4 * HOUR), row('e', ANCHOR - 5 * HOUR)],
+      columns: 2,
+      anchorMs: ANCHOR,
+      exhausted: false,
+      namedDayOffset: NO_NAMED_DAY,
+    })
+    const keysBefore = before.filter((i) => i.type === 'row').map((i) => i.key)
+    const keysAfter = after.filter((i) => i.type === 'row').map((i) => i.key)
+    expect(keysBefore).toEqual(['r:a', 'r:c'])
+    expect(keysAfter.slice(0, keysBefore.length)).toEqual(keysBefore)
+  })
+
   it('keys are stable across a prepend: the same track keeps its row key', () => {
     const before = buildGalleryItems({ rows: rows.slice(1), columns: 1, anchorMs: ANCHOR, exhausted: true, namedDayOffset: NO_NAMED_DAY })
     const after = buildGalleryItems({ rows, columns: 1, anchorMs: ANCHOR, exhausted: true, namedDayOffset: NO_NAMED_DAY })

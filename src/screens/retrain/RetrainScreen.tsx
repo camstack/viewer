@@ -22,6 +22,7 @@ import { useTranslation } from 'react-i18next'
 import type { RetrainFrame } from '@camstack/types'
 import { LibraryFilterBar, type LibraryFilterDef } from '../../components/ui/LibraryFilterBar.js'
 import type { OverflowMenuItem } from '../../components/ui/HeaderOverflowMenu.js'
+import { libraryGridRows } from '../../components/ui/library-grid-rows.js'
 import { useLibraryGrid } from '../../components/ui/use-library-grid.js'
 import {
   LIBRARY_GRID_BOTTOM_PADDING,
@@ -55,7 +56,7 @@ import { FolderOpen, Images, Pencil, Plus, Trash2 } from '../../lib/icons.js'
 import { useTheme } from '../../theme/theme-provider.js'
 import { SPACING } from '../../theme/tokens.js'
 import { useTabScrollPadding } from '../../navigation/bottom-nav-inset.js'
-import { chunkRetrainRows, sortNewestFirst } from '../../retrain/corpus-list.js'
+import { sortNewestFirst } from '../../retrain/corpus-list.js'
 import { RetrainFrameThumb } from './RetrainFrameThumb.js'
 import { EmptyState, ErrorState } from '../../components/ui/EmptyState.js'
 
@@ -118,7 +119,10 @@ export function RetrainScreen() {
   const removeFromCollection = useRemoveRetrainFrameFromCollection()
 
   const frames = useMemo(() => sortNewestFirst(corpus.frames), [corpus.frames])
-  const rows = useMemo(() => chunkRetrainRows(frames, grid.columns), [frames, grid.columns])
+  const rows = useMemo(
+    () => libraryGridRows(frames, grid.columns, (frame) => frame.frameId),
+    [frames, grid.columns],
+  )
   const [pulling, setPulling] = useState(false)
   const { refetch } = corpus
   const onPullRefresh = useCallback(() => {
@@ -336,10 +340,9 @@ export function RetrainScreen() {
         <EmptyState icon={Images} title={t('v2.retrain.corpusEmptyTitle')} body={t('v2.retrain.corpusEmptyBody')} />
       ) : (
         <FlashList
-          key={`cols-${String(grid.columns)}`}
           data={rows}
           extraData={selectedIds}
-          keyExtractor={(row) => row.map((frame) => frame.frameId).join('|')}
+          keyExtractor={(row) => row.key}
           onEndReached={corpus.fetchNextPage}
           onEndReachedThreshold={0.6}
           refreshControl={
@@ -353,7 +356,7 @@ export function RetrainScreen() {
           contentContainerStyle={[styles.grid, { paddingBottom: gridPadBottom }]}
           renderItem={({ item }) => (
             <View style={styles.row}>
-              {item.map((frame) => (
+              {item.items.map((frame) => (
                 <RetrainFrameThumb
                   key={frame.frameId}
                   frame={frame}

@@ -61,6 +61,7 @@ import { useTabScrollPadding } from '../../navigation/bottom-nav-inset.js'
 import { Sparkles, RefreshCw, CheckSquare, UserRoundPlus, ScanFace, SearchX } from '../../lib/icons.js'
 import { LibraryFilterBar } from '../../components/ui/LibraryFilterBar.js'
 import type { OverflowMenuItem } from '../../components/ui/HeaderOverflowMenu.js'
+import { libraryGridRows, type LibraryGridRow } from '../../components/ui/library-grid-rows.js'
 import { useLibraryGrid } from '../../components/ui/use-library-grid.js'
 import { useSettings } from '../../data/use-settings.js'
 import {
@@ -190,6 +191,12 @@ export function FaceReviewScreen() {
   // surface, and `retainSelectedFaces` hands back the very same set when it
   // dropped nothing, so this memo is identity-stable.
   const infoByFace = useMemo(() => faceInfoByRow(visibleRows, numColumns), [visibleRows, numColumns])
+  // Rows, not `numColumns`: FlatList joins every cell key, and the short tail
+  // is renamed when the next page fills it — the list jumps back to the top.
+  const gridRows = useMemo(
+    () => libraryGridRows(visibleRows, numColumns, (row) => row.faceId),
+    [visibleRows, numColumns],
+  )
   const activeSelection = useMemo(() => retainSelectedFaces(selected, visibleRows), [selected, visibleRows])
 
   const cameraOptions = useMemo(() => faceReviewCameraOptions(rows), [rows])
@@ -436,24 +443,29 @@ export function FaceReviewScreen() {
   const unassignedLabel = t('v2.faceReview.filterUnassigned')
   const confirmLabel = t('v2.faceReview.assign')
   const renderItem = useCallback(
-    ({ item }: { item: FaceReviewRow }) => (
-      <ReviewTile
-        content={faceReviewTileContent(item, unassignedLabel)}
-        display={tileDisplay.display}
-        width={tileWidth}
-        cropUri={faceCropUri(item, serverUrl)}
-        info={infoByFace.get(item.faceId) ?? true}
-        mediaHeaders={mediaHeaders}
-        pending={pendingFaceIds.has(item.faceId)}
-        selectionMode={selectionMode}
-        selected={activeSelection.has(item.faceId)}
-        confirmLabel={confirmLabel}
-        onToggleSelect={onToggleSelect}
-        onStartSelect={onStartSelect}
-        onOpenDetail={onOpenDetail}
-        onConfirm={onConfirmSuggestion}
-        testIDPrefix="face-cell"
-      />
+    ({ item }: { item: LibraryGridRow<FaceReviewRow> }) => (
+      <View style={styles.row}>
+        {item.items.map((face) => (
+          <ReviewTile
+            key={face.faceId}
+            content={faceReviewTileContent(face, unassignedLabel)}
+            display={tileDisplay.display}
+            width={tileWidth}
+            cropUri={faceCropUri(face, serverUrl)}
+            info={infoByFace.get(face.faceId) ?? true}
+            mediaHeaders={mediaHeaders}
+            pending={pendingFaceIds.has(face.faceId)}
+            selectionMode={selectionMode}
+            selected={activeSelection.has(face.faceId)}
+            confirmLabel={confirmLabel}
+            onToggleSelect={onToggleSelect}
+            onStartSelect={onStartSelect}
+            onOpenDetail={onOpenDetail}
+            onConfirm={onConfirmSuggestion}
+            testIDPrefix="face-cell"
+          />
+        ))}
+      </View>
     ),
     [tileDisplay.display, unassignedLabel, confirmLabel, tileWidth, serverUrl, infoByFace, mediaHeaders, pendingFaceIds, selectionMode, activeSelection, onToggleSelect, onStartSelect, onOpenDetail, onConfirmSuggestion],
   )
@@ -613,11 +625,8 @@ export function FaceReviewScreen() {
       {top}
 
       <FlatList
-        key={`cols-${String(numColumns)}`}
-        data={visibleRows}
-        keyExtractor={(item) => item.faceId}
-        numColumns={numColumns}
-        columnWrapperStyle={styles.row}
+        data={gridRows}
+        keyExtractor={(item) => item.key}
         contentContainerStyle={[styles.gridContent, { paddingBottom: gridPadBottom }]}
         renderItem={renderItem}
         ListEmptyComponent={visibleRows.length === 0 ? listBody : null}
@@ -690,6 +699,6 @@ const styles = StyleSheet.create({
   centered: { alignItems: 'center', justifyContent: 'center', padding: SPACING['2xl'], gap: SPACING.md },
   partialHint: { fontSize: 11, paddingHorizontal: SPACING.md, paddingBottom: SPACING.sm },
   footerLoading: { paddingVertical: SPACING.md, alignItems: 'center' },
-  row: { gap: LIBRARY_GRID_GAP, paddingHorizontal: LIBRARY_GRID_PADDING },
+  row: { flexDirection: 'row', gap: LIBRARY_GRID_GAP, paddingHorizontal: LIBRARY_GRID_PADDING },
   gridContent: { paddingVertical: SPACING.sm, gap: LIBRARY_GRID_GAP, flexGrow: 1 },
 })

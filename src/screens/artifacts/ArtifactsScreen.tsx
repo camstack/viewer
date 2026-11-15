@@ -34,6 +34,7 @@ import { useRouter } from 'expo-router'
 import { useTheme } from '../../theme/theme-provider.js'
 import { SPACING } from '../../theme/tokens.js'
 import { useTabScrollPadding } from '../../navigation/bottom-nav-inset.js'
+import { libraryGridRows, type LibraryGridRow } from '../../components/ui/library-grid-rows.js'
 import { useLibraryGrid } from '../../components/ui/use-library-grid.js'
 import {
   LIBRARY_GRID_BOTTOM_PADDING,
@@ -178,6 +179,10 @@ export function ArtifactsScreen({ embedded = false }: ArtifactsScreenProps) {
     )
     return merged.filter((item) => libraryItemMatches(item, criteria))
   }, [feed.artifacts, exportsQuery.data, artifactsWanted, exportsWanted, criteria])
+  const rows = useMemo(
+    () => libraryGridRows(items, grid.columns, (item) => item.id),
+    [items, grid.columns],
+  )
 
   const onToggleKind = useCallback(
     (kind: Parameters<typeof toggleArtifactKind>[1]) =>
@@ -316,32 +321,39 @@ export function ArtifactsScreen({ embedded = false }: ArtifactsScreenProps) {
   const loadError = artifactsWanted ? feed.error : null
 
   const renderItem = useCallback(
-    ({ item }: { item: LibraryItem }) =>
-      item.source === 'artifact' ? (
-        <ArtifactCard
-          record={item.record}
-          width={grid.tileWidth}
-          thumb={thumbFor(item.record)}
-          headers={headers}
-          cameras={namedCameras}
-          nowMs={nowMs}
-          t={t}
-          onPress={() => setSelectedArtifact(item.record)}
-          onDelete={() => onDeleteArtifact(item.record)}
-        />
-      ) : (
-        <ExportCard
-          rec={item.record}
-          width={grid.tileWidth}
-          cameraName={cameraName(item.record.deviceId)}
-          nowMs={nowMs}
-          livePct={liveEvents[item.record.id]?.progressPct}
-          t={t}
-          onPress={() => setSelectedExport(item.record)}
-          onDownload={() => onDownloadExport(item.record)}
-          onCancel={() => onCancelExport(item.record)}
-        />
-      ),
+    ({ item }: { item: LibraryGridRow<LibraryItem> }) => (
+      <View style={styles.row}>
+        {item.items.map((cell) =>
+          cell.source === 'artifact' ? (
+            <ArtifactCard
+              key={cell.id}
+              record={cell.record}
+              width={grid.tileWidth}
+              thumb={thumbFor(cell.record)}
+              headers={headers}
+              cameras={namedCameras}
+              nowMs={nowMs}
+              t={t}
+              onPress={() => setSelectedArtifact(cell.record)}
+              onDelete={() => onDeleteArtifact(cell.record)}
+            />
+          ) : (
+            <ExportCard
+              key={cell.id}
+              rec={cell.record}
+              width={grid.tileWidth}
+              cameraName={cameraName(cell.record.deviceId)}
+              nowMs={nowMs}
+              livePct={liveEvents[cell.record.id]?.progressPct}
+              t={t}
+              onPress={() => setSelectedExport(cell.record)}
+              onDownload={() => onDownloadExport(cell.record)}
+              onCancel={() => onCancelExport(cell.record)}
+            />
+          ),
+        )}
+      </View>
+    ),
     [
       thumbFor, headers, namedCameras, nowMs, t, cameraName, liveEvents,
       onDownloadExport, onCancelExport, onDeleteArtifact, grid.tileWidth,
@@ -375,11 +387,8 @@ export function ArtifactsScreen({ embedded = false }: ArtifactsScreenProps) {
     }
     return (
       <FlatList
-        key={`cols-${String(grid.columns)}`}
-        data={items}
-        keyExtractor={(item) => item.id}
-        numColumns={grid.columns}
-        columnWrapperStyle={styles.row}
+        data={rows}
+        keyExtractor={(item) => item.key}
         contentContainerStyle={[styles.gridContent, { paddingBottom: listPadBottom }]}
         onEndReachedThreshold={0.5}
         // Only the ARTIFACT half is paged: `listExports` answers with the whole
@@ -405,8 +414,8 @@ export function ArtifactsScreen({ embedded = false }: ArtifactsScreenProps) {
       />
     )
   }, [
-    state, colors, t, feed, exportsQuery, items, isLoading, loadError, activeFilters, onClear, renderItem,
-    grid.columns, listPadBottom,
+    state, colors, t, feed, exportsQuery, items, rows, isLoading, loadError, activeFilters, onClear, renderItem,
+    listPadBottom,
   ])
 
   const cameraOptions = namedCameras.map((c) => ({ key: String(c.id), label: c.name }))
@@ -545,6 +554,6 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.xl,
     alignItems: 'center',
   },
-  row: { gap: LIBRARY_GRID_GAP, paddingHorizontal: LIBRARY_GRID_PADDING },
+  row: { flexDirection: 'row', gap: LIBRARY_GRID_GAP, paddingHorizontal: LIBRARY_GRID_PADDING },
   gridContent: { paddingVertical: SPACING.sm, gap: LIBRARY_GRID_GAP },
 })

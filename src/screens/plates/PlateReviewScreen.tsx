@@ -33,6 +33,7 @@ import { plateReviewTileContent } from '../../components/review/review-tile.js'
 import { useReviewTileDisplay } from '../../components/review/use-review-tile-display.js'
 import { LibraryFilterBar } from '../../components/ui/LibraryFilterBar.js'
 import type { OverflowMenuItem } from '../../components/ui/HeaderOverflowMenu.js'
+import { libraryGridRows, type LibraryGridRow } from '../../components/ui/library-grid-rows.js'
 import { useLibraryGrid } from '../../components/ui/use-library-grid.js'
 import { LIBRARY_GRID_BOTTOM_PADDING, LIBRARY_GRID_GAP, LIBRARY_GRID_PADDING } from '../../components/ui/library-grid.js'
 import { useConfirm, useNotice, usePrompt } from '../../components/ui/confirm.js'
@@ -127,6 +128,10 @@ export function PlateReviewScreen(): React.JSX.Element {
   // A selected read that a filter, an assignment or a refetch took off screen
   // leaves the count (derived, identity-stable).
   const activeSelection = useMemo(() => retainSelectedPlates(selected, visibleRows), [selected, visibleRows])
+  const gridRows = useMemo(
+    () => libraryGridRows(visibleRows, numColumns, (row) => row.plateId),
+    [visibleRows, numColumns],
+  )
   const cameraOptions = useMemo(() => plateReviewCameraOptions(rows), [rows])
   const activeFilterCount = activeFaceReviewFilterCount(filters)
   const windowIsPartial = plateReviewWindowIsPartial(filters, hasMore)
@@ -320,23 +325,28 @@ export function PlateReviewScreen(): React.JSX.Element {
 
   const confirmLabel = t('v2.plateReview.assign')
   const renderItem = useCallback(
-    ({ item }: { item: PlateReviewRow }) => (
-      <ReviewTile
-        content={plateReviewTileContent(item)}
-        display={tileDisplay.display}
-        width={tileWidth}
-        cropUri={plateCropUri(item, serverUrl)}
-        mediaHeaders={mediaHeaders}
-        pending={pendingIds.has(item.plateId)}
-        selectionMode={selectionMode}
-        selected={activeSelection.has(item.plateId)}
-        confirmLabel={confirmLabel}
-        onToggleSelect={onToggleSelect}
-        onStartSelect={onStartSelect}
-        onOpenDetail={onOpenDetail}
-        onConfirm={onConfirmSuggestion}
-        testIDPrefix="plate-cell"
-      />
+    ({ item }: { item: LibraryGridRow<PlateReviewRow> }) => (
+      <View style={styles.row}>
+        {item.items.map((plate) => (
+          <ReviewTile
+            key={plate.plateId}
+            content={plateReviewTileContent(plate)}
+            display={tileDisplay.display}
+            width={tileWidth}
+            cropUri={plateCropUri(plate, serverUrl)}
+            mediaHeaders={mediaHeaders}
+            pending={pendingIds.has(plate.plateId)}
+            selectionMode={selectionMode}
+            selected={activeSelection.has(plate.plateId)}
+            confirmLabel={confirmLabel}
+            onToggleSelect={onToggleSelect}
+            onStartSelect={onStartSelect}
+            onOpenDetail={onOpenDetail}
+            onConfirm={onConfirmSuggestion}
+            testIDPrefix="plate-cell"
+          />
+        ))}
+      </View>
     ),
     [tileDisplay.display, confirmLabel, tileWidth, serverUrl, mediaHeaders, pendingIds, selectionMode, activeSelection, onToggleSelect, onStartSelect, onOpenDetail, onConfirmSuggestion],
   )
@@ -479,11 +489,8 @@ export function PlateReviewScreen(): React.JSX.Element {
       {top}
 
       <FlatList
-        key={`cols-${String(numColumns)}`}
-        data={visibleRows}
-        keyExtractor={(item) => item.plateId}
-        numColumns={numColumns}
-        columnWrapperStyle={styles.row}
+        data={gridRows}
+        keyExtractor={(item) => item.key}
         contentContainerStyle={[styles.gridContent, { paddingBottom: gridPadBottom }]}
         renderItem={renderItem}
         ListEmptyComponent={visibleRows.length === 0 ? listBody : null}
@@ -544,6 +551,6 @@ const styles = StyleSheet.create({
   centered: { alignItems: 'center', justifyContent: 'center', padding: SPACING['2xl'], gap: SPACING.md },
   partialHint: { fontSize: 11, paddingHorizontal: SPACING.md, paddingBottom: SPACING.sm },
   footerLoading: { paddingVertical: SPACING.md, alignItems: 'center' },
-  row: { gap: LIBRARY_GRID_GAP, paddingHorizontal: LIBRARY_GRID_PADDING },
+  row: { flexDirection: 'row', gap: LIBRARY_GRID_GAP, paddingHorizontal: LIBRARY_GRID_PADDING },
   gridContent: { paddingVertical: SPACING.sm, gap: LIBRARY_GRID_GAP, flexGrow: 1 },
 })
