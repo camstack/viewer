@@ -47,7 +47,7 @@
  */
 import type { ServedProfileReport } from '../../../recording/recording-messages.js'
 import React, { useRef, useState } from 'react'
-import { ActivityIndicator, View, Text, Pressable, StyleSheet, type LayoutChangeEvent } from 'react-native'
+import { View, Text, Pressable, StyleSheet, type LayoutChangeEvent } from 'react-native'
 import Animated from 'react-native-reanimated'
 import { useDockTransitions } from '../../../theme/motion.js'
 import { useTranslation } from 'react-i18next'
@@ -1065,29 +1065,32 @@ export function TimelinePlaybackBar({
         </Pressable>
       ) : null}
       {showDownload && clipDownload !== undefined ? (
-        <Pressable
-          onPress={() => {
-            hapticTap()
-            clipDownload.onSave?.()
-          }}
-          disabled={clipDownload.onSave === null || clipDownload.saving === true}
-          style={[
-            styles.chip,
-            iconBtn,
-            styles.bordered,
-            { opacity: clipDownload.onSave === null ? 0.4 : 1 },
-          ]}
-          hitSlop={4}
-          accessibilityRole="button"
-          accessibilityState={{ disabled: clipDownload.onSave === null }}
-          accessibilityLabel={downloadLabel}
-        >
-          {clipDownload.saving === true ? (
-            <ActivityIndicator size="small" color={colors.foreground} />
-          ) : (
+        <View>
+          <Pressable
+            onPress={() => {
+              hapticTap()
+              clipDownload.onSave?.()
+            }}
+            disabled={clipDownload.onSave === null || clipDownload.saving === true}
+            style={[
+              styles.chip,
+              iconBtn,
+              styles.bordered,
+              { opacity: clipDownload.onSave === null ? 0.4 : 1 },
+            ]}
+            hitSlop={4}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: clipDownload.onSave === null }}
+            accessibilityLabel={downloadLabel}
+          >
             <Download size={ui.px(15)} color={colors.foreground} />
-          )}
-        </Pressable>
+          </Pressable>
+          {/* Saving rings the chip the way connecting rings play/pause: a
+              status on this control, never a second indicator inside it. */}
+          {clipDownload.saving === true ? (
+            <TransportSpinnerRing size={ui.control.button} color={colors.primary} />
+          ) : null}
+        </View>
       ) : null}
       {showRate ? (
         <View style={styles.speedAnchor} onLayout={onRateLayout}>

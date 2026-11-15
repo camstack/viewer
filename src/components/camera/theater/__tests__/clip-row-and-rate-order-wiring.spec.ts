@@ -130,7 +130,10 @@ describe('the running clip reaches the card it is about', () => {
     // leave "which row is playing" unanswered whenever the length is unknown.
     expect(CARD).toContain('<ClipRowProgress')
     expect(CARD).toContain('const playing = clipPlayback !== undefined')
-    expect(CARD).toContain('borderColor: playing || selected ? colors.primary : colors.border')
+    // Which ONE frame wears the highlight (the card in the gallery, the tilted
+    // pill in clips mode) is clusterCardFrame's call; both borders ask it.
+    expect(CARD).toContain('clusterCardFrame({ paging, selected, playing, active: false }).card')
+    expect(CARD).toContain('clusterCardFrame({ paging, selected, playing, active }).pill')
   })
 })
 
