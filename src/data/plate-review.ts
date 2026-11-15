@@ -21,6 +21,7 @@ import { isRecord } from './cap-query.js'
 import { absoluteMediaPath, buildMediaIdUrl } from './event-media-url.js'
 import type { FaceReviewStatus } from './face-cluster-review.js'
 import { foldForSearch } from './identity-picker.js'
+import { toFaceBox, type FaceBox } from './face-full-picture.js'
 
 export type PlateReviewStatus = FaceReviewStatus
 
@@ -38,6 +39,10 @@ export interface PlateInfo {
   readonly vehicleName: string | undefined
   readonly cropUrl: string | undefined
   readonly base64: string | undefined
+  /** The track's native key frame (MediaStore key), when the hub kept one. */
+  readonly keyFrameMediaId?: number
+  /** The plate's box on that key frame, in its pixels. */
+  readonly plateBbox?: FaceBox
 }
 
 /** A saved vehicle (`plateGallery.listVehicles`), narrowed. */
@@ -66,6 +71,7 @@ export function toPlateInfo(row: unknown): PlateInfo | null {
   if (typeof row.plateId !== 'string' || row.plateId.length === 0) return null
   if (typeof row.deviceId !== 'number') return null
   if (typeof row.trackId !== 'string' || row.trackId.length === 0) return null
+  const plateBbox = toFaceBox(row.plateBbox)
   return {
     plateId: row.plateId,
     deviceId: row.deviceId,
@@ -79,6 +85,10 @@ export function toPlateInfo(row: unknown): PlateInfo | null {
     vehicleName: optionalString(row.vehicleName),
     cropUrl: optionalString(row.cropUrl),
     base64: optionalString(row.base64),
+    ...(typeof row.keyFrameMediaId === 'number' && Number.isFinite(row.keyFrameMediaId)
+      ? { keyFrameMediaId: row.keyFrameMediaId }
+      : {}),
+    ...(plateBbox !== undefined ? { plateBbox } : {}),
   }
 }
 
@@ -135,6 +145,9 @@ export interface PlateReviewRow {
   /** The vehicle the read is assigned to (`assigned`) or that the matcher named (`suggested`). */
   readonly vehicleId: string | undefined
   readonly vehicleName: string | undefined
+  /** The track's native key frame and the plate's box on it (the full picture). */
+  readonly keyFrameMediaId?: number
+  readonly plateBbox?: FaceBox
 }
 
 export function plateStatus(plate: PlateInfo): PlateReviewStatus {
@@ -162,6 +175,8 @@ export function buildPlateReviewRows(
       corrected: plate.corrected,
       cropUrl: plate.cropUrl,
       base64: plate.base64,
+      ...(plate.keyFrameMediaId !== undefined ? { keyFrameMediaId: plate.keyFrameMediaId } : {}),
+      ...(plate.plateBbox !== undefined ? { plateBbox: plate.plateBbox } : {}),
       status,
       vehicleId,
       vehicleName:

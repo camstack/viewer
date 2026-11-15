@@ -22,6 +22,8 @@ import { useTranslation } from 'react-i18next'
 
 import { useServer } from '../../app/ServerProvider.js'
 import { PlateReviewDetailModal } from '../../components/plates/PlateReviewDetailModal.js'
+import { FaceTrackDetail, type FaceTrackTarget } from '../../components/faces/FaceTrackDetail.js'
+import { sampleFullPicture } from '../../data/face-full-picture.js'
 import { PlateReviewSelectionBar } from '../../components/plates/PlateReviewSelectionBar.js'
 import { PlateSimilarModal } from '../../components/plates/PlateSimilarModal.js'
 import { reviewFilterBar } from '../../components/review/review-filter-bar.js'
@@ -294,6 +296,20 @@ export function PlateReviewScreen(): React.JSX.Element {
   )
 
   const cropUriForRow = useCallback((row: PlateReviewRow) => plateCropUri(row, serverUrl), [serverUrl])
+  const plateFullPictureFor = useCallback(
+    (row: PlateReviewRow) => sampleFullPicture(row.keyFrameMediaId, row.plateBbox, serverUrl),
+    [serverUrl],
+  )
+  /** "Open event": the plate detail closes and the track's own detail opens. */
+  const [trackTarget, setTrackTarget] = useState<FaceTrackTarget | null>(null)
+  const onDetailOpenTrack = useCallback(
+    (row: PlateReviewRow) => {
+      closeDetail()
+      setTrackTarget({ deviceId: row.deviceId, trackId: row.trackId, cameraName: row.cameraName ?? `#${String(row.deviceId)}` })
+    },
+    [closeDetail],
+  )
+  const closeTrack = useCallback(() => setTrackTarget(null), [])
   const cropUriForId = useCallback(
     (plateId: string) => {
       const row = byId.get(plateId)
@@ -503,8 +519,12 @@ export function PlateReviewScreen(): React.JSX.Element {
         onDelete={(plateId) => {
           void onDeleteOne(plateId)
         }}
+        fullPictureFor={plateFullPictureFor}
+        onOpenTrack={onDetailOpenTrack}
         onClose={closeDetail}
       />
+
+      <FaceTrackDetail target={trackTarget} onClose={closeTrack} />
 
       <PlateSimilarModal
         open={similarOpen}

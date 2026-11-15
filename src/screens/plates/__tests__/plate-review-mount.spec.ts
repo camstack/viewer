@@ -35,7 +35,7 @@ const HUB = {
   'plateGallery.listPlates': [
     row('a', { assigned: true, recognizedVehicleId: 'v1', vehicleName: 'Panda' }),
     row('b', { recognizedVehicleId: 'v1', vehicleName: 'Panda' }),
-    row('c'),
+    row('c', { keyFrameMediaId: 5151, plateBbox: { x: 10, y: 20, w: 60, h: 20 } }),
   ],
   'plateGallery.listVehicles': [{ id: 'v1', name: 'Panda', sampleCount: 2 }],
   'plateGallery.assignPlates': { assigned: 1, failed: [] },
@@ -83,5 +83,24 @@ describe('PlateReviewScreen', () => {
       plateId: 'c',
       text: 'ZZ999YY',
     })
+  })
+
+  // Issue 557: the plate detail is the face detail's sheet, original picture
+  // included (the key frame, the plate boxed on it, "Open event").
+  it('the detail shows the full picture the read was cut from, and opens its track', async () => {
+    mountScreen(React.createElement(PlateReviewScreen), { hub: HUB })
+    await waitFor(() => expect(screen.getByTestId('plate-cell-c')).toBeTruthy())
+    fireEvent.click(screen.getByTestId('plate-cell-c').querySelector('[role="button"]') as Element)
+    const picture = await screen.findByTestId('face-full-picture')
+    expect(picture.querySelector('[data-testid$="/event-media/m/5151"]')).not.toBeNull()
+    expect(screen.getByTestId('face-open-track')).toBeTruthy()
+  })
+
+  it('says the hub kept no full picture for a read without a key frame', async () => {
+    mountScreen(React.createElement(PlateReviewScreen), { hub: HUB })
+    await waitFor(() => expect(screen.getByTestId('plate-cell-b')).toBeTruthy())
+    fireEvent.click(screen.getByTestId('plate-cell-b').querySelector('[role="button"]') as Element)
+    const absent = await screen.findByTestId('face-full-picture-absent')
+    expect(absent.textContent).toBe('The hub kept no full picture for this plate.')
   })
 })

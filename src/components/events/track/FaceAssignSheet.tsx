@@ -36,8 +36,6 @@ import {
   UserRoundX,
   Users,
   Check,
-  RefreshCw,
-  Sparkles,
 } from '../../../lib/icons.js'
 import { Image } from 'expo-image'
 import { useTheme } from '../../../theme/theme-provider.js'
@@ -61,12 +59,10 @@ import { useServer } from '../../../app/ServerProvider.js'
 import { useConnection } from '../../../connection/ConnectionProvider.js'
 import { mediaImageSource } from '../../../data/track-media-uri.js'
 import { useFaceRescore } from '../../../data/use-face-rescore.js'
+import { FaceRescoreControls } from '../../faces/FaceRescoreControls.js'
 import {
   formatRescoreScore,
   rescoreRowTone,
-  rescoreVerdictKey,
-  rescoreVerdictTone,
-  shouldOfferReembed,
   type FaceRescoreIdentityRow,
   type FaceRescoreParams,
   type FaceRescoreReport,
@@ -464,37 +460,11 @@ export const FaceAssignSheet = memo(function FaceAssignSheet({ face, onClose }: 
           suggestion above was frozen when the track closed; after a batch
           of assignments it answers about a gallery that no longer exists. */}
       {face !== null ? (
-        <Pressable
-          onPress={() => { void runRescore(false) }}
-          disabled={busy}
-          accessibilityRole="button"
-          accessibilityLabel={t('v2.tracks.rescore.button')}
-          accessibilityState={{ disabled: busy, busy: pendingAction?.kind === 'rescore' }}
-          style={[
-            styles.rescoreBtn,
-            {
-              borderColor: colors.primary,
-              opacity: busy && pendingAction?.kind !== 'rescore' ? 0.5 : 1,
-            },
-          ]}
-        >
-          {pendingAction?.kind === 'rescore' ? (
-            <ActivityIndicator size="small" color={colors.primary} />
-          ) : (
-            <RefreshCw size={16} color={colors.primary} />
-          )}
-          <Text style={[styles.rescoreBtnText, { color: colors.primary }]}>
-            {t('v2.tracks.rescore.button')}
-          </Text>
-        </Pressable>
-      ) : null}
-
-      {reportForThisFace !== null ? (
-        <RescoreVerdict
+        <FaceRescoreControls
           report={reportForThisFace}
           busy={busy}
-          reembedPending={pendingAction?.kind === 'reembed'}
-          onReembed={() => { void runRescore(true) }}
+          pending={pendingAction?.kind === 'rescore' || pendingAction?.kind === 'reembed' ? pendingAction.kind : null}
+          onRescore={(reembed) => { void runRescore(reembed) }}
         />
       ) : null}
 
@@ -525,91 +495,6 @@ export const FaceAssignSheet = memo(function FaceAssignSheet({ face, onClose }: 
         )}
       </ScrollView>
     </SheetModal>
-  )
-})
-
-interface RescoreVerdictProps {
-  readonly report: FaceRescoreReport
-  readonly busy: boolean
-  readonly reembedPending: boolean
-  readonly onReembed: () => void
-}
-
-/**
- * The headline of a recompute: what the pipeline WOULD do with this face right
- * now, and the two numbers that decide it (threshold and margin) so a
- * percentage in the list below can be read against something.
- *
- * `model-mismatch` gets the warning tint and its own escape hatch rather than
- * a "0%" — see `rescoreVerdictTone` for why those two must never look alike.
- */
-const RescoreVerdict = memo(function RescoreVerdict({
-  report,
-  busy,
-  reembedPending,
-  onReembed,
-}: RescoreVerdictProps) {
-  const { colors } = useTheme()
-  const { t } = useTranslation()
-  const tone = rescoreVerdictTone(report.verdict)
-  const tint =
-    tone === 'good'
-      ? colors.success
-      : tone === 'medium'
-        ? colors.primary
-        : tone === 'warning'
-          ? colors.warning
-          : colors.foregroundMuted
-  const winner = report.identities.find((i) => i.wouldAutoAssign)
-  const threshold = formatRescoreScore(report.params.threshold)
-  const margin = formatRescoreScore(report.params.margin)
-  return (
-    <View style={[styles.verdictBox, { borderColor: tint, backgroundColor: `${tint}14` }]}>
-      <Text style={[styles.verdictText, { color: tint }]}>
-        {t(rescoreVerdictKey(report.verdict), {
-          name: winner?.name ?? '',
-          min: report.params.minIdentitySamples,
-        })}
-      </Text>
-      {report.comparable && threshold !== null && margin !== null ? (
-        <Text style={[styles.verdictMeta, { color: colors.foregroundSubtle }]}>
-          {t('v2.tracks.rescore.params', { threshold, margin })}
-        </Text>
-      ) : null}
-      {/* Only when it could change the answer: out of the cluster space AND the
-          crop still exists AND a re-embed has not already succeeded. */}
-      {shouldOfferReembed(report) ? (
-        <Pressable
-          onPress={onReembed}
-          disabled={busy}
-          accessibilityRole="button"
-          accessibilityLabel={t('v2.tracks.rescore.reembed')}
-          accessibilityState={{ disabled: busy, busy: reembedPending }}
-          style={[
-            styles.reembedBtn,
-            { borderColor: colors.warning, opacity: busy && !reembedPending ? 0.5 : 1 },
-          ]}
-        >
-          {reembedPending ? (
-            <ActivityIndicator size="small" color={colors.warning} />
-          ) : (
-            <Sparkles size={14} color={colors.warning} />
-          )}
-          <Text style={[styles.reembedBtnText, { color: colors.warning }]}>
-            {t('v2.tracks.rescore.reembed')}
-          </Text>
-        </Pressable>
-      ) : null}
-      {/* A refusal is never silent: the operator asked for inference and must
-          be told exactly why none happened. */}
-      {report.reembed.attempted && !report.reembed.succeeded ? (
-        <Text style={[styles.verdictMeta, { color: colors.danger }]}>
-          {t('v2.tracks.rescore.reembedFailed', {
-            reason: report.reembed.detail ?? report.reembed.reason ?? '',
-          })}
-        </Text>
-      ) : null}
-    </View>
   )
 })
 
@@ -732,11 +617,4 @@ const styles = StyleSheet.create({
   personName: { fontSize: 15, fontWeight: '600' },
   personCount: { fontSize: 11 },
   personScore: { fontSize: 14, fontWeight: '800', fontVariant: ['tabular-nums'], minWidth: 44, textAlign: 'right' },
-  rescoreBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: SPACING.xs, paddingVertical: SPACING.sm, borderRadius: RADIUS.md, borderWidth: 1, marginTop: SPACING.sm },
-  rescoreBtnText: { fontSize: 13, fontWeight: '700' },
-  verdictBox: { borderWidth: 1, borderRadius: RADIUS.md, paddingHorizontal: SPACING.sm, paddingVertical: SPACING.sm, marginTop: SPACING.sm, gap: 4 },
-  verdictText: { fontSize: 13, fontWeight: '700' },
-  verdictMeta: { fontSize: 11, fontWeight: '500' },
-  reembedBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: SPACING.xs, paddingVertical: SPACING.xs, paddingHorizontal: SPACING.sm, borderRadius: RADIUS.md, borderWidth: 1, marginTop: SPACING.xs, alignSelf: 'flex-start' },
-  reembedBtnText: { fontSize: 12, fontWeight: '700' },
 })

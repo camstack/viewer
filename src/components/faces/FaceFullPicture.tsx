@@ -9,6 +9,10 @@
  * event, as the admin face detail reads it), and an "Open event" button that
  * hands the face's track to the caller.
  *
+ * The plate detail draws the same frame through this component (issue 557:
+ * the plate detail matches the face detail, original picture included);
+ * `subject` names what is boxed and what the absence line says.
+ *
  * A face whose hub kept no key frame says so in one line — it does not borrow
  * another frame of the track to look complete.
  */
@@ -32,6 +36,16 @@ export interface FaceFullPictureProps {
   readonly mediaHeaders: Record<string, string> | undefined
   /** Absent ⇒ no "Open event" button. */
   readonly onOpenTrack?: () => void
+  /** What the box marks. Defaults to a face. */
+  readonly subject?: FullPictureSubject
+}
+
+/** The kinds of sample a full picture is shown for. */
+export type FullPictureSubject = 'face' | 'plate'
+
+const ABSENT_KEY: Readonly<Record<FullPictureSubject, string>> = {
+  face: 'v2.faceReview.fullPictureAbsent',
+  plate: 'v2.plateReview.fullPictureAbsent',
 }
 
 interface Size {
@@ -43,6 +57,7 @@ export const FaceFullPicture = memo(function FaceFullPicture({
   picture,
   mediaHeaders,
   onOpenTrack,
+  subject = 'face',
 }: FaceFullPictureProps) {
   const { colors } = useTheme()
   const { t } = useTranslation()
@@ -62,7 +77,7 @@ export const FaceFullPicture = memo(function FaceFullPicture({
   const box = picture?.box
   const detections: readonly DetailDetection[] =
     box !== undefined && frame !== null
-      ? [{ id: 'face', timestamp: 0, className: 'face', zones: [], bbox: box, frameWidth: frame.width, frameHeight: frame.height }]
+      ? [{ id: subject, timestamp: 0, className: subject, zones: [], bbox: box, frameWidth: frame.width, frameHeight: frame.height }]
       : []
 
   return (
@@ -70,7 +85,7 @@ export const FaceFullPicture = memo(function FaceFullPicture({
       <SectionLabel style={styles.label}>{t('v2.faceReview.fullPicture')}</SectionLabel>
       {picture === null ? (
         <Text testID="face-full-picture-absent" style={[styles.absent, { color: colors.foregroundMuted }]}>
-          {t('v2.faceReview.fullPictureAbsent')}
+          {t(ABSENT_KEY[subject])}
         </Text>
       ) : (
         <View onLayout={onLayout} style={[styles.stage, { backgroundColor: colors.surface }]}>

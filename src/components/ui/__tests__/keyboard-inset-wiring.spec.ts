@@ -55,9 +55,9 @@ describe('one keyboard mechanism', () => {
     expect(read('src/components/ui/confirm.tsx')).toContain('<KeyboardInsetView')
   })
 
+  // The face and plate details are adapters over this one sheet (issue 557).
   it.each([
-    'src/components/plates/PlateReviewDetailModal.tsx',
-    'src/components/faces/FaceReviewDetailModal.tsx',
+    'src/components/review/ReviewSampleDetailModal.tsx',
   ])('%s scrolls its body so the focused field and its button stay above the keyboard', (path) => {
     const source = read(path)
     expect(source).toContain('<KeyboardAwareScrollView style={styles.body}')

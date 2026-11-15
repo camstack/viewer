@@ -70,7 +70,33 @@ let onHub: readonly FaceRow[] = []
 function hub(): Record<string, unknown> {
   return {
     'faceGallery.listRecentFaces': () => onHub,
-    'faceGallery.listIdentities': () => [{ id: 'alice', name: 'Alice', sampleCount: 1 }],
+    'faceGallery.listIdentities': () => [
+      { id: 'alice', name: 'Alice', sampleCount: 1 },
+      { id: 'bob', name: 'Bob', sampleCount: 3 },
+    ],
+    'addons.custom': (input: unknown) => {
+      const { action, input: args } = input as { readonly action: string; readonly input: { readonly trackId: string } }
+      // The screen also polls `face.rescoreStatus`; an old hub without it is a
+      // path the screen already handles, and this test is about one face.
+      if (action !== 'face.rescoreTrack') throw new Error(`addon has no custom action '${action}'`)
+      return {
+        faceId: args.trackId === PARKED.trackId ? PARKED.faceId : 'other',
+        deviceId: 7,
+        trackId: args.trackId,
+        assigned: false,
+        verdict: 'suggestion',
+        comparable: true,
+        probeModelId: 'm',
+        clusterModelId: 'm',
+        params: { threshold: 0.6, margin: 0.05, minIdentitySamples: 2, suggestionMinCosine: 0.3 },
+        identities: [
+          { identityId: 'alice', name: 'Alice', score: 0.31, sampleCount: 1, eligible: false, meetsThreshold: false, wouldAutoAssign: false },
+          { identityId: 'bob', name: 'Bob', score: 0.47, sampleCount: 3, eligible: true, meetsThreshold: false, wouldAutoAssign: false },
+        ],
+        reembedAvailable: false,
+        reembed: { attempted: false, succeeded: false },
+      }
+    },
     'faceGallery.deleteFace': (input: unknown) => {
       const faceId = (input as { readonly faceId: string }).faceId
       onHub = onHub.filter((r) => r.faceId !== faceId)
@@ -208,5 +234,25 @@ describe('the full picture', () => {
       i18n.t('v2.faceReview.fullPictureAbsent'),
     )
     expect(screen.getByTestId('face-full-picture').querySelector('[data-testid*="/event-media/m/"]')).toBeNull()
+  })
+})
+
+// Issue 557: recompute one photo and see every person's % on the list.
+describe('recompute from the face detail', () => {
+  it('scores the face against every person and puts the best first', async () => {
+    await openDetail(PARKED.faceId)
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('face-rescore'))
+    })
+    await screen.findByText('47%')
+    expect(screen.getByText('31%')).toBeTruthy()
+    const call = hubCalls().find(
+      (c) => c.path === 'addons.custom' && (c.input as { readonly action?: string }).action === 'face.rescoreTrack',
+    )
+    expect(call?.input).toMatchObject({ action: 'face.rescoreTrack', input: { deviceId: 7, trackId: PARKED.trackId } })
+    const names = [...document.body.querySelectorAll('[role="button"]')]
+      .map((el) => el.textContent ?? '')
+      .filter((text) => text.startsWith('Alice') || text.startsWith('Bob'))
+    expect(names[0]).toContain('Bob')
   })
 })

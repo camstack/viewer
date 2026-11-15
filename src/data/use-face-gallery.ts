@@ -18,6 +18,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useConnection } from '../connection/ConnectionProvider.js'
 import { capQuery, isRecord } from './cap-query.js'
+import { toFaceBox, type FaceBox } from './face-full-picture.js'
 import { absoluteMediaPath, buildMediaIdUrl } from './event-media-url.js'
 import { reloadEventsFeedsAfterBurst } from '../events/events-feed-registry.js'
 import {
@@ -66,26 +67,12 @@ export interface TrackFace {
   readonly faceBbox?: FaceBox
 }
 
-/** Pixel-space box on the key frame (the server's `BoundingBoxSchema`). */
-export interface FaceBox {
-  readonly x: number
-  readonly y: number
-  readonly w: number
-  readonly h: number
-}
-
 function finite(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value)
 }
 
-/** Narrow a `faceBbox`; a box with no area is no box. Pure. */
-export function toFaceBox(raw: unknown): FaceBox | undefined {
-  if (!isRecord(raw)) return undefined
-  const { x, y, w, h } = raw
-  if (!finite(x) || !finite(y) || !finite(w) || !finite(h)) return undefined
-  if (w <= 0 || h <= 0) return undefined
-  return { x, y, w, h }
-}
+// The key-frame box moved to `face-full-picture.ts` (pure, shared with plates).
+export { toFaceBox, type FaceBox }
 
 /** A saved person (face-gallery identity), normalised for the picker. */
 export interface PersonIdentity {

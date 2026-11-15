@@ -4245,7 +4245,8 @@
         "deleteTitle_other": "Elimina {{count}} targhe"
       },
       "filterPlate": "Targa",
-      "searchPlates": "Cerca targhe"
+      "searchPlates": "Cerca targhe",
+      "fullPictureAbsent": "L’hub non ha conservato la foto completa di questa targa."
     },
     "scenes": {
       "empty": "Ancora nessuna scena",

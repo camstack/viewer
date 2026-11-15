@@ -4248,7 +4248,8 @@
         "deleteTitle_other": "Delete {{count}} plates"
       },
       "filterPlate": "Plate",
-      "searchPlates": "Search plates"
+      "searchPlates": "Search plates",
+      "fullPictureAbsent": "The hub kept no full picture for this plate."
     },
     "scenes": {
       "empty": "No scenes yet",

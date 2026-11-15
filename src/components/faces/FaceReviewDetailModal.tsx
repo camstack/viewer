@@ -34,6 +34,12 @@
  * a bin over several faces would delete the one on screen or all of them, and
  * the operator could not tell which.
  *
+ * Since issue 557 the sheet itself is `ReviewSampleDetailModal`, shared with
+ * the plate detail; this file is the face adapter: what a face is called and
+ * scored, who it can go to, and the face-only slot — "Recompute"
+ * (`FaceRescoreControls`), whose fresh percentage for EVERY person is drawn on
+ * that person's row, best first.
+ *
  * The search field was added on 2026-09-13 with the rest of the review tab's
  * person-picking: a bare list is fine at four people and a scroll hunt at
  * forty (*"il selettore li crescerebbe troppo"*). The matching rule is
@@ -43,36 +49,29 @@
  * would hide it.
  */
 import React, { memo, useCallback, useMemo, useState } from 'react'
-import {
-  View,
-  Text,
-  TextInput,
-  Pressable,
-  ScrollView,
-  ActivityIndicator,
-  StyleSheet,
-} from 'react-native'
+import { Text, StyleSheet } from 'react-native'
 import { useTranslation } from 'react-i18next'
-import { Image } from 'expo-image'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { Plus, ChevronRight, Search, Trash2 } from '../../lib/icons.js'
 import { useTheme } from '../../theme/theme-provider.js'
-import { SPACING, RADIUS, TABULAR } from '../../theme/tokens.js'
-import { KeyboardAwareScrollView } from '../ui/KeyboardInset.js'
-import { SheetModal } from '../ui/SheetModal.js'
-import { CarouselPager } from '../ui/CarouselPager.js'
-import { FaceConfidenceBar } from './FaceConfidenceBar.js'
-import { mediaImageSource } from '../../data/track-media-uri.js'
+import { SPACING } from '../../theme/tokens.js'
 import { filterIdentities } from '../../data/identity-picker.js'
 import type { FaceReviewRow } from '../../data/face-cluster-review.js'
 import type { PersonIdentity } from '../../data/use-face-gallery.js'
-import { SectionLabel } from '../ui/SectionLabel.js'
 import { captureCaption } from '../../lib/capture-caption.js'
 import { useDateLocale } from '../../lib/date-locale.js'
-import { SheetHeader, SheetIconButton } from '../ui/SheetHeader.js'
-import { FaceFullPicture } from './FaceFullPicture.js'
+import { log } from '../../lib/logger.js'
+import { refusalAwareKey } from '../../auth/forbidden.js'
 import type { FaceFullPicture as FullPicture } from '../../data/face-full-picture.js'
 import { faceDeletionReadiness } from '../../data/face-review-deletion.js'
+import { useFaceRescore } from '../../data/use-face-rescore.js'
+import { formatRescoreScore, rescoreRowTone, type FaceRescoreReport, type FaceRescoreRowTone } from '../../data/face-rescore.js'
+import {
+  ReviewSampleDetailModal,
+  type ReviewSampleCopy,
+  type ReviewSampleInfo,
+  type ReviewTargetScore,
+  type ReviewTargetTone,
+} from '../review/ReviewSampleDetailModal.js'
+import { FaceRescoreControls, type FaceRescorePending } from './FaceRescoreControls.js'
 
 export interface FaceReviewDetailModalProps {
   /** The faces under review. EMPTY closes the modal; one is the single-face
@@ -98,8 +97,20 @@ export interface FaceReviewDetailModalProps {
   readonly onClose: () => void
 }
 
-/** Above this many people the list gets a search field. */
-const SEARCHABLE_FROM = 6
+/** A failed recompute, kept with the face it was asked for. */
+interface RescoreError {
+  readonly faceId: string
+  readonly message: string
+}
+
+/** The rescore row tone, in the sheet's colour vocabulary. */
+const TONE: Readonly<Record<FaceRescoreRowTone, ReviewTargetTone>> = {
+  'would-assign': 'success',
+  'over-threshold': 'warning',
+  suggestion: 'primary',
+  blocked: 'danger',
+  below: 'muted',
+}
 
 export const FaceReviewDetailModal = memo(function FaceReviewDetailModal({
   rows,
@@ -117,253 +128,134 @@ export const FaceReviewDetailModal = memo(function FaceReviewDetailModal({
   const { colors } = useTheme()
   const { t } = useTranslation()
   const locale = useDateLocale()
-  const insets = useSafeAreaInsets()
-  const [index, setIndex] = useState(0)
-  const [newName, setNewName] = useState('')
-  const [personQuery, setPersonQuery] = useState('')
-
-  const shownIdentities = useMemo(
-    () => filterIdentities(identities, personQuery),
-    [identities, personQuery],
-  )
-
-  const visible = rows.length > 0
-  // The raw index can outlive the set it points into (a refetch can shrink
-  // `rows` under an open modal); every read clamps rather than trusting it,
-  // the same rule the pager itself applies.
-  const active = rows.length > 0 ? (rows[Math.min(index, rows.length - 1)] ?? null) : null
+  const rescore = useFaceRescore()
+  // A report belongs to ONE face (`report.faceId`); paging the carousel to
+  // another face shows that face's own state, never the last one's numbers.
+  const [report, setReport] = useState<FaceRescoreReport | null>(null)
+  const [rescorePending, setRescorePending] = useState<FaceRescorePending>(null)
+  const [rescoreError, setRescoreError] = useState<RescoreError | null>(null)
 
   // The bin is for ONE face, and only one the hub would delete.
   const deletable = rows.length === 1 && faceDeletionReadiness(rows).ready ? rows[0] : undefined
 
   const handleClose = useCallback(() => {
-    setIndex(0)
-    setNewName('')
-    setPersonQuery('')
+    setReport(null)
+    setRescoreError(null)
     onClose()
   }, [onClose])
 
-  const handleCreate = useCallback(() => {
-    const trimmed = newName.trim()
-    if (trimmed.length === 0) return
-    onCreate(trimmed)
-    setNewName('')
-  }, [newName, onCreate])
-
-  const renderPage = useCallback(
-    (pageIndex: number) => {
-      const row = rows[pageIndex]
-      if (row === undefined) return null
-      const uri = cropUriFor(row)
-      if (uri === null) return <View style={[styles.image, { backgroundColor: colors.surfaceHover }]} />
-      return <Image source={mediaImageSource(uri, mediaHeaders)} style={styles.image} contentFit="contain" />
+  const runRescore = useCallback(
+    async (row: FaceReviewRow, reembed: boolean): Promise<void> => {
+      if (rescorePending !== null) return
+      setRescoreError(null)
+      setRescorePending(reembed ? 'reembed' : 'rescore')
+      try {
+        setReport(await rescore.mutateAsync({ deviceId: row.deviceId, trackId: row.trackId, reembed }))
+      } catch (err: unknown) {
+        log.error('face-review', 'rescore threw', {
+          deviceId: row.deviceId,
+          trackId: row.trackId,
+          error: err instanceof Error ? `${err.name}: ${err.message}` : String(err),
+        })
+        setRescoreError({ faceId: row.faceId, message: t(refusalAwareKey(err, 'v2.tracks.rescore.failed')) })
+      } finally {
+        setRescorePending(null)
+      }
     },
-    [rows, cropUriFor, mediaHeaders, colors.surfaceHover],
+    [rescore, rescorePending, t],
   )
 
-  const renderIdentity = useCallback(
-    (item: PersonIdentity) => (
-      <Pressable
-        key={item.id}
-        onPress={() => onAssign(item.id, item.name)}
-        disabled={pending}
-        accessibilityRole="button"
-        style={[styles.personRow, { borderColor: colors.border, opacity: pending ? 0.5 : 1 }]}
-      >
-        <Text numberOfLines={1} style={[styles.personName, { color: colors.foreground }]}>
-          {item.name}
-        </Text>
-        <ChevronRight size={16} color={colors.foregroundSubtle} />
-      </Pressable>
+  const reportFor = useCallback(
+    (row: FaceReviewRow): FaceRescoreReport | null => (report !== null && report.faceId === row.faceId ? report : null),
+    [report],
+  )
+
+  const scoreOf = useCallback(
+    (row: FaceReviewRow, identityId: string): ReviewTargetScore | undefined => {
+      const fresh = reportFor(row)
+      const scored = fresh?.identities.find((i) => i.identityId === identityId)
+      if (fresh === null || scored === undefined) return undefined
+      const text = formatRescoreScore(scored.score)
+      if (text === null) return undefined
+      return { text, tone: TONE[rescoreRowTone(scored, fresh.params)], rank: scored.score }
+    },
+    [reportFor],
+  )
+
+  const infoFor = useCallback(
+    (row: FaceReviewRow): ReviewSampleInfo => ({
+      headline:
+        row.status === 'assigned'
+          ? (row.assignedIdentityName ?? '')
+          : row.status === 'suggested'
+            ? (row.suggestedIdentityName ?? '')
+            : t('v2.faceReview.filterUnassigned'),
+      headlineStyle: 'name',
+      caption: captureCaption(row, locale),
+      ...(row.suggestedMatchScore !== undefined && row.certainty !== undefined
+        ? { score: { value: row.suggestedMatchScore, certainty: row.certainty, label: t('v2.faceReview.confidence') } }
+        : {}),
+    }),
+    [locale, t],
+  )
+
+  const renderSlot = useCallback(
+    (row: FaceReviewRow) => (
+      <>
+        <FaceRescoreControls
+          report={reportFor(row)}
+          busy={pending || rescorePending !== null}
+          pending={rescorePending}
+          onRescore={(reembed) => { void runRescore(row, reembed) }}
+        />
+        {rescoreError !== null && rescoreError.faceId === row.faceId ? (
+          <Text style={[styles.error, { color: colors.danger }]}>{rescoreError.message}</Text>
+        ) : null}
+      </>
     ),
-    [colors, onAssign, pending],
+    [reportFor, pending, rescorePending, runRescore, rescoreError, colors.danger],
+  )
+
+  const copy = useMemo<ReviewSampleCopy>(
+    () => ({
+      title:
+        rows.length > 1 ? t('v2.faceReview.detailTitleMany', { count: rows.length }) : t('v2.faceReview.pickIdentityTitle'),
+      deleteLabel: t('v2.faceReview.deleteOne'),
+      closeLabel: t('v2.faceReview.previewClose'),
+      listTitle: t('v2.faceReview.knownPeople'),
+      searchPlaceholder: t('v2.faceReview.pickPersonSearch'),
+      emptyList: t('v2.tracks.noPersons'),
+      noMatch: (query) => t('v2.faceReview.pickPersonNoMatch', { query }),
+      createPlaceholder: t('v2.tracks.newPersonPlaceholder'),
+    }),
+    [rows.length, t],
   )
 
   return (
-    <SheetModal
-      visible={visible}
+    <ReviewSampleDetailModal
+      rows={rows}
+      targets={identities}
+      filterTargets={filterIdentities}
+      infoFor={infoFor}
+      cropUriFor={cropUriFor}
+      mediaHeaders={mediaHeaders}
+      pending={pending}
+      onAssign={onAssign}
+      onCreate={onCreate}
+      fullPictureFor={fullPictureFor}
+      fullPictureSubject="face"
+      onOpenTrack={onOpenTrack}
+      deleteId={deletable?.faceId}
+      deleteTestID="face-detail-delete"
+      onDelete={onDelete}
       onClose={handleClose}
-      scrimColor="transparent"
-      sheetStyle={[
-        styles.sheet,
-        { backgroundColor: colors.backgroundElevated, paddingBottom: insets.bottom + SPACING.md },
-      ]}
-    >
-      <SheetHeader
-        title={
-          rows.length > 1
-          ? t('v2.faceReview.detailTitleMany', { count: rows.length })
-          : t('v2.faceReview.pickIdentityTitle')
-        }
-        actions={
-          deletable !== undefined ? (
-            <SheetIconButton
-              icon={Trash2}
-              tone="danger"
-              label={t('v2.faceReview.deleteOne')}
-              testID="face-detail-delete"
-              disabled={pending}
-              onPress={() => onDelete(deletable.faceId)}
-            />
-          ) : null
-        }
-        onClose={handleClose}
-        closeLabel={t('v2.faceReview.previewClose')}
-      />
-
-      {/* Everything under the header scrolls once the keyboard leaves less
-          room than the card needs: the field being typed into, and the
-          button next to it, stay above the keyboard. */}
-      <KeyboardAwareScrollView style={styles.body} bounces={false}>
-        {active !== null ? (
-          <>
-            <CarouselPager
-              count={rows.length}
-              index={index}
-              onIndexChange={setIndex}
-              renderPage={renderPage}
-              style={[styles.stage, { backgroundColor: colors.surface }]}
-            />
-
-            <View style={styles.info}>
-              <Text numberOfLines={1} style={[styles.name, { color: colors.foreground }]}>
-                {active.status === 'assigned'
-                  ? (active.assignedIdentityName ?? '')
-                  : active.status === 'suggested'
-                    ? (active.suggestedIdentityName ?? '')
-                    : t('v2.faceReview.filterUnassigned')}
-              </Text>
-              <Text numberOfLines={1} style={[styles.meta, TABULAR, { color: colors.foregroundMuted }]}>
-                {captureCaption(active, locale)}
-              </Text>
-              {active.suggestedMatchScore !== undefined && active.certainty !== undefined ? (
-                <View style={styles.scoreRow}>
-                  <View style={styles.scoreBar}>
-                    <FaceConfidenceBar
-                      score={active.suggestedMatchScore}
-                      certainty={active.certainty}
-                      height={6}
-                    />
-                  </View>
-                  <Text style={[styles.scoreText, TABULAR, { color: colors.foregroundMuted }]}>
-                    {`${t('v2.faceReview.confidence')}: ${String(Math.round(active.suggestedMatchScore * 100))}%`}
-                  </Text>
-                </View>
-              ) : null}
-            </View>
-
-            <FaceFullPicture
-              picture={fullPictureFor(active)}
-              mediaHeaders={mediaHeaders}
-              onOpenTrack={() => onOpenTrack(active)}
-            />
-          </>
-        ) : null}
-
-        <SectionLabel style={styles.sectionLabel}>
-          {t('v2.faceReview.knownPeople')}
-        </SectionLabel>
-        {/* Offered only once the list is long enough to hunt through. Three
-            people do not need a search box above them, and an empty field
-            over an empty gallery reads as a broken picker. */}
-        {identities.length > SEARCHABLE_FROM ? (
-          <View style={[styles.searchRow, { backgroundColor: colors.surface }]}>
-            <Search size={14} color={colors.foregroundMuted} />
-            <TextInput
-              value={personQuery}
-              onChangeText={setPersonQuery}
-              editable={!pending}
-              autoCorrect={false}
-              placeholder={t('v2.faceReview.pickPersonSearch')}
-              placeholderTextColor={colors.foregroundSubtle}
-              accessibilityLabel={t('v2.faceReview.pickPersonSearch')}
-              style={[styles.searchInput, { color: colors.foreground }]}
-            />
-          </View>
-        ) : null}
-        <ScrollView style={styles.list} nestedScrollEnabled keyboardShouldPersistTaps="handled">
-          {shownIdentities.length > 0 ? (
-            shownIdentities.map(renderIdentity)
-          ) : (
-            <Text style={[styles.empty, { color: colors.foregroundMuted }]}>
-              {identities.length === 0
-                ? t('v2.tracks.noPersons')
-                : t('v2.faceReview.pickPersonNoMatch', { query: personQuery.trim() })}
-            </Text>
-          )}
-        </ScrollView>
-
-        <View style={styles.createRow}>
-          <TextInput
-            value={newName}
-            onChangeText={setNewName}
-            editable={!pending}
-            placeholder={t('v2.tracks.newPersonPlaceholder')}
-            placeholderTextColor={colors.foregroundSubtle}
-            style={[styles.input, { backgroundColor: colors.surface, color: colors.foreground }]}
-          />
-          <Pressable
-            onPress={handleCreate}
-            disabled={pending || newName.trim().length === 0}
-            accessibilityRole="button"
-            style={[
-              styles.createBtn,
-              {
-                backgroundColor: colors.primary,
-                opacity: pending || newName.trim().length === 0 ? 0.5 : 1,
-              },
-            ]}
-          >
-            {pending ? (
-              <ActivityIndicator size="small" color={colors.primaryForeground} />
-            ) : (
-              <Plus size={16} color={colors.primaryForeground} />
-            )}
-          </Pressable>
-        </View>
-      </KeyboardAwareScrollView>
-    </SheetModal>
+      renderSlot={renderSlot}
+      scoreOf={scoreOf}
+      copy={copy}
+    />
   )
 })
 
 const styles = StyleSheet.create({
-  sheet: {
-    maxHeight: '92%',
-    borderTopLeftRadius: RADIUS.xl,
-    borderTopRightRadius: RADIUS.xl,
-    paddingHorizontal: SPACING.md,
-    paddingTop: SPACING.md,
-  },
-  body: { flexGrow: 0, flexShrink: 1 },
-  stage: { height: 220, borderRadius: RADIUS.lg, overflow: 'hidden' },
-  image: { width: '100%', height: '100%' },
-  info: { paddingTop: SPACING.sm, gap: 2 },
-  name: { fontSize: 15, fontWeight: '700' },
-  meta: { fontSize: 11 },
-  scoreRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, paddingTop: 4 },
-  scoreBar: { flex: 1, borderRadius: 3, overflow: 'hidden' },
-  scoreText: { fontSize: 11, fontWeight: '600' },
-  sectionLabel: { paddingTop: SPACING.md },
-  searchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.sm,
-    borderRadius: RADIUS.md,
-    paddingHorizontal: SPACING.sm,
-    marginTop: SPACING.xs,
-  },
-  searchInput: { flex: 1, fontSize: 14, paddingVertical: SPACING.sm },
-  list: { flexGrow: 0, maxHeight: 220 },
-  personRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: SPACING.md,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  personName: { fontSize: 15, flex: 1 },
-  empty: { fontSize: 13, paddingVertical: SPACING.md, textAlign: 'center' },
-  createRow: { flexDirection: 'row', gap: SPACING.sm, alignItems: 'center', paddingTop: SPACING.sm },
-  input: { flex: 1, borderRadius: RADIUS.md, paddingHorizontal: SPACING.sm, paddingVertical: SPACING.sm, fontSize: 14 },
-  createBtn: { width: 40, height: 40, borderRadius: RADIUS.md, alignItems: 'center', justifyContent: 'center' },
+  error: { fontSize: 12, fontWeight: '600', marginTop: SPACING.xs },
 })
