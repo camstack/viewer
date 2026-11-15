@@ -30,6 +30,14 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.716',
+    date: '2026-11-16',
+    notes: {
+      en: ['A recorded clip of a sleeping battery camera plays without waking the camera.'],
+      it: ['Una clip registrata di una telecamera a batteria parte senza svegliarla.'],
+    },
+  },
+  {
     version: '1.0.715',
     date: '2026-11-15',
     notes: {
