@@ -30,6 +30,24 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.714',
+    date: '2026-11-15',
+    notes: {
+      en: [
+        'Library timeline: the camera picker works, sections resize freely, and the grid fills its space.',
+        'Retrain: faster loading, one-step labels, Accept and next, quick confirm in the box list.',
+        'Faces and plates share one detail with the original picture; faces can be recomputed against every person.',
+        'New filters: person on faces, text on plates, rule on media. Reanalysing samples no longer freezes.',
+      ],
+      it: [
+        'Timeline della libreria: il selettore camere funziona, le sezioni si ridimensionano liberamente e la griglia riempie lo spazio.',
+        'Retrain: caricamento più rapido, etichette in un passaggio, Accetta e prossimo, conferma rapida nella lista dei box.',
+        'Facce e targhe hanno lo stesso dettaglio con l’immagine originale; una faccia si può ricalcolare su tutte le persone.',
+        'Nuovi filtri: persona sulle facce, testo sulle targhe, regola sui media. Rianalizzare i campioni non blocca più.',
+      ],
+    },
+  },
+  {
     version: '1.0.713',
     date: '2026-11-14',
     notes: {
