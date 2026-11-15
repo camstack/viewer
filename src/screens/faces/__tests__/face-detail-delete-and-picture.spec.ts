@@ -19,6 +19,7 @@ import {
   type FaceReviewDetailModalProps,
 } from '../../../components/faces/FaceReviewDetailModal.js'
 import type { FaceReviewRow } from '../../../data/face-cluster-review.js'
+import { isRecord } from '../../../data/cap-query.js'
 
 vi.mock('../../../connection/ConnectionProvider.js', async () =>
   (await import('../../../testing/connection-stub.js')).connectionStubModule(),
@@ -67,6 +68,22 @@ const ALICE_FACE: FaceRow = {
 
 let onHub: readonly FaceRow[] = []
 
+/** A string field of a hub call's input, or '' — a guard, not a cast. */
+function textField(input: unknown, key: string): string {
+  const value = isRecord(input) ? input[key] : undefined
+  return typeof value === 'string' ? value : ''
+}
+
+/** The custom action an `addons.custom` call names, and its own input. */
+interface CustomCall {
+  readonly action: string
+  readonly args: unknown
+}
+
+function customCall(input: unknown): CustomCall {
+  return { action: textField(input, 'action'), args: isRecord(input) ? input['input'] : undefined }
+}
+
 function hub(): Record<string, unknown> {
   return {
     'faceGallery.listRecentFaces': () => onHub,
@@ -75,14 +92,15 @@ function hub(): Record<string, unknown> {
       { id: 'bob', name: 'Bob', sampleCount: 3 },
     ],
     'addons.custom': (input: unknown) => {
-      const { action, input: args } = input as { readonly action: string; readonly input: { readonly trackId: string } }
+      const { action, args } = customCall(input)
+      const trackId = textField(args, 'trackId')
       // The screen also polls `face.rescoreStatus`; an old hub without it is a
       // path the screen already handles, and this test is about one face.
       if (action !== 'face.rescoreTrack') throw new Error(`addon has no custom action '${action}'`)
       return {
-        faceId: args.trackId === PARKED.trackId ? PARKED.faceId : 'other',
+        faceId: trackId === PARKED.trackId ? PARKED.faceId : 'other',
         deviceId: 7,
-        trackId: args.trackId,
+        trackId,
         assigned: false,
         verdict: 'suggestion',
         comparable: true,
@@ -98,7 +116,7 @@ function hub(): Record<string, unknown> {
       }
     },
     'faceGallery.deleteFace': (input: unknown) => {
-      const faceId = (input as { readonly faceId: string }).faceId
+      const faceId = textField(input, 'faceId')
       onHub = onHub.filter((r) => r.faceId !== faceId)
       return undefined
     },
@@ -119,8 +137,8 @@ function tileFor(faceId: string): HTMLElement {
   const crop = document.body.querySelector(`[data-testid$="/m/${faceId === PARKED.faceId ? 11 : faceId === LEGACY.faceId ? 12 : 13}"]`)
   if (crop === null) throw new Error(`no tile for ${faceId}`)
   const pressable = crop.closest('[role="button"]')
-  if (pressable === null) throw new Error(`the tile for ${faceId} is not pressable`)
-  return pressable as HTMLElement
+  if (!(pressable instanceof HTMLElement)) throw new Error(`the tile for ${faceId} is not pressable`)
+  return pressable
 }
 
 async function openDetail(faceId: string): Promise<void> {
@@ -138,8 +156,8 @@ function dialogButton(label: string): HTMLElement {
   const dialog = document.body.querySelector('[role="alert"]')
   if (dialog === null) throw new Error('no confirmation dialog on screen')
   const button = [...dialog.querySelectorAll('[role="button"]')].find((el) => el.textContent === label)
-  if (button === undefined) throw new Error(`the confirmation has no "${label}" button`)
-  return button as HTMLElement
+  if (!(button instanceof HTMLElement)) throw new Error(`the confirmation has no "${label}" button`)
+  return button
 }
 
 function listReads(): number {
@@ -247,7 +265,7 @@ describe('recompute from the face detail', () => {
     await screen.findByText('47%')
     expect(screen.getByText('31%')).toBeTruthy()
     const call = hubCalls().find(
-      (c) => c.path === 'addons.custom' && (c.input as { readonly action?: string }).action === 'face.rescoreTrack',
+      (c) => c.path === 'addons.custom' && customCall(c.input).action === 'face.rescoreTrack',
     )
     expect(call?.input).toMatchObject({ action: 'face.rescoreTrack', input: { deviceId: 7, trackId: PARKED.trackId } })
     const names = [...document.body.querySelectorAll('[role="button"]')]

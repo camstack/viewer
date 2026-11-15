@@ -201,11 +201,17 @@ const ACTIVE_POLL_MS = 2_000
 /** List exports (history included), optionally scoped to one device. Degrades to
  *  `[]` when not connected / the cap is absent. Polls fast while any row is
  *  active so progress advances without an event stream. */
-export function useExportsList(deviceId?: number): UseQueryResult<ExportRecord[]> {
+/** Options for {@link useExportsList}. */
+export interface ExportsListOptions {
+  /** False: the caller does not want exports now (default true). */
+  readonly enabled?: boolean
+}
+
+export function useExportsList(deviceId?: number, options: ExportsListOptions = {}): UseQueryResult<ExportRecord[]> {
   const { controller, state } = useConnection()
   return useQuery<ExportRecord[]>({
     queryKey: [...EXPORTS_KEY, 'list', deviceId ?? 'all'],
-    enabled: state === 'connected',
+    enabled: state === 'connected' && options.enabled !== false,
     staleTime: 5_000,
     refetchInterval: (query) =>
       (query.state.data ?? []).some(isExportActive) ? ACTIVE_POLL_MS : false,

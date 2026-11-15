@@ -207,7 +207,10 @@ export function wantsArtifacts(kinds: readonly LibraryItemKind[]): boolean {
 }
 
 /** Are exports part of this kind selection? */
-export function wantsExports(kinds: readonly LibraryItemKind[]): boolean {
+export function wantsExports(kinds: readonly LibraryItemKind[], ruleId: string | null = null): boolean {
+  // An export belongs to no rule: with a rule picked every export would be
+  // fetched only to be dropped by `libraryItemMatches`.
+  if (ruleId !== null) return false
   return kinds.length === 0 || kinds.includes(LIBRARY_EXPORT_KIND)
 }
 

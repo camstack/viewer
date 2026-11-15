@@ -4361,7 +4361,8 @@
       "allCameras": "All cameras",
       "noFootage": "No footage at this time",
       "loading": "Loading cameras…",
-      "noCameras": "No cameras to show"
+      "noCameras": "No cameras to show",
+      "noPreviewAboveMax": "No preview above {{max}} cameras"
     },
     "remote": {
       "fullScreen": "Full screen",

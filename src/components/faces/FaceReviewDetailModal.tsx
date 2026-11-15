@@ -48,7 +48,7 @@
  * showing IS the reason the person is being chosen, and a sheet over a sheet
  * would hide it.
  */
-import React, { memo, useCallback, useMemo, useState } from 'react'
+import React, { memo, useCallback, useMemo } from 'react'
 import { Text, StyleSheet } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useTheme } from '../../theme/theme-provider.js'
@@ -58,12 +58,9 @@ import type { FaceReviewRow } from '../../data/face-cluster-review.js'
 import type { PersonIdentity } from '../../data/use-face-gallery.js'
 import { captureCaption } from '../../lib/capture-caption.js'
 import { useDateLocale } from '../../lib/date-locale.js'
-import { log } from '../../lib/logger.js'
-import { refusalAwareKey } from '../../auth/forbidden.js'
 import type { FaceFullPicture as FullPicture } from '../../data/face-full-picture.js'
 import { faceDeletionReadiness } from '../../data/face-review-deletion.js'
-import { useFaceRescore } from '../../data/use-face-rescore.js'
-import { formatRescoreScore, rescoreRowTone, type FaceRescoreReport, type FaceRescoreRowTone } from '../../data/face-rescore.js'
+import { formatRescoreScore, rescoreRowTone, type FaceRescoreRowTone } from '../../data/face-rescore.js'
 import {
   ReviewSampleDetailModal,
   type ReviewSampleCopy,
@@ -71,7 +68,8 @@ import {
   type ReviewTargetScore,
   type ReviewTargetTone,
 } from '../review/ReviewSampleDetailModal.js'
-import { FaceRescoreControls, type FaceRescorePending } from './FaceRescoreControls.js'
+import { FaceRescoreControls } from './FaceRescoreControls.js'
+import { useFaceRescoreSession } from './use-face-rescore-session.js'
 
 export interface FaceReviewDetailModalProps {
   /** The faces under review. EMPTY closes the modal; one is the single-face
@@ -95,12 +93,6 @@ export interface FaceReviewDetailModalProps {
   /** Delete ONE parked face; the caller confirms first. */
   readonly onDelete: (faceId: string) => void
   readonly onClose: () => void
-}
-
-/** A failed recompute, kept with the face it was asked for. */
-interface RescoreError {
-  readonly faceId: string
-  readonly message: string
 }
 
 /** The rescore row tone, in the sheet's colour vocabulary. */
@@ -128,58 +120,28 @@ export const FaceReviewDetailModal = memo(function FaceReviewDetailModal({
   const { colors } = useTheme()
   const { t } = useTranslation()
   const locale = useDateLocale()
-  const rescore = useFaceRescore()
-  // A report belongs to ONE face (`report.faceId`); paging the carousel to
-  // another face shows that face's own state, never the last one's numbers.
-  const [report, setReport] = useState<FaceRescoreReport | null>(null)
-  const [rescorePending, setRescorePending] = useState<FaceRescorePending>(null)
-  const [rescoreError, setRescoreError] = useState<RescoreError | null>(null)
+  // Paging the carousel to another face shows that face's own state, never
+  // the last one's numbers: the session answers per face.
+  const rescore = useFaceRescoreSession('face-review')
 
   // The bin is for ONE face, and only one the hub would delete.
   const deletable = rows.length === 1 && faceDeletionReadiness(rows).ready ? rows[0] : undefined
 
   const handleClose = useCallback(() => {
-    setReport(null)
-    setRescoreError(null)
+    rescore.reset()
     onClose()
-  }, [onClose])
-
-  const runRescore = useCallback(
-    async (row: FaceReviewRow, reembed: boolean): Promise<void> => {
-      if (rescorePending !== null) return
-      setRescoreError(null)
-      setRescorePending(reembed ? 'reembed' : 'rescore')
-      try {
-        setReport(await rescore.mutateAsync({ deviceId: row.deviceId, trackId: row.trackId, reembed }))
-      } catch (err: unknown) {
-        log.error('face-review', 'rescore threw', {
-          deviceId: row.deviceId,
-          trackId: row.trackId,
-          error: err instanceof Error ? `${err.name}: ${err.message}` : String(err),
-        })
-        setRescoreError({ faceId: row.faceId, message: t(refusalAwareKey(err, 'v2.tracks.rescore.failed')) })
-      } finally {
-        setRescorePending(null)
-      }
-    },
-    [rescore, rescorePending, t],
-  )
-
-  const reportFor = useCallback(
-    (row: FaceReviewRow): FaceRescoreReport | null => (report !== null && report.faceId === row.faceId ? report : null),
-    [report],
-  )
+  }, [onClose, rescore])
 
   const scoreOf = useCallback(
     (row: FaceReviewRow, identityId: string): ReviewTargetScore | undefined => {
-      const fresh = reportFor(row)
-      const scored = fresh?.identities.find((i) => i.identityId === identityId)
+      const fresh = rescore.reportFor(row.faceId)
+      const scored = rescore.scoresFor(row.faceId).get(identityId)
       if (fresh === null || scored === undefined) return undefined
       const text = formatRescoreScore(scored.score)
       if (text === null) return undefined
       return { text, tone: TONE[rescoreRowTone(scored, fresh.params)], rank: scored.score }
     },
-    [reportFor],
+    [rescore],
   )
 
   const infoFor = useCallback(
@@ -203,17 +165,17 @@ export const FaceReviewDetailModal = memo(function FaceReviewDetailModal({
     (row: FaceReviewRow) => (
       <>
         <FaceRescoreControls
-          report={reportFor(row)}
-          busy={pending || rescorePending !== null}
-          pending={rescorePending}
-          onRescore={(reembed) => { void runRescore(row, reembed) }}
+          report={rescore.reportFor(row.faceId)}
+          busy={pending || rescore.pending !== null}
+          pending={rescore.pending}
+          onRescore={(reembed) => { void rescore.run(row, reembed) }}
         />
-        {rescoreError !== null && rescoreError.faceId === row.faceId ? (
-          <Text style={[styles.error, { color: colors.danger }]}>{rescoreError.message}</Text>
+        {rescore.errorFor(row.faceId) !== null ? (
+          <Text style={[styles.error, { color: colors.danger }]}>{rescore.errorFor(row.faceId)}</Text>
         ) : null}
       </>
     ),
-    [reportFor, pending, rescorePending, runRescore, rescoreError, colors.danger],
+    [rescore, pending, colors.danger],
   )
 
   const copy = useMemo<ReviewSampleCopy>(

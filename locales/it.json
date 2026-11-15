@@ -4358,7 +4358,8 @@
       "allCameras": "Tutte le camere",
       "noFootage": "Nessuna registrazione a quest’ora",
       "loading": "Caricamento camere…",
-      "noCameras": "Nessuna camera da mostrare"
+      "noCameras": "Nessuna camera da mostrare",
+      "noPreviewAboveMax": "Nessuna anteprima oltre {{max}} telecamere"
     },
     "remote": {
       "fullScreen": "Schermo intero",

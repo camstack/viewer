@@ -19,7 +19,6 @@
 import { buildMediaIdUrl } from './event-media-url.js'
 import { isRecord } from './cap-query.js'
 
-/** What the detail needs to draw the full picture. */
 /** Pixel-space box on the key frame (the server's `BoundingBoxSchema`). */
 export interface FaceBox {
   readonly x: number
@@ -41,7 +40,7 @@ export function toFaceBox(raw: unknown): FaceBox | undefined {
   return { x, y, w, h }
 }
 
-
+/** What the detail needs to draw the full picture. */
 export interface FaceFullPicture {
   /** Absolute URL of the native key frame on the event-media plane. */
   readonly uri: string
@@ -49,8 +48,10 @@ export interface FaceFullPicture {
   readonly box: FaceBox | undefined
 }
 
-/** The full picture a face was cropped from, or `null` when the hub kept none. */
-/** The full picture for any review sample: its key frame and its box on it. */
+/**
+ * The full picture for any review sample (a face, a plate read): its key frame
+ * and its box on it, or `null` when the hub kept none.
+ */
 export function sampleFullPicture(
   keyFrameMediaId: number | undefined,
   box: FaceBox | undefined,
@@ -60,8 +61,15 @@ export function sampleFullPicture(
   return { uri: buildMediaIdUrl(serverUrl, keyFrameMediaId), box }
 }
 
+/** What a face row carries about its key frame. */
+export interface FaceKeyFrameRef {
+  readonly keyFrameMediaId?: number
+  readonly faceBbox?: FaceBox
+}
+
+/** The full picture a face was cropped from, or `null` when the hub kept none. */
 export function faceFullPicture(
-  row: { readonly keyFrameMediaId?: number; readonly faceBbox?: FaceBox },
+  row: FaceKeyFrameRef,
   serverUrl: string | null,
 ): FaceFullPicture | null {
   return sampleFullPicture(row.keyFrameMediaId, row.faceBbox, serverUrl)

@@ -4,9 +4,13 @@
  *
  * The Library timeline has no picture of its own: its "stream slot" holds a
  * grid of stills, one per camera in the scope, cut from the recorded footage at
- * the instant the cursor is on. The grid draws EVERY camera the operator picked
- * (issue 557 removed the per-width cap and its "+N more" note; the camera
- * picker is what narrows the wall) and fills its box ({@link fillFrameGrid}).
+ * the instant the cursor is on. The grid lays out EVERY camera the operator
+ * picked and fills its box ({@link fillFrameGrid}); issue 557 removed the
+ * per-width cap and its "+N more" note. What stays bounded is the READS: only
+ * the first {@link CURSOR_STILLS_MAX} cameras draw a still, so a 20-camera
+ * scope costs 12 still reads per settle, not 20. A camera past the bound keeps
+ * its tile, with its name and a one-line note saying why it has no picture
+ * ({@link drawsStill}).
  *
  *  - **Live scrub on a small scope.** With at most
  *    {@link LIVE_SCRUB_MAX_CAMERAS} cameras the stills follow a drag, at most
@@ -41,6 +45,14 @@ export const LIVE_SCRUB_MAX_CAMERAS = 4
 
 /** At most one still request per tile per this interval while scrubbing live. */
 export const SCRUB_FRAME_INTERVAL_MS = 100
+
+/** The most cameras that draw a still at once; the rest show their name only. */
+export const CURSOR_STILLS_MAX = 12
+
+/** Does the camera at this position in the scope draw a still? */
+export function drawsStill(index: number): boolean {
+  return index >= 0 && index < CURSOR_STILLS_MAX
+}
 
 /** Does a scope of this size scrub live? */
 export function scrubsLive(cameraCount: number): boolean {

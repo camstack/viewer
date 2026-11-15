@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  CURSOR_STILLS_MAX,
   LIVE_FRAME_LAG_MS,
+  drawsStill,
   cursorInstant,
   fillFrameGrid,
   scrubsLive,
@@ -9,6 +11,14 @@ import {
 } from '../cursor-frames.js'
 
 describe('cursor frames', () => {
+  it('only the first CURSOR_STILLS_MAX cameras of the scope draw a still', () => {
+    expect(CURSOR_STILLS_MAX).toBe(12)
+    expect(drawsStill(0)).toBe(true)
+    expect(drawsStill(11)).toBe(true)
+    expect(drawsStill(12)).toBe(false)
+    expect(drawsStill(-1)).toBe(false)
+  })
+
   it('the cells stretch over the whole box, gaps included', () => {
     const grid = fillFrameGrid(4, 808, 408, 8, 2)
     expect(grid).toEqual({ cols: 2, rows: 2, cellW: 400, cellH: 200 })

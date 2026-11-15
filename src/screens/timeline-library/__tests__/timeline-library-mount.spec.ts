@@ -32,7 +32,32 @@ afterEach(() => {
   setTestViewport(IPHONE_PORTRAIT)
 })
 
+/** A fleet of `count` online cameras, ids from 101. */
+function fleet(count: number): readonly (typeof CAMERAS)[number][] {
+  return Array.from({ length: count }, (_, i) => ({ ...CAMERAS[0], id: 101 + i, name: `Cam ${String(i + 1)}` }))
+}
+
 describe('TimelineLibraryScreen', () => {
+  it('lays out every camera but reads stills for the first 12 only, and says so on the rest', async () => {
+    const many = fleet(14)
+    const view = mountScreen(React.createElement(TimelineLibraryScreen), {
+      hub: { 'deviceManager.listAll': many },
+    })
+    await waitFor(() => {
+      for (const c of many) expect(view.queryByTestId(`${CURSOR_FRAME_TILE_TEST_ID}-${c.id}`)).not.toBeNull()
+    })
+    const tile = (id: number): HTMLElement => view.getByTestId(`${CURSOR_FRAME_TILE_TEST_ID}-${id}`)
+    for (const c of many.slice(12)) {
+      expect(tile(c.id).textContent).toContain('No preview above 12 cameras')
+      expect(tile(c.id).textContent).toContain(c.name)
+      expect(tile(c.id).querySelector('[data-testid*="/addon/recorder/still/"]')).toBeNull()
+    }
+    for (const c of many.slice(0, 12)) {
+      expect(tile(c.id).textContent).not.toContain('No preview above')
+      expect(tile(c.id).querySelector('[data-testid*="/addon/recorder/still/"]')).not.toBeNull()
+    }
+  })
+
   it('draws one frame tile per camera in the fleet', async () => {
     const view = mountScreen(React.createElement(TimelineLibraryScreen), {
       hub: { 'deviceManager.listAll': CAMERAS },

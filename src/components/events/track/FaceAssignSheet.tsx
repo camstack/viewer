@@ -58,14 +58,13 @@ import {
 import { useServer } from '../../../app/ServerProvider.js'
 import { useConnection } from '../../../connection/ConnectionProvider.js'
 import { mediaImageSource } from '../../../data/track-media-uri.js'
-import { useFaceRescore } from '../../../data/use-face-rescore.js'
+import { useFaceRescoreSession, orderByRescore } from '../../faces/use-face-rescore-session.js'
 import { FaceRescoreControls } from '../../faces/FaceRescoreControls.js'
 import {
   formatRescoreScore,
   rescoreRowTone,
   type FaceRescoreIdentityRow,
   type FaceRescoreParams,
-  type FaceRescoreReport,
   type FaceRescoreRowTone,
 } from '../../../data/face-rescore.js'
 import { SectionLabel } from '../../ui/SectionLabel.js'
@@ -85,11 +84,6 @@ type FaceSheetPendingAction =
   | { readonly kind: 'create' }
   | { readonly kind: 'unassign' }
   | { readonly kind: 'unassignAll' }
-  /** The recompute — arithmetic over the persisted vector; the hub also
-   *  persists the fresh suggestion server-side (never an assignment). */
-  | { readonly kind: 'rescore' }
-  /** The recompute that first re-embeds the crop — runs inference on a node. */
-  | { readonly kind: 'reembed' }
   | null
 
 export const FaceAssignSheet = memo(function FaceAssignSheet({ face, onClose }: FaceAssignSheetProps) {
@@ -112,83 +106,51 @@ export const FaceAssignSheet = memo(function FaceAssignSheet({ face, onClose }: 
   const unassignAll = useUnassignAllForIdentity()
   const createPerson = useCreateIdentity()
 
-  const rescore = useFaceRescore()
+  // The recompute (and its in-flight state, report and failure) is the shared
+  // session `FaceReviewDetailModal` also uses.
+  const rescore = useFaceRescoreSession('face-assign')
 
   const [newName, setNewName] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [pendingAction, setPendingAction] = useState<FaceSheetPendingAction>(null)
-  const [report, setReport] = useState<FaceRescoreReport | null>(null)
   const busy =
     assign.isPending ||
     unassign.isPending ||
     unassignAll.isPending ||
     createPerson.isPending ||
-    rescore.isPending
+    rescore.pending !== null
 
-  // A report belongs to ONE face. The sheet is reused for the next track
-  // without unmounting, so a report kept across that swap would show track A's
-  // percentages beside track B's crop — the single worst thing this feature
-  // could do, since the operator would act on it.
-  const reportForThisFace = report !== null && report.faceId === face?.faceId ? report : null
+  const reportForThisFace = rescore.reportFor(face?.faceId)
+  const shownError = error ?? rescore.errorFor(face?.faceId)
 
   const close = useCallback((): void => {
     setNewName('')
     setError(null)
-    setReport(null)
+    rescore.reset()
     onClose()
-  }, [onClose])
+  }, [onClose, rescore])
 
   /**
    * Ask the hub to score this face against the gallery AS IT IS NOW.
    *
-   * `reembed` is passed through explicitly and defaults to false — the plain
-   * recompute is pure arithmetic over a persisted vector, while the re-embed
-   * spends a node round-trip and rewrites the face row. See
-   * `data/face-rescore.ts` for why the number already on the track is stale.
+   * `reembed` defaults to false — the plain recompute is pure arithmetic over a
+   * persisted vector, while the re-embed spends a node round-trip and rewrites
+   * the face row. See `data/face-rescore.ts` for why the number already on the
+   * track is stale.
    */
   const runRescore = useCallback(
     async (reembed: boolean): Promise<void> => {
       if (!face || busy) return
       setError(null)
-      setPendingAction({ kind: reembed ? 'reembed' : 'rescore' })
-      try {
-        const result = await rescore.mutateAsync({
-          deviceId: face.deviceId,
-          trackId: face.trackId,
-          reembed,
-        })
-        setReport(result)
-      } catch (err: unknown) {
-        log.error('face-assign', 'rescore threw', {
-          deviceId: face.deviceId,
-          trackId: face.trackId,
-          error: err instanceof Error ? `${err.name}: ${err.message}` : String(err),
-        })
-        setError(t(refusalAwareKey(err, 'v2.tracks.rescore.failed')))
-      } finally {
-        setPendingAction(null)
-      }
+      await rescore.run(face, reembed)
     },
-    [face, busy, rescore, t],
+    [face, busy, rescore],
   )
 
-  /** identityId → its fresh row, so the people list can wear the new numbers
+  /** identityId → its fresh row, so the people list wears the new numbers
    *  instead of the sheet growing a second, competing list. */
-  const scoreByIdentity = useMemo((): ReadonlyMap<string, FaceRescoreIdentityRow> => {
-    if (reportForThisFace === null) return new Map()
-    return new Map(reportForThisFace.identities.map((r) => [r.identityId, r]))
-  }, [reportForThisFace])
-
-  /** Best-first once scored — the operator's next tap is almost always the top
-   *  row, and leaving it in alphabetical order hides the answer they asked for. */
-  const orderedPersons = useMemo((): readonly PersonIdentity[] => {
-    if (scoreByIdentity.size === 0) return persons
-    return [...persons].sort(
-      (a, b) =>
-        (scoreByIdentity.get(b.id)?.score ?? Number.NEGATIVE_INFINITY) -
-        (scoreByIdentity.get(a.id)?.score ?? Number.NEGATIVE_INFINITY),
-    )
-  }, [persons, scoreByIdentity])
+  const scoreByIdentity = rescore.scoresFor(face?.faceId)
+  const orderedPersons = useMemo(() => orderByRescore(persons, scoreByIdentity), [persons, scoreByIdentity])
 
   const assignTo = useCallback(
     async (identityId: string): Promise<void> => {
@@ -452,8 +414,8 @@ export const FaceAssignSheet = memo(function FaceAssignSheet({ face, onClose }: 
         </Pressable>
       </View>
 
-      {error !== null ? (
-        <Text style={[styles.error, { color: colors.danger }]}>{error}</Text>
+      {shownError !== null ? (
+        <Text style={[styles.error, { color: colors.danger }]}>{shownError}</Text>
       ) : null}
 
       {/* Recompute every person's % against the gallery AS IT IS NOW. The
@@ -463,7 +425,7 @@ export const FaceAssignSheet = memo(function FaceAssignSheet({ face, onClose }: 
         <FaceRescoreControls
           report={reportForThisFace}
           busy={busy}
-          pending={pendingAction?.kind === 'rescore' || pendingAction?.kind === 'reembed' ? pendingAction.kind : null}
+          pending={rescore.pending}
           onRescore={(reembed) => { void runRescore(reembed) }}
         />
       ) : null}

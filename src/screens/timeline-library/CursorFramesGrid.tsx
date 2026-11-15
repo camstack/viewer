@@ -7,7 +7,8 @@
  * still route (`data/still-media-url.ts`) for ITS camera at `instant`. Which
  * cameras get a tile, and when the instant is allowed to change, are
  * `cursor-frames.ts`'s — this file only lays them out and says what each tile
- * is (name, time) or why it has no picture (no footage at that instant).
+ * is (name, time) or why it has no picture (no footage at that instant, or a
+ * camera past the {@link CURSOR_STILLS_MAX} still bound).
  *
  * While a drag is in flight the grid keeps what it has: `instant` it receives
  * is already the settled one (`use-settled-instant.ts`), so no image request
@@ -27,7 +28,7 @@ import { useDateLocale } from '../../lib/date-locale.js'
 import { useTheme } from '../../theme/theme-provider.js'
 import { RADIUS, SPACING } from '../../theme/tokens.js'
 import { buildStillMediaUrl, isStillPreviewFailed } from '../../data/still-media-url.js'
-import { fillFrameGrid } from './cursor-frames.js'
+import { CURSOR_STILLS_MAX, drawsStill, fillFrameGrid } from './cursor-frames.js'
 
 export interface FrameCamera {
   readonly id: number
@@ -79,7 +80,9 @@ export function CursorFramesGrid({ cameras, instant, variant = 'grid' }: CursorF
     const cols = computeGridLayout(cameras.length, innerW, innerH, 'auto', 16 / 9).cols
     return fillFrameGrid(cameras.length, innerW, innerH, GAP, cols)
   }, [cameras.length, box.width, box.height])
-  const rows = useMemo(() => splitIntoRows(cameras, layout.cols), [cameras, layout.cols])
+  // Each camera keeps its scope position, which decides whether it draws a still.
+  const indexed = useMemo(() => cameras.map((camera, index) => ({ camera, index, id: camera.id })), [cameras])
+  const rows = useMemo(() => splitIntoRows(indexed, layout.cols), [indexed, layout.cols])
 
   if (variant === 'strip') {
     const tileH = Math.max(0, box.height - GAP * 2)
@@ -87,8 +90,15 @@ export function CursorFramesGrid({ cameras, instant, variant = 'grid' }: CursorF
     return (
       <View testID={CURSOR_FRAMES_TEST_ID} style={styles.fill} onLayout={onLayout}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.strip, { padding: GAP, gap: GAP }]}>
-          {cameras.map((camera) => (
-            <FrameTile key={camera.id} camera={camera} instant={instant} width={tileW} height={tileH} />
+          {cameras.map((camera, index) => (
+            <FrameTile
+              key={camera.id}
+              camera={camera}
+              instant={instant}
+              width={tileW}
+              height={tileH}
+              showStill={drawsStill(index)}
+            />
           ))}
         </ScrollView>
       </View>
@@ -100,13 +110,14 @@ export function CursorFramesGrid({ cameras, instant, variant = 'grid' }: CursorF
       <View style={[styles.wall, { padding: GAP, gap: GAP }]}>
         {rows.map((row) => (
           <View key={row[0]?.id ?? 0} style={[styles.row, { gap: GAP }]}>
-            {row.map((camera) => (
+            {row.map(({ camera, index }) => (
               <FrameTile
                 key={camera.id}
                 camera={camera}
                 instant={instant}
                 width={layout.cellW}
                 height={layout.cellH}
+                showStill={drawsStill(index)}
               />
             ))}
           </View>
@@ -121,9 +132,11 @@ interface FrameTileProps {
   readonly instant: number
   readonly width: number
   readonly height: number
+  /** False past the still bound: the tile shows the camera, not a picture. */
+  readonly showStill: boolean
 }
 
-function FrameTile({ camera, instant, width, height }: FrameTileProps): React.JSX.Element {
+function FrameTile({ camera, instant, width, height, showStill }: FrameTileProps): React.JSX.Element {
   const { t } = useTranslation()
   const { colors } = useTheme()
   const locale = useDateLocale()
@@ -134,7 +147,7 @@ function FrameTile({ camera, instant, width, height }: FrameTileProps): React.JS
   const failed = isStillPreviewFailed(failedAt, instant)
 
   const serverUrl = state === 'connected' ? (controller.getSystem()?.serverUrl ?? null) : null
-  const uri = serverUrl !== null ? buildStillMediaUrl(serverUrl, camera.id, instant) : null
+  const uri = serverUrl !== null && showStill ? buildStillMediaUrl(serverUrl, camera.id, instant) : null
   const headers: Record<string, string> | undefined = token ? { Authorization: `Bearer ${token}` } : undefined
 
   return (
@@ -146,7 +159,14 @@ function FrameTile({ camera, instant, width, height }: FrameTileProps): React.JS
       ]}
     >
       <View style={[styles.picture, { backgroundColor: colors.surfaceHover }]}>
-        {uri !== null && !failed ? (
+        {!showStill ? (
+          <View style={styles.placeholder}>
+            <ImageOff size={18} color={colors.foregroundSubtle} />
+            <Text style={[styles.placeholderText, { color: colors.foregroundSubtle }]} numberOfLines={2}>
+              {t('v2.timelineLibrary.noPreviewAboveMax', { max: CURSOR_STILLS_MAX })}
+            </Text>
+          </View>
+        ) : uri !== null && !failed ? (
           // NOT keyed by the URI: a live scrub changes it several times a
           // second, and a remount would blank the tile between two stills.
           <Image
@@ -169,9 +189,11 @@ function FrameTile({ camera, instant, width, height }: FrameTileProps): React.JS
         <Text style={[styles.name, { color: colors.foreground }]} numberOfLines={1}>
           {camera.name}
         </Text>
-        <Text style={[styles.time, { color: colors.foregroundMuted }]} numberOfLines={1}>
-          {clock(instant, locale)}
-        </Text>
+        {showStill ? (
+          <Text style={[styles.time, { color: colors.foregroundMuted }]} numberOfLines={1}>
+            {clock(instant, locale)}
+          </Text>
+        ) : null}
       </View>
     </View>
   )
@@ -189,7 +211,7 @@ const styles = StyleSheet.create({
   },
   picture: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   placeholder: { alignItems: 'center', justifyContent: 'center', gap: SPACING.xs },
-  placeholderText: { fontSize: 11 },
+  placeholderText: { fontSize: 11, textAlign: 'center' },
   caption: {
     height: CAPTION_HEIGHT,
     flexDirection: 'row',

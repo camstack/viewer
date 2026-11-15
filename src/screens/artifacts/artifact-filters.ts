@@ -126,12 +126,12 @@ export function toggleArtifactDevice(
   }
 }
 
-/** Set the day cursor. Returns a new state. */
 /** Pick a rule; picking the rule already picked clears it (single choice). */
 export function toggleArtifactRule(state: ArtifactFilterState, ruleId: string): ArtifactFilterState {
   return { ...state, ruleId: state.ruleId === ruleId ? null : ruleId }
 }
 
+/** Set the day cursor. Returns a new state. */
 export function setArtifactDayOffset(
   state: ArtifactFilterState,
   dayOffset: number,

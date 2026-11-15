@@ -145,10 +145,10 @@ export function ArtifactsScreen({ embedded = false }: ArtifactsScreenProps) {
   const criteria = useMemo(() => toLibraryCriteria(filterState, bucketNow), [filterState, bucketNow])
 
   const artifactsWanted = wantsArtifacts(filterState.kinds)
-  const exportsWanted = wantsExports(filterState.kinds)
+  const exportsWanted = wantsExports(filterState.kinds, filterState.ruleId)
   const feed = useNcArtifacts(filters, { enabled: artifactsWanted && filtersRead })
   const rulesQuery = useNcRules()
-  const exportsQuery = useExportsList()
+  const exportsQuery = useExportsList(undefined, { enabled: exportsWanted })
   const liveEvents = useExportEvents()
   const cancel = useCancelExport()
   const del = useDeleteExport()

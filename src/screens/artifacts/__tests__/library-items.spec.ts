@@ -202,6 +202,9 @@ describe('a source nobody asked for is not fetched', () => {
 
   it('stops listing exports when only artifact kinds are selected', () => {
     expect(wantsExports(['timelapse'])).toBe(false)
+    // A picked rule: exports belong to no rule, so they are not fetched at all.
+    expect(wantsExports([], 'r1')).toBe(false)
+    expect(wantsExports(['export'], 'r1')).toBe(false)
     expect(wantsArtifacts(['timelapse'])).toBe(true)
   })
 })

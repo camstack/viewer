@@ -19,6 +19,18 @@ vi.mock('../../../connection/ConnectionProvider.js', async () =>
 
 afterEach(cleanup)
 
+/** The element under `root` matching `selector`; throws instead of casting. */
+function inside(root: HTMLElement, selector: string): Element {
+  const found = root.querySelector(selector)
+  if (found === null) throw new Error(`nothing matches ${selector}`)
+  return found
+}
+
+/** Open a read's detail by pressing its tile. */
+function openCell(plateId: string): void {
+  fireEvent.click(inside(screen.getByTestId(`plate-cell-${plateId}`), '[role="button"]'))
+}
+
 const row = (plateId: string, extra: Record<string, unknown> = {}): Record<string, unknown> => ({
   plateId,
   deviceId: 1,
@@ -57,9 +69,7 @@ describe('PlateReviewScreen', () => {
   it('confirming a suggestion assigns that read to the suggested vehicle', async () => {
     mountScreen(React.createElement(PlateReviewScreen), { hub: HUB })
     await waitFor(() => expect(screen.getByTestId('plate-cell-b')).toBeTruthy())
-    const confirm = screen.getByTestId('plate-cell-b').querySelector('[aria-label="Assign"]')
-    expect(confirm).not.toBeNull()
-    fireEvent.click(confirm as Element)
+    fireEvent.click(inside(screen.getByTestId('plate-cell-b'), '[aria-label="Assign"]'))
     await waitFor(() =>
       expect(hubCalls().some((c) => c.path === 'plateGallery.assignPlates')).toBe(true),
     )
@@ -70,10 +80,10 @@ describe('PlateReviewScreen', () => {
   it('the detail modal lists the vehicles and corrects the text through the hub', async () => {
     mountScreen(React.createElement(PlateReviewScreen), { hub: HUB })
     await waitFor(() => expect(screen.getByTestId('plate-cell-c')).toBeTruthy())
-    fireEvent.click(screen.getByTestId('plate-cell-c').querySelector('[role="button"]') as Element)
+    openCell('c')
     await waitFor(() => expect(screen.getByText('Known vehicles')).toBeTruthy())
     expect(screen.getAllByText('Panda').length).toBeGreaterThan(1)
-    const input = screen.getByLabelText('Plate text') as HTMLInputElement
+    const input = screen.getByLabelText('Plate text')
     fireEvent.change(input, { target: { value: 'zz 999 yy' } })
     fireEvent.click(screen.getByLabelText('Correct the text'))
     await waitFor(() =>
@@ -90,7 +100,7 @@ describe('PlateReviewScreen', () => {
   it('the detail shows the full picture the read was cut from, and opens its track', async () => {
     mountScreen(React.createElement(PlateReviewScreen), { hub: HUB })
     await waitFor(() => expect(screen.getByTestId('plate-cell-c')).toBeTruthy())
-    fireEvent.click(screen.getByTestId('plate-cell-c').querySelector('[role="button"]') as Element)
+    openCell('c')
     const picture = await screen.findByTestId('face-full-picture')
     expect(picture.querySelector('[data-testid$="/event-media/m/5151"]')).not.toBeNull()
     expect(screen.getByTestId('face-open-track')).toBeTruthy()
@@ -99,7 +109,7 @@ describe('PlateReviewScreen', () => {
   it('says the hub kept no full picture for a read without a key frame', async () => {
     mountScreen(React.createElement(PlateReviewScreen), { hub: HUB })
     await waitFor(() => expect(screen.getByTestId('plate-cell-b')).toBeTruthy())
-    fireEvent.click(screen.getByTestId('plate-cell-b').querySelector('[role="button"]') as Element)
+    openCell('b')
     const absent = await screen.findByTestId('face-full-picture-absent')
     expect(absent.textContent).toBe('The hub kept no full picture for this plate.')
   })
