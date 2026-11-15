@@ -93,7 +93,9 @@ describe('the cluster gallery panel', () => {
     // it is written; the tap path itself is proved above through the lens.
     const src = readFileSync(join(__dirname, '..', 'ClusterCard.tsx'), 'utf8')
     expect(src).toContain("const selectedIndex = tappedId === null ? -1")
-    expect(src).toContain('borderColor: active ? colors.primary : accent')
+    // The gallery's pill border follows `active` through `clusterCardFrame`
+    // (paging → pill: active), pinned in `cluster-card-frame.spec.ts`.
+    expect(src).toContain('borderColor: clusterCardFrame({ paging, selected, playing, active }).pill')
   })
 
   it('the lens follows the last tap', () => {

@@ -26,6 +26,7 @@ import { dayRelativeLabel } from '../../../lib/day-relative-label.js'
 import { useDateLocale } from '../../../lib/date-locale.js'
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native'
 import { Download, Search, Video } from '../../../lib/icons.js'
+import { clusterCardFrame } from './cluster-card-frame.js'
 import { useCameras } from '../../../data/use-cameras.js'
 import { trackCameraName } from '../../../data/track-events.js'
 import { useTranslation } from 'react-i18next'
@@ -350,7 +351,9 @@ export const ClusterCard = memo(function ClusterCard({
           {
             width: itemWidth,
             height: paging ? CLUSTER_PANEL_ITEM_HEIGHT : clipThumbHeight + CLUSTER_CLIP_CAPTION_HEIGHT,
-            borderColor: active ? colors.primary : accent,
+            borderColor: clusterCardFrame({ paging, selected, playing, active }).pill
+              ? colors.primary
+              : accent,
           },
         ]}
       >
@@ -389,7 +392,9 @@ export const ClusterCard = memo(function ClusterCard({
           width,
           height: cluster.heightPx,
           backgroundColor: paging ? colors.surface : 'transparent',
-          borderColor: playing || selected ? colors.primary : colors.border,
+          borderColor: clusterCardFrame({ paging, selected, playing, active: false }).card
+            ? colors.primary
+            : colors.border,
         },
       ]}
     >
