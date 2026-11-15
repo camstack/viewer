@@ -2104,6 +2104,7 @@
       },
       "templateVars": {
         "sensor": "Sensore",
+        "sensorState": "Stato del sensore",
         "cause": "Causa",
         "nodeName": "Nome del nodo",
         "offlineFor": "Offline da",
