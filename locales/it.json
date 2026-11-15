@@ -3580,7 +3580,9 @@
         "deleteTitle_one": "Elimina {{count}} volto",
         "deleteTitle_other": "Elimina {{count}} volti",
         "recomputeTitle": "Ricalcola i suggerimenti"
-      }
+      },
+      "filterPerson": "Persona",
+      "searchPeople": "Cerca persone"
     },
     "statusDetail": {
       "batteryTitle": "Batteria",
@@ -4239,7 +4241,9 @@
         "applyTitle_other": "Applica {{count}} suggerimenti targa",
         "deleteTitle_one": "Elimina {{count}} targa",
         "deleteTitle_other": "Elimina {{count}} targhe"
-      }
+      },
+      "filterPlate": "Targa",
+      "searchPlates": "Cerca targhe"
     },
     "scenes": {
       "empty": "Ancora nessuna scena",

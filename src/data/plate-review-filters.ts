@@ -24,6 +24,7 @@ import {
   faceReviewDayBounds,
   type FaceReviewFilterState,
   type FaceReviewSort,
+  wantedReviewSubjects,
 } from './face-review-filters.js'
 import type { PlateReviewRow } from './plate-review.js'
 
@@ -49,19 +50,31 @@ export function plateReviewListInput(state: FaceReviewFilterState, limit: number
  */
 export function plateReviewWindowIsPartial(state: FaceReviewFilterState, hasMore: boolean): boolean {
   if (!hasMore) return false
-  return state.statuses.length < 3 || state.dayMs !== null || state.deviceIds.length > 1
+  return (
+    state.statuses.length < 3 ||
+    state.dayMs !== null ||
+    state.deviceIds.length > 1 ||
+    (state.subjects?.length ?? 0) > 0
+  )
 }
 
-/** Status ∧ camera ∧ day, all ANDed. Empty `statuses` yields nothing. Pure. */
+/** The distinct plate texts of the loaded window, for the Plate facet, A→Z. */
+export function plateReviewTextOptions(rows: readonly PlateReviewRow[]): readonly string[] {
+  return [...new Set(rows.map((r) => r.text).filter((text) => text !== ''))].sort((a, b) => a.localeCompare(b))
+}
+
+/** Status ∧ camera ∧ day ∧ plate text, all ANDed. Empty `statuses` yields nothing. Pure. */
 export function applyPlateReviewFilters(rows: readonly PlateReviewRow[], state: FaceReviewFilterState): PlateReviewRow[] {
   if (state.statuses.length === 0) return []
   const wantedStatus = new Set(state.statuses)
   const wantedDevices = state.deviceIds.length > 0 ? new Set(state.deviceIds) : null
   const bounds = faceReviewDayBounds(state.dayMs)
+  const wantedTexts = wantedReviewSubjects(state)
   return rows.filter((row) => {
     if (!wantedStatus.has(row.status)) return false
     if (wantedDevices !== null && !wantedDevices.has(row.deviceId)) return false
     if (bounds !== null && (row.timestamp < bounds.fromMs || row.timestamp > bounds.toMs)) return false
+    if (wantedTexts !== null && !wantedTexts.has(row.text)) return false
     return true
   })
 }

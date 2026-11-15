@@ -504,6 +504,21 @@ export function FaceReviewScreen() {
 
 
 
+  // The Person facet: a face assigned to, or PROPOSED for, the picked people.
+  // With Status on Assigned it is every sample of that person (issue 557:
+  // assigned faces looked gone, because the default status hides them).
+  const personFacet = useMemo(
+    () => ({
+      label: t('v2.faceReview.filterPerson'),
+      options: [...identities]
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .map((identity) => ({ key: identity.id, label: identity.name })),
+      searchPlaceholder: t('v2.faceReview.searchPeople'),
+      testID: 'review-filter-person',
+    }),
+    [identities, t],
+  )
+
   const filterBar = reviewFilterBar({
     t,
     filters,
@@ -517,6 +532,7 @@ export function FaceReviewScreen() {
     display: tileDisplay.display,
     onDisplayChange: tileDisplay.onDisplayChange,
     displayTestID: 'face-review-display',
+    subjects: personFacet,
   })
 
   // Fixed block under the scope bar: ONE row of chips with the eye, the `⋯`

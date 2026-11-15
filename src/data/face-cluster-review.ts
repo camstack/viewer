@@ -128,6 +128,8 @@ export interface FaceReviewRow {
   readonly status: FaceReviewStatus
   /** Set only when `status === 'assigned'`. */
   readonly assignedIdentityName: string | undefined
+  /** The assigned person's id — set only when `status === 'assigned'`. */
+  readonly assignedIdentityId?: string
   /** Set only when `status === 'suggested'` — THIS face's own recognizer
    *  suggestion, never a cluster's. */
   readonly suggestedIdentityId: string | undefined
@@ -168,6 +170,7 @@ function toFaceReviewRow(
       ...base,
       status: 'assigned',
       assignedIdentityName: face.identityName ?? identityNameById.get(face.identityId ?? '') ?? face.identityId,
+      ...(face.identityId !== undefined && face.identityId !== null ? { assignedIdentityId: face.identityId } : {}),
       ...EMPTY_SUGGESTION,
     }
   }

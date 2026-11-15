@@ -3583,7 +3583,9 @@
         "deleteTitle_one": "Delete {{count}} face",
         "deleteTitle_other": "Delete {{count}} faces",
         "recomputeTitle": "Recompute suggestions"
-      }
+      },
+      "filterPerson": "Person",
+      "searchPeople": "Search people"
     },
     "statusDetail": {
       "batteryTitle": "Battery",
@@ -4242,7 +4244,9 @@
         "applyTitle_other": "Apply {{count}} plate suggestions",
         "deleteTitle_one": "Delete {{count}} plate",
         "deleteTitle_other": "Delete {{count}} plates"
-      }
+      },
+      "filterPlate": "Plate",
+      "searchPlates": "Search plates"
     },
     "scenes": {
       "empty": "No scenes yet",

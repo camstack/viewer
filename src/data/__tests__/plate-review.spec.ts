@@ -14,6 +14,7 @@ import {
 import {
   applyPlateReviewFilters,
   plateReviewCameraOptions,
+  plateReviewTextOptions,
   plateReviewWindowIsPartial,
   retainSelectedPlates,
   sortPlateReviewRows,
@@ -135,5 +136,22 @@ describe('text helpers', () => {
   })
   it('normalises plate text like the hub stores it', () => {
     expect(normalizePlateText('ab 123-cd')).toBe('AB123CD')
+  })
+})
+
+describe('the plate text filter', () => {
+  const rows = buildPlateReviewRows(
+    [plate({ plateId: 'x', text: 'ZZ999ZZ' }), plate({ plateId: 'y', text: 'AB123CD' }), plate({ plateId: 'z', text: 'AB123CD' })],
+    VEHICLES,
+    CAMERAS,
+  )
+  const ALL = { ...DEFAULT_FACE_REVIEW_FILTERS, statuses: ['assigned', 'suggested', 'unassigned'] as const }
+  it('offers each text once, A to Z', () => {
+    expect(plateReviewTextOptions(rows)).toEqual(['AB123CD', 'ZZ999ZZ'])
+  })
+  it('keeps only the picked texts, and says the window is partial while more exists', () => {
+    const state = { ...ALL, statuses: [...ALL.statuses], subjects: ['AB123CD'] }
+    expect(applyPlateReviewFilters(rows, state).map((r) => r.plateId)).toEqual(['y', 'z'])
+    expect(plateReviewWindowIsPartial(state, true)).toBe(true)
   })
 })

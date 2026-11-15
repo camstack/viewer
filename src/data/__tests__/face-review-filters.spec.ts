@@ -24,6 +24,7 @@ import {
   toggleFaceReviewSortDirection,
   toggleFaceReviewStatus,
   toggleFaceSelection,
+  toggleReviewSubject,
   DEFAULT_FACE_REVIEW_FILTERS,
   DEFAULT_FACE_REVIEW_SORT,
   type FaceReviewFilterState,
@@ -289,7 +290,7 @@ describe('filter state transitions', () => {
 
   it('picking a day leaves the other narrowings alone', () => {
     const state = setFaceReviewDay(toggleFaceReviewDevice(DEFAULT_FACE_REVIEW_FILTERS, 7), dayStart(3))
-    expect(state).toEqual({ statuses: DEFAULT_FACE_REVIEW_FILTERS.statuses, deviceIds: [7], dayMs: dayStart(3) })
+    expect(state).toEqual({ statuses: DEFAULT_FACE_REVIEW_FILTERS.statuses, deviceIds: [7], dayMs: dayStart(3), subjects: [] })
     expect(setFaceReviewDay(state, null).dayMs).toBeNull()
   })
 
@@ -409,5 +410,27 @@ describe('multi-selection', () => {
 
   it('selecting a face that is not on screen yields nothing to write', () => {
     expect(selectedFaceRows(rows, new Set(['ghost']))).toEqual([])
+  })
+})
+
+describe('the person filter', () => {
+  const ALL = { ...DEFAULT_FACE_REVIEW_FILTERS, statuses: ['assigned', 'suggested', 'unassigned'] as const }
+  const rows = rowsFrom([
+    face({ faceId: 'a1', identityId: 'alice', assigned: true }),
+    face({ faceId: 'a2', suggestedIdentityId: 'alice', suggestedMatchScore: 0.7 }),
+    face({ faceId: 'b1', identityId: 'bob', assigned: true }),
+    face({ faceId: 'u1' }),
+  ])
+  it('keeps the faces assigned to the person AND the ones proposed for them', () => {
+    const state = toggleReviewSubject({ ...ALL, statuses: [...ALL.statuses] }, 'alice')
+    expect(applyFaceReviewFilters(rows, state).map((r) => r.faceId)).toEqual(['a1', 'a2'])
+    // The non-default statuses count as one narrowing, the person as another.
+    expect(activeFaceReviewFilterCount(state)).toBe(2)
+    expect(faceReviewWindowIsPartial(state, true)).toBe(true)
+  })
+  it('a second tap clears the person', () => {
+    const once = toggleReviewSubject({ ...ALL, statuses: [...ALL.statuses] }, 'alice')
+    const twice = toggleReviewSubject(once, 'alice')
+    expect(applyFaceReviewFilters(rows, twice)).toHaveLength(4)
   })
 })

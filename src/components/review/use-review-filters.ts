@@ -15,6 +15,14 @@ import type { FaceReviewFilterState, FaceReviewSort } from '../../data/face-revi
 
 export type ReviewFiltersPage = 'faces' | 'plates'
 
+/** The part of the filters that lives only for this visit. */
+interface ReviewSessionFilters {
+  readonly dayMs: number | null
+  readonly subjects: readonly string[]
+}
+
+const NO_SESSION_FILTERS: ReviewSessionFilters = { dayMs: null, subjects: [] }
+
 export interface ReviewFiltersState {
   readonly filters: FaceReviewFilterState
   readonly setFilters: (update: (prev: FaceReviewFilterState) => FaceReviewFilterState) => void
@@ -32,22 +40,27 @@ export function useReviewFilters(page: ReviewFiltersPage): ReviewFiltersState {
 
   // The day lives in this visit only; a ref mirrors it so an updater always
   // sees the latest one, even two updates within one render.
-  const [dayMs, setDayMs] = useState<number | null>(null)
-  const dayRef = useRef<number | null>(null)
+  // The day and the picked subjects are this visit's: neither is remembered.
+  const [session, setSession] = useState<ReviewSessionFilters>(NO_SESSION_FILTERS)
+  const sessionRef = useRef<ReviewSessionFilters>(NO_SESSION_FILTERS)
 
   const { statuses, deviceIds, sort } = remembered.value
-  const filters = useMemo<FaceReviewFilterState>(() => ({ statuses, deviceIds, dayMs }), [statuses, deviceIds, dayMs])
+  const { dayMs, subjects } = session
+  const filters = useMemo<FaceReviewFilterState>(
+    () => ({ statuses, deviceIds, dayMs, subjects }),
+    [statuses, deviceIds, dayMs, subjects],
+  )
 
   const setFilters = useCallback(
     (update: (prev: FaceReviewFilterState) => FaceReviewFilterState) => {
-      let nextDay = dayRef.current
+      let nextSession = sessionRef.current
       remember((prev) => {
-        const next = update({ statuses: prev.statuses, deviceIds: prev.deviceIds, dayMs: dayRef.current })
-        nextDay = next.dayMs
+        const next = update({ statuses: prev.statuses, deviceIds: prev.deviceIds, ...sessionRef.current })
+        nextSession = { dayMs: next.dayMs, subjects: next.subjects ?? [] }
         return { ...prev, statuses: next.statuses, deviceIds: next.deviceIds }
       })
-      dayRef.current = nextDay
-      setDayMs(nextDay)
+      sessionRef.current = nextSession
+      setSession(nextSession)
     },
     [remember],
   )

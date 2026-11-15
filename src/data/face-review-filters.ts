@@ -122,6 +122,12 @@ export interface FaceReviewFilterState {
   readonly deviceIds: readonly number[]
   /** The picked day (a local midnight), or `null` for every day. */
   readonly dayMs: number | null
+  /**
+   * Picked subjects — on the faces page a person's id (matching the face
+   * assigned to them OR proposed for them), on the plates page a plate text.
+   * Absent or empty means every subject. Like the day, it is not remembered.
+   */
+  readonly subjects?: readonly string[]
 }
 
 export const FACE_REVIEW_STATUSES: readonly FaceReviewStatus[] = ['assigned', 'suggested', 'unassigned']
@@ -132,6 +138,7 @@ export const DEFAULT_FACE_REVIEW_FILTERS: FaceReviewFilterState = {
   statuses: ['suggested', 'unassigned'],
   deviceIds: [],
   dayMs: null,
+  subjects: [],
 }
 
 export function toggleFaceReviewStatus(
@@ -151,6 +158,17 @@ export function toggleFaceReviewDevice(state: FaceReviewFilterState, deviceId: n
   return { ...state, deviceIds }
 }
 
+export function toggleReviewSubject(state: FaceReviewFilterState, subject: string): FaceReviewFilterState {
+  const current = state.subjects ?? []
+  const subjects = current.includes(subject) ? current.filter((s) => s !== subject) : [...current, subject]
+  return { ...state, subjects }
+}
+
+/** The picked subjects as a set, or `null` when none narrows. */
+export function wantedReviewSubjects(state: FaceReviewFilterState): ReadonlySet<string> | null {
+  return state.subjects !== undefined && state.subjects.length > 0 ? new Set(state.subjects) : null
+}
+
 export function setFaceReviewDay(state: FaceReviewFilterState, dayMs: number | null): FaceReviewFilterState {
   return { ...state, dayMs }
 }
@@ -161,6 +179,7 @@ export function activeFaceReviewFilterCount(state: FaceReviewFilterState): numbe
   let count = 0
   if (state.deviceIds.length > 0) count += 1
   if (state.dayMs !== null) count += 1
+  if ((state.subjects?.length ?? 0) > 0) count += 1
   const defaults = DEFAULT_FACE_REVIEW_FILTERS.statuses
   const sameStatuses =
     state.statuses.length === defaults.length && defaults.every((s) => state.statuses.includes(s))
@@ -169,7 +188,7 @@ export function activeFaceReviewFilterCount(state: FaceReviewFilterState): numbe
 }
 
 /**
- * Status ∧ camera ∧ date. Every predicate is an AND — an operator narrowing
+ * Status ∧ camera ∧ date ∧ person. Every predicate is an AND — an operator narrowing
  * twice expects fewer rows, never more. Pure.
  */
 export function applyFaceReviewFilters(rows: readonly FaceReviewRow[], state: FaceReviewFilterState): FaceReviewRow[] {
@@ -177,12 +196,20 @@ export function applyFaceReviewFilters(rows: readonly FaceReviewRow[], state: Fa
   const wantedStatus = new Set(state.statuses)
   const wantedDevices = state.deviceIds.length > 0 ? new Set(state.deviceIds) : null
   const bounds = faceReviewDayBounds(state.dayMs)
+  const wantedPeople = wantedReviewSubjects(state)
   return rows.filter((row) => {
     if (!wantedStatus.has(row.status)) return false
     if (wantedDevices !== null && !wantedDevices.has(row.deviceId)) return false
     if (bounds !== null && (row.timestamp < bounds.fromMs || row.timestamp > bounds.toMs)) return false
+    if (wantedPeople !== null && !faceRowIsAbout(row, wantedPeople)) return false
     return true
   })
+}
+
+/** The face is assigned to, or proposed for, one of these people. */
+function faceRowIsAbout(row: FaceReviewRow, people: ReadonlySet<string>): boolean {
+  const person = row.assignedIdentityId ?? row.suggestedIdentityId
+  return person !== undefined && people.has(person)
 }
 
 /** The hub's `filter` value for a set of status chips, or `null` when no chip
@@ -295,10 +322,12 @@ export function mergeFaceReviewPages<T extends { readonly faceId: string }>(page
  * TRUE when the status chips narrow below what the hub's filter returns — the
  * cut is made on the loaded rows, so while more pages exist the grid is "…among
  * the first N", not "all of them". Cameras and dates are server-side now and
- * never make the window partial. Pure.
+ * never make the window partial; a person is picked on the loaded rows, so it
+ * does. Pure.
  */
 export function faceReviewWindowIsPartial(state: FaceReviewFilterState, hasMore: boolean): boolean {
   if (!hasMore) return false
+  if ((state.subjects?.length ?? 0) > 0) return true
   const filter = faceReviewServerFilter(state.statuses)
   return filter !== null && state.statuses.length < SERVER_FILTER_STATUS_COUNT[filter]
 }

@@ -24,6 +24,7 @@ import {
   FACE_REVIEW_STATUSES,
   setFaceReviewSortKey,
   toggleFaceReviewDevice,
+  toggleReviewSubject,
   toggleFaceReviewStatus,
   type FaceReviewFilterState,
   type FaceReviewSort,
@@ -63,6 +64,19 @@ export interface ReviewFilterBarInput {
   readonly displayTestID?: string
   /** testID of the date chip. */
   readonly dateTestID?: string
+  /**
+   * The page's SUBJECT facet — a person on the faces page, a plate text on the
+   * plates page. Absent: the page offers none.
+   */
+  readonly subjects?: ReviewSubjectFacet
+}
+
+/** One page's subject facet: what it is called and what can be picked. */
+export interface ReviewSubjectFacet {
+  readonly label: string
+  readonly options: readonly { readonly key: string; readonly label: string }[]
+  readonly searchPlaceholder: string
+  readonly testID: string
 }
 
 export interface ReviewFilterBar {
@@ -83,7 +97,29 @@ export function reviewFilterBar(input: ReviewFilterBarInput): ReviewFilterBar {
   const directionLabel = (dir: FaceReviewSortDirection): string =>
     dir === 'desc' ? t('v2.library.descending') : t('v2.library.ascending')
 
+  const subjectFacet: readonly LibraryFilterDef[] =
+    input.subjects === undefined
+      ? []
+      : [
+          {
+            id: 'subjects',
+            label: input.subjects.label,
+            count: filters.subjects?.length ?? 0,
+            testID: input.subjects.testID,
+            sections: [
+              {
+                title: input.subjects.label,
+                options: input.subjects.options,
+                selected: filters.subjects ?? [],
+                onToggle: (key) => setFilters((prev) => toggleReviewSubject(prev, key)),
+                searchPlaceholder: input.subjects.searchPlaceholder,
+              },
+            ],
+          },
+        ]
+
   const facets: readonly LibraryFilterDef[] = [
+    ...subjectFacet,
     {
       id: 'cameras',
       label: t('v2.events.cameras'),

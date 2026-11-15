@@ -71,6 +71,7 @@ describe('useReviewFilters', () => {
       statuses: [...DEFAULT_FACE_REVIEW_FILTERS.statuses, 'assigned'],
       deviceIds: [101],
       dayMs: null,
+      subjects: [],
     }
     expect(remounted.result.current.filters).toEqual(expected)
     expect(remounted.result.current.sort).toEqual({ key: 'date', direction: 'asc' })

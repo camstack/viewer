@@ -50,6 +50,7 @@ import {
 import {
   applyPlateReviewFilters,
   plateReviewCameraOptions,
+  plateReviewTextOptions,
   plateReviewWindowIsPartial,
   retainSelectedPlates,
   selectedPlateRows,
@@ -350,6 +351,17 @@ export function PlateReviewScreen(): React.JSX.Element {
     },
   ]
 
+  // The Plate facet: the texts of the loaded window, searchable.
+  const plateFacet = useMemo(
+    () => ({
+      label: t('v2.plateReview.filterPlate'),
+      options: plateReviewTextOptions(rows).map((text) => ({ key: text, label: text })),
+      searchPlaceholder: t('v2.plateReview.searchPlates'),
+      testID: 'review-filter-plate',
+    }),
+    [rows, t],
+  )
+
   const filterBar = reviewFilterBar({
     t,
     filters,
@@ -363,6 +375,7 @@ export function PlateReviewScreen(): React.JSX.Element {
     display: tileDisplay.display,
     onDisplayChange: tileDisplay.onDisplayChange,
     displayTestID: 'plate-review-display',
+    subjects: plateFacet,
   })
 
   // Fixed block under the scope bar: ONE row — chips, then the eye, the `⋯`

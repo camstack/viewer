@@ -127,6 +127,7 @@ describe('buildFaceReviewRows — one row per FACE, never a group vote', () => {
         base64: undefined,
         status: 'assigned',
         assignedIdentityName: 'Alice',
+        assignedIdentityId: 'alice',
         suggestedIdentityId: undefined,
         suggestedIdentityName: undefined,
         suggestedMatchScore: undefined,
