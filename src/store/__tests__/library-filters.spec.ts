@@ -15,6 +15,9 @@ import {
   pruneKnownIds,
   pruneRetrainRemembered,
   pruneReviewRemembered,
+  pruneTimelineRemembered,
+  parseTimelineRemembered,
+  TIMELINE_REMEMBERED_DEFAULTS,
 } from '../library-filters.js'
 import { DEFAULT_FACE_REVIEW_SORT } from '../../data/face-review-filters.js'
 import { STORAGE_KEY_LEVELS, storageLevelOf } from '../storage-levels.js'
@@ -54,6 +57,12 @@ describe('parsers', () => {
     expect(parseArtifactsRemembered('garbage')).toEqual(ARTIFACTS_REMEMBERED_DEFAULTS)
   })
 
+  it('timeline: an absent document is no cameras, and only integer ids are kept', () => {
+    expect(parseTimelineRemembered(undefined)).toEqual(TIMELINE_REMEMBERED_DEFAULTS)
+    expect(parseTimelineRemembered({ deviceIds: [3, '4', 3, 5.5] })).toEqual({ deviceIds: [3] })
+    expect(parseTimelineRemembered({ deviceIds: [] }).deviceIds).toEqual([])
+  })
+
   it('retrain: one camera and one collection, else null', () => {
     expect(parseRetrainRemembered({ deviceId: 7, collectionId: 'c1' })).toEqual({ deviceId: 7, collectionId: 'c1' })
     expect(parseRetrainRemembered({ deviceId: '7', collectionId: '' })).toEqual(RETRAIN_REMEMBERED_DEFAULTS)
@@ -72,6 +81,7 @@ describe('stale ids', () => {
     expect(pruneKnownIds([7, 99], known)).toEqual([7])
     expect(pruneReviewRemembered({ ...REVIEW_REMEMBERED_DEFAULTS, deviceIds: [99] }, known).deviceIds).toEqual([])
     expect(pruneArtifactsRemembered({ kinds: [], deviceIds: [8, 99] }, known).deviceIds).toEqual([8])
+    expect(pruneTimelineRemembered({ deviceIds: [7, 99] }, known).deviceIds).toEqual([7])
     expect(pruneRetrainRemembered({ deviceId: 99, collectionId: 'gone' }, known, new Set(['c1']))).toEqual({
       deviceId: null,
       collectionId: null,
@@ -95,11 +105,11 @@ describe('stale ids', () => {
 
 describe('levels', () => {
   it('every section is a DEVICE key, one copy per hub', () => {
-    for (const section of ['events', 'artifacts', 'faces', 'plates', 'retrain']) {
+    for (const section of ['events', 'artifacts', 'faces', 'plates', 'retrain', 'timeline']) {
       const entry = storageLevelOf(`camstack.v2.library-filter.${section}@hub-a`)
       expect(entry?.level, section).toBe('device')
       expect(entry?.match, section).toBe('per-hub')
     }
-    expect(STORAGE_KEY_LEVELS.filter((e) => e.key.startsWith('camstack.v2.library-filter.'))).toHaveLength(5)
+    expect(STORAGE_KEY_LEVELS.filter((e) => e.key.startsWith('camstack.v2.library-filter.'))).toHaveLength(6)
   })
 })

@@ -51,7 +51,7 @@ import {
   type CameraSelectionMode,
 } from '../../screens/camera-detail/camera-selection.js'
 
-import type { CameraScopeBinding } from './camera-scope-binding.js'
+import { toggleSelectAll, type CameraScopeBinding } from './camera-scope-binding.js'
 
 /** Marker for the confirm action. `testID` reaches the web as `data-testid` and
  *  is inert on a device; the "does not navigate" gate is asserted through it
@@ -143,8 +143,7 @@ export function CameraSwitcherPanel({
       {scope ? (
         <Pressable
           onPress={() => {
-            // Select-all only: an empty scope is never offered.
-            if (!allTicked) scope.onChange(cameras.map((c) => c.id))
+            scope.onChange(toggleSelectAll(cameras.map((c) => c.id), checked))
           }}
           accessibilityRole="checkbox"
           accessibilityState={{ checked: allTicked }}
@@ -157,7 +156,7 @@ export function CameraSwitcherPanel({
             <Square size={18} color={colors.foregroundSubtle} />
           )}
           <Text style={[styles.name, { color: colors.foreground, fontSize: ui.font.sm }]} numberOfLines={1}>
-            {t('v2.timelineLibrary.allCameras')}
+            {t(allTicked ? 'v2.timelineLibrary.deselectAll' : 'v2.timelineLibrary.allCameras')}
           </Text>
         </Pressable>
       ) : null}

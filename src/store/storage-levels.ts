@@ -58,6 +58,7 @@ export const STORAGE_KEY_LEVELS: readonly StorageKeyLevel[] = [
   { key: 'camstack.v2.library-filter.faces', match: 'per-hub', level: 'device', what: 'People filter bar and sort' },
   { key: 'camstack.v2.library-filter.plates', match: 'per-hub', level: 'device', what: 'Plates filter bar and sort' },
   { key: 'camstack.v2.library-filter.retrain', match: 'per-hub', level: 'device', what: 'Retrain camera and collection' },
+  { key: 'camstack.v2.library-filter.timeline', match: 'per-hub', level: 'device', what: 'Library timeline cameras' },
   { key: 'camstack.v2.ondemand-player', match: 'exact', level: 'device', what: 'on-demand player box' },
   { key: 'camstack.v2.whats-new.seen', match: 'exact', level: 'device', what: "what's-new seen" },
   { key: 'camstack.v2.native-release.prompted', match: 'exact', level: 'device', what: 'native release prompt seen' },

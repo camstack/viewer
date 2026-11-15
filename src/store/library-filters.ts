@@ -15,6 +15,7 @@
  *   faces      cameras, status, the sort                  the day
  *   plates     cameras, status, the sort                  the day
  *   retrain    camera, collection                         —
+ *   timeline   cameras                                    —
  *
  * The DAY is never remembered: a picked day is a question about that day, and
  * a page that reopened tomorrow on yesterday (or, for Media, on "N days back"
@@ -38,21 +39,29 @@ import { LIBRARY_KIND_ORDER, type LibraryItemKind } from '../screens/artifacts/l
 
 /** The Library pages with a remembered filter bar besides Events (whose filter
  *  is `events-filter-store`'s). */
-export type LibraryFilterSection = 'artifacts' | 'faces' | 'plates' | 'retrain'
+export type LibraryFilterSection = 'artifacts' | 'faces' | 'plates' | 'retrain' | 'timeline'
 
-export const LIBRARY_FILTER_SECTIONS: readonly LibraryFilterSection[] = ['artifacts', 'faces', 'plates', 'retrain']
+export const LIBRARY_FILTER_SECTIONS: readonly LibraryFilterSection[] = [
+  'artifacts',
+  'faces',
+  'plates',
+  'retrain',
+  'timeline',
+]
 
 // One base key per section, each stored per hub (`storage-levels.ts`, device).
 export const ARTIFACTS_FILTER_STORAGE_KEY = 'camstack.v2.library-filter.artifacts'
 export const FACES_FILTER_STORAGE_KEY = 'camstack.v2.library-filter.faces'
 export const PLATES_FILTER_STORAGE_KEY = 'camstack.v2.library-filter.plates'
 export const RETRAIN_FILTER_STORAGE_KEY = 'camstack.v2.library-filter.retrain'
+export const TIMELINE_FILTER_STORAGE_KEY = 'camstack.v2.library-filter.timeline'
 
 export const LIBRARY_FILTER_STORAGE_KEYS: Readonly<Record<LibraryFilterSection, string>> = {
   artifacts: ARTIFACTS_FILTER_STORAGE_KEY,
   faces: FACES_FILTER_STORAGE_KEY,
   plates: PLATES_FILTER_STORAGE_KEY,
   retrain: RETRAIN_FILTER_STORAGE_KEY,
+  timeline: TIMELINE_FILTER_STORAGE_KEY,
 }
 
 // ── Shapes ────────────────────────────────────────────────────────────────────
@@ -85,6 +94,13 @@ export const REVIEW_REMEMBERED_DEFAULTS: ReviewRemembered = Object.freeze({
 })
 
 export const RETRAIN_REMEMBERED_DEFAULTS: RetrainRemembered = Object.freeze({ deviceId: null, collectionId: null })
+
+/** Library timeline: the cameras the operator kept. Empty is the first visit. */
+export interface TimelineRemembered {
+  readonly deviceIds: readonly number[]
+}
+
+export const TIMELINE_REMEMBERED_DEFAULTS: TimelineRemembered = Object.freeze({ deviceIds: [] })
 
 // ── Parsers ───────────────────────────────────────────────────────────────────
 
@@ -136,6 +152,11 @@ export function parseReviewRemembered(raw: unknown): ReviewRemembered {
   }
 }
 
+export function parseTimelineRemembered(raw: unknown): TimelineRemembered {
+  if (!isRecord(raw)) return TIMELINE_REMEMBERED_DEFAULTS
+  return { deviceIds: cameraIds(raw['deviceIds']) }
+}
+
 export function parseRetrainRemembered(raw: unknown): RetrainRemembered {
   if (!isRecord(raw)) return RETRAIN_REMEMBERED_DEFAULTS
   const deviceId = raw['deviceId']
@@ -178,6 +199,14 @@ export function pruneReviewRemembered(
   value: ReviewRemembered,
   knownCameras: ReadonlySet<number> | undefined,
 ): ReviewRemembered {
+  const deviceIds = pruneKnownIds(value.deviceIds, knownCameras)
+  return deviceIds === value.deviceIds ? value : { ...value, deviceIds }
+}
+
+export function pruneTimelineRemembered(
+  value: TimelineRemembered,
+  knownCameras: ReadonlySet<number> | undefined,
+): TimelineRemembered {
   const deviceIds = pruneKnownIds(value.deviceIds, knownCameras)
   return deviceIds === value.deviceIds ? value : { ...value, deviceIds }
 }

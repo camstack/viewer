@@ -4359,6 +4359,7 @@
     },
     "timelineLibrary": {
       "allCameras": "All cameras",
+      "deselectAll": "Deselect all",
       "noFootage": "No footage at this time",
       "loading": "Loading cameras…",
       "noCameras": "No cameras to show",

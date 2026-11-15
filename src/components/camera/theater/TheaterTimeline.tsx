@@ -280,6 +280,12 @@ export interface TheaterTimelineProps {
    */
   readonly scopeIds?: readonly number[]
   /**
+   * An explicit empty `scopeIds` stays empty. Camera-detail and the grid omit
+   * this and keep the fallback to `deviceId`, so a scope of nothing there is
+   * still the camera in the picture.
+   */
+  readonly allowEmptyScope?: boolean
+  /**
    * The id the activity filter's selection is stored under, for a surface whose
    * scope is chosen by the operator and has no stable "first camera" (the
    * Library timeline). It also widens the filter panel's vocabulary to the
@@ -860,10 +866,11 @@ export const TheaterTimeline = memo(function TheaterTimeline(props: TheaterTimel
   // Memoised on the joined key rather than the array, which is a fresh literal
   // on every render of the screen above and would remint four query keys.
   const scopeKey = scopeIdsKey(props.scopeIds ?? [])
-  const scopeIds = useMemo(
-    () => initTimelineScope(idsFromScopeKey(scopeKey), props.deviceId),
-    [scopeKey, props.deviceId],
-  )
+  const allowEmptyScope = props.allowEmptyScope === true
+  const scopeIds = useMemo(() => {
+    const seeded = idsFromScopeKey(scopeKey)
+    return allowEmptyScope ? seeded : initTimelineScope(seeded, props.deviceId)
+  }, [scopeKey, props.deviceId, allowEmptyScope])
 
   // ─── Activity filter + event-kind taxonomy (per camera, persisted) ──
   // A surface that reads a SET of cameras names the key the selection is kept

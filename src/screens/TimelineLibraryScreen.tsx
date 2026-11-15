@@ -1,6 +1,6 @@
 /**
- * TimelineLibraryScreen — the Library's "Timeline" section: the events of EVERY
- * camera on ONE timeline.
+ * TimelineLibraryScreen — the Library's "Timeline" section: the events of the
+ * cameras the operator selected, on ONE timeline.
  *
  * It is `TheaterTimeline` again, the host the single-camera page and the grid
  * wall already mount, scoped to N cameras (`scopeIds`): the same filter panel,
@@ -12,8 +12,8 @@
  *     the drag ends, never during it. On a phone they are a thin strip over a
  *     full-page timeline that a handle expands to half the window; on a tablet
  *     or desktop they are a resizable right column (`library-layout.ts`);
- *   • the camera scope — "all" by default, a multi-select in the camera panel
- *     (`CameraSwitcherPanel` in scope mode);
+ *   • the camera scope — nothing selected on the first visit, then the cameras
+ *     remembered on this device (`library-filters`, section `timeline`);
  *   • the playback machine, with a sink that reaches no player: the cursor IS
  *     the playhead here;
  *   • the selection → one export or one delete per camera in scope
@@ -25,6 +25,7 @@ import { useTranslation } from 'react-i18next'
 
 import { TheaterTimeline } from '../components/camera/theater/TheaterTimeline.js'
 import { useCameras } from '../data/use-cameras.js'
+import { useKnownCameraIds, useLibraryFilter } from '../hooks/use-library-filter.js'
 import { useViewportSize } from '../hooks/use-viewport-size.js'
 import { useScreenMinSide } from '../hooks/use-responsive.js'
 import {
@@ -48,12 +49,12 @@ import {
 } from './timeline-library/library-layout.js'
 import { CursorFramesGrid, type FrameCamera } from './timeline-library/CursorFramesGrid.js'
 import { cursorInstant, scrubsLive } from './timeline-library/cursor-frames.js'
+import { pickFromIds, resolveCameraScope, ticksFor } from './timeline-library/camera-scope.js'
 import {
-  pickFromIds,
-  resolveCameraScope,
-  ticksFor,
-  type CameraPick,
-} from './timeline-library/camera-scope.js'
+  parseTimelineRemembered,
+  pruneTimelineRemembered,
+  type TimelineRemembered,
+} from '../store/library-filters.js'
 import { useSettledInstant } from './timeline-library/use-settled-instant.js'
 
 /** The filter's key. The activity filter is kept per camera id; the Library's
@@ -80,17 +81,21 @@ export function TimelineLibraryScreen(): React.JSX.Element {
   const cameras = useMemo(() => camerasQuery.data ?? [], [camerasQuery.data])
   const known = useMemo(() => cameras.map((c) => c.id), [cameras])
 
-  const [pick, setPick] = useState<CameraPick>(null)
+  const knownCameras = useKnownCameraIds()
+  const pruneTimeline = useCallback(
+    (value: TimelineRemembered) => pruneTimelineRemembered(value, knownCameras),
+    [knownCameras],
+  )
+  const remembered = useLibraryFilter('timeline', parseTimelineRemembered, pruneTimeline)
+  const remember = remembered.set
+  const pick = remembered.value.deviceIds
   const scope = useMemo(() => resolveCameraScope(known, pick), [known, pick])
   const selectedIds = useMemo(() => ticksFor(known, pick), [known, pick])
   const onScopeChange = useCallback(
     (ids: readonly number[]) => {
-      // Never an empty scope: unticking the last camera is ignored, because a
-      // timeline of nothing says "no events" about cameras nobody looked at.
-      if (ids.length === 0) return
-      setPick(pickFromIds(known, ids))
+      remember(() => ({ deviceIds: pickFromIds(known, ids) }))
     },
-    [known],
+    [known, remember],
   )
 
   const playback = usePlaybackMachine(NO_PLAYER_SINK)
@@ -147,10 +152,10 @@ export function TimelineLibraryScreen(): React.JSX.Element {
 
   const title = t('v2.library.sections.timeline')
 
-  if (camerasQuery.isLoading || camerasQuery.isPending) {
+  if (!remembered.hydrated || camerasQuery.isLoading || camerasQuery.isPending) {
     return <StateNote text={t('v2.timelineLibrary.loading')} />
   }
-  if (scope.length === 0) {
+  if (known.length === 0) {
     return <StateNote text={t('v2.timelineLibrary.noCameras')} />
   }
 
@@ -165,6 +170,7 @@ export function TimelineLibraryScreen(): React.JSX.Element {
           hideBack
           deviceId={scope[0] ?? 0}
           scopeIds={scope}
+          allowEmptyScope
           filterKeyId={LIBRARY_FILTER_KEY}
           name={title}
           // A tab of the Library: there is no page behind it to go back to, and
