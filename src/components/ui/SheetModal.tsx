@@ -63,6 +63,7 @@ import {
   DRAG_ACTIVATION,
   DRAG_ZONE_HEIGHT,
   dragScrimFactor,
+  isSheetDragTouch,
   shouldCloseOnRelease,
 } from './sheet-drag.js'
 
@@ -231,12 +232,22 @@ export function SheetModal({
     // A control being dragged inside the sheet owns the finger (control-drag-lock).
     .enabled(!controlDragging)
     .manualActivation(true)
+    // A second finger makes it the content's pinch, never a close drag (#564).
+    .maxPointers(1)
     .onTouchesDown((e, manager) => {
+      if (!isSheetDragTouch(e.numberOfTouches)) {
+        manager.fail()
+        return
+      }
       const y = e.allTouches[0]?.y ?? 0
       touchStartY.value = y
       if (y > DRAG_ZONE_HEIGHT) manager.fail()
     })
     .onTouchesMove((e, manager) => {
+      if (!isSheetDragTouch(e.numberOfTouches)) {
+        manager.fail()
+        return
+      }
       const touch = e.allTouches[0]
       if (touch === undefined) return
       if (touch.y - touchStartY.value > DRAG_ACTIVATION) manager.activate()

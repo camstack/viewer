@@ -36,3 +36,10 @@ export function dragScrimFactor(dragY: number, cardHeight: number): number {
   'worklet'
   return cardHeight <= 0 ? 1 : 1 - clamp01(dragY / cardHeight)
 }
+
+/** Only a ONE-finger touch may drag the sheet: a pinch inside it (zooming a
+ *  camera) is the content's gesture, never a close drag (#564). */
+export function isSheetDragTouch(numberOfTouches: number): boolean {
+  'worklet'
+  return numberOfTouches <= 1
+}

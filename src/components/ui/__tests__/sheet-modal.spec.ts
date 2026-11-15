@@ -7,12 +7,13 @@
  */
 import { execFileSync } from 'node:child_process'
 import { join } from 'node:path'
+import { readFileSync } from 'node:fs'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createElement } from 'react'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { Pressable, Text } from 'react-native'
 
-import { clampDrag, dragScrimFactor, shouldCloseOnRelease } from '../sheet-drag.js'
+import { clampDrag, dragScrimFactor, isSheetDragTouch, shouldCloseOnRelease } from '../sheet-drag.js'
 import { setTestPlatform } from '../../../testing/platform-control.js'
 import {
   DIALOG_MAX_WIDTH,
@@ -202,5 +203,21 @@ describe('sheet drag-to-close', () => {
     expect(dragScrimFactor(0, 500)).toBe(1)
     expect(dragScrimFactor(250, 500)).toBe(0.5)
     expect(dragScrimFactor(900, 500)).toBe(0)
+  })
+})
+
+describe('a pinch never drags the sheet (#564)', () => {
+  // A camera zoomed with two fingers inside a sheet moved the sheet: the close
+  // drag read only the first finger and activated on its downward drift.
+  it('only ONE finger is a close drag', () => {
+    expect(isSheetDragTouch(1)).toBe(true)
+    expect(isSheetDragTouch(2)).toBe(false)
+    expect(isSheetDragTouch(3)).toBe(false)
+  })
+  it('the gesture caps its pointers and fails as soon as a second finger lands', () => {
+    const src = readFileSync(join(process.cwd(), 'src', 'components', 'ui', 'SheetModal.tsx'), 'utf8')
+    const drag = src.slice(src.indexOf('const closeDrag = Gesture.Pan()'), src.indexOf('.onUpdate('))
+    expect(drag).toContain('.maxPointers(1)')
+    expect(drag.match(/if \(!isSheetDragTouch\(e\.numberOfTouches\)\)/g)?.length).toBe(2)
   })
 })
