@@ -192,6 +192,9 @@ export function controlView(control: HeroControl): ControlView | null {
         step: null,
         call: { cap: control.call.cap, method: control.call.method, valueArg: control.valueArg },
       }
+    default:
+      // A kind a newer hub sends that this build does not know: nothing is drawn, never a guessed control.
+      return null
   }
 }
 
