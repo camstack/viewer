@@ -10,7 +10,8 @@
  *
  * `model` is always a real model (D315): a pending or failed batch, or a hub
  * with no row for the device, draws the legacy row instead. A model whose
- * `primary` is null (a cap the hero does not cover yet) draws `fallbackControl`.
+ * `primary` is null (a cap the hero does not cover yet) draws `fallbackControl`; a primary
+ * the hub GATED (`primaryGated`) is read-only and draws nothing.
  */
 import React from 'react'
 import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native'
@@ -27,6 +28,7 @@ import { useTheme } from '../theme/theme-provider.js'
 import { SPACING, TYPOGRAPHY } from '../theme/tokens.js'
 import { HeroControlView } from './HeroControlView.js'
 import { HeroSceneTile } from './HeroSceneTile.js'
+import { isPrimaryGated } from './hero-parse.js'
 import { heroLocale, rowView, toneColor } from './hero-view.js'
 import { useHeroCaller } from './use-hero.js'
 
@@ -132,7 +134,7 @@ export function HeroRowBody({ deviceId, name, online, model, customIcon = null, 
             ),
           )}
         </View>
-      ) : fallbackControl !== null ? (
+      ) : fallbackControl !== null && !isPrimaryGated(model) ? (
         <View style={styles.control}>{fallbackControl}</View>
       ) : null}
       {showFact && view.trailing !== null ? (

@@ -98,3 +98,27 @@ describe('an automation row', () => {
     expect(power[0]?.getAttribute('aria-label')).toBe('automation.disable')
   })
 })
+
+describe('the fallback control', () => {
+  const fallback = React.createElement('span', { 'data-testid': 'legacy-control' })
+  const mount = (model: HeroRowModel): void => {
+    mountScreen(
+      React.createElement(HeroRowBody, { deviceId: 4, name: 'Plug', online: true, model, fallbackControl: fallback, onOpen: () => undefined, openLabel: 'Open' }),
+      { hub: {} },
+    )
+  }
+  // `primaryGated` is newer than the pinned @camstack/types: add it without a cast.
+  const withGated = (gated: boolean): HeroRowModel => Object.assign({}, base, { primaryGated: gated })
+  it('is drawn for a type the hero does not cover yet', () => {
+    mount(withGated(false))
+    expect(screen.queryByTestId('legacy-control')).not.toBeNull()
+  })
+  it('is drawn for an older hub that sends no primaryGated', () => {
+    mount(base)
+    expect(screen.queryByTestId('legacy-control')).not.toBeNull()
+  })
+  it('is never drawn when the hub gated the primary (read-only)', () => {
+    mount(withGated(true))
+    expect(screen.queryByTestId('legacy-control')).toBeNull()
+  })
+})

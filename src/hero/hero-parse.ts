@@ -43,6 +43,15 @@ export function isHeroRowModel(value: unknown): value is HeroRowModel {
   return value.trailing === null || (isRecord(value.trailing) && isHeroText(value.trailing.text))
 }
 
+/**
+ * True when the hub says the row's primary exists but is gated (read-only). Read from
+ * the parsed row, so it needs no `@camstack/types` bump: an older hub sends no field
+ * and reads `false`, and the legacy fallback control still draws for an uncovered type.
+ */
+export function isPrimaryGated(model: HeroRowModel): boolean {
+  return 'primaryGated' in model && model.primaryGated === true
+}
+
 /** One entry per requested id, in order; anything unusable is `null` (no row model). */
 export function parseHeroRowModels(raw: unknown): readonly (HeroRowModel | null)[] {
   if (!Array.isArray(raw)) return []
