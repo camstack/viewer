@@ -239,6 +239,17 @@ export function keyGlyph(button: RemoteLayoutButton): string | undefined {
   return keyIcon(button)
 }
 
+/** Glyphs that say too little alone: the key prints its name under them (the guide / e-Manual book). */
+const NAMED_GLYPHS: ReadonlySet<string> = new Set(['book-open'])
+
+/** Whether a key prints its name beside its glyph: it has a label of its own, or its glyph is an ambiguous one. */
+export function keyPrintsName(button: RemoteLayoutButton): boolean {
+  const legend = keyLegend(button)
+  if (button.label !== undefined && button.label !== legend) return true
+  const glyph = keyGlyph(button)
+  return glyph !== undefined && NAMED_GLYPHS.has(glyph)
+}
+
 /** Text printed on a key instead of a glyph (a digit), or `undefined`. */
 export function keyLegend(button: RemoteLayoutButton): string | undefined {
   return button.icon === undefined ? remoteRoleLegend(button.role) : undefined

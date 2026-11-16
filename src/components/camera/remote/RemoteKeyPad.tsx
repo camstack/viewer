@@ -24,6 +24,7 @@ import {
   keyBrand,
   keyGlyph,
   keyLegend,
+  keyPrintsName,
   keyName,
   vocabLocale,
   rowSpanBox,
@@ -312,7 +313,7 @@ function Key({ layout, button, bound, commandName, onPress }: KeyProps): React.J
           ) : glyph === undefined ? null : (
             <CatalogIcon iconKey={glyph} size={ICON_SIZE} color={look.foreground} />
           )}
-          {button.label !== undefined && button.label !== legend ? (
+          {keyPrintsName(button) ? (
             <Text numberOfLines={1} style={[styles.keyText, { color: look.foreground }]}>
               {name}
             </Text>

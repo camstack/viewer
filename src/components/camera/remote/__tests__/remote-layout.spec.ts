@@ -11,6 +11,7 @@ import {
   keyIcon,
   keyLegend,
   keyName,
+  keyPrintsName,
   parseRemoteCommandList,
   parseRemoteLayout,
   remoteLayoutFromTemplates,
@@ -218,5 +219,11 @@ describe('app brand keys and unnamed-icon keys (#477)', () => {
   it('a custom key with an icon of its own, and a known role, keep their glyph', () => {
     expect(keyGlyph({ ...button('t', 'custom:settings', 0, 0), label: 'Settings', icon: 'settings' })).toBe('settings')
     expect(keyGlyph(button('p', 'power', 0, 0))).toBe(keyIcon(button('p', 'power', 0, 0)))
+  })
+  it('the book glyph (guide, e-Manual) prints its name; a plain glyph key does not', () => {
+    expect(keyPrintsName(button('g', 'guide', 0, 0))).toBe(true)
+    expect(keyPrintsName({ ...button('m', 'custom:e_manual', 0, 0), label: 'e-Manual', icon: 'book-open' })).toBe(true)
+    expect(keyPrintsName(button('p', 'power', 0, 0))).toBe(false)
+    expect(keyPrintsName({ ...button('t', 'custom:ttx', 0, 0), label: 'TTX' })).toBe(true)
   })
 })
