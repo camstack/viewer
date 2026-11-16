@@ -30,6 +30,24 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.718',
+    date: '2026-11-16',
+    notes: {
+      en: [
+        'Remote keys show brand logos, and a key without an icon prints its name.',
+        'Tap a device value to edit it in place, with confirm and cancel.',
+        'A device whose main control is unavailable no longer shows a fallback control.',
+        'Device details scroll as one sheet; interactions are grouped by day.',
+      ],
+      it: [
+        'I tasti del telecomando mostrano i loghi, e un tasto senza icona mostra il nome.',
+        'Tocca un valore del dispositivo per modificarlo sul posto, con conferma e annulla.',
+        'Un dispositivo con il comando principale non disponibile non mostra un sostituto.',
+        'I dettagli del dispositivo scorrono in un solo pannello; interazioni per giorno.',
+      ],
+    },
+  },
+  {
     version: '1.0.717',
     date: '2026-11-16',
     notes: {
