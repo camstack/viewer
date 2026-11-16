@@ -60,6 +60,12 @@ export interface CameraAccessoryPanelProps {
   /** The camera's display name — the picker's subtitle. A host that cannot
    *  name the camera passes what it has; the panel never invents one. */
   readonly cameraName: string
+  /**
+   * The host gives the panel a DEFINITE height (a device-sheet sized frame): the
+   * open detail's card fills it instead of carrying a height of its own, so the
+   * host is exactly as tall as the device sheet and no taller.
+   */
+  readonly fillDetail?: boolean
   /** Told whenever a device's detail opens or closes. A host that stacks other
    *  sections above this panel (the controls sheet's PTZ pad) uses it to give
    *  the detail the whole panel instead of nesting it under them. */
@@ -69,6 +75,7 @@ export interface CameraAccessoryPanelProps {
 export function CameraAccessoryPanel({
   deviceId,
   cameraName,
+  fillDetail = false,
   onDetailOpenChange,
 }: CameraAccessoryPanelProps): React.JSX.Element {
   const { t } = useTranslation()
@@ -125,14 +132,14 @@ export function CameraAccessoryPanel({
   const switchedOff = switchedOffMap[deviceId] ?? []
 
   return (
-    <View style={styles.panel}>
+    <View style={detail !== null && fillDetail ? styles.fill : styles.panel}>
       {card === null ? null : (
-        <View style={detail === null ? styles.parked : undefined} pointerEvents={detail === null ? 'none' : 'auto'}>
+        <View style={detail === null ? styles.parked : fillDetail ? styles.fill : undefined} pointerEvents={detail === null ? 'none' : 'auto'}>
           <DeviceDetailBody
             deviceId={card.id}
             deviceName={card.name}
             active={detail !== null}
-            cardHeight={deviceSheetHeight(sheetPresentation(Platform.OS), windowHeight)}
+            cardHeight={fillDetail ? undefined : deviceSheetHeight(sheetPresentation(Platform.OS), windowHeight)}
             leading={
               <SheetIconButton
                 icon={ChevronLeft}
@@ -196,6 +203,7 @@ export function CameraAccessoryPanel({
 
 const styles = StyleSheet.create({
   panel: { gap: SPACING.md },
+  fill: { flex: 1 },
   hidden: { display: 'none' },
   parked: { position: 'absolute', width: 1, height: 1, opacity: 0, overflow: 'hidden' },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },

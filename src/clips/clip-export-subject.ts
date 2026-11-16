@@ -53,6 +53,7 @@
 
 import type { CreateExportInput } from '../data/use-exports.js'
 import type { Clip } from './clip-model.js'
+import { buildExportSelectionInput } from '../recording/selection-commit.js'
 import type { ClipProfile } from './clip-quality.js'
 
 /**
@@ -131,4 +132,19 @@ export function buildClipExportInput(request: ClipExportRequest): CreateExportIn
       deleteAfterDownload: false,
     },
   }
+}
+
+/**
+ * The `createExport` input for a clip of OUR OWN recording.
+ *
+ * Not a clip subject: the clip is a range of the hub's footage, so the export
+ * is the timeline selection's footage request over the clip's own span —
+ * `fromMs`/`toMs` here ARE the boundaries, and the profile is the selection's.
+ */
+export function buildRecordedClipExportInput(clip: Clip): CreateExportInput {
+  return buildExportSelectionInput(clip.deviceId, {
+    fromMs: clip.startMs,
+    toMs: clip.endMs,
+    durationMs: clip.endMs - clip.startMs,
+  })
 }

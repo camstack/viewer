@@ -9,6 +9,7 @@ import {
   CLIP_EXPORT_LIFE_MS,
   buildClipExportInput,
   buildClipExportSubject,
+  buildRecordedClipExportInput,
 } from '../clip-export-subject.js'
 import type { Clip } from '../clip-model.js'
 
@@ -121,5 +122,17 @@ describe('the subject names the source it was listed from', () => {
     expect(buildClipExportSubject({ ...REQUEST, catalogWindow: window }).catalogWindow).toEqual(
       window,
     )
+  })
+})
+
+describe('a clip of our own recording is a footage export over its span', () => {
+  it('sends the clip span as fromMs/toMs, no subject, the selection profile', () => {
+    const own = clip({ sourceId: 'analytics', playback: { kind: 'recorded', deviceId: 107 } })
+    const input = buildRecordedClipExportInput(own)
+    expect(input.deviceId).toBe(107)
+    expect(input.fromMs).toBe(own.startMs)
+    expect(input.toMs).toBe(own.endMs)
+    expect(input.profiles).toEqual(['high'])
+    expect('subject' in input).toBe(false)
   })
 })

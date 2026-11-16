@@ -83,8 +83,8 @@ export function GridCellPanelOverlay({
         accessibilityLabel={t('v2.cameraDetail.close')}
       />
       <View style={styles.center} pointerEvents="box-none">
-        <View style={[styles.card, { backgroundColor: colors.background, borderColor: colors.border }]}>
-          <TimelinePanelHost title={cameraName} onClose={onClose}>
+        <View style={[styles.card, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
+          <TimelinePanelHost title={cameraName} onClose={onClose} sheetSurface>
             <PanelBody
               key={`${panel.kind}:${panel.deviceId}`}
               panel={panel}

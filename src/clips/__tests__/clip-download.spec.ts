@@ -129,13 +129,15 @@ describe('a control that looks available and refuses is the defect this line is 
     expect(offer).toEqual({ kind: 'refused', reason: null })
   })
 
-  it('offers nothing at all for a clip of OUR OWN recording', () => {
-    // Those are a range of the hub's footage, not a file. They are collected
-    // through the export path (D558's `ExportRecord`), which has its own
-    // control, its own lifetime and its own quality choice. A second way to
-    // get the same thing is how the two diverge.
+  it('offers the footage export for a clip of OUR OWN recording', () => {
+    // A range of the hub's footage, not a file: kept through the timeline's
+    // footage export, one copy, the same icon and modal as a camera-side clip.
     const recorded = clip({ sourceId: 'analytics', playback: { kind: 'recorded', deviceId: 107 } })
-    expect(resolveClipDownload(recorded)).toEqual({ kind: 'none' })
+    expect(resolveClipDownload(recorded)).toEqual({
+      kind: 'recorded',
+      deviceId: 107,
+      clipId: recorded.clipId,
+    })
   })
 })
 

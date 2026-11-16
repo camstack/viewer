@@ -18,6 +18,13 @@ interface SectionProps {
   /** A short value beside a collapsible title (a count), visible while folded. */
   readonly titleValue?: string
   readonly testID?: string
+  /**
+   * Draw no card: the children fill the section as they are, with no surface,
+   * border or radius. For a host that hands the section's space to a body that
+   * is its own panel (an open device detail); the children stay mounted when it
+   * flips, so their state survives.
+   */
+  readonly bare?: boolean
   readonly children: React.ReactNode
 }
 
@@ -25,7 +32,7 @@ interface SectionProps {
  *  `surface` card (bordered, rounded) that wraps its rows. Rows draw their own
  *  dividers; the card just frames them. `collapsible` makes the title fold
  *  the card. */
-export function Section({ title, collapsible, defaultCollapsed, titleValue, testID, children }: SectionProps) {
+export function Section({ title, collapsible, defaultCollapsed, titleValue, testID, bare, children }: SectionProps) {
   const { colors } = useTheme()
   const foldable = collapsible === true && title !== undefined && title.length > 0
   const [collapsed, setCollapsed] = useState(foldable && defaultCollapsed === true)
@@ -40,7 +47,7 @@ export function Section({ title, collapsible, defaultCollapsed, titleValue, test
   }
   const Chevron = collapsed ? ChevronRight : ChevronDown
   return (
-    <View style={{ gap: SPACING.md }} testID={testID}>
+    <View style={bare === true ? { flex: 1 } : { gap: SPACING.md }} testID={testID}>
       {foldable ? (
         <Pressable
           accessibilityRole="button"
@@ -59,13 +66,17 @@ export function Section({ title, collapsible, defaultCollapsed, titleValue, test
       ) : null}
       {collapsed ? null : (
         <View
-          style={{
-            backgroundColor: colors.surface,
-            borderColor: colors.border,
-            borderWidth: 1,
-            borderRadius: RADIUS.lg,
-            overflow: 'hidden',
-          }}
+          style={
+            bare === true
+              ? { flex: 1 }
+              : {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.border,
+                  borderWidth: 1,
+                  borderRadius: RADIUS.lg,
+                  overflow: 'hidden',
+                }
+          }
         >
           {children}
         </View>

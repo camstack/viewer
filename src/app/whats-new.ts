@@ -30,6 +30,22 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.717',
+    date: '2026-11-16',
+    notes: {
+      en: [
+        'Clips from the hub recordings can be downloaded too, with the same button and dialog.',
+        'The quick grid panel has the same background as every other sheet.',
+        'A device opened from the Cameras controls is the same height as the device sheet.',
+      ],
+      it: [
+        'Anche le clip delle registrazioni dell\'hub si scaricano, con lo stesso pulsante e dialogo.',
+        'Il pannello della griglia rapida ha lo stesso sfondo di tutti gli altri pannelli.',
+        'Un dispositivo aperto dai controlli Camere ha la stessa altezza del pannello dispositivo.',
+      ],
+    },
+  },
+  {
     version: '1.0.716',
     date: '2026-11-16',
     notes: {

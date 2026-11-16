@@ -151,7 +151,8 @@ import {
   resolveClipDownload,
 } from '../../../clips/clip-download.js'
 import { useClipExport } from '../../../clips/use-clip-export.js'
-import type { ClipQualityOption } from '../../../clips/clip-export-quality.js'
+import { RECORDED_CLIP_OPTION, type ClipQualityOption } from '../../../clips/clip-export-quality.js'
+import { playsFromRecording } from '../../../clips/clip-mapping.js'
 import type { ClipProfile } from '../../../clips/clip-quality.js'
 import { ClipExportModal } from './ClipExportModal.js'
 import { IDLE_CLIP_EXPORT } from '../../../clips/clip-export-progress.js'
@@ -1404,7 +1405,7 @@ export const TheaterTimeline = memo(function TheaterTimeline(props: TheaterTimel
    * The KEEP control in the magnifier's corner, per card.
    *
    * `resolveClipDownload` decides entirely off the row: a clip of our own
-   * recording gets nothing (the timeline's export control owns those), a row
+   * recording is kept as a footage export over its span, a row
    * the provider refused is drawn disabled with its words, a clip whose every
    * copy is over the export bound is drawn disabled with OURS, and everything
    * else is offered. The press CREATES AN EXPORT (D558) — it is no longer a
@@ -1432,6 +1433,11 @@ export const TheaterTimeline = memo(function TheaterTimeline(props: TheaterTimel
 
   const startClipExport = useCallback(
     (clip: Clip, profile: ClipProfile): void => {
+      if (playsFromRecording(clip.sourceId)) {
+        // Our own footage: no provider, no source row — the footage export.
+        clipExport.startRecorded(clip)
+        return
+      }
       if (clipProviderAddonId === null) {
         // The provider pin is REQUIRED by the subject and by `listClips`; a
         // bare ask fans out over every source. A branch that drops the work
@@ -1473,14 +1479,16 @@ export const TheaterTimeline = memo(function TheaterTimeline(props: TheaterTimel
         out.set(cardIdForClip(entry), { onSave: null, reason: t('v2.clips.export.tooLarge') })
         continue
       }
-      const quality = offer.quality
+      const options =
+        offer.kind === 'recorded'
+          ? [RECORDED_CLIP_OPTION]
+          : offer.quality.kind === 'choice'
+            ? offer.quality.options
+            : [offer.quality.option]
       out.set(cardIdForClip(entry), {
         // Always the modal, even with one copy, so a keep never starts silently.
         onSave: () => {
-          setQualityPick({
-            clip: entry.clip,
-            options: quality.kind === 'choice' ? quality.options : [quality.option],
-          })
+          setQualityPick({ clip: entry.clip, options })
         },
         reason: null,
         // Per CLIP, not per surface: two cards must not both spin because one

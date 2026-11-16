@@ -127,6 +127,16 @@ function optionFor(profile: ClipProfile, stream: ClipStream | undefined): ClipQu
 }
 
 /**
+ * The one copy a clip of OUR OWN recording offers: the footage export's
+ * profile. No size on the row, so none is claimed (unknown is never a refusal).
+ */
+export const RECORDED_CLIP_OPTION: ClipQualityOption = {
+  profile: CLIP_PROFILE_HIGH,
+  bytes: null,
+  refusal: null,
+}
+
+/**
  * The copies worth offering, in keep order (best first).
  *
  * Empty when the row resolved no twins at all — see {@link resolveClipExportQuality},

@@ -103,7 +103,14 @@ export type ClipDownload =
    * is rare and the `choice` arm carrying a disabled `high` is not.
    */
   | { readonly kind: 'tooLarge' }
-  /** No control at all — this clip is not a file (see {@link resolveClipDownload}). */
+  /**
+   * A clip of OUR OWN recording: a range of the hub's footage, not a file. It
+   * is kept through the footage export (`buildRecordedClipExportInput`) — the
+   * SAME act the timeline selection runs — with one copy (`high`) and no
+   * picker choice to make.
+   */
+  | { readonly kind: 'recorded'; readonly deviceId: number; readonly clipId: string }
+  /** No control at all — reserved for a row that is neither a file nor footage. */
   | { readonly kind: 'none' }
 
 /** The cache/export file name. Carries the camera and the clip's own instant,
@@ -115,13 +122,14 @@ export function clipDownloadFileName(clip: Clip): string {
 /**
  * The decision, read entirely off the row — no call, no second lookup.
  *
- * A clip of OUR OWN recording gets `none`: it is a range of the hub's footage,
- * not a file, and it is collected through the timeline's own export control,
- * which has its own selection and its own quality rule. Two ways to get one
- * thing is how the two diverge (D62, reached from the tile).
+ * A clip of OUR OWN recording is `recorded`: a range of the hub's footage,
+ * exported through the timeline's own footage path at its one quality rule
+ * (`EXPORT_SELECTION_PROFILE`), so the two never diverge.
  */
 export function resolveClipDownload(clip: Clip): ClipDownload {
-  if (playsFromRecording(clip.sourceId)) return { kind: 'none' }
+  if (playsFromRecording(clip.sourceId)) {
+    return { kind: 'recorded', deviceId: clip.deviceId, clipId: clip.clipId }
+  }
   if (!isPlayable(clip)) return { kind: 'refused', reason: clip.unplayableReason ?? null }
   const quality = resolveClipExportQuality(clip)
   if (quality.kind === 'unavailable') return { kind: 'tooLarge' }

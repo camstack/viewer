@@ -33,14 +33,15 @@
  */
 import React, { memo, useState } from 'react'
 import { useControlDragActive } from '../ui/control-drag-lock.js'
-import { View, Text, Pressable, StyleSheet } from 'react-native'
+import { Platform, View, Text, Pressable, StyleSheet, useWindowDimensions } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useTranslation } from 'react-i18next'
 
 import { X } from '../../lib/icons.js'
 import { useTheme } from '../../theme/theme-provider.js'
 import { RADIUS, SPACING } from '../../theme/tokens.js'
-import { SheetModal } from '../ui/SheetModal.js'
+import { SheetModal, sheetPresentation } from '../ui/SheetModal.js'
+import { deviceSheetHeight } from '../../screens/device-sheet-size.js'
 import { Section } from '../ui/Section.js'
 import { useCanActuate } from '../../hooks/use-user-scope.js'
 import { FEATURE, type CameraInfo } from '../../data/use-cameras.js'
@@ -67,6 +68,7 @@ export const CameraControlsOverlay = memo(function CameraControlsOverlay({
   const { colors } = useTheme()
   const insets = useSafeAreaInsets()
   const canActuate = useCanActuate()
+  const { height: windowHeight } = useWindowDimensions()
 
   // A linked device's detail takes the WHOLE sheet body (PTZ included) while it
   // is open; Back returns to the controls exactly as they were left.
@@ -82,6 +84,21 @@ export const CameraControlsOverlay = memo(function CameraControlsOverlay({
 
   if (!open || camera === null) return null
 
+  // An open detail is the SAME panel the device route draws: its height, its
+  // surface, its padding, its own header. The controls sheet's chrome (title,
+  // section card, scroll padding) steps aside for it.
+  const presentation = sheetPresentation(Platform.OS)
+  const sheetStyle = detailOpen
+    ? [
+        styles.detailSheet,
+        {
+          backgroundColor: colors.background,
+          height: deviceSheetHeight(presentation, windowHeight),
+          paddingBottom: presentation === 'sheet' ? insets.bottom + SPACING.xl : SPACING.xl,
+        },
+      ]
+    : [styles.sheet, { backgroundColor: colors.backgroundElevated }]
+
   const hasPtz = canActuate && camera.features.includes(FEATURE.ptz)
   const hasNavigation = canActuate && capNames.includes('navigation')
 
@@ -90,9 +107,9 @@ export const CameraControlsOverlay = memo(function CameraControlsOverlay({
       visible
       onClose={onClose}
       backdropLabel={t('v2.cameraDetail.close')}
-      sheetStyle={[styles.sheet, { backgroundColor: colors.backgroundElevated }]}
+      sheetStyle={sheetStyle}
     >
-      <View style={styles.header}>
+      <View style={detailOpen ? styles.hidden : styles.header}>
         <Text style={[styles.title, { color: colors.foreground }]} numberOfLines={1}>
           {camera.name}
         </Text>
@@ -108,7 +125,10 @@ export const CameraControlsOverlay = memo(function CameraControlsOverlay({
       </View>
 
       <KeyboardAwareScrollView
-        contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom + SPACING.lg }]}
+        style={detailOpen ? styles.fill : undefined}
+        contentContainerStyle={
+          detailOpen ? styles.detailScroll : [styles.scroll, { paddingBottom: insets.bottom + SPACING.lg }]
+        }
         // This panel may hold a text field (the accessory panel's inline
         // rename). The keyboard-aware scroll pads the content by the keyboard
         // and scrolls the focused field into view on iOS and Android; the
@@ -144,15 +164,18 @@ export const CameraControlsOverlay = memo(function CameraControlsOverlay({
             the function switches (D62) — the SAME composition the
             single-camera page and the wall mount. It draws its own section
             labels and owns its loading / empty states. */}
-        <Section>
-          <View style={styles.sectionBody}>
-            <CameraAccessoryPanel
-              deviceId={camera.id}
-              cameraName={camera.name}
-              onDetailOpenChange={setDetailOpen}
-            />
-          </View>
-        </Section>
+        <View style={detailOpen ? styles.fill : undefined}>
+          <Section bare={detailOpen}>
+            <View style={detailOpen ? styles.fill : styles.sectionBody}>
+              <CameraAccessoryPanel
+                deviceId={camera.id}
+                cameraName={camera.name}
+                fillDetail
+                onDetailOpenChange={setDetailOpen}
+              />
+            </View>
+          </Section>
+        </View>
       </KeyboardAwareScrollView>
     </SheetModal>
   )
@@ -166,6 +189,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.md,
     paddingTop: SPACING.md,
   },
+  detailSheet: {
+    borderTopLeftRadius: RADIUS.xl,
+    borderTopRightRadius: RADIUS.xl,
+    paddingTop: SPACING.xl,
+    paddingHorizontal: SPACING.xl,
+  },
+  fill: { flex: 1 },
+  detailScroll: { flexGrow: 1 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',

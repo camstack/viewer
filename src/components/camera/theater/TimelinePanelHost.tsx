@@ -44,6 +44,9 @@ export interface TimelinePanelHostProps {
   /** False while a child (export heatmap) owns the finger, so the scroller
    *  cannot steal a horizontal scrub. */
   readonly scrollEnabled?: boolean
+  /** The panel sits in a sheet/card: use the sheet surface (`backgroundElevated`)
+   *  every other sheet wears, instead of the page background. */
+  readonly sheetSurface?: boolean
   readonly children: React.ReactNode
 }
 
@@ -53,6 +56,7 @@ export function TimelinePanelHost({
   onBack,
   scroll = true,
   scrollEnabled = true,
+  sheetSurface = false,
   children,
 }: TimelinePanelHostProps) {
   const { t } = useTranslation()
@@ -60,7 +64,12 @@ export function TimelinePanelHost({
   const ui = useTimelineScale()
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: sheetSurface ? colors.backgroundElevated : colors.background },
+      ]}
+    >
       <View
         style={[
           styles.header,

@@ -174,7 +174,8 @@ describe('a clip is KEPT by creating an export, not by downloading it here', () 
   })
 
   it('a single copy still opens the modal — the press never starts a keep silently', () => {
-    expect(TIMELINE).toContain("quality.kind === 'choice' ? quality.options : [quality.option]")
+    expect(TIMELINE).toContain("offer.quality.kind === 'choice'")
+    expect(TIMELINE).toContain('[offer.quality.option]')
     expect(TIMELINE).not.toContain('startClipExport(entry.clip, quality.option.profile)')
   })
 })

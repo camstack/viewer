@@ -30,9 +30,14 @@
  */
 import { useCallback, useState } from 'react'
 
-import { useCreateExport, useExport } from '../data/use-exports.js'
+import { useCreateExport, useExport, type CreateExportInput } from '../data/use-exports.js'
 import { log } from '../lib/logger.js'
-import { buildClipExportInput, type ClipExportRequest } from './clip-export-subject.js'
+import type { Clip } from './clip-model.js'
+import {
+  buildClipExportInput,
+  buildRecordedClipExportInput,
+  type ClipExportRequest,
+} from './clip-export-subject.js'
 import {
   IDLE_CLIP_EXPORT,
   resolveClipExportPhase,
@@ -42,6 +47,8 @@ import {
 export interface UseClipExport {
   /** Queue the export for this clip at this profile. */
   readonly start: (request: ClipExportRequest) => void
+  /** Queue the footage export of a clip of our own recording. */
+  readonly startRecorded: (clip: Clip) => void
   /** Where the job is. `idle` until something is asked. */
   readonly phase: ClipExportPhase
   /** The clip the current job is for, so a second tile cannot read it. */
@@ -67,37 +74,37 @@ export function useClipExport(): UseClipExport {
   // Polls while the job is active; disabled until there is an id.
   const tracked = useExport(exportId)
 
-  const start = useCallback(
-    (request: ClipExportRequest): void => {
-      setClipId(request.clip.clipId)
+  const run = useCallback(
+    (clip: Clip, profile: string, build: () => CreateExportInput): void => {
+      setClipId(clip.clipId)
       setExportId(null)
       setAskFailed(null)
       void (async () => {
         try {
-          const record = await createExport.mutateAsync(buildClipExportInput(request))
+          const record = await createExport.mutateAsync(build())
           if (record === null) {
             // A branch that accepts work and produces nothing says so (D391).
             log.warn('clips', 'clip export create returned no record', {
-              deviceId: request.clip.deviceId,
-              clipId: request.clip.clipId,
-              profile: request.profile,
+              deviceId: clip.deviceId,
+              clipId: clip.clipId,
+              profile,
             })
             setAskFailed('no-record')
             return
           }
           log.info('clips', 'clip export queued', {
-            deviceId: request.clip.deviceId,
-            clipId: request.clip.clipId,
-            profile: request.profile,
+            deviceId: clip.deviceId,
+            clipId: clip.clipId,
+            profile,
             exportId: record.id,
           })
           setExportId(record.id)
         } catch (e) {
           const detail = e instanceof Error ? e.message : String(e)
           log.warn('clips', 'clip export create failed', {
-            deviceId: request.clip.deviceId,
-            clipId: request.clip.clipId,
-            profile: request.profile,
+            deviceId: clip.deviceId,
+            clipId: clip.clipId,
+            profile,
             error: detail,
           })
           setAskFailed(detail)
@@ -105,6 +112,17 @@ export function useClipExport(): UseClipExport {
       })()
     },
     [createExport],
+  )
+
+  const start = useCallback(
+    (request: ClipExportRequest): void =>
+      run(request.clip, request.profile, () => buildClipExportInput(request)),
+    [run],
+  )
+
+  const startRecorded = useCallback(
+    (clip: Clip): void => run(clip, 'recorded', () => buildRecordedClipExportInput(clip)),
+    [run],
   )
 
   const reset = useCallback((): void => {
@@ -123,7 +141,7 @@ export function useClipExport(): UseClipExport {
     return resolveClipExportPhase(tracked.data ?? null)
   })()
 
-  return { start, phase, clipId, reset }
+  return { start, startRecorded, phase, clipId, reset }
 }
 
 export type { ClipExportRequest }
