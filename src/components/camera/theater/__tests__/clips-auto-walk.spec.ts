@@ -16,7 +16,12 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { shiftLocalDay } from '../../../../lib/local-day.js'
-import { autoWalkVerdict, nextLookbackDaysAfterDayChange } from '../lookback-walk.js'
+import {
+  autoWalkVerdict,
+  nextLookbackDaysAfterDayChange,
+  walkReadiness,
+  type WalkReadinessInput,
+} from '../lookback-walk.js'
 
 const TODAY = new Date(2026, 10, 17).getTime()
 const day = (n: number): number => shiftLocalDay(TODAY, -n)
@@ -117,17 +122,67 @@ describe('nextLookbackDaysAfterDayChange — scrolling back up keeps the list', 
   })
 })
 
+const ANSWERED = { answered: true, failed: false } as const
+const PENDING = { answered: false, failed: false } as const
+const FAILED = { answered: false, failed: true } as const
+
+/** The walk's verdict for one render, the way the timeline composes it. */
+function verdictFor(reads: Partial<WalkReadinessInput>): ReturnType<typeof autoWalkVerdict> {
+  return autoWalkVerdict({
+    clipsMode: true,
+    clipCount: 0,
+    lookbackDays: 1,
+    maxDays: MAX,
+    ...walkReadiness({
+      sources: ANSWERED,
+      nativeMode: false,
+      files: PENDING,
+      sourceOk: false,
+      tracks: ANSWERED,
+      footage: ANSWERED,
+      ...reads,
+    }),
+  })
+}
+
+describe('walkReadiness — the source list comes first', () => {
+  it('source list still pending: the recordings body waits, never steps', () => {
+    // `resolveClipProvider` says `derived` until the list answers — a camera
+    // with SD-card clips must not be walked as if it had none.
+    expect(verdictFor({ sources: PENDING })).toBe('wait')
+  })
+
+  it('source list failed: no step', () => {
+    expect(verdictFor({ sources: FAILED })).toBe('wait')
+    expect(verdictFor({ sources: FAILED, nativeMode: true, files: ANSWERED, sourceOk: true })).toBe('wait')
+  })
+
+  it('recordings body: steps only once tracks AND footage of this window answered', () => {
+    expect(verdictFor({})).toBe('step')
+    expect(verdictFor({ tracks: PENDING })).toBe('wait')
+    expect(verdictFor({ footage: PENDING })).toBe('wait')
+    expect(verdictFor({ footage: FAILED })).toBe('wait')
+  })
+
+  it('a source\'s files: steps on the answered file list of an ok source', () => {
+    const native = { nativeMode: true, files: ANSWERED, sourceOk: true, tracks: PENDING, footage: PENDING }
+    expect(verdictFor(native)).toBe('step')
+    expect(verdictFor({ ...native, files: PENDING })).toBe('wait')
+    expect(verdictFor({ ...native, sourceOk: false })).toBe('wait')
+  })
+})
+
 describe('the timeline wires both halves', () => {
+  // TheaterTimeline is not mountable in jsdom (player, reanimated, hub reads),
+  // so the composition is pinned at the two call sites; the behaviour of each
+  // half is the specs above.
   const src = readFileSync(
     join(process.cwd(), 'src/components/camera/theater/TheaterTimeline.tsx'),
     'utf8',
   )
 
-  it('the walk runs on BOTH bodies, through the one verdict', () => {
-    expect(src).toMatch(/autoWalkVerdict\(\{/)
-    expect(src).not.toMatch(/clipsMode && nativeMode && cameraClips\.length === 0/)
-    // The derived body's answer is the tracks AND the footage read of THIS window.
-    expect(src).toMatch(/tracksQuery\.answered && activityQuery\.answered/)
+  it('the walk is judged through walkReadiness, with the source list first', () => {
+    expect(src).toMatch(/\.\.\.walkReadiness\(\{\s*sources: \{ answered: clips\.sourcesAnswered, failed: clips\.sourcesFailed \}/)
   })
 
   it('a newer settled day keeps the loaded window in clips mode', () => {

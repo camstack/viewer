@@ -323,3 +323,49 @@ export function autoWalkVerdict(input: AutoWalkInput): AutoWalkVerdict {
   if (!input.answered || input.failed || !input.sourceOk) return 'wait'
   return 'step'
 }
+
+/** One read's state, as the walk needs it. */
+export interface WalkRead {
+  readonly answered: boolean
+  readonly failed: boolean
+}
+
+export interface WalkReadinessInput {
+  /** The camera's source list (`videoclips.listSources`). */
+  readonly sources: WalkRead
+  /** The body is a source's FILES (`derivation === 'cap'`). */
+  readonly nativeMode: boolean
+  /** The file list of THIS window (native body). */
+  readonly files: WalkRead
+  /** The source's own state is `ok` (native body). */
+  readonly sourceOk: boolean
+  /** The tracks and the footage reads of THIS window (recordings body). */
+  readonly tracks: WalkRead
+  readonly footage: WalkRead
+}
+
+/**
+ * The `answered` / `failed` / `sourceOk` the walk is judged on.
+ *
+ * Both bodies first need the SOURCE list: until it answers, the body is
+ * `derived` for want of evidence, and walking our recordings then would widen
+ * the window of a camera whose cards are really a source's files. A failed
+ * source list is the same unknown. Then the body's own reads of this window:
+ * the file list for a source, the tracks AND the footage for our recordings.
+ */
+export function walkReadiness(
+  input: WalkReadinessInput,
+): Pick<AutoWalkInput, 'answered' | 'failed' | 'sourceOk'> {
+  if (input.nativeMode) {
+    return {
+      answered: input.sources.answered && input.files.answered,
+      failed: input.sources.failed || input.files.failed,
+      sourceOk: input.sourceOk,
+    }
+  }
+  return {
+    answered: input.sources.answered && input.tracks.answered && input.footage.answered,
+    failed: input.sources.failed || input.tracks.failed || input.footage.failed,
+    sourceOk: true,
+  }
+}

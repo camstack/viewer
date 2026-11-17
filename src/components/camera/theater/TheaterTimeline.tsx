@@ -131,7 +131,12 @@ import {
   type LiveCaptureFlow,
 } from '../../../recording/record-control.js'
 import { log } from '../../../lib/logger.js'
-import { autoWalkVerdict, isSettledDayChange, nextLookbackDaysAfterDayChange } from './lookback-walk.js'
+import {
+  autoWalkVerdict,
+  isSettledDayChange,
+  nextLookbackDaysAfterDayChange,
+  walkReadiness,
+} from './lookback-walk.js'
 import { composeHeatmapBins, filterDetectionsByKind } from './event-highlights.js'
 import { usePaletteView } from '../../../../shared/palette.js'
 import { filterEventsByZone, resolveFrameSize, zonePillAction } from './zone-filter.js'
@@ -1512,40 +1517,37 @@ export const TheaterTimeline = memo(function TheaterTimeline(props: TheaterTimel
   )
 
   /**
-   * WALK BACKWARDS BY ITSELF until a day has something in it.
+   * WALK BACKWARDS BY ITSELF until the window holds a clip.
    *
-   * The window starts at one calendar day, and `lookback-walk.ts` says of
-   * itself, in as many words: *"WHAT THIS WALK IS NOT: it is not data-driven.
-   * Nothing here consults whether the day being walked into HAS any footage."*
-   * It is armed by `onScrollBeginDrag` — a finger. So a camera whose current
-   * day happens to be empty rendered "Nessuna clip per questa telecamera" and
-   * stayed there, and the operator had to drag the list by hand to uncover 21
-   * clips one day back (measured live 2026-09-22: `rows:0` at 04:52:37Z, then
-   * 21 / 47 / 26 after three scrolls).
+   * The window starts at one calendar day, and the scroll-driven walk in
+   * `lookback-walk.ts` is armed by a finger, not by data. So a camera whose
+   * recent days were empty drew "Nessuna clip per questa telecamera" and the
+   * operator had to drag the list by hand to uncover clips days back
+   * (2026-09-22 on a source's files; 2026-11-17 on our own recordings).
    *
-   * One step per ANSWER, and `clips.answered` is what makes that safe: it goes
-   * false the moment the window changes and true again only when the new
-   * window has really come back, so this cannot run ahead of its own reads.
-   * It walks only where the cards are FILES (`nativeMode`) and only while the
-   * source says `ok` — a silent or missing source has already explained
-   * itself, and widening the window would just ask it again.
+   * Both bodies walk, one day per ANSWER, and only once every read the body
+   * is cut from has answered for THIS window (`walkReadiness`): the camera's
+   * source list first — until it answers the body is `derived` for want of
+   * evidence, not by choice — then the file list for a source, or the tracks
+   * AND the footage reads for our recordings. Each goes not-answered on a
+   * window change (a placeholder is not an answer), so the walk cannot run
+   * ahead of its reads. A failed read, or a source that is not `ok`, waits:
+   * widening would only ask it again. It stops at the first clip or at
+   * `MAX_AUTO_LOOKBACK_DAYS`, and says which (`clips-walk` log line below).
    */
-  //
-  // Both bodies walk (2026-11-17). On our own recordings the answer is the
-  // tracks AND the footage read of THIS window — the two the derived cards are
-  // cut from — so a camera whose last detection was three days back opens on
-  // that clip instead of an empty list.
-  const walkAnswered = nativeMode
-    ? clips.answered
-    : tracksQuery.answered && activityQuery.answered
   const walk = autoWalkVerdict({
     clipsMode,
     clipCount: cameraClips.length,
     lookbackDays,
     maxDays: MAX_AUTO_LOOKBACK_DAYS,
-    answered: walkAnswered,
-    failed: nativeMode ? clips.failed : tracksQuery.isError || activityQuery.failed,
-    sourceOk: nativeMode ? clips.choice.state === 'ok' : true,
+    ...walkReadiness({
+      sources: { answered: clips.sourcesAnswered, failed: clips.sourcesFailed },
+      nativeMode,
+      files: { answered: clips.answered, failed: clips.failed },
+      sourceOk: clips.choice.state === 'ok',
+      tracks: { answered: tracksQuery.answered, failed: tracksQuery.isError },
+      footage: { answered: activityQuery.answered, failed: activityQuery.failed },
+    }),
   })
   const autoWalking = walk === 'step' || walk === 'wait'
   useEffect(() => {

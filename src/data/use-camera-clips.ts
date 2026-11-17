@@ -142,6 +142,14 @@ export interface CameraClipsView {
    * could answer, which is a different thing again.
    */
   readonly answered: boolean
+  /**
+   * The camera's SOURCE list has answered (an empty list included). Until it
+   * has, `choice` falls back to `derived` for want of evidence, which is not
+   * the same as the camera having no source of its own.
+   */
+  readonly sourcesAnswered: boolean
+  /** The source-list read rejected. */
+  readonly sourcesFailed: boolean
   readonly refetch: () => void
 }
 
@@ -325,11 +333,13 @@ export function useCameraClips(input: UseCameraClipsInput): CameraClipsView {
       // matters: without it a window that has not been read yet reports the
       // PREVIOUS window's answer as its own.
       answered: askCap && clipsQuery.isSuccess && clipsQuery.isPlaceholderData !== true,
+      sourcesAnswered: enabled && sourcesQuery.isSuccess,
+      sourcesFailed: enabled && sourcesQuery.isError,
       refetch: () => {
         void sourcesQuery.refetch()
         if (askCap) void clipsQuery.refetch()
       },
     }),
-    [sources, choice, askCap, clipsQuery, sourcesQuery, shownClips],
+    [sources, choice, askCap, clipsQuery, sourcesQuery, shownClips, enabled],
   )
 }
