@@ -3419,7 +3419,8 @@
           "camera-refused": "The camera refused",
           "fetch-failed": "The clip could not be fetched",
           "too-large-to-transfer": "Too large to transfer",
-          "wake-expired": "The camera went back to sleep before the job ran"
+          "wake-expired": "The camera went back to sleep before the job ran",
+          "wake-timeout": "The camera did not wake up in time to read the clip — try again"
         }
       },
       "scrubUnavailable": "This camera's clips cannot be scrubbed — only forward from where the picture is",

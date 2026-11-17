@@ -55,6 +55,7 @@ export const CLIP_EXPORT_FAILURES: readonly string[] = [
   'fetch-failed',
   'too-large-to-transfer',
   'wake-expired',
+  'wake-timeout',
 ]
 
 export interface ClipExportFailureText {

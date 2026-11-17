@@ -129,4 +129,10 @@ describe('a failure is a TOKEN plus the producer own words', () => {
       detail: '174964736 > 52428800 bytes',
     })
   })
+  it('knows a wake that was sent but not answered in time by name', () => {
+    expect(clipExportFailureText('wake-timeout: the camera did not wake within 15 s')).toEqual({
+      code: 'wake-timeout',
+      detail: 'the camera did not wake within 15 s',
+    })
+  })
 })

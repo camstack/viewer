@@ -3419,7 +3419,8 @@
           "camera-refused": "La telecamera ha rifiutato",
           "fetch-failed": "Impossibile scaricare la clip",
           "too-large-to-transfer": "Troppo grande da trasferire",
-          "wake-expired": "La telecamera si è riaddormentata prima che il lavoro partisse"
+          "wake-expired": "La telecamera si è riaddormentata prima che il lavoro partisse",
+          "wake-timeout": "La telecamera non si è svegliata in tempo per leggere la clip — riprova"
         }
       },
       "scrubUnavailable": "Le clip di questa camera non si possono scorrere: solo in avanti dal punto in cui è l'immagine",
