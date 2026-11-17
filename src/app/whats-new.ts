@@ -31,6 +31,22 @@ export interface WhatsNewEntry {
 // i18n-ok: release notes carry their own `en` + `it` text per entry (typed, held by whats-new.spec.ts)
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.723',
+    date: '2026-11-18',
+    notes: {
+      en: [
+        'Clips open on the newest clip, even if it is days old.',
+        'Scrolling back up no longer empties the clip list.',
+        'The clip download button is gone from the playback bar.',
+      ],
+      it: [
+        'Le clip si aprono sulla più recente, anche se di giorni fa.',
+        'Tornando su la lista delle clip non si svuota più.',
+        'Il pulsante di download clip non è più nella barra di riproduzione.',
+      ],
+    },
+  },
+  {
     version: '1.0.722',
     date: '2026-11-17',
     notes: {
