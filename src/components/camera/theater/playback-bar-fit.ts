@@ -142,12 +142,6 @@ export interface PlaybackBarHost {
   readonly canWrap: boolean
   /** The trailing side carries an icon button (record, or the clip loop). */
   readonly trailingIcon: boolean
-  /**
-   * How many icon buttons the trailing side carries (a held clip: loop and
-   * download). Absent ⟺ one when {@link trailingIcon}, which is every host
-   * that has not been taught about the second.
-   */
-  readonly trailingIcons?: number
   /** The surface binds frame-step. */
   readonly canStep: boolean
   /** What the bar has measured of its own text-sized controls. */
@@ -231,8 +225,7 @@ function centreWidth(slots: number, d: BarDims): number {
 /** The trailing side while nothing is armed: record (or loop) and speed. */
 function idleTrailing(fit: PlaybackBarFit, host: PlaybackBarHost, d: BarDims): number {
   if (fit.secondary === 'overflow') return d.button
-  const icons = host.trailingIcons ?? (host.trailingIcon ? 1 : 0)
-  const icon = icons * (d.button + d.gap)
+  const icon = host.trailingIcon ? d.button + d.gap : 0
   return icon + d.rate
 }
 

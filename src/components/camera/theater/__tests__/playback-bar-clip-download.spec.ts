@@ -1,111 +1,61 @@
 /**
  * @vitest-environment jsdom
  *
- * The clip DOWNLOAD in the playback bar (#443).
+ * The playback bar carries NO clip download (operator, 2026-11-17).
  *
- * While a clip holds the frame the bar's record/export control is withdrawn
- * (a held file is not recordable), so the only way to keep the file on screen
- * was the small icon on its card. The bar now carries the SAME binding the
- * card does — `ClipSaveBinding`, whose press opens the one `ClipExportModal` —
- * drawn with the timeline's own Download icon.
- *
- * Rules, the bar's own:
- *  • an absent binding is an absent control;
- *  • a refusal (`onSave: null`) is drawn disabled with its reason as the label;
- *  • the press calls the binding — the modal is the timeline's, never a copy.
- *
- * And the wiring: the timeline hands the bar the HELD clip's entry of the very
- * map the cards read (`clipSaves`), gated on `axis === 'clip'`.
+ * A download chip beside the loop (#443, #567) widened the bar's trailing side
+ * and broke its fit on every layout. Keeping a clip stays where it was before:
+ * the Download icon on the clip's card, which opens the one `ClipExportModal`.
  */
-import { describe, it, expect, afterEach, vi } from 'vitest'
+import { describe, it, expect, afterEach } from 'vitest'
 import React from 'react'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { render, cleanup, fireEvent } from '@testing-library/react'
+import { render, cleanup } from '@testing-library/react'
 
 import { ThemeProvider } from '../../../../theme/theme-provider.js'
 import '../../../../app/i18n.js'
 import { TimelinePlaybackBar } from '../TimelinePlaybackBar.js'
-import type { ClipSaveBinding } from '../TimelineScroller.js'
 
 afterEach(cleanup)
 
 const NOOP = (): void => undefined
 
-function mountBar(clipDownload?: ClipSaveBinding, clipHeld = true): HTMLElement {
-  const { container } = render(
-    React.createElement(
-      ThemeProvider,
-      null,
-      React.createElement(TimelinePlaybackBar, {
-        mode: 'playback',
-        rate: 1,
-        paused: false,
-        loading: false,
-        onTogglePause: NOOP,
-        onJogBack: NOOP,
-        onJogForward: NOOP,
-        onSelectRate: NOOP,
-        onGoLive: NOOP,
-        clipHeld,
-        ...(clipHeld ? { clipLoop: { enabled: true, onToggle: NOOP } } : {}),
-        ...(clipDownload === undefined ? {} : { clipDownload }),
-      }),
-    ),
-  )
-  return container
+function read(rel: string): string {
+  return readFileSync(join(process.cwd(), rel), 'utf8')
 }
 
-describe('the bar offers the held clip for download', () => {
-  it('draws nothing without a binding', () => {
-    const root = mountBar()
-    expect(root.querySelector('[aria-label="Save clip"]')).toBeNull()
+describe('the playback bar has no clip download', () => {
+  it('a held clip draws the loop and no "Save clip" control', () => {
+    const { container } = render(
+      React.createElement(
+        ThemeProvider,
+        null,
+        React.createElement(TimelinePlaybackBar, {
+          mode: 'playback',
+          rate: 1,
+          paused: false,
+          loading: false,
+          onTogglePause: NOOP,
+          onJogBack: NOOP,
+          onJogForward: NOOP,
+          onSelectRate: NOOP,
+          onGoLive: NOOP,
+          clipHeld: true,
+          clipLoop: { enabled: true, onToggle: NOOP },
+        }),
+      ),
+    )
+    expect(container.querySelector('[aria-label="Save clip"]')).toBeNull()
   })
 
-  it('draws the download and the press reaches the binding', () => {
-    const onSave = vi.fn()
-    const root = mountBar({ onSave, reason: null })
-    const button = root.querySelector('[aria-label="Save clip"]')
-    expect(button).not.toBeNull()
-    fireEvent.click(button!)
-    expect(onSave).toHaveBeenCalledTimes(1)
+  it('neither the bar nor the timeline wires a download binding into the bar', () => {
+    expect(read('src/components/camera/theater/TimelinePlaybackBar.tsx')).not.toMatch(/clipDownload/)
+    expect(read('src/components/camera/theater/TheaterTimeline.tsx')).not.toMatch(/clipDownload:/)
+    expect(read('src/components/camera/theater/playback-bar-fit.ts')).not.toMatch(/trailingIcons/)
   })
 
-  it('a refusal is drawn, disabled, with its reason', () => {
-    const root = mountBar({ onSave: null, reason: 'The camera refused this clip' })
-    const button = root.querySelector('[aria-label="The camera refused this clip"]')
-    expect(button).not.toBeNull()
-    expect(button!.getAttribute('aria-disabled')).toBe('true')
-  })
-})
-
-describe('clips mode offers the SELECTED clip, not only a held file (#567)', () => {
-  // A clip of our own recording is played by SEEKING the recorded transport:
-  // nothing is "held", the bar stays on the epoch axis — and it used to draw no
-  // download at all, so clips mode had no way to keep the clip it was showing.
-  it('draws the download while the bar is on the epoch axis', () => {
-    const onSave = vi.fn()
-    const root = mountBar({ onSave, reason: null }, false)
-    const button = root.querySelector('[aria-label="Save clip"]')
-    expect(button).not.toBeNull()
-    fireEvent.click(button!)
-    expect(onSave).toHaveBeenCalledTimes(1)
-  })
-
-  it('still draws nothing without a binding', () => {
-    expect(mountBar(undefined, false).querySelector('[aria-label="Save clip"]')).toBeNull()
-  })
-})
-
-describe('the timeline hands the bar the card binding of the selected clip', () => {
-  const src = readFileSync(
-    join(process.cwd(), 'src/components/camera/theater/TheaterTimeline.tsx'),
-    'utf8',
-  )
-
-  it('reads the SAME map the cards read, for the held file OR the seeked clip', () => {
-    expect(src).toMatch(/clipDownload:\s*selectedClipSave,/)
-    expect(src).toMatch(/selectedClipSave[\s\S]{0,700}clipSaves\.get\(/)
-    expect(src).toMatch(/clipsSurface\.axis === 'clip'\s*\?\s*\(props\.clipOnFrameId \?\? null\)\s*:\s*activeClipId/)
+  it('the clip card keeps its download (the map the cards read survives)', () => {
+    expect(read('src/components/camera/theater/TheaterTimeline.tsx')).toMatch(/const clipSaves = useMemo/)
   })
 })

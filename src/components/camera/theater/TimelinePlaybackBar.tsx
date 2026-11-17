@@ -76,7 +76,6 @@ import { TransportSpinnerRing } from './TransportSpinnerRing.js'
 import { ClipProgressBar } from './ClipProgressBar.js'
 import type { ClipProgressBinding } from '../../../clips/clip-progress.js'
 import type { ClipLoopBinding } from '../../../clips/clip-loop.js'
-import type { ClipSaveBinding } from './TimelineScroller.js'
 import type { PlaybackMode } from '../../../recording/playback-machine.js'
 import type { RecordMenuAction } from '../../../recording/record-menu.js'
 import type { RecordControlBinding } from '../../../recording/record-control.js'
@@ -180,14 +179,6 @@ export interface TimelinePlaybackBarProps {
    * state invented to look thorough.
    */
   readonly clipLoop?: ClipLoopBinding
-  /**
-   * Keep the selected clip (#443, #567): the SAME binding the clip's card
-   * carries, so the press opens the timeline's one `ClipExportModal`. Absent ⟺
-   * no clip selected in clips mode; present both for a held file and for a
-   * clip of our own recording played by seeking. `onSave: null` is a refusal,
-   * drawn disabled with its reason.
-   */
-  readonly clipDownload?: ClipSaveBinding
   /** Frame-step. Absent ⟺ the surface cannot step (a wall of N), and then the
    *  two step buttons are not drawn at all. */
   readonly onStepFrame?: (dir: 1 | -1) => void
@@ -292,7 +283,6 @@ export function TimelinePlaybackBar({
   clipHeld = false,
   clipProgress,
   clipLoop,
-  clipDownload,
   onStepFrame,
   onSelectRate,
   onGoLive,
@@ -365,9 +355,6 @@ export function TimelinePlaybackBar({
     scale: ui.scale,
     canWrap,
     trailingIcon: record !== undefined || clipLoop !== undefined,
-    // The download sits beside the loop: price both, or the narrowest panel
-    // overflows again.
-    trailingIcons: (record !== undefined || clipLoop !== undefined ? 1 : 0) + (clipDownload !== undefined ? 1 : 0),
     canStep: onStepFrame !== undefined,
     measured,
   }
@@ -395,14 +382,6 @@ export function TimelinePlaybackBar({
   const overflow = fit.secondary === 'overflow' && rateOffered
   const showRate = rateOffered && !overflow
   const showLoop = loopOffered && !overflow
-  // The BINDING is the statement: the timeline hands one only for a selected
-  // clip in clips mode — a held file or a seeked clip of our own footage.
-  const downloadOffered = clipDownload !== undefined
-  const showDownload = downloadOffered && !overflow
-  const downloadLabel =
-    clipDownload === undefined || clipDownload.onSave !== null
-      ? t('v2.clips.saveClip')
-      : (clipDownload.reason ?? t('v2.clips.saveUnavailable'))
   const showRecordDot = recordIdle && !overflow
   // What the running thing is (a live clip, or a selection to export / delete)
   // is the BINDING's statement, not the layout's: the idle button is the same
@@ -636,17 +615,6 @@ export function TimelinePlaybackBar({
           <Repeat size={ui.px(15)} color={clipLoop.enabled ? colors.primaryForeground : colors.foreground} />,
           clipLoop.onToggle,
           clipLoop.enabled,
-        ),
-      )
-    }
-    if (downloadOffered && clipDownload !== undefined && clipDownload.onSave !== null) {
-      verbs.push(
-        verbRow(
-          'download',
-          downloadLabel,
-          <Download size={ui.px(15)} color={colors.foreground} />,
-          clipDownload.onSave,
-          false,
         ),
       )
     }
@@ -1069,34 +1037,6 @@ export function TimelinePlaybackBar({
             color={clipLoop.enabled ? colors.primaryForeground : colors.foreground}
           />
         </Pressable>
-      ) : null}
-      {showDownload && clipDownload !== undefined ? (
-        <View>
-          <Pressable
-            onPress={() => {
-              hapticTap()
-              clipDownload.onSave?.()
-            }}
-            disabled={clipDownload.onSave === null || clipDownload.saving === true}
-            style={[
-              styles.chip,
-              iconBtn,
-              styles.bordered,
-              { opacity: clipDownload.onSave === null ? 0.4 : 1 },
-            ]}
-            hitSlop={4}
-            accessibilityRole="button"
-            accessibilityState={{ disabled: clipDownload.onSave === null }}
-            accessibilityLabel={downloadLabel}
-          >
-            <Download size={ui.px(15)} color={colors.foreground} />
-          </Pressable>
-          {/* Saving rings the chip the way connecting rings play/pause: a
-              status on this control, never a second indicator inside it. */}
-          {clipDownload.saving === true ? (
-            <TransportSpinnerRing size={ui.control.button} color={colors.primary} />
-          ) : null}
-        </View>
       ) : null}
       {showRate ? (
         <View style={styles.speedAnchor} onLayout={onRateLayout}>
