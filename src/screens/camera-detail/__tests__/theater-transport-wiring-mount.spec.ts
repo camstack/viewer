@@ -24,7 +24,10 @@
  * these fail.
  *
  * Deterministic: the scrub's idle commit is a 300 ms timer, driven with fake
- * timers; no assertion reads the wall clock.
+ * timers; no assertion reads the wall clock. And the clock itself is PINNED at
+ * local noon: the stub event sits {@link EVENT_AGO_MS} before the newest
+ * instant, which in the first minutes after local midnight fell before the
+ * day's window and drew no card at all (red from 00:00 to ~00:30, every TZ).
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, screen } from '@testing-library/react'
@@ -46,6 +49,8 @@ const PHONE = { width: 390, height: 600 } as const
 /** How far before the newest instant the one event on the timeline starts. */
 const EVENT_AGO_MS = 20 * 60_000
 const EVENT_SPAN_MS = 12_000
+/** The pinned wall clock: local noon on an ordinary (non-DST) day, in any TZ. */
+const PINNED_NOW_MS = new Date(2026, 9, 14, 12, 0, 0, 0).getTime()
 
 interface TracksRequest {
   readonly since: number
@@ -150,6 +155,9 @@ async function tapEventCard(): Promise<void> {
 }
 
 beforeEach(async () => {
+  // Only `Date`, and it keeps ticking from the pinned instant — timers stay
+  // real, so the mount's deferrals run exactly as before.
+  vi.useFakeTimers({ toFake: ['Date'], now: PINNED_NOW_MS, shouldAdvanceTime: true })
   served.firstSeen = 0
   await AsyncStorage.clear()
 })
@@ -165,7 +173,10 @@ describe('scrub → transport', () => {
     const scroller = timelineScroller()
     const from = injectedWebViewScripts().length
 
-    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] })
+    // Hand the pinned clock over to fully driven timers, at the same instant.
+    const pinned = Date.now()
+    vi.useRealTimers()
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'], now: pinned })
     for (const offsetY of [200, 400, 600]) {
       act(() => {
         scroller.scrollTop = offsetY
