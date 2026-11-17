@@ -118,6 +118,8 @@ describe('DeviceType parity', () => {
   ]
   // Controllable, but the viewer has no row for it yet (its page is the hub's).
   const NO_VIEWER_CONTROL_YET: readonly string[] = ['dishwasher', 'washer', 'dryer', 'pet-fountain', 'energy-system', 'weather-station']
+  // A workload's on / off is drawn by the hub's row model, not a viewer control.
+  const HUB_ROW_ONLY: readonly string[] = ['workload']
 
   it('resolves a control kind for every shared DeviceType', () => {
     for (const type of Object.values(DeviceType)) {
@@ -128,7 +130,7 @@ describe('DeviceType parity', () => {
 
   it('maps every controllable DeviceType to a real control (no "none")', () => {
     for (const type of Object.values(DeviceType)) {
-      if (STRUCTURAL.includes(type) || NO_VIEWER_CONTROL_YET.includes(type)) continue
+      if (STRUCTURAL.includes(type) || NO_VIEWER_CONTROL_YET.includes(type) || HUB_ROW_ONLY.includes(type)) continue
       // Sensor/presence need a sensor feature to resolve a value; supply one so
       // the controllable assertion holds for the value-bearing case.
       const features = type === 'sensor' || type === 'presence' ? ['temperature-sensor'] : []
@@ -224,5 +226,11 @@ describe('appliance types that bind a plain switch', () => {
     expect(pickAccessoryControl({ type: 'switch', role: 'switch-heater', features: ['timed-run'] })).toEqual({
       kind: 'none',
     })
+  })
+})
+
+describe('workload', () => {
+  it('draws no viewer control: the hub row model owns its power switch', () => {
+    expect(pickAccessoryControl({ type: DeviceType.Workload, features: ['workload', 'switch'] })).toEqual({ kind: 'none' })
   })
 })

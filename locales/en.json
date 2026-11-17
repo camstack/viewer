@@ -2287,7 +2287,8 @@
         "pet-fountain": "Pet fountain",
         "heat-pump": "Heat pump",
         "energy-system": "Energy system",
-        "weather-station": "Weather station"
+        "weather-station": "Weather station",
+        "workload": "Workload"
       },
       "prune": {
         "device": "Disabled on {{date}}: its last device (#{{id}}) was deleted.",

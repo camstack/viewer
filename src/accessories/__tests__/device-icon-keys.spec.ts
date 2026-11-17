@@ -62,3 +62,15 @@ describe('resolver parity with the accessory panel', () => {
     ).toBe('thermometer')
   })
 })
+
+describe('workload and PoE-port devices are not drawn as generic', () => {
+  it('a workload row wears the workload glyph, and each workload role its own', () => {
+    const generic = iconKeyForDeviceType(DeviceType.Generic)
+    expect(iconKeyForDeviceType(DeviceType.Workload)).not.toBe(generic)
+    for (const role of ['vm', 'app-container', 'app', 'host', 'poe-port']) {
+      const key = resolveAccessoryIconKey({ localIcon: undefined, displayIcon: null, role, roleIcons: {}, type: DeviceType.Workload })
+      expect(key, role).not.toBe(generic)
+      expect(drawable(key), role).toBe(true)
+    }
+  })
+})

@@ -66,8 +66,8 @@
   },
   "dependencies": {
     "@camstack/sdk": "^1.2.153",
-    "@camstack/types": "^1.2.578",
-    "@camstack/ui-library": "^1.2.289",
+    "@camstack/types": "^1.2.589",
+    "@camstack/ui-library": "^1.2.466",
     "@config-plugins/react-native-webrtc": "^15.0.1",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",

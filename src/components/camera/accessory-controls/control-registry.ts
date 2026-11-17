@@ -221,6 +221,10 @@ const CONTROL_BY_DEVICE_TYPE = {
   [DeviceType.EnergySystem]: 'none',
   // A read-only multi-sensor weather station (the `weather-station` cap): nothing to operate.
   [DeviceType.WeatherStation]: 'none',
+  // A VM, container, LXC, app or host (the `workload` cap). Its on / off is the
+  // switch its power hint registers, and the hub's row model draws it (gated
+  // per session); there is no viewer workload control to fall back on.
+  [DeviceType.Workload]: 'none',
 } as const satisfies Record<DeviceType, AccessoryControlKind>
 
 /** Appliance types whose on/off is the plain `switch` cap they bind. A plug-in

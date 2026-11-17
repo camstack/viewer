@@ -828,6 +828,12 @@ export const NcTargetOverridesSchema = z.record(z.string(), NcTargetOverrideSche
 export type NcTargetOverrides = z.infer<typeof NcTargetOverridesSchema>
 
 /** Client-supplied rule fields (server stamps id/createdBy/createdAt/updatedAt). */
+/**
+ * Mirror of the hub's `TagsFieldSchema` (`tags/tag.ts`), which is not on the
+ * `/client` entry: 1–40 characters each, at most 20 per rule.
+ */
+const NcRuleTagsSchema = z.array(z.string().trim().min(1).max(40)).max(20)
+
 export const NcRuleInputSchema = z.object({
   name: z.string().min(1).max(200),
   enabled: z.boolean().default(true),
@@ -914,6 +920,8 @@ export const NcRuleInputSchema = z.object({
   groupWithinSec: z.number().int().min(0).max(NC_GROUP_WITHIN_MAX_SEC).optional(),
   /** Mirror of the hub's `askVerdict` (#243): absent and `false` mean off. */
   askVerdict: z.boolean().optional(),
+  /** Mirror of the hub's operator `tags` (D1054). Unmirrored, a phone save would drop them. */
+  tags: NcRuleTagsSchema.optional(),
 })
 export type NcRuleInput = z.infer<typeof NcRuleInputSchema>
 
@@ -963,6 +971,8 @@ export const NcRulePatchSchema = z.object({
   groupWithinSec: z.number().int().min(0).max(NC_GROUP_WITHIN_MAX_SEC).optional(),
   /** Mirror of the hub's `askVerdict` (#243): absent and `false` mean off. */
   askVerdict: z.boolean().optional(),
+  /** Mirror of the hub's operator `tags` (D1054). Unmirrored, a phone save would drop them. */
+  tags: NcRuleTagsSchema.optional(),
 })
 export type NcRulePatch = z.infer<typeof NcRulePatchSchema>
 

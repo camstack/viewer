@@ -2287,7 +2287,8 @@
         "pet-fountain": "Fontana per animali",
         "heat-pump": "Pompa di calore",
         "energy-system": "Impianto energetico",
-        "weather-station": "Stazione meteo"
+        "weather-station": "Stazione meteo",
+        "workload": "Carico di lavoro"
       },
       "prune": {
         "device": "Disattivata il {{date}}: il suo ultimo dispositivo (#{{id}}) è stato eliminato.",
