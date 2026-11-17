@@ -181,10 +181,11 @@ export interface TimelinePlaybackBarProps {
    */
   readonly clipLoop?: ClipLoopBinding
   /**
-   * Keep the held clip (#443): the SAME binding the clip's card carries, so
-   * the press opens the timeline's one `ClipExportModal`. Absent ⟺ nothing on
-   * the frame to keep (or a clip of our own footage, which the export control
-   * owns); `onSave: null` is a refusal, drawn disabled with its reason.
+   * Keep the selected clip (#443, #567): the SAME binding the clip's card
+   * carries, so the press opens the timeline's one `ClipExportModal`. Absent ⟺
+   * no clip selected in clips mode; present both for a held file and for a
+   * clip of our own recording played by seeking. `onSave: null` is a refusal,
+   * drawn disabled with its reason.
    */
   readonly clipDownload?: ClipSaveBinding
   /** Frame-step. Absent ⟺ the surface cannot step (a wall of N), and then the
@@ -394,8 +395,9 @@ export function TimelinePlaybackBar({
   const overflow = fit.secondary === 'overflow' && rateOffered
   const showRate = rateOffered && !overflow
   const showLoop = loopOffered && !overflow
-  // Same statement as the loop: a file is on screen and the surface binds it.
-  const downloadOffered = steppingClips && clipDownload !== undefined
+  // The BINDING is the statement: the timeline hands one only for a selected
+  // clip in clips mode — a held file or a seeked clip of our own footage.
+  const downloadOffered = clipDownload !== undefined
   const showDownload = downloadOffered && !overflow
   const downloadLabel =
     clipDownload === undefined || clipDownload.onSave !== null
