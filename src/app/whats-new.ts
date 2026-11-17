@@ -31,6 +31,22 @@ export interface WhatsNewEntry {
 // i18n-ok: release notes carry their own `en` + `it` text per entry (typed, held by whats-new.spec.ts)
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.720',
+    date: '2026-11-17',
+    notes: {
+      en: [
+        'A power switch that only reports its state no longer offers Power on / off.',
+        'An alarm panel that needs a PIN is read correctly on every hub version.',
+        'A clip export that times out waking the camera says so.',
+      ],
+      it: [
+        'Una presa che riporta solo lo stato non offre più Accendi / Spegni.',
+        'Una centrale d\'allarme che richiede il PIN è letta bene con ogni versione dell\'hub.',
+        'Un export di clip che scade svegliando la camera lo dice.',
+      ],
+    },
+  },
+  {
     version: '1.0.719',
     date: '2026-11-17',
     notes: {
