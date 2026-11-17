@@ -131,7 +131,7 @@ import {
   type LiveCaptureFlow,
 } from '../../../recording/record-control.js'
 import { log } from '../../../lib/logger.js'
-import { isSettledDayChange, nextLookbackDaysAfterDayChange } from './lookback-walk.js'
+import { autoWalkVerdict, isSettledDayChange, nextLookbackDaysAfterDayChange } from './lookback-walk.js'
 import { composeHeatmapBins, filterDetectionsByKind } from './event-highlights.js'
 import { usePaletteView } from '../../../../shared/palette.js'
 import { filterEventsByZone, resolveFrameSize, zonePillAction } from './zone-filter.js'
@@ -1115,11 +1115,14 @@ export const TheaterTimeline = memo(function TheaterTimeline(props: TheaterTimel
           previousLookbackDays: prevLookbackDays,
           nextDayFrom: dayFrom,
           maxLookbackDays: MAX_LOOKBACK_DAYS,
+          // Clips mode: scrolling back up (or go-live) keeps the clips already
+          // loaded and only adds the newer ones — never empties the list.
+          keepOnForward: clipsMode,
         }),
       )
     }
     if (props.mode !== 'seeking') settledDayFromRef.current = dayFrom
-  }, [dayFrom, props.mode])
+  }, [dayFrom, props.mode, clipsMode])
 
   // Date panel: the anchored month. The hook fetches the recording-day dots only
   // while that panel owns the body.
@@ -1527,14 +1530,44 @@ export const TheaterTimeline = memo(function TheaterTimeline(props: TheaterTimel
    * source says `ok` — a silent or missing source has already explained
    * itself, and widening the window would just ask it again.
    */
-  const autoWalking =
-    clipsMode && nativeMode && cameraClips.length === 0 && lookbackDays < MAX_AUTO_LOOKBACK_DAYS
+  //
+  // Both bodies walk (2026-11-17). On our own recordings the answer is the
+  // tracks AND the footage read of THIS window — the two the derived cards are
+  // cut from — so a camera whose last detection was three days back opens on
+  // that clip instead of an empty list.
+  const walkAnswered = nativeMode
+    ? clips.answered
+    : tracksQuery.answered && activityQuery.answered
+  const walk = autoWalkVerdict({
+    clipsMode,
+    clipCount: cameraClips.length,
+    lookbackDays,
+    maxDays: MAX_AUTO_LOOKBACK_DAYS,
+    answered: walkAnswered,
+    failed: nativeMode ? clips.failed : tracksQuery.isError || activityQuery.failed,
+    sourceOk: nativeMode ? clips.choice.state === 'ok' : true,
+  })
+  const autoWalking = walk === 'step' || walk === 'wait'
   useEffect(() => {
-    if (!autoWalking) return
-    if (!clips.answered || clips.failed) return
-    if (clips.choice.state !== 'ok') return
+    if (walk !== 'step') return
     setLookbackDays((d) => Math.min(MAX_AUTO_LOOKBACK_DAYS, d + 1))
-  }, [autoWalking, clips.answered, clips.failed, clips.choice.state])
+  }, [walk, lookbackDays])
+  // Where the walk ended, once per camera and outcome: a list that stays empty
+  // must say how far back it looked.
+  const walkLoggedRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (walk !== 'found' && walk !== 'exhausted') return
+    if (lookbackDays <= 1 && walk === 'found') return
+    const key = `${String(props.deviceId)}|${walk}|${String(lookbackDays)}`
+    if (walkLoggedRef.current === key) return
+    walkLoggedRef.current = key
+    log.info('clips-walk', walk === 'found' ? 'clip found' : 'bound reached, no clip', {
+      deviceId: props.deviceId,
+      days: lookbackDays,
+      maxDays: MAX_AUTO_LOOKBACK_DAYS,
+      source: nativeMode ? 'cap' : 'derived',
+    })
+  }, [walk, lookbackDays, props.deviceId, nativeMode])
 
   // Publish the list the body is showing, so the frame can STEP through it.
   // The screen never re-derives it — one derivation, one answer.

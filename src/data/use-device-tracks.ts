@@ -362,6 +362,12 @@ export interface DeviceTracksResult {
   readonly isError: boolean
   readonly isFetching: boolean
   readonly isLoading: boolean
+  /**
+   * THIS window has come back — with rows or with none. False while the
+   * previous window's rows stand in as a placeholder, so an empty answer is
+   * never claimed before the new window was read.
+   */
+  readonly answered: boolean
   readonly refetch: () => Promise<unknown>
   /**
    * True when the settled-history read stopped at its per-chunk row bound
@@ -768,6 +774,10 @@ export function useDeviceTracks(
     isError: historyQuery.isError || tailQuery.isError,
     isFetching: historyQuery.isFetching || tailQuery.isFetching,
     isLoading: historyQuery.isLoading || (liveWindow && tailQuery.isLoading),
+    answered:
+      historyQuery.isSuccess &&
+      !historyQuery.isPlaceholderData &&
+      (!liveWindow || (tailQuery.isSuccess && !tailQuery.isPlaceholderData)),
     refetch: async () => {
       await Promise.all([historyQuery.refetch(), tailQuery.refetch()])
     },

@@ -258,8 +258,19 @@ export function nextLookbackDaysAfterDayChange(input: {
   readonly previousLookbackDays: number
   readonly nextDayFrom: number
   readonly maxLookbackDays: number
+  /**
+   * Clips mode: a move to a NEWER day (scrolling back up, go-live) keeps the
+   * oldest loaded boundary, so the list keeps the clips it already shows and
+   * only gains the newer ones (operator, 2026-11-17). Without it the window
+   * restarted at one day and the list emptied and reloaded.
+   */
+  readonly keepOnForward?: boolean
 }): number {
   const oldTimelineFromMs = shiftLocalDay(input.previousDayFrom, 1 - input.previousLookbackDays)
+  if (input.keepOnForward === true && input.nextDayFrom > input.previousDayFrom) {
+    const span = calendarDaysFrom(oldTimelineFromMs, input.nextDayFrom) + 1
+    return Math.min(input.maxLookbackDays, Math.max(1, span))
+  }
   const withinLoadedWindow =
     input.nextDayFrom >= oldTimelineFromMs && input.nextDayFrom <= input.previousDayFrom
   if (!withinLoadedWindow) return 1
@@ -278,4 +289,37 @@ function calendarDaysFrom(earlierMs: number, laterMs: number): number {
     n += 1
   }
   return n
+}
+
+// ─── Clips mode: walk back until the list holds a clip ─────────────────────
+
+/** What the empty-window walk does on this render. */
+export type AutoWalkVerdict = 'idle' | 'wait' | 'step' | 'found' | 'exhausted'
+
+export interface AutoWalkInput {
+  readonly clipsMode: boolean
+  /** Clips in the window the body is showing. */
+  readonly clipCount: number
+  readonly lookbackDays: number
+  /** The walk's own bound (`MAX_AUTO_LOOKBACK_DAYS`). */
+  readonly maxDays: number
+  /** THIS window has answered (a placeholder of the previous one has not). */
+  readonly answered: boolean
+  readonly failed: boolean
+  /** The source can be read as complete (`ok`); always true for our own footage. */
+  readonly sourceOk: boolean
+}
+
+/**
+ * One step per ANSWER: a window that came back with no clip widens by one
+ * day; the first window holding a clip stops the walk, and so does the bound.
+ * A window still loading, a failed read or a source that cannot answer waits —
+ * widening would only ask it again.
+ */
+export function autoWalkVerdict(input: AutoWalkInput): AutoWalkVerdict {
+  if (!input.clipsMode) return 'idle'
+  if (input.clipCount > 0) return 'found'
+  if (input.lookbackDays >= input.maxDays) return 'exhausted'
+  if (!input.answered || input.failed || !input.sourceOk) return 'wait'
+  return 'step'
 }

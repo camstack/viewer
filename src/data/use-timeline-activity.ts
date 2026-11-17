@@ -92,6 +92,8 @@ export interface TimelineActivityResult {
   readonly loading: boolean
   /** The last read rejected. */
   readonly failed: boolean
+  /** THIS window's read has come back (a placeholder of the previous one has not). */
+  readonly answered: boolean
   /** An attempt is in flight right now — the retry phase of the fault notice. */
   readonly fetching: boolean
   /** Retry now (the fault notice's retry, for the recordings source). */
@@ -326,6 +328,7 @@ export function useTimelineActivity(
     activity: query.data ?? EMPTY_ACTIVITY,
     loading: query.isLoading,
     failed: query.isError,
+    answered: query.isSuccess && !query.isPlaceholderData,
     fetching: query.isFetching,
     refetch: () => {
       void query.refetch()
