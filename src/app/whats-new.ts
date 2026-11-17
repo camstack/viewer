@@ -31,6 +31,24 @@ export interface WhatsNewEntry {
 // i18n-ok: release notes carry their own `en` + `it` text per entry (typed, held by whats-new.spec.ts)
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.719',
+    date: '2026-11-17',
+    notes: {
+      en: [
+        'A clip on a sleeping battery camera starts without waking the camera.',
+        'Clip downloads appear in Activity, and a recorded clip has a download in the playback bar.',
+        'The notification rule editor shows only the fields its destinations can deliver.',
+        'Every screen is translated in English and Italian.',
+      ],
+      it: [
+        'Una clip di una camera a batteria addormentata parte senza svegliare la camera.',
+        'I download delle clip compaiono in Attività, e una clip registrata ha il download nella barra.',
+        'L\'editor delle regole di notifica mostra solo i campi che le destinazioni possono ricevere.',
+        'Ogni schermata è tradotta in inglese e in italiano.',
+      ],
+    },
+  },
+  {
     version: '1.0.718',
     date: '2026-11-16',
     notes: {
