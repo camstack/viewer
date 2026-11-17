@@ -456,7 +456,8 @@
       "ok": "OK",
       "done": "Done",
       "delete": "Delete",
-      "clear": "Clear"
+      "clear": "Clear",
+      "search": "Search"
     },
     "cameras": {
       "empty": "No cameras",
@@ -499,7 +500,9 @@
       "favourites": "Favourites",
       "motionOrder": "Motion",
       "locationFilter": "Filter by location",
-      "bucketEmpty": "Nothing here yet. Star a camera with the heart, or pick another place above."
+      "bucketEmpty": "Nothing here yet. Star a camera with the heart, or pick another place above.",
+      "favourite": "Add to favourites",
+      "unfavourite": "Remove from favourites"
     },
     "cameraDetail": {
       "fallbackName": "Camera #{{id}}",
@@ -569,7 +572,8 @@
       "cellActions": "Camera actions",
       "cellActionsA11y": "More actions for this camera",
       "cellDevicesA11y": "Linked devices",
-      "cellMenuA11y": "View options"
+      "cellMenuA11y": "View options",
+      "initialAudio": "Start with audio"
     },
     "gridBuilder": {
       "title": "Edit grid",
@@ -1916,7 +1920,8 @@
           "discoverNotReady": "Fill in the fields above to load the list, or type the value.",
           "discoverFailed": "Could not load the list: {{message}}. Type the value instead.",
           "discoverEmpty": "Nothing was found. Type the value instead."
-        }
+        },
+        "testUnavailable": "This kind cannot be tested"
       },
       "snooze": {
         "title": "Snooze",
@@ -4027,7 +4032,15 @@
       "inCollections_one": "{{count}} collection",
       "inCollections_other": "{{count}} collections",
       "corpusEmptyTitle": "No frames in the corpus yet",
-      "corpusEmptyBody": "Mark tracks on Events or send a frame from Theater."
+      "corpusEmptyBody": "Mark tracks on Events or send a frame from Theater.",
+      "frameRefusal": {
+        "unknownCollection": "That collection no longer exists — pick another one.",
+        "stillUnavailable": "No frame could be taken from the recording at that moment.",
+        "stillBusy": "The recorder is busy decoding other frames. Try again in a moment.",
+        "unreadableImage": "The recorder returned something that is not a picture.",
+        "writeFailed": "The frame could not be stored. Check the artifacts storage.",
+        "withDetail": "{{text}} ({{detail}})"
+      }
     },
     "device": {
       "title": "This device",
@@ -4117,7 +4130,8 @@
           "hardware": "Hardware-backed keystore (StrongBox / TEE)",
           "software": "Software",
           "unknown": "Unknown"
-        }
+        },
+        "unreadableStep": "Failed at: {{step}}"
       },
       "certificateDetails": "Certificate details"
     },
@@ -4487,6 +4501,34 @@
       "moreChips": "+{{count}}",
       "resolveFailed": "Could not check the chosen devices.",
       "inContainer": "in {{name}}"
+    },
+    "faceAssign": {
+      "sampleCount_one": "{{count}} sample",
+      "sampleCount_other": "{{count}} samples",
+      "noIdentities": "No people yet",
+      "namePlaceholder": "Person name…",
+      "createPerson": "Create new person",
+      "unknownPerson": "Unknown",
+      "noFace": "No face enrolled",
+      "face": "Face",
+      "assign": "Assign",
+      "errorDismiss": "{{error}} (tap to dismiss)"
+    },
+    "rootError": {
+      "body": "Something went wrong while drawing the screen. The details are saved on this device and are sent to your hub the next time the app connects.",
+      "retry": "Retry"
+    },
+    "mediaStrip": {
+      "crop": "Crop",
+      "confirmationCrop": "Gate crop"
+    },
+    "embedFrame": {
+      "deviceCard": "Device card",
+      "cameraGrid": "Camera grid",
+      "camera": "Camera {{id}} live view"
+    },
+    "linkedDevices": {
+      "title": "Linked devices"
     }
   },
   "prototype": {

@@ -30,9 +30,20 @@
  */
 import React from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
+import i18n from 'i18next'
 
 import { describeThrown } from '../lib/crash-record.js'
 import { reportFatal } from '../lib/crash-reporter.js'
+
+// The English fallback keeps this screen readable when the throw came before
+// i18n was initialised (the boundary wraps the whole tree).
+// i18n-ok: fallback before i18n init; the drawn text is v2.rootError.body
+const ROOT_BODY_EN =
+  'Something went wrong while drawing the screen. The details are saved on this device and are sent to your hub the next time the app connects.'
+
+function rootText(key: string, english: string): string {
+  return i18n.isInitialized ? i18n.t(key) : english
+}
 
 export interface RootErrorBoundaryProps {
   readonly children: React.ReactNode
@@ -77,17 +88,14 @@ export class RootErrorBoundary extends React.Component<
     return (
       <View style={styles.root}>
         <Text style={styles.title}>CamStack</Text>
-        <Text style={styles.body}>
-          Something went wrong while drawing the screen. The details are saved on this device and
-          are sent to your hub the next time the app connects.
-        </Text>
+        <Text style={styles.body}>{rootText('v2.rootError.body', ROOT_BODY_EN)}</Text>
         {this.state.detail === null ? null : (
           <Text style={styles.detail} selectable testID="root-error-detail">
             {this.state.detail}
           </Text>
         )}
         <Pressable style={styles.button} onPress={this.retry}>
-          <Text style={styles.buttonLabel}>Retry</Text>
+          <Text style={styles.buttonLabel}>{rootText('v2.rootError.retry', 'Retry')}</Text>
         </Pressable>
       </View>
     )

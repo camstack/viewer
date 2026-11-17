@@ -36,37 +36,40 @@ export interface NcAudioMacroLabel {
   /** Bare macro id, as written to the rule (`dog`, never `audio-dog`). */
   readonly id: string
   readonly icon: string
-  /** English fallback; the hub's taxonomy label wins when it serves one. */
-  readonly name: string
+}
+
+/** The locale key naming an audio macro (`eventKind.audio-<id>`), shared with the event labels. */
+export function audioMacroLabelKey(id: string): string {
+  return `eventKind.${AUDIO_KIND_PREFIX}${id}`
 }
 
 /** The macro vocabulary the picker offers when the hub sends no taxonomy. */
 export const NC_AUDIO_MACRO_LABELS: readonly NcAudioMacroLabel[] = [
-  { id: 'speech', icon: '🗣️', name: 'Speech' },
-  { id: 'scream', icon: '😱', name: 'Scream / Shout' },
-  { id: 'crying', icon: '😢', name: 'Crying / Baby' },
-  { id: 'laughter', icon: '😂', name: 'Laughter' },
-  { id: 'music', icon: '🎵', name: 'Music' },
-  { id: 'dog', icon: '🐕', name: 'Dog' },
-  { id: 'cat', icon: '🐈', name: 'Cat' },
-  { id: 'bird', icon: '🐦', name: 'Bird' },
-  { id: 'animal', icon: '🐾', name: 'Animal (other)' },
-  { id: 'alarm', icon: '🚨', name: 'Alarm / Siren' },
-  { id: 'doorbell', icon: '🔔', name: 'Doorbell / Knock' },
-  { id: 'glass_breaking', icon: '💥', name: 'Glass Breaking' },
-  { id: 'gunshot', icon: '💣', name: 'Gunshot / Explosion' },
-  { id: 'vehicle', icon: '🚗', name: 'Vehicle' },
-  { id: 'siren', icon: '🚑', name: 'Emergency Siren' },
-  { id: 'fire', icon: '🔥', name: 'Fire / Smoke' },
-  { id: 'water', icon: '💧', name: 'Water' },
-  { id: 'wind', icon: '🌬️', name: 'Wind / Weather' },
-  { id: 'door', icon: '🚪', name: 'Door' },
-  { id: 'footsteps', icon: '👣', name: 'Footsteps' },
-  { id: 'crowd', icon: '👥', name: 'Crowd / Chatter' },
-  { id: 'telephone', icon: '📞', name: 'Telephone' },
-  { id: 'engine', icon: '⚙️', name: 'Engine / Motor' },
-  { id: 'tools', icon: '🔨', name: 'Tools / Construction' },
-  { id: 'silence', icon: '🤫', name: 'Silence' },
+  { id: 'speech', icon: '🗣️' },
+  { id: 'scream', icon: '😱' },
+  { id: 'crying', icon: '😢' },
+  { id: 'laughter', icon: '😂' },
+  { id: 'music', icon: '🎵' },
+  { id: 'dog', icon: '🐕' },
+  { id: 'cat', icon: '🐈' },
+  { id: 'bird', icon: '🐦' },
+  { id: 'animal', icon: '🐾' },
+  { id: 'alarm', icon: '🚨' },
+  { id: 'doorbell', icon: '🔔' },
+  { id: 'glass_breaking', icon: '💥' },
+  { id: 'gunshot', icon: '💣' },
+  { id: 'vehicle', icon: '🚗' },
+  { id: 'siren', icon: '🚑' },
+  { id: 'fire', icon: '🔥' },
+  { id: 'water', icon: '💧' },
+  { id: 'wind', icon: '🌬️' },
+  { id: 'door', icon: '🚪' },
+  { id: 'footsteps', icon: '👣' },
+  { id: 'crowd', icon: '👥' },
+  { id: 'telephone', icon: '📞' },
+  { id: 'engine', icon: '⚙️' },
+  { id: 'tools', icon: '🔨' },
+  { id: 'silence', icon: '🤫' },
 ]
 
 /** The `audio-` namespace the NC taxonomy uses for these same macro ids. */
@@ -281,7 +284,10 @@ export function patchAudio(
  *  the local catalog — kept so the operator can SEE it and drop it. */
 export interface NcAudioLabelChoice {
   readonly value: string
+  /** The hub's words, or the bare id when the label comes from `labelKey`. */
   readonly label: string
+  /** Set on the local catalogue: the locale key that names it. */
+  readonly labelKey?: string
   readonly icon: string
   readonly unknown: boolean
 }
@@ -316,7 +322,8 @@ export function audioLabelChoices(
         })
       : NC_AUDIO_MACRO_LABELS.map((macro) => ({
           value: macro.id,
-          label: macro.name,
+          label: macro.id,
+          labelKey: audioMacroLabelKey(macro.id),
           icon: macro.icon,
           unknown: false,
         }))

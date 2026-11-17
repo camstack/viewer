@@ -1,3 +1,4 @@
+// i18n-ok-file: transport and diagnostic messages, logged and reported to the hub; a screen shows its own translated copy
 import { createSystem, type CredentialRefreshReason, type System } from '@camstack/sdk'
 import { isUnauthorizedError } from '../auth/unauthorized.js'
 import { watchSessionEndedClose } from '../auth/session-ended.js'

@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest'
+import i18next from 'i18next'
+import enLocale from '../../../locales/en.json'
+import itLocale from '../../../locales/it.json'
 import {
   toAddFrameFromRecordingOutcome,
   toCreateRetrainCollectionOutcome,
   toRetrainCollection,
   toRetrainCollectionList,
   trainingFrameRefusalText,
+  TRAINING_FRAME_REFUSAL_KEY,
 } from '../use-retrain-collections.js'
 
 describe('toRetrainCollection', () => {
@@ -74,8 +78,23 @@ describe('toAddFrameFromRecordingOutcome', () => {
 })
 
 describe('trainingFrameRefusalText', () => {
+  const en = i18next.createInstance()
+  void en.init({ lng: 'en', resources: { en: { translation: enLocale } }, initAsync: false, showSupportNotice: false })
+
   it('names every refusal and appends detail', () => {
-    expect(trainingFrameRefusalText('still-busy')).toMatch(/busy/i)
-    expect(trainingFrameRefusalText('write-failed', 'disk full')).toMatch(/disk full/)
+    expect(trainingFrameRefusalText(en.t, 'still-busy')).toMatch(/busy/i)
+    expect(trainingFrameRefusalText(en.t, 'write-failed', 'disk full')).toMatch(/disk full/)
+  })
+
+  it('every refusal has a sentence in both locales', () => {
+    for (const key of [...Object.values(TRAINING_FRAME_REFUSAL_KEY), 'v2.retrain.frameRefusal.withDetail']) {
+      for (const tree of [enLocale, itLocale]) {
+        const value = key.split('.').reduce<unknown>(
+          (node, part) => (node !== null && typeof node === 'object' ? new Map(Object.entries(node)).get(part) : undefined),
+          tree,
+        )
+        expect(value, key).toBeTypeOf('string')
+      }
+    }
   })
 })

@@ -150,7 +150,7 @@ export function AudioField({ taxonomy, value, onChange }: AudioFieldProps) {
                       fontSize: 13,
                     }}
                   >
-                    {choice.label}
+                    {choice.labelKey !== undefined ? t(choice.labelKey, { defaultValue: choice.label }) : choice.label}
                   </Text>
                   {on ? (
                     <X size={12} color={choice.unknown ? colors.warning : colors.primary} />

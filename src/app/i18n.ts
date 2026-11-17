@@ -12,7 +12,7 @@
  *  - loading only `en` eagerly and `it` on demand gives an Italian user — the
  *    operator — a first paint in English, then a flip.
  *
- * `it.json` is COMPLETE (1354/1354 keys), so the `en` fallback is never
+ * `it.json` is COMPLETE (same key set as `en.json`, held by `scripts/check-i18n.mjs`), so the `en` fallback is never
  * actually consulted for an Italian user; it is dead weight that cannot be
  * dropped safely while a missing key would render as a raw key. The real fix
  * is web code-splitting (`experiments.asyncRoutes` + `output: "static"`),

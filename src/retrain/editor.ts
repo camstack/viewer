@@ -162,6 +162,7 @@ export function pipelineDrafts(boxes: readonly RetrainPipelineBox[]): readonly E
       ...(p.modelId !== undefined ? { assistModelId: p.modelId } : {}),
       ...(p.score !== undefined ? { assistScore: p.score } : {}),
       draft: true,
+      // i18n-ok: `note` is never drawn (no screen reads EditorBox.note)
       note:
         p.basis === 'subject-box'
           ? 'The box the pipeline recorded on this very frame.'

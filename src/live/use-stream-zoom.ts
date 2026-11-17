@@ -778,7 +778,7 @@ export function useStreamZoom({
       // hold anything with.
       if (target.kind === 'fit' || w < MIN_VIEWPORT || h0 < MIN_VIEWPORT) {
         traceBegin('double-tap')
-        traceSample('step', { focalX: x, focalY: y, note: `${f2(s0)}→fit` })
+        traceSample('step', { focalX: x, focalY: y, note: `${f2(s0)}→fit` }) // i18n-ok: debug trace
         traceRelease()
         resetZoom('double-tap')
         return

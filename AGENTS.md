@@ -115,6 +115,7 @@ File-based routing in `app/`:
 - After changing `app.config.ts` or plugins, run `npm run prebuild:clean` and rebuild
 - Open iOS project via **camstack.xcworkspace**, not .xcodeproj
 - i18n: English + Italian (`locales/en.json`, `locales/it.json`) via i18next + react-i18next
+  - `npm run check:i18n` (in `ts-check`) refuses hard-coded user-visible text in `src/` and `app/`, a `t()` / `…Key:` key missing in either locale, and the two locales drifting apart (keys, empty values, `{{placeholders}}`). Text that reads the same in every language goes in its `PINNED_TEXT`; anything else that must stay carries `// i18n-ok: <reason>` (a transport/diagnostic module: `// i18n-ok-file: <reason>`). `--list` prints every finding.
 - CI runs `npm run ts-check` on every push/PR to main
 - **This checkout can see types it does not declare, because it usually lives
   INSIDE camstack-server.** Two separate leaks, and only one is closed:

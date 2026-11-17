@@ -340,36 +340,36 @@ describe('grid-export', () => {
   it('parseGridExport round-trips a serialized envelope (id stripped)', () => {
     const grid: Grid = { id: 'a', name: 'Esterno', cameraIds: [1, 2], options: { showName: true } }
     const json = JSON.stringify(buildGridExport([grid]))
-    const parsed = parseGridExport(json)
+    const parsed = parseGridExport(json, 'Imported grid')
     expect(parsed).toEqual([{ name: 'Esterno', cameraIds: [1, 2], options: { showName: true } }])
     for (const g of parsed) expect('id' in g).toBe(false)
   })
 
   it('parseGridExport accepts a bare array and a single object', () => {
-    expect(parseGridExport(JSON.stringify([{ name: 'A', cameraIds: [1] }]))).toEqual([
+    expect(parseGridExport(JSON.stringify([{ name: 'A', cameraIds: [1] }]), 'Imported grid')).toEqual([
       { name: 'A', cameraIds: [1] },
     ])
-    expect(parseGridExport(JSON.stringify({ name: 'B', cameraIds: [2] }))).toEqual([
+    expect(parseGridExport(JSON.stringify({ name: 'B', cameraIds: [2] }), 'Imported grid')).toEqual([
       { name: 'B', cameraIds: [2] },
     ])
   })
 
   it('parseGridExport dedupes cameras and prunes hidden ids to members', () => {
     const json = JSON.stringify({ name: 'X', cameraIds: [1, 1, 2], hiddenCameraIds: [2, 99] })
-    expect(parseGridExport(json)).toEqual([{ name: 'X', cameraIds: [1, 2], hiddenCameraIds: [2] }])
+    expect(parseGridExport(json, 'Imported grid')).toEqual([{ name: 'X', cameraIds: [1, 2], hiddenCameraIds: [2] }])
   })
 
   it('parseGridExport ignores a quality (device-local) but keeps a valid showName', () => {
     for (const quality of ['ultra', 'high']) {
       const json = JSON.stringify({ name: 'X', cameraIds: [1], options: { showName: true, quality } })
-      expect(parseGridExport(json)).toEqual([{ name: 'X', cameraIds: [1], options: { showName: true } }])
+      expect(parseGridExport(json, 'Imported grid')).toEqual([{ name: 'X', cameraIds: [1], options: { showName: true } }])
     }
   })
 
   it('parseGridExport returns [] for null/garbage/malformed entries', () => {
-    expect(parseGridExport(null)).toEqual([])
-    expect(parseGridExport('not json')).toEqual([])
-    expect(parseGridExport(JSON.stringify({ name: 'NoCams' }))).toEqual([])
-    expect(parseGridExport(JSON.stringify({ cameraIds: [1] }))).toEqual([])
+    expect(parseGridExport(null, 'Imported grid')).toEqual([])
+    expect(parseGridExport('not json', 'Imported grid')).toEqual([])
+    expect(parseGridExport(JSON.stringify({ name: 'NoCams' }), 'Imported grid')).toEqual([])
+    expect(parseGridExport(JSON.stringify({ cameraIds: [1] }), 'Imported grid')).toEqual([])
   })
 })

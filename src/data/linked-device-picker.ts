@@ -189,6 +189,7 @@ export function resolvePickedOptions(
   return picked.map((id) => {
     const device = byId.get(id)
     if (device === undefined) {
+      // i18n-ok: no screen draws this today (spec-only); a caller must pass the label through v2.accessories.deviceFallback
       return { id, label: `Device #${id}`, description: '', location: null }
     }
     const parentName =

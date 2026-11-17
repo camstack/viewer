@@ -1,3 +1,4 @@
+// i18n-ok-file: transport and diagnostic messages, logged and reported to the hub; a screen shows its own translated copy
 /**
  * Enrollment (D855): the device generates its own key, the hub signs the
  * public half.

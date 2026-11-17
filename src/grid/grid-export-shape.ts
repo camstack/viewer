@@ -60,8 +60,9 @@ export function serializeGrids(grids: readonly Grid[]): string {
 /** Parse a shared JSON payload into importable grids. Accepts the versioned
  *  envelope, a bare array of exported grids, or a single exported grid object.
  *  Never throws — malformed input yields `[]`. Each result is membership-clean
- *  (hidden ids pruned to actual members). */
-export function parseGridExport(raw: string | null): readonly ImportedGrid[] {
+ *  (hidden ids pruned to actual members). `unnamed` names a grid that arrives
+ *  without a name — in the caller's language. */
+export function parseGridExport(raw: string | null, unnamed: string): readonly ImportedGrid[] {
   if (!raw) return []
   let data: unknown
   try {
@@ -72,7 +73,7 @@ export function parseGridExport(raw: string | null): readonly ImportedGrid[] {
   const candidates = extractCandidates(data)
   const result: ImportedGrid[] = []
   for (const c of candidates) {
-    const grid = toImportedGrid(c)
+    const grid = toImportedGrid(c, unnamed)
     if (grid) result.push(grid)
   }
   return result
@@ -94,7 +95,7 @@ function isEnvelope(value: unknown): value is GridExportEnvelope {
 
 /** Validate + normalize one candidate into an `ImportedGrid`, or `null` if it is
  *  not a well-formed exported grid. */
-function toImportedGrid(value: unknown): ImportedGrid | null {
+function toImportedGrid(value: unknown, unnamed: string): ImportedGrid | null {
   if (typeof value !== 'object' || value === null) return null
   const g = value as Record<string, unknown>
   if (typeof g.name !== 'string') return null
@@ -102,7 +103,7 @@ function toImportedGrid(value: unknown): ImportedGrid | null {
   const cameraIds = Array.from(new Set(g.cameraIds))
   const members = new Set(cameraIds)
   const imported: { -readonly [K in keyof ImportedGrid]: ImportedGrid[K] } = {
-    name: g.name.trim() || 'Griglia importata',
+    name: g.name.trim() || unnamed,
     cameraIds,
   }
   if (isNumberArray(g.hiddenCameraIds)) {

@@ -1,3 +1,4 @@
+// i18n-ok-file: a developer registry of persisted keys; `what` is documentation, never drawn
 /**
  * EVERY key this app persists, and the level it lives at — the one registry
  * (operator decision 2026-10-21: two levels, each setting in exactly one).

@@ -66,6 +66,6 @@ describe('nc-tabs', () => {
 
   it('has every tab label present in the Italian locale', () => {
     const tabs = buildNcTabs((key) => lookup(itLocale, key), 'admin')
-    expect(tabs.map((tab) => tab.label)).toEqual(['Regole', 'Targets', 'Silenzia', 'Allarme'])
+    expect(tabs.map((tab) => tab.label)).toEqual(['Regole', 'Destinazioni', 'Silenzia', 'Allarme'])
   })
 })

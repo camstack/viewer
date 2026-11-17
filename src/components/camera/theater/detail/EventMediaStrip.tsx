@@ -66,6 +66,7 @@ interface MediaTileProps {
  */
 function MediaTile({ item, colors }: MediaTileProps) {
   const { token } = useServer()
+  const { t } = useTranslation()
   const [failed, setFailed] = useState(false)
   const headers: Record<string, string> | undefined = token
     ? { Authorization: `Bearer ${token}` }
@@ -85,7 +86,7 @@ function MediaTile({ item, colors }: MediaTileProps) {
           onError={() => setFailed(true)}
         />
       )}
-      <Text style={[styles.tileLabel, { color: colors.foregroundMuted }]}>{item.label}</Text>
+      <Text style={[styles.tileLabel, { color: colors.foregroundMuted }]}>{item.labelKey !== undefined ? t(item.labelKey) : item.kind}</Text>
     </View>
   )
 }

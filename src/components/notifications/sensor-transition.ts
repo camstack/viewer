@@ -64,11 +64,12 @@ interface SensorTransitionSourceChoice {
   readonly hint?: string
 }
 
-/** The local fallback, for a hub that serves no options. */
+/** The local fallback, for a hub that serves no options. The labels are only
+ *  the i18n default of `labelKey`; the drawn text comes from the locales. */
 const LOCAL_CHOICES: readonly SensorTransitionSourceChoice[] = [
-  { value: '', label: 'It triggers and when it clears' },
-  { value: 'raised', label: 'Only when it triggers' },
-  { value: 'cleared', label: 'Only when it clears' },
+  { value: '', label: 'It triggers and when it clears' }, // i18n-ok: default of v2.nc.rules.editor.sensorTransition.both
+  { value: 'raised', label: 'Only when it triggers' }, // i18n-ok: default of …sensorTransition.raised
+  { value: 'cleared', label: 'Only when it clears' }, // i18n-ok: default of …sensorTransition.cleared
 ]
 
 /** A select's raw value back to the condition; `''`, `'both'` and unknown → absent. */

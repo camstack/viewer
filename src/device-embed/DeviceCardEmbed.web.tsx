@@ -153,7 +153,7 @@ export function DeviceCardEmbed({ deviceId, active = true }: DeviceCardEmbedProp
         key={doc.webViewKey}
         ref={frameRef}
         src={doc.documentUri}
-        title="device-card"
+        title={t('v2.embedFrame.deviceCard')}
         data-testid="device-card-iframe"
         onLoad={(e) => {
           const href = framedPath(e.currentTarget)

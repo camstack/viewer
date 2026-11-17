@@ -105,7 +105,7 @@ export function CertificateDetailsSheet({ visible, onClose, record, hubName }: C
               {t('v2.device.details.unreadable')}
             </Text>
             <Text testID="cert-unreadable-step" style={{ color: colors.foregroundMuted, fontSize: 12, marginTop: SPACING.xs }}>
-              {`unreadable: ${parsed.step}`}
+              {t('v2.device.details.unreadableStep', { step: parsed.step })}
             </Text>
           </>
         ) : (

@@ -155,7 +155,7 @@ export function makeNcTargetsClient(deps: NcInstancesDeps): NcTargetsClient {
       } catch (e) {
         // `testInstance` is an optional method: a provider without one has no such procedure.
         if (e instanceof Error && NO_PROCEDURE.test(e.message)) {
-          return { success: false, error: 'This kind cannot be tested' }
+          return { success: false, untestable: true }
         }
         throw e
       }

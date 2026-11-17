@@ -234,7 +234,7 @@ export function GridLiveEmbed(props: GridLiveEmbedProps) {
 
   if (!src) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.mediaBlack }]}>
         <View style={styles.center}>
           <Text style={[styles.errorText, { color: colors.danger }]}>{t('v2.live.error')}</Text>
         </View>
@@ -243,7 +243,7 @@ export function GridLiveEmbed(props: GridLiveEmbedProps) {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.mediaBlack }]}>
       { }
       <iframe
         // NOT keyed on the device set: that is what `setDevices` replaced. The
@@ -252,12 +252,12 @@ export function GridLiveEmbed(props: GridLiveEmbedProps) {
         key={reloadNonce}
         ref={iframeRef}
         src={src}
-        title="camera-grid"
+        title={t('v2.embedFrame.cameraGrid')}
         allow="microphone; autoplay; fullscreen"
-        style={{ width: '100%', height: '100%', border: 'none', background: '#000' }}
+        style={{ width: '100%', height: '100%', border: 'none', background: colors.mediaBlack }}
       />
       {state !== 'ready' && (
-        <View style={styles.overlay} pointerEvents={state === 'error' ? 'auto' : 'none'}>
+        <View style={[styles.overlay, { backgroundColor: colors.mediaBlack }]} pointerEvents={state === 'error' ? 'auto' : 'none'}>
           {state === 'connecting' ? (
             <View style={styles.center}>
               <ActivityIndicator color={colors.primary} />
@@ -281,8 +281,8 @@ export function GridLiveEmbed(props: GridLiveEmbedProps) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, overflow: 'hidden', backgroundColor: '#000' },
-  overlay: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center', backgroundColor: '#000' },
+  container: { flex: 1, overflow: 'hidden' },
+  overlay: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center' },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: SPACING.xl, gap: SPACING.md },
   hint: { fontSize: 13, textAlign: 'center' },
   errorText: { fontSize: 13, textAlign: 'center' },

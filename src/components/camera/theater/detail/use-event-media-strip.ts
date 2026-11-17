@@ -20,21 +20,22 @@ export interface MediaStripItem {
   readonly kind: string
   /** HTTP URI for the stored kind — render with the session Bearer header. */
   readonly uri: string
-  readonly label: string
+  /** Locale key of the tile caption; `undefined` for a kind this build does not name. */
+  readonly labelKey: string | undefined
 }
 
 /** The media kinds surfaced in the strip (fullFrame is shown by the pager). */
 const STRIP_KINDS: readonly string[] = ['crop', 'faceCrop', 'plateCrop', 'confirmationCrop']
 
-function kindLabel(kind: string): string {
-  if (kind === 'crop') return 'Crop'
-  if (kind === 'faceCrop') return 'Face'
-  if (kind === 'plateCrop') return 'Plate'
+function kindLabelKey(kind: string): string | undefined {
+  if (kind === 'crop') return 'v2.mediaStrip.crop'
+  if (kind === 'faceCrop') return 'v2.mediaKind.faceCrop'
+  if (kind === 'plateCrop') return 'v2.mediaKind.plateCrop'
   // The pixels the confirmation gate judged, kept only when it refused to
   // confirm a birth. Present on a handful of tracks and absent everywhere
   // else — which is the point: it is there to be argued with.
-  if (kind === 'confirmationCrop') return 'Gate crop'
-  return kind
+  if (kind === 'confirmationCrop') return 'v2.mediaStrip.confirmationCrop'
+  return undefined
 }
 
 export interface EventMediaStripResult {
@@ -84,7 +85,7 @@ export function useEventMediaStrip(
               signal: ac.signal,
               ...(token ? { headers: { Authorization: `Bearer ${token}` } } : {}),
             })
-            if (probe.ok) found.push({ kind, uri, label: kindLabel(kind) })
+            if (probe.ok) found.push({ kind, uri, labelKey: kindLabelKey(kind) })
             else if (!isHonestEventMediaMiss(probe.status)) {
               log.warn('theater:detail:strip', 'event-media HEAD unexpected', {
                 eventId,

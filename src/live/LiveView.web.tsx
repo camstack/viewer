@@ -12,7 +12,7 @@ import { RotateCw } from '../lib/icons.js'
 import { useServer } from '../app/ServerProvider.js'
 import { useTheme } from '../theme/theme-provider.js'
 import { StreamPoster } from '../components/camera/StreamPoster.js'
-import { SPACING, RADIUS } from '../theme/tokens.js'
+import { SPACING, RADIUS, BACKDROP_ALPHA, withAlpha } from '../theme/tokens.js'
 import {
   DEFAULT_TARGET,
   type LiveViewHandle,
@@ -359,7 +359,7 @@ export const LiveView = forwardRef<LiveViewHandle, LiveViewProps>(function LiveV
 
   if (!src) {
     return (
-      <View style={[styles.container, { borderColor: colors.border }]}>
+      <View style={[styles.container, { borderColor: colors.border, backgroundColor: colors.mediaBlack }]}>
         <View style={styles.center}>
           <Text style={[styles.errorText, { color: colors.danger }]}>{t('v2.live.error')}</Text>
         </View>
@@ -368,18 +368,18 @@ export const LiveView = forwardRef<LiveViewHandle, LiveViewProps>(function LiveV
   }
 
   return (
-    <View style={[styles.container, videoStyle, { borderColor: colors.border }]}>
+    <View style={[styles.container, videoStyle, { borderColor: colors.border, backgroundColor: colors.mediaBlack }]}>
       { }
       <iframe
         ref={iframeRef}
         src={src}
-        title={`camera-${deviceId}`}
+        title={t('v2.embedFrame.camera', { id: deviceId })}
         allow="microphone; autoplay; fullscreen"
-        style={{ width: '100%', height: '100%', border: 'none', background: '#000' }}
+        style={{ width: '100%', height: '100%', border: 'none', background: colors.mediaBlack }}
       />
       {coverMounted && (
         <Animated.View
-          style={[styles.overlay, coverStyle]}
+          style={[styles.overlay, { backgroundColor: colors.mediaBlack }, coverStyle]}
           // Mirrors the native host: the cover claimed the touch stream on
           // 'error' only so its retry button could be pressed. That button now
           // lives on the playback bar (the one place a press actually lands),
@@ -408,7 +408,7 @@ export const LiveView = forwardRef<LiveViewHandle, LiveViewProps>(function LiveV
             // actually lands.
             //
             // Scrim so the error card stays legible over the poster photo.
-            <View style={styles.errorScrim}>
+            <View style={[styles.errorScrim, { backgroundColor: withAlpha(colors.mediaBlack, BACKDROP_ALPHA) }]}>
               <View style={styles.center}>
                 <Text style={[styles.errorText, { color: colors.danger }]}>{t('v2.live.error')}</Text>
                 {status.reason !== undefined ? (
@@ -442,11 +442,11 @@ const styles = StyleSheet.create({
   // stream did not take the header into account"). No `borderRadius` either:
   // a full-window picture with rounded corners shows the background through
   // them, and the iOS picture never had any.
-  container: { width: '100%', height: '100%', backgroundColor: '#000', overflow: 'hidden' },
+  container: { width: '100%', height: '100%', overflow: 'hidden' },
   // Opacity comes from StreamPoster (last frame → shimmer → themed surface);
-  // the `#000` is only the last-resort base beneath it.
-  overlay: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center', backgroundColor: '#000' },
-  errorScrim: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(0,0,0,0.6)' },
+  // `colors.mediaBlack` (at render) is only the last-resort base beneath it.
+  overlay: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center' },
+  errorScrim: { ...StyleSheet.absoluteFill },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: SPACING.xl, gap: SPACING.md },
   hint: { fontSize: 13, textAlign: 'center' },
   errorText: { fontSize: 13, textAlign: 'center' },
