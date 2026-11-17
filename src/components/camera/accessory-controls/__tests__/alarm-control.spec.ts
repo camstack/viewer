@@ -18,7 +18,7 @@ import type { NcAlarmArmOutcome, NcAlarmLive, NcPanelLookup } from '../../../../
 
 const PANEL = 1201
 
-const disarmed: AlarmStatus = { state: 'disarmed', availableModes: ['home', 'away', 'night'], requiresCode: false }
+const disarmed: AlarmStatus = { state: 'disarmed', availableModes: ['home', 'away', 'night'], codeRequired: false }
 const known: NcPanelLookup = { kind: 'known', panelId: PANEL }
 
 function input(over: Partial<AlarmControlModelInput> = {}): AlarmControlModelInput {
@@ -62,7 +62,7 @@ describe('alarmControlModel — modes', () => {
   })
 
   it('a coded panel offers no modes (there is no PIN entry inline)', () => {
-    const coded: AlarmStatus = { ...disarmed, requiresCode: true }
+    const coded: AlarmStatus = { ...disarmed, codeRequired: true }
     expect(alarmControlModel(input({ status: coded })).modes).toEqual([])
   })
 })

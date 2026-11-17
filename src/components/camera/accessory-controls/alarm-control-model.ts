@@ -150,7 +150,7 @@ const ALARM_SEVERITY: Readonly<Record<AlarmState, number>> = {
 function effectiveStatus(input: AlarmControlModelInput, isNcPanel: boolean): AlarmStatus | null {
   const live = isNcPanel ? input.ncLive : null
   if (live === null) return input.status
-  const fromLive: AlarmStatus = { state: live.state, availableModes: live.availableModes, requiresCode: false }
+  const fromLive: AlarmStatus = { state: live.state, availableModes: live.availableModes, codeRequired: false }
   if (input.status === null) return fromLive
   return ALARM_SEVERITY[live.state] > ALARM_SEVERITY[input.status.state]
     ? { ...input.status, state: live.state }
@@ -202,8 +202,8 @@ export function alarmControlModel(input: AlarmControlModelInput): AlarmControlMo
   const status = effectiveStatus(input, isNcPanel)
   const state = status?.state ?? null
   const armed = state !== null && ARMED_STATES.has(state)
-  const requiresCode = status?.requiresCode ?? false
-  const modes = status === null || requiresCode ? [] : [...status.availableModes]
+  const codeRequired = status?.codeRequired ?? false
+  const modes = status === null || codeRequired ? [] : [...status.availableModes]
   const outcome = input.lastOutcome
   return {
     modes,
@@ -214,7 +214,7 @@ export function alarmControlModel(input: AlarmControlModelInput): AlarmControlMo
     canArm: armPath !== null && state === 'disarmed' && modes.length > 0,
     // Unknown is reachable, and so is `disarming`: disarm is idempotent, and a
     // panel stuck there (an HA panel can be) must be finishable from the row.
-    canDisarm: state === null || armed || state === 'disarming' || requiresCode,
+    canDisarm: state === null || armed || state === 'disarming' || codeRequired,
     lookupUnknown: input.verdict === 'admin' && input.ncPanel.kind === 'unknown',
     // A refusal the panel has since moved past (armed from anywhere) is history,
     // and its Arm anyway would only come back `stale`.

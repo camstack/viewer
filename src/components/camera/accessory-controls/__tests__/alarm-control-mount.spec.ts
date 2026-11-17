@@ -33,7 +33,7 @@ function field(input: unknown, key: string): unknown {
 }
 
 function status(state: string): Record<string, unknown> {
-  return { state, availableModes: ['home', 'away', 'night'], requiresCode: false, lastChangedAt: 1 }
+  return { state, availableModes: ['home', 'away', 'night'], codeRequired: false, lastChangedAt: 1 }
 }
 
 function customCalls(action: string): readonly unknown[] {
@@ -208,5 +208,51 @@ describe('AlarmControl — Disarm waits on nothing (N1, N2)', () => {
     await vi.waitFor(() =>
       expect(hubCalls().filter((c) => c.path === 'alarmPanel.disarm').map((c) => c.input)).toEqual([{ deviceId: PANEL }]),
     )
+  })
+})
+
+/**
+ * The hub renamed `requiresCode: boolean` to `codeRequired: boolean | null`
+ * (null = not known). The viewer reads both names, new first, and an unknown
+ * answer is a coded panel — never a code-less one that offers Arm and sends a
+ * code-less disarm.
+ */
+describe('AlarmControl — the PIN flag under both hub names', () => {
+  const CAP_PANEL = 77
+
+  function codedHub(slice: Record<string, unknown>): Readonly<Record<string, unknown>> {
+    return {
+      'auth.me': { id: 'u1', username: 'operator', isAdmin: false },
+      'alarmPanel.getStatus': { state: 'disarmed', availableModes: ['home', 'away', 'night'], lastChangedAt: 1, ...slice },
+    }
+  }
+
+  async function settled(): Promise<void> {
+    await vi.waitFor(() => expect(hubCalls().some((c) => c.path === 'alarmPanel.getStatus')).toBe(true))
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 20))
+    })
+  }
+
+  it.each([
+    ['an older hub, requiresCode: false', { requiresCode: false }],
+    ['a newer hub, codeRequired: false', { codeRequired: false }],
+  ])('%s → the status is read and Arm is offered', async (_label, slice) => {
+    mountScreen(React.createElement(AlarmControl, { deviceId: CAP_PANEL, online: true }), { hub: codedHub(slice) })
+    await dom.findByRole('button', { name: 'Away' })
+    expect(dom.queryByText('Panel state unknown')).toBeNull()
+  })
+
+  it.each([
+    ['an older hub, requiresCode: true', { requiresCode: true }],
+    ['a newer hub, codeRequired: true', { codeRequired: true }],
+    ['a newer hub, codeRequired: null (unknown)', { codeRequired: null }],
+    ['a newer hub wins over the old name it also sends', { codeRequired: null, requiresCode: false }],
+  ])('%s → a coded panel: the status is read, no inline Arm', async (_label, slice) => {
+    mountScreen(React.createElement(AlarmControl, { deviceId: CAP_PANEL, online: true }), { hub: codedHub(slice) })
+    await settled()
+    expect(dom.queryByText('Panel state unknown')).toBeNull()
+    expect(dom.queryByRole('button', { name: 'Away' })).toBeNull()
+    expect(dom.getByRole('button', { name: 'Disarm' })).toBeTruthy()
   })
 })

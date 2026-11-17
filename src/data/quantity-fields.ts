@@ -30,6 +30,11 @@ export const PRESSURE: QuantityField = { name: 'pressure', legacy: 'hpa' }
 export const ILLUMINANCE: QuantityField = { name: 'illuminance', legacy: 'lux' }
 export const CO2: QuantityField = { name: 'co2', legacy: 'co2Ppm' }
 export const VOC: QuantityField = { name: 'voc', legacy: 'vocPpb' }
+/**
+ * Not a quantity, the same dual-name read: `alarm-panel` renamed its PIN flag
+ * `requiresCode: boolean` to `codeRequired: boolean | null` (null = not known).
+ */
+export const ALARM_CODE_REQUIRED: QuantityField = { name: 'codeRequired', legacy: 'requiresCode' }
 
 /** A status slice as the viewer receives it: a plain object of unknown values. */
 export type StatusSlice = Readonly<Record<string, unknown>>

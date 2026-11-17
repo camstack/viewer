@@ -9,7 +9,7 @@
  *   - brightness      → { percentage(0..100), lastChangedAt }
  *   - lock-control    → { state: 'locked'|'unlocked'|'locking'|'unlocking'|'jammed', … }
  *   - cover           → { state, position|null, tiltPosition|null, … }
- *   - alarm-panel     → { state, availableModes, requiresCode, … }
+ *   - alarm-panel     → { state, availableModes, codeRequired (older hub: requiresCode), … }
  *   - temperature-sensor → { celsius, unit?, precision? }
  *   - humidity-sensor    → { percent, unit?, precision? }
  *   - numeric-sensor     → { value, unit?, precision? }
@@ -25,11 +25,13 @@ import { type UseQueryResult } from '@tanstack/react-query'
 import { useConnection } from '../connection/ConnectionProvider.js'
 import { useCapStatus, useCapStatusParsed } from './use-cap-status.js'
 import {
+  ALARM_CODE_REQUIRED,
   BRIGHTNESS_LEVEL,
   FAN_SPEED,
   HUMIDITY,
   ILLUMINANCE,
   type QuantityField,
+  readQuantity,
   readQuantityNumber,
   readQuantityNullable,
   TEMPERATURE,
@@ -73,7 +75,8 @@ export type AlarmState =
 export interface AlarmStatus {
   readonly state: AlarmState
   readonly availableModes: readonly AlarmArmMode[]
-  readonly requiresCode: boolean
+  /** True unless the hub said `false`: an unknown (`null`) PIN flag is a coded panel. */
+  readonly codeRequired: boolean
 }
 export type HvacMode = 'off' | 'heat' | 'cool' | 'auto' | 'heat_cool' | 'fan_only' | 'dry'
 export interface ClimateStatus {
@@ -144,12 +147,23 @@ const ALARM_STATES: readonly AlarmState[] = [
   'armed_custom_bypass', 'arming', 'disarming', 'pending', 'triggered',
 ]
 const ALARM_MODES: readonly AlarmArmMode[] = ['home', 'away', 'night', 'vacation', 'custom_bypass']
-function isAlarmStatus(v: unknown): v is AlarmStatus {
-  if (!isRecord(v) || typeof v.state !== 'string') return false
-  if (!(ALARM_STATES as readonly string[]).includes(v.state)) return false
-  if (typeof v.requiresCode !== 'boolean') return false
-  if (!Array.isArray(v.availableModes)) return false
-  return v.availableModes.every((m) => typeof m === 'string' && (ALARM_MODES as readonly string[]).includes(m))
+function isAlarmMode(m: unknown): m is AlarmArmMode {
+  return typeof m === 'string' && (ALARM_MODES as readonly string[]).includes(m)
+}
+function isAlarmState(v: unknown): v is AlarmState {
+  return typeof v === 'string' && (ALARM_STATES as readonly string[]).includes(v)
+}
+/**
+ * The PIN flag under either hub name (`codeRequired`, older `requiresCode`).
+ * `null` — the hub does not know — reads as coded, never as code-less; a slice
+ * that names neither is malformed.
+ */
+function toAlarmStatus(v: unknown): AlarmStatus | null {
+  if (!isRecord(v) || !isAlarmState(v.state)) return null
+  const flag = readQuantity(v, ALARM_CODE_REQUIRED)
+  if (flag !== null && typeof flag !== 'boolean') return null
+  if (!Array.isArray(v.availableModes) || !v.availableModes.every(isAlarmMode)) return null
+  return { state: v.state, availableModes: v.availableModes.filter(isAlarmMode), codeRequired: flag !== false }
 }
 
 const HVAC_MODES: readonly HvacMode[] = ['off', 'heat', 'cool', 'auto', 'heat_cool', 'fan_only', 'dry']
@@ -217,7 +231,7 @@ export function useCoverStatus(deviceId: number, enabled: boolean): UseQueryResu
   return useCapStatus('cover', deviceId, isCoverStatus, enabled)
 }
 export function useAlarmStatus(deviceId: number, enabled: boolean): UseQueryResult<AlarmStatus | null> {
-  return useCapStatus('alarmPanel', deviceId, isAlarmStatus, enabled)
+  return useCapStatusParsed('alarmPanel', deviceId, toAlarmStatus, enabled)
 }
 /** Read the `climate-control` cap status (thermostat / A-C). Router key is
  *  camelCase `climateControl`. */

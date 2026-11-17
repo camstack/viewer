@@ -177,7 +177,7 @@ function hub(options: HubOptions = {}): Readonly<Record<string, unknown>> {
       if (options.meFails === true) throw new Error('auth.me unreachable')
       return { id: 'u1', username: 'operator', isAdmin: options.isAdmin ?? true }
     },
-    'alarmPanel.getStatus': { state: 'disarmed', availableModes: ['home', 'away', 'night'], requiresCode: false, lastChangedAt: 1 },
+    'alarmPanel.getStatus': { state: 'disarmed', availableModes: ['home', 'away', 'night'], codeRequired: false, lastChangedAt: 1 },
     'deviceManager.listAll': [
       { id: CAMERA, name: 'Garden cam', type: 'camera' },
       { id: CONTACT, name: 'Back door', type: 'sensor', location: 'Sala' },
