@@ -124,6 +124,7 @@ export function ruleAiApplies(kind: NcRuleKind): boolean {
  * lets the hub ask its own default — is translated
  * ({@link ruleAiDefaultPromptKey}, with this string as its `defaultValue`).
  */
+// i18n-ok: the English prompt VALUE sent to the model (see above); its placeholder is translated
 export const NC_RULE_AI_DEFAULT_PROMPT: Readonly<Record<NcRuleAiShape, string>> = {
   occupancy: 'Does the claimed count hold?',
   'detection-immediate': 'What is in this picture?',

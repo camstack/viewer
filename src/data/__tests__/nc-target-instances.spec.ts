@@ -114,7 +114,7 @@ describe('own notification targets through integrationInstances', () => {
     const none = clientOver({ getInstance: ROW('a', 'u1') })
     await expect(none.client.testTarget('a')).resolves.toEqual({
       success: false,
-      error: 'This kind cannot be tested',
+      untestable: true,
     })
   })
 

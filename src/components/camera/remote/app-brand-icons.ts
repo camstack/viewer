@@ -59,6 +59,7 @@ const lettermark = (key: string, label: string, text: string): AppBrand => ({
   mark: { kind: 'lettermark', text },
 })
 
+// i18n-ok: app brand names are the same in every language
 export const APP_BRANDS: readonly AppBrand[] = [
   glyph('netflix', 'Netflix', siNetflix),
   glyph('youtube', 'YouTube', siYoutube),

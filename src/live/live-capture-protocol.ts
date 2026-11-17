@@ -1,3 +1,4 @@
+// i18n-ok-file: transport and diagnostic messages, logged and reported to the hub; a screen shows its own translated copy
 /**
  * Host-side live-capture protocol: chunked embed→host messages plus the
  * helpers that reassemble them into a shareable file.

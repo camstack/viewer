@@ -1,3 +1,4 @@
+// i18n-ok-file: transport and diagnostic messages, logged and reported to the hub; a screen shows its own translated copy
 /**
  * Signing in with the device certificate on behalf of the app's session
  * machinery (boot, a session the hub ended, removing a hub): the certificate

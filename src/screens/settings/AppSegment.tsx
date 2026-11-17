@@ -46,6 +46,7 @@ export function AppSegment() {
     { value: 'dark', label: t('v2.settings.themeDark') },
     { value: 'light', label: t('v2.settings.themeLight') },
   ]
+  // i18n-ok: each language is named in its own language, whatever the UI language
   const languageOptions: readonly { value: LanguagePreference; label: string }[] = [
     { value: 'system', label: t('v2.settings.langSystem') },
     { value: 'it', label: 'Italiano' },

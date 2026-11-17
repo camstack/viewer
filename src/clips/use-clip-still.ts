@@ -1,3 +1,4 @@
+// i18n-ok-file: transport and diagnostic messages, logged and reported to the hub; a screen shows its own translated copy
 /**
  * use-clip-still — one tile's still: ask, read the disposition, come back if
  * the server said to, and stop with a NAME when the budget runs out (D573).

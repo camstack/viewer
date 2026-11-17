@@ -49,6 +49,17 @@ import type {
   NcTaxonomy,
 } from '../../../data/notification-center.js'
 
+/** Dotted-path lookup in a locale tree; a segment may itself contain dashes. */
+function lookupKey(tree: unknown, key: string): string | undefined {
+  let node: unknown = tree
+  for (const part of key.split('.')) {
+    if (node === null || typeof node !== 'object' || !(part in node)) return undefined
+    const record: Record<string, unknown> = { ...node }
+    node = record[part]
+  }
+  return typeof node === 'string' ? node : undefined
+}
+
 /** The descriptor the hub serves once an audio rule is authorable (P2). */
 const AUDIO_DESCRIPTOR: NcConditionDescriptor = {
   id: 'audio',
@@ -369,11 +380,17 @@ describe('label vocabulary — both spellings are one label', () => {
     expect(choices).toHaveLength(NC_AUDIO_MACRO_LABELS.length)
     expect(choices.find((c) => c.value === 'crying')).toEqual({
       value: 'crying',
-      label: 'Crying / Baby',
+      label: 'crying',
+      labelKey: 'eventKind.audio-crying',
       icon: '😢',
       unknown: false,
     })
     expect(choices.every((c) => c.icon.length > 0)).toBe(true)
+    // Every local choice is named by a key both locales carry.
+    for (const c of choices) {
+      expect(lookupKey(enLocale, c.labelKey ?? ''), `en ${c.labelKey}`).toBeTypeOf('string')
+      expect(lookupKey(itLocale, c.labelKey ?? ''), `it ${c.labelKey}`).toBeTypeOf('string')
+    }
   })
 
   it('prefers the hub WORDS and keeps the local EMOJI, keyed by macro id', () => {

@@ -1,3 +1,4 @@
+// i18n-ok-file: transport and diagnostic messages, logged and reported to the hub; a screen shows its own translated copy
 /**
  * Browser Fullscreen API hook (web). On native this is a harmless no-op (the
  * native fullscreen path uses ScreenOrientation elsewhere). Attach `ref` to the

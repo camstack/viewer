@@ -24,7 +24,7 @@
     "on": "On",
     "mute": "Muto",
     "unmute": "Audio",
-    "stop": "Stop",
+    "stop": "Ferma",
     "locked": "Chiusa",
     "unlocked": "Aperta",
     "open": "Aperta",
@@ -223,15 +223,15 @@
     "baseUrl": "URL base",
     "urlLocal": "URL locale",
     "urlPublic": "URL pubblico",
-    "username": "Username",
+    "username": "Nome utente",
     "password": "Password",
     "token": "Token (opzionale)",
     "frigateTokenHint": "Token (opzionale): JWT dal browser",
     "tokenRequired": "Token",
     "testConnection": "Test connessione",
-    "testLocal": "Test Local",
-    "testPublic": "Test Public",
-    "testMqtt": "Test MQTT",
+    "testLocal": "Prova locale",
+    "testPublic": "Prova pubblica",
+    "testMqtt": "Prova MQTT",
     "connectionOk": "Connessione riuscita",
     "connectionError": "Connessione fallita",
     "scryptedCredentialsPromptTitle": "Accesso Hub esterno",
@@ -244,7 +244,7 @@
     "data": "Dati",
     "clearCacheEventsClips": "Svuota cache eventi e videoclip",
     "eventsClipsSourceHint": "Sorgente per le schede Eventi e Videoclip.",
-    "hubReelTitle": "Hub & Reel",
+    "hubReelTitle": "Hub e Reel",
     "reelIntegrationsHint": "Scegli quali integrazioni usare per il reel.",
     "reelScryptedSourceHint": "Con Hub esterno: sorgente eventi per il reel.",
     "eventsClipsAuto": "Auto",
@@ -326,7 +326,7 @@
     "manageCamerasHint": "Rimuovi telecamere dall'app.",
     "downloadSnapshot": "Scarica snapshot",
     "snapshotFailed": "Impossibile recuperare lo snapshot",
-    "exportSnapshot": "Snapshot",
+    "exportSnapshot": "Istantanea",
     "exportDownloadClip": "Scarica clip",
     "exportStartRecording": "Avvia registrazione",
     "exportStopRecording": "Ferma registrazione",
@@ -339,7 +339,7 @@
     "playOnOpenHint": "Carica automaticamente lo stream live quando apri una telecamera.",
     "audioOnOpen": "Audio attivo all'apertura",
     "audioOnOpenHint": "Riproduci audio quando apri una telecamera (se supportato).",
-    "streamWatchdog": "Stream watchdog",
+    "streamWatchdog": "Controllo dello stream",
     "streamWatchdogHint": "Riavvia lo stream quando non arrivano dati (aiuta con connessioni bloccate).",
     "cameraPlayer": "Player telecamera",
     "webViewCameraDetail": "Usa player WebView",
@@ -348,7 +348,7 @@
     "streamQualitySingle": "Qualità singola telecamera",
     "streamQualityGrid": "Qualità griglia",
     "qualityAuto": "Auto",
-    "qualityHigh": "High",
+    "qualityHigh": "Alta",
     "qualityMedium": "Mid",
     "qualityLow": "Sub",
     "auto": "Auto",
@@ -421,7 +421,7 @@
     "reelBadgeLarge": "Grande"
   },
   "reel": {
-    "filterMotion": "Motion",
+    "filterMotion": "Movimento",
     "filterOnlyRules": "Solo rule",
     "filterOnlySensors": "Solo sensori",
     "goToMostRecent": "Vai al più recente"
@@ -456,7 +456,8 @@
       "ok": "OK",
       "done": "Fatto",
       "delete": "Elimina",
-      "clear": "Svuota"
+      "clear": "Svuota",
+      "search": "Cerca"
     },
     "cameras": {
       "empty": "Nessuna telecamera",
@@ -499,10 +500,12 @@
       "favourites": "Preferite",
       "motionOrder": "Movimento",
       "locationFilter": "Filtra per luogo",
-      "bucketEmpty": "Qui non c’è niente. Aggiungi una camera col cuore, o scegli un altro luogo qui sopra."
+      "bucketEmpty": "Qui non c’è niente. Aggiungi una camera col cuore, o scegli un altro luogo qui sopra.",
+      "favourite": "Aggiungi ai preferiti",
+      "unfavourite": "Rimuovi dai preferiti"
     },
     "cameraDetail": {
-      "fallbackName": "Camera #{{id}}",
+      "fallbackName": "Telecamera #{{id}}",
       "mute": "Disattiva audio",
       "unmute": "Attiva audio",
       "snapshot": "Istantanea",
@@ -569,7 +572,8 @@
       "cellActions": "Azioni telecamera",
       "cellActionsA11y": "Altre azioni per questa telecamera",
       "cellDevicesA11y": "Dispositivi collegati",
-      "cellMenuA11y": "Opzioni di visualizzazione"
+      "cellMenuA11y": "Opzioni di visualizzazione",
+      "initialAudio": "Avvia con l'audio"
     },
     "gridBuilder": {
       "title": "Modifica griglia",
@@ -596,7 +600,8 @@
       "highlightDetection": "Su rilevamento",
       "clusterLabel": "Etichetta cluster",
       "clusterLabelIcon": "Icona",
-      "clusterLabelText": "Testo"
+      "clusterLabelText": "Testo",
+      "highlightAudioSensor": "Presenza"
     },
     "gridBar": {
       "back": "Indietro",
@@ -903,13 +908,15 @@
         "localOnlyHub": "Solo locale — questo hub non conserva le impostazioni dell'account",
         "localOnlyCredential": "Solo locale — questo accesso non raggiunge le impostazioni dell'account"
       },
-      "logsShare": "Condividi i log"
+      "logsShare": "Condividi i log",
+      "tileShowImportance": "Mostra l'importanza",
+      "tileShowImportanceHint": "Mostra il badge di importanza sulle schede degli eventi (quando è stata calcolata)."
     },
     "nc": {
       "title": "Notifiche",
       "tabs": {
         "rules": "Regole",
-        "targets": "Targets",
+        "targets": "Destinazioni",
         "snooze": "Silenzia",
         "alarm": "Allarme"
       },
@@ -1912,7 +1919,8 @@
           "discoverNotReady": "Compila i campi sopra per caricare l'elenco, oppure digita il valore.",
           "discoverFailed": "Impossibile caricare l'elenco: {{message}}. Digita il valore.",
           "discoverEmpty": "Non è stato trovato nulla. Digita il valore."
-        }
+        },
+        "testUnavailable": "Questo tipo non si può provare"
       },
       "snooze": {
         "title": "Silenzia",
@@ -2473,8 +2481,8 @@
     "login": {
       "loginFailed": "Accesso fallito",
       "verifyFailed": "Verifica fallita",
-      "serverUrl": "Server URL",
-      "username": "Username",
+      "serverUrl": "URL del server",
+      "username": "Nome utente",
       "password": "Password",
       "showPassword": "Mostra password",
       "hidePassword": "Nascondi password",
@@ -2548,7 +2556,7 @@
       "left": "Gira a sinistra",
       "right": "Gira a destra",
       "turnAround": "Inverti",
-      "stop": "Stop",
+      "stop": "Ferma",
       "actions": "Azioni",
       "sounds": "Suoni",
       "light": "Luce",
@@ -2685,9 +2693,9 @@
         "timelineTitle": "Colonna attività",
         "timelineRecordingTitle": "Registrazione",
         "timelineRecordingBody": "Linea rossa continua all'estrema destra.",
-        "timelineMotionTitle": "Motion",
+        "timelineMotionTitle": "Movimento",
         "timelineMotionBody": "Linea verde al centro.",
-        "timelineDetectionTitle": "Object detection",
+        "timelineDetectionTitle": "Rilevamento oggetti",
         "timelineDetectionBody": "Pallino sulla linea motion, del colore della classe prominente in quel momento.",
         "timelineAudioTitle": "Livello audio",
         "timelineAudioBody": "Linea all'estrema sinistra. Stessa scala verde→rosso della heatmap e del misuratore live.",
@@ -3080,7 +3088,7 @@
       "dismiss": "Chiudi",
       "state": {
         "queued": "In coda",
-        "rendering": "Rendering",
+        "rendering": "In elaborazione",
         "ready": "Pronto",
         "failed": "Non riuscito",
         "expired": "Scaduto",
@@ -3943,8 +3951,8 @@
       "source": {
         "operator": "Disegnato",
         "pipeline": "Pipeline",
-        "assist": "Detector",
-        "llm": "AI vision"
+        "assist": "Rilevatore",
+        "llm": "Visione AI"
       },
       "editor": {
         "accept": "Accetta",
@@ -4023,7 +4031,15 @@
       "inCollections_one": "{{count}} raccolta",
       "inCollections_other": "{{count}} raccolte",
       "corpusEmptyTitle": "Ancora nessun fotogramma nel corpus",
-      "corpusEmptyBody": "Segna delle tracce in Eventi o invia un fotogramma dal Teatro."
+      "corpusEmptyBody": "Segna delle tracce in Eventi o invia un fotogramma dal Teatro.",
+      "frameRefusal": {
+        "unknownCollection": "Questa raccolta non esiste più: scegline un'altra.",
+        "stillUnavailable": "Dalla registrazione non è stato possibile estrarre un fotogramma in quel momento.",
+        "stillBusy": "Il registratore sta decodificando altri fotogrammi. Riprova tra poco.",
+        "unreadableImage": "Il registratore ha restituito qualcosa che non è un'immagine.",
+        "writeFailed": "Non è stato possibile salvare il fotogramma. Controlla lo spazio degli artefatti.",
+        "withDetail": "{{text}} ({{detail}})"
+      }
     },
     "device": {
       "title": "Questo dispositivo",
@@ -4113,7 +4129,8 @@
           "hardware": "Keystore hardware (StrongBox / TEE)",
           "software": "Software",
           "unknown": "Sconosciuto"
-        }
+        },
+        "unreadableStep": "Non riuscito a: {{step}}"
       },
       "certificateDetails": "Dettagli del certificato"
     },
@@ -4162,8 +4179,8 @@
     },
     "recordMenu": {
       "open": "Azioni di registrazione",
-      "snapshot": "Snapshot",
-      "selectExport": "Export",
+      "snapshot": "Istantanea",
+      "selectExport": "Esporta",
       "deleteRecording": "Elimina",
       "recordLive": "Registra"
     },
@@ -4483,6 +4500,34 @@
       "moreChips": "+{{count}}",
       "resolveFailed": "Impossibile verificare i dispositivi scelti.",
       "inContainer": "in {{name}}"
+    },
+    "faceAssign": {
+      "sampleCount_one": "{{count}} campione",
+      "sampleCount_other": "{{count}} campioni",
+      "noIdentities": "Ancora nessuna persona",
+      "namePlaceholder": "Nome della persona…",
+      "createPerson": "Crea una nuova persona",
+      "unknownPerson": "Sconosciuto",
+      "noFace": "Nessun volto registrato",
+      "face": "Volto",
+      "assign": "Assegna",
+      "errorDismiss": "{{error}} (tocca per chiudere)"
+    },
+    "rootError": {
+      "body": "Qualcosa è andato storto mentre la schermata veniva disegnata. I dettagli restano su questo dispositivo e arrivano al tuo hub alla prossima connessione dell'app.",
+      "retry": "Riprova"
+    },
+    "mediaStrip": {
+      "crop": "Ritaglio",
+      "confirmationCrop": "Ritaglio di conferma"
+    },
+    "embedFrame": {
+      "deviceCard": "Scheda dispositivo",
+      "cameraGrid": "Griglia telecamere",
+      "camera": "Diretta della telecamera {{id}}"
+    },
+    "linkedDevices": {
+      "title": "Dispositivi collegati"
     }
   },
   "prototype": {

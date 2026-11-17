@@ -133,7 +133,7 @@ export function SendFrameToTrainingControl({
       hapticResult(false)
       notice({
         title: t('v2.theater.training.refusedTitle', 'Could not add frame'),
-        message: trainingFrameRefusalText(result.reason, result.detail),
+        message: trainingFrameRefusalText(t, result.reason, result.detail),
       })
     } catch (err) {
       hapticResult(false)

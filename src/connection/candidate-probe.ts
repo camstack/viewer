@@ -1,3 +1,4 @@
+// i18n-ok-file: transport and diagnostic messages, logged and reported to the hub; a screen shows its own translated copy
 /**
  * candidate-probe — say WHY a candidate route lost the race.
  *

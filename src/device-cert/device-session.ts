@@ -1,3 +1,4 @@
+// i18n-ok-file: transport and diagnostic messages, logged and reported to the hub; a screen shows its own translated copy
 /**
  * The device-certificate life cycle (D855): sign in with it, renew it, give it
  * up, and the revocation contract that decides when it dies.

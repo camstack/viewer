@@ -106,7 +106,7 @@ interface Option<T> {
   readonly label: string
 }
 const LAYOUT_OPTIONS: readonly Option<GridLayout>[] = [
-  { value: 'auto', label: 'Auto' },
+  { value: 'auto', label: 'auto' }, // drawn through v2.gridControls.layoutAuto
   { value: 2, label: '2' },
   { value: 3, label: '3' },
   { value: 4, label: '4' },
@@ -217,7 +217,7 @@ export function GridControlBar({
           {LAYOUT_OPTIONS.map((o) => (
             <ControlBarOption
               key={String(o.value)}
-              label={o.label}
+              label={o.value === 'auto' ? t('v2.gridControls.layoutAuto') : o.label}
               selected={o.value === layout}
               onPress={() => { hapticTap(); onSelectLayout(o.value); close() }}
             />

@@ -40,6 +40,7 @@ interface TestOutcome {
   readonly targetId: string
   readonly ok: boolean
   readonly error?: string
+  readonly untestable?: boolean
 }
 
 export function TargetsTab() {
@@ -107,7 +108,12 @@ export function TargetsTab() {
       { targetId: target.id },
       {
         onSuccess: (result) =>
-          setTestOutcome({ targetId: target.id, ok: result.success, error: result.error }),
+          setTestOutcome({
+            targetId: target.id,
+            ok: result.success,
+            error: result.error,
+            untestable: result.untestable === true,
+          }),
         onError: (err) =>
           setTestOutcome({
             targetId: target.id,
@@ -177,7 +183,9 @@ export function TargetsTab() {
                     >
                       {outcome.ok
                         ? t('v2.nc.targets.testOk')
-                        : (outcome.error ?? t('v2.nc.targets.testFail'))}
+                        : outcome.untestable === true
+                          ? t('v2.nc.targets.testUnavailable')
+                          : (outcome.error ?? t('v2.nc.targets.testFail'))}
                     </Text>
                   ) : undefined
                 }

@@ -8,6 +8,7 @@
  * the admin Training Frames tab.
  */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import type { TFunction } from 'i18next'
 
 import { useConnection } from '../connection/ConnectionProvider.js'
 import { useServer } from '../app/ServerProvider.js'
@@ -103,17 +104,19 @@ export function toAddFrameFromRecordingOutcome(raw: unknown): AddFrameFromRecord
   return null
 }
 
-/** Operator-facing sentence for a named hub refusal. */
-export function trainingFrameRefusalText(reason: TrainingFrameRefusal, detail?: string): string {
-  const base: Record<TrainingFrameRefusal, string> = {
-    'unknown-collection': 'That collection no longer exists — pick another one.',
-    'still-unavailable': 'No frame could be taken from the recording at that moment.',
-    'still-busy': 'The recorder is busy decoding other frames. Try again in a moment.',
-    'unreadable-image': 'The recorder returned something that is not a picture.',
-    'write-failed': 'The frame could not be stored. Check the artifacts storage.',
-  }
-  const text = base[reason]
-  return detail !== undefined && detail !== '' ? `${text} (${detail})` : text
+/** The locale key of each named hub refusal. */
+export const TRAINING_FRAME_REFUSAL_KEY: Readonly<Record<TrainingFrameRefusal, string>> = {
+  'unknown-collection': 'v2.retrain.frameRefusal.unknownCollection',
+  'still-unavailable': 'v2.retrain.frameRefusal.stillUnavailable',
+  'still-busy': 'v2.retrain.frameRefusal.stillBusy',
+  'unreadable-image': 'v2.retrain.frameRefusal.unreadableImage',
+  'write-failed': 'v2.retrain.frameRefusal.writeFailed',
+}
+
+/** Operator-facing sentence for a named hub refusal, with the hub's detail when it sent one. */
+export function trainingFrameRefusalText(t: TFunction, reason: TrainingFrameRefusal, detail?: string): string {
+  const text = t(TRAINING_FRAME_REFUSAL_KEY[reason])
+  return detail !== undefined && detail !== '' ? t('v2.retrain.frameRefusal.withDetail', { text, detail }) : text
 }
 
 export function retrainCollectionsQueryKey(

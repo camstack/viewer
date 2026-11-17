@@ -160,7 +160,7 @@ const GridManageRow = React.memo(function GridManageRow({
           onPress={() => { hapticTap(); onToggleAudio(camera.id, !audioOn) }}
           hitSlop={8}
           accessibilityRole="button"
-          accessibilityLabel="Initial audio"
+          accessibilityLabel={t('v2.gridView.initialAudio')}
           accessibilityState={{ selected: audioOn }}
         >
           {audioOn ? (

@@ -40,6 +40,7 @@ function clock(epochMs: number): string {
 
 // ── Derivation ───────────────────────────────────────────────────────────────
 
+// i18n-ok: `label` is not drawn by the app (CameraDetailScreen reads only isLive); the embed player has no i18n
 export function derivePlaybackStatus(input: PlaybackStatusInput): PlaybackStatus {
   if (input.mode === 'live') return { isLive: true, label: 'LIVE', showGoLive: false }
   if (input.mode === 'gap') return { isLive: false, label: 'No footage', showGoLive: true }

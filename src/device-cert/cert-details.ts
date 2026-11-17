@@ -48,6 +48,7 @@ const NAME_ATTRIBUTES: Readonly<Record<string, string>> = {
   '2.5.4.10': 'O',
   '2.5.4.11': 'OU',
 }
+// i18n-ok: standard signature-algorithm names, shown as written in the certificate tooling
 const SIGNATURES: Readonly<Record<string, string>> = {
   '1.2.840.10045.4.3.2': 'ECDSA with SHA-256',
   '1.2.840.10045.4.3.3': 'ECDSA with SHA-384',

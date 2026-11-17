@@ -1,3 +1,4 @@
+// i18n-ok-file: transport and diagnostic messages, logged and reported to the hub; a screen shows its own translated copy
 /**
  * The hub's device-certificate endpoints over the raw tRPC wire (they run when
  * no System exists: a cold start, a hub that is not the active one). Every

@@ -1,3 +1,4 @@
+// i18n-ok-file: transport and diagnostic messages, logged and reported to the hub; a screen shows its own translated copy
 /**
  * Minimal raw-fetch client for the hub's auth mutations that run OUTSIDE the
  * live connection: the public ones (`auth.exchangeSession`,

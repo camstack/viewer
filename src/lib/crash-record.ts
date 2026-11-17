@@ -1,3 +1,4 @@
+// i18n-ok-file: transport and diagnostic messages, logged and reported to the hub; a screen shows its own translated copy
 /**
  * crash-record — the pure rules for answering ONE question after the fact:
  * why did the previous JS runtime stop?

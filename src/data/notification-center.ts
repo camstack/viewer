@@ -1791,7 +1791,12 @@ export type NcTargetKindsResult = z.infer<typeof NcTargetKindsResultSchema>
 export const NcTargetResultSchema = z.object({ target: TargetSchema })
 export type NcTargetResult = z.infer<typeof NcTargetResultSchema>
 
-export const NcTestTargetResultSchema = z.object({ success: z.boolean(), error: z.string().optional() })
+/** `untestable`: the target's kind has no test method — the screen says so in its own words. */
+export const NcTestTargetResultSchema = z.object({
+  success: z.boolean(),
+  error: z.string().optional(),
+  untestable: z.literal(true).optional(),
+})
 export type NcTestTargetResult = z.infer<typeof NcTestTargetResultSchema>
 
 // ── Testing a rule (admin only on the hub) ─────────────────────────────────

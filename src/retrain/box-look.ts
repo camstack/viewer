@@ -30,6 +30,7 @@ export interface BoxLook {
   readonly fallback: string
 }
 
+// i18n-ok: the last argument is only the default of `v2.retrain.review.<key>`, which both locales carry
 const LOOKS: Readonly<Record<BoxDiffKind, BoxLook>> = {
   added: look('success', 'solid', 2, 'success', 'fill', 'added', 'Added'),
   removed: look('danger', 'dotted', 2, 'danger', 'fill', 'removed', 'Removed'),

@@ -680,6 +680,7 @@ function CredentialsForm({
           {...enter('serverUrl')}
           value={serverUrl}
           onChangeText={onChangeServerUrl}
+          // i18n-ok: an example address
           placeholder="https://hub.local:4443"
           placeholderTextColor={colors.foregroundSubtle}
           autoCapitalize="none"

@@ -28,6 +28,7 @@ export function defaultDeviceName(): string {
   // Native-backed and possibly absent from the installed binary: loaded on demand (see optional-module.ts).
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const Device = optionalModule<typeof import('expo-device')>(() => require('expo-device'))
+  // i18n-ok: the device's NAME as the hub stores it on the certificate, not text drawn here
   return Device?.deviceName ?? Device?.modelName ?? (Platform.OS === 'web' ? 'Web browser' : 'Phone')
 }
 

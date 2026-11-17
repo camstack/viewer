@@ -27,7 +27,7 @@ import { useTranslation } from 'react-i18next'
 import { UserPlus, UserX, Users, ChevronRight, X, Plus, Check } from '../../../../lib/icons.js'
 import { useTheme } from '../../../../theme/theme-provider.js'
 import { useConfirm } from '../../../ui/confirm.js'
-import { RADIUS, SPACING } from '../../../../theme/tokens.js'
+import { RADIUS, SPACING, withAlpha } from '../../../../theme/tokens.js'
 import { SheetModal } from '../../../ui/SheetModal.js'
 import { useFaceInfo, type IdentityInfo } from './use-face-info.js'
 import { faceHasPerson } from '../../../../data/use-face-gallery.js'
@@ -59,6 +59,7 @@ const IdentityPicker = memo(function IdentityPicker({
   onClose,
 }: IdentityPickerProps) {
   const { colors } = useTheme()
+  const { t } = useTranslation()
   const [newName, setNewName] = useState('')
   const [showInput, setShowInput] = useState(false)
 
@@ -78,16 +79,16 @@ const IdentityPicker = memo(function IdentityPicker({
       ]}
     >
       <Text style={[styles.pickerName, { color: colors.foreground }]}>{item.name}</Text>
-      <Text style={[styles.pickerCount, { color: colors.foregroundMuted }]}>{item.sampleCount} samples</Text>
+      <Text style={[styles.pickerCount, { color: colors.foregroundMuted }]}>{t('v2.faceAssign.sampleCount', { count: item.sampleCount })}</Text>
       <ChevronRight size={16} color={colors.foregroundSubtle} />
     </Pressable>
-  ), [colors, mutating, onPick])
+  ), [colors, mutating, onPick, t])
 
   return (
     <View style={[styles.sheet, { backgroundColor: colors.backgroundElevated }]}>
       {/* Sheet header */}
       <View style={[styles.sheetHeader, { borderColor: colors.border }]}>
-        <Text style={[styles.sheetTitle, { color: colors.foreground }]}>Assign to person</Text>
+        <Text style={[styles.sheetTitle, { color: colors.foreground }]}>{t('v2.tracks.assignPerson')}</Text>
         <Pressable onPress={onClose} hitSlop={10} style={[styles.iconBtn, { backgroundColor: colors.surface }]}>
           <X size={18} color={colors.foreground} />
         </Pressable>
@@ -100,7 +101,7 @@ const IdentityPicker = memo(function IdentityPicker({
         renderItem={renderIdentity}
         style={styles.pickerList}
         ListEmptyComponent={
-          <Text style={[styles.emptyText, { color: colors.foregroundMuted }]}>No identities yet</Text>
+          <Text style={[styles.emptyText, { color: colors.foregroundMuted }]}>{t('v2.faceAssign.noIdentities')}</Text>
         }
       />
 
@@ -109,7 +110,7 @@ const IdentityPicker = memo(function IdentityPicker({
         <View style={[styles.createRow, { borderColor: colors.border }]}>
           <TextInput
             style={[styles.nameInput, { color: colors.foreground, borderColor: colors.border, backgroundColor: colors.surface }]}
-            placeholder="Person name…"
+            placeholder={t('v2.faceAssign.namePlaceholder')}
             placeholderTextColor={colors.foregroundSubtle}
             value={newName}
             onChangeText={setNewName}
@@ -137,7 +138,7 @@ const IdentityPicker = memo(function IdentityPicker({
           style={[styles.createBtn, { borderColor: colors.border, opacity: mutating ? 0.5 : 1 }]}
         >
           <Plus size={16} color={colors.primary} />
-          <Text style={[styles.createBtnText, { color: colors.primary }]}>Create new person</Text>
+          <Text style={[styles.createBtnText, { color: colors.primary }]}>{t('v2.faceAssign.createPerson')}</Text>
         </Pressable>
       )}
     </View>
@@ -197,7 +198,7 @@ export const FaceAssignPanel = memo(function FaceAssignPanel({
   // Don't render while loading AND no prior data
   if (loading && faceInfo === null && identities.length === 0) return null
 
-  const identityLabel = faceInfo?.identityName ?? (faceInfo ? 'Unknown' : 'No face enrolled')
+  const identityLabel = faceInfo?.identityName ?? (faceInfo ? t('v2.faceAssign.unknownPerson') : t('v2.faceAssign.noFace'))
   // A face is "linked to a person" whether the recognizer AUTO-assigned it
   // (`assigned` false, recognizedIdentityId set) or the operator did (`assigned`
   // true). The dissociate affordances gate on THIS, not `assigned` — otherwise
@@ -208,7 +209,7 @@ export const FaceAssignPanel = memo(function FaceAssignPanel({
     <View style={[styles.panel, { borderColor: colors.border }]}>
       <View style={styles.panelRow}>
         <UserPlus size={16} color={colors.foregroundMuted} />
-        <Text style={[styles.panelLabel, { color: colors.foregroundMuted }]}>Face</Text>
+        <Text style={[styles.panelLabel, { color: colors.foregroundMuted }]}>{t('v2.faceAssign.face')}</Text>
         <Text style={[styles.identityLabel, { color: colors.foreground }]} numberOfLines={1}>
           {loading ? '…' : identityLabel}
         </Text>
@@ -234,7 +235,7 @@ export const FaceAssignPanel = memo(function FaceAssignPanel({
               {mutating ? (
                 <ActivityIndicator size="small" color={colors.foreground} />
               ) : (
-                <Text style={[styles.actionText, { color: colors.foreground }]}>Assign</Text>
+                <Text style={[styles.actionText, { color: colors.foreground }]}>{t('v2.faceAssign.assign')}</Text>
               )}
             </Pressable>
           ) : null}
@@ -288,7 +289,7 @@ export const FaceAssignPanel = memo(function FaceAssignPanel({
       {error !== null ? (
         <Pressable onPress={clearError} style={styles.errorRow}>
           <Text style={[styles.errorText, { color: colors.danger }]} numberOfLines={2}>
-            {error} (tap to dismiss)
+            {t('v2.faceAssign.errorDismiss', { error })}
           </Text>
         </Pressable>
       ) : null}
@@ -297,7 +298,7 @@ export const FaceAssignPanel = memo(function FaceAssignPanel({
       <SheetModal
         visible={pickerVisible}
         onClose={() => { setPickerVisible(false) }}
-        scrimColor="#00000080"
+        scrimColor={withAlpha(colors.mediaBlack, 0.5)}
         sheetStyle={styles.sheetAnchor}
       >
         <IdentityPicker
