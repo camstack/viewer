@@ -1048,6 +1048,7 @@
           "templateTitleLabel": "Titolo",
           "templateBodyLabel": "Testo",
           "templateHint": "Lascia vuoti entrambi i campi per usare il testo dell'hub.",
+          "droppedBy": "Non consegnato a: {{targets}}",
           "save": "Salva modifiche",
           "create": "Crea regola",
           "addValue": "Aggiungi valore…",

@@ -1051,6 +1051,7 @@
           "templateTitleLabel": "Title",
           "templateBodyLabel": "Body",
           "templateHint": "Leave both blank for the hub's own wording.",
+          "droppedBy": "Not delivered to: {{targets}}",
           "save": "Save changes",
           "create": "Create rule",
           "addValue": "Add value…",
