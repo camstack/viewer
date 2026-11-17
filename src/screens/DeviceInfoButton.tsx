@@ -39,6 +39,7 @@ function useDeviceInfoFacts(deviceId: number, t: Translate): readonly DeviceInfo
       reachability: identity?.reachability ?? 'unknown',
       seenAt: identity?.seenAt ?? null,
       nowMs: Date.now(),
+      identifiers: identity?.identifiers,
     },
     t,
   )

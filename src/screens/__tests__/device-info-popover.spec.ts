@@ -37,6 +37,7 @@ const HUB = {
       integrationId: 'int-1',
       parentDeviceId: 9,
       lastSeen: NOW - 3 * 3_600_000,
+      identifiers: { serial: { value: 'homematic:oeq0123456', origin: 'read', readAt: 1 } },
     },
     { id: 9, name: 'Laundry', type: 'camera', online: true, features: [] },
   ],
@@ -77,6 +78,7 @@ describe('device info popover', () => {
     expect(within(popover).getByText('Type').parentElement?.textContent).toContain('Switch')
     expect(within(popover).getByText('Role').parentElement?.textContent).toContain('switch-heater')
     expect(within(popover).getByText('Parent').parentElement?.textContent).toContain('Laundry')
+    expect(within(popover).getByText('Serial').parentElement?.textContent).toContain('homematic:oeq0123456')
     expect(within(popover).getByText('Reachability').parentElement?.textContent).toContain('Unknown')
     expect(within(popover).queryByText('Offline')).toBeNull()
     expect(within(popover).getByText('Last seen').parentElement?.textContent).toContain('3h ago')

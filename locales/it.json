@@ -4418,7 +4418,15 @@
       "offline": "Offline",
       "unknown": "Sconosciuto",
       "lastSeen": "Ultimo contatto",
-      "lastUpdate": "Ultimo aggiornamento"
+      "lastUpdate": "Ultimo aggiornamento",
+      "identifier": {
+        "mac": "MAC",
+        "serial": "Numero di serie",
+        "vendorUid": "ID produttore",
+        "machineUuid": "UUID macchina",
+        "hostname": "Nome host",
+        "ip": "IP"
+      }
     },
     "deviceDetail": {
       "openFor": "Dettagli di {{device}}",

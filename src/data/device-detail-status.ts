@@ -26,6 +26,8 @@ export interface DeviceIdentity extends AccessoryDevice {
   readonly reachability: DeviceReachability
   /** Last seen, else last update. Null when the row carries neither (or only the epoch). */
   readonly seenAt: DeviceSeenAt | null
+  /** The row's provider-declared `identifiers`, raw — parsed where they are shown. */
+  readonly identifiers: unknown
 }
 
 /** A tRPC client proxy is a callable node (typeof 'function'), a plain client an object. */
@@ -64,6 +66,7 @@ export function useDeviceIdentity(deviceId: number | null): UseQueryResult<Devic
           parentDeviceId: parentDeviceIdOf(row),
           reachability: reachabilityOf(isRecord(row) ? row.online : undefined),
           seenAt: deviceSeenAt(row),
+          identifiers: isRecord(row) ? row.identifiers : undefined,
         }
       }
       return null
