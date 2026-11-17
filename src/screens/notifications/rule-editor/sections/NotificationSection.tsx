@@ -17,8 +17,14 @@ import { TemplateField, TemplatePreview } from '../../../../components/notificat
 import { varsForContext } from '../../../../components/notifications/template-field.js'
 import { formScopedConditions } from '../../../../components/notifications/rule-scope-form.js'
 import { RuleAiSection } from '../../../../components/notifications/RuleAiSection.js'
-import { useNcTemplateCatalog } from '../../../../data/use-notification-center.js'
+import {
+  useNcTargetKinds,
+  useNcTargets,
+  useNcTemplateCatalog,
+} from '../../../../data/use-notification-center.js'
+import { fieldSupportForSelection } from '../../../../components/notifications/rule-field-support.js'
 import type {
+  NotificationField,
   NcTemplateField,
   NcTemplateVarContext,
   NcTemplateVarDescriptor,
@@ -42,6 +48,24 @@ export function NotificationSection({ draft, patch, kind }: RuleSectionProps) {
   const ai = useRuleAiState(draft)
   const form = draft.form
   const kindSpec = ruleKindSpec(kind)
+  // What the selected targets can deliver (#483), from each kind's declaration.
+  // Unanswered queries narrow nothing: not-yet-known is not unsupported.
+  const targetsQuery = useNcTargets()
+  const targetKindsQuery = useNcTargetKinds()
+  const fieldSupport = fieldSupportForSelection(form.targetIds, targetsQuery.data ?? [], targetKindsQuery.data)
+  const shows = (field: NotificationField): boolean => fieldSupport.get(field)?.shown ?? true
+  const droppedHint = (field: NotificationField): string | undefined => {
+    const droppedBy = fieldSupport.get(field)?.droppedBy ?? []
+    return droppedBy.length > 0
+      ? t('v2.nc.rules.editor.droppedBy', { targets: droppedBy.join(', ') })
+      : undefined
+  }
+  const priorityDropped = droppedHint('priority')
+  const mediaDropped = droppedHint('attachments')
+  const titleDropped = droppedHint('title')
+  const bodyDropped = droppedHint('body')
+  const bodyWarning = summaryBodyWarning(form)
+  const splitBodyWarning = summarySplitBodyWarning(form)
 
   const templateContext = (field: NcTemplateField): NcTemplateVarContext => ({
     family: 'rule',
@@ -58,16 +82,19 @@ export function NotificationSection({ draft, patch, kind }: RuleSectionProps) {
 
   return (
     <View style={{ gap: SPACING.xl }}>
-      <Section>
-        <StepperRow
-          label={t('v2.nc.rules.editor.priorityLabel')}
-          value={form.priority}
-          min={NC_PRIORITY_MIN}
-          max={NC_PRIORITY_MAX}
-          onChange={(next) => patch({ priority: next })}
-          last
-        />
-      </Section>
+      {shows('priority') ? (
+        <Section>
+          <StepperRow
+            label={t('v2.nc.rules.editor.priorityLabel')}
+            value={form.priority}
+            min={NC_PRIORITY_MIN}
+            max={NC_PRIORITY_MAX}
+            onChange={(next) => patch({ priority: next })}
+            last={priorityDropped === undefined}
+          />
+          {priorityDropped !== undefined ? <Hint text={priorityDropped} last /> : null}
+        </Section>
+      ) : null}
 
       {/* When a system rule speaks: its start, its resolution, a scheduled
           summary. Offered for the families that may summarise only. */}
@@ -81,7 +108,7 @@ export function NotificationSection({ draft, patch, kind }: RuleSectionProps) {
 
       {/* A subject that freezes no frame gets no media controls: `formToInput`
           writes `image: 'none'` for it either way. */}
-      {kindSpec.carriesMedia ? (
+      {kindSpec.carriesMedia && shows('attachments') ? (
         <Section title={t('v2.nc.rules.editor.mediaLabel')}>
           {kindSpec.mediaBlurb !== undefined ? (
             <Text
@@ -102,28 +129,38 @@ export function NotificationSection({ draft, patch, kind }: RuleSectionProps) {
             conditions={formScopedConditions(form)}
             onChange={(next) => patch({ media: next })}
           />
+          {mediaDropped !== undefined ? <Hint text={mediaDropped} last /> : null}
         </Section>
       ) : null}
 
       <Section title={t('v2.nc.rules.editor.templateLabel')}>
-        <TemplateField
-          label={t('v2.nc.rules.editor.templateTitleLabel')}
-          value={form.templateTitle}
-          onChangeText={(next) => patch({ templateTitle: next })}
-          vars={templateVarsFor('title')}
-          testID="rule-template-title"
-        />
-        <TemplateField
-          label={t('v2.nc.rules.editor.templateBodyLabel')}
-          value={form.templateBody}
-          onChangeText={(next) => patch({ templateBody: next })}
-          vars={templateVarsFor('body')}
-          placeholder={t('v2.nc.rules.editor.templateHint')}
-          multiline
-          last={!summaryBodyWarning(form) && !summarySplitBodyWarning(form)}
-          testID="rule-template-body"
-        />
-        {summaryBodyWarning(form) ? (
+        {shows('title') ? (
+          <TemplateField
+            label={t('v2.nc.rules.editor.templateTitleLabel')}
+            value={form.templateTitle}
+            onChangeText={(next) => patch({ templateTitle: next })}
+            vars={templateVarsFor('title')}
+            testID="rule-template-title"
+            last={titleDropped === undefined && !shows('body')}
+          />
+        ) : null}
+        {shows('title') && titleDropped !== undefined ? <Hint text={titleDropped} last={!shows('body')} /> : null}
+        {shows('body') ? (
+          <TemplateField
+            label={t('v2.nc.rules.editor.templateBodyLabel')}
+            value={form.templateBody}
+            onChangeText={(next) => patch({ templateBody: next })}
+            vars={templateVarsFor('body')}
+            placeholder={t('v2.nc.rules.editor.templateHint')}
+            multiline
+            last={bodyDropped === undefined && !bodyWarning && !splitBodyWarning}
+            testID="rule-template-body"
+          />
+        ) : null}
+        {shows('body') && bodyDropped !== undefined ? (
+          <Hint text={bodyDropped} last={!bodyWarning && !splitBodyWarning} />
+        ) : null}
+        {shows('body') && bodyWarning ? (
           <Hint
             text={t('v2.nc.rules.editor.systemDelivery.bodyWarning', {
               token: '{{summaryText}}',
@@ -131,7 +168,7 @@ export function NotificationSection({ draft, patch, kind }: RuleSectionProps) {
             last
           />
         ) : null}
-        {summarySplitBodyWarning(form) ? (
+        {shows('body') && splitBodyWarning ? (
           <Hint
             text={t('v2.nc.rules.editor.systemDelivery.splitBodyWarning', {
               token: '{{summaryText}}',

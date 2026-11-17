@@ -1229,7 +1229,30 @@ export const TargetKindAttachmentsCapsSchema = z.object({
 })
 export type TargetKindAttachmentsCaps = z.infer<typeof TargetKindAttachmentsCapsSchema>
 
+/** Which TEXT fields a kind delivers (#483) — a speaker says a title only.
+ *  Mirrors the cap's `TargetKindTextCapsSchema`; absent = title AND body. */
+export const TargetKindTextCapsSchema = z.object({
+  title: z.boolean(),
+  body: z.boolean(),
+})
+export type TargetKindTextCaps = z.infer<typeof TargetKindTextCapsSchema>
+
+/** The message fields a rule can author for a target (mirrors the cap's
+ *  `NotificationFieldSchema`), in the order an editor meets them. */
+export const NotificationFieldSchema = z.enum([
+  'title',
+  'body',
+  'attachments',
+  'actions',
+  'priority',
+  'sound',
+  'clickUrl',
+])
+export type NotificationField = z.infer<typeof NotificationFieldSchema>
+
 export const TargetKindCapsSchema = z.object({
+  /** Kept, not stripped: the rule editor reads it to hide what a target drops. */
+  text: TargetKindTextCapsSchema.optional(),
   attachments: TargetKindAttachmentsCapsSchema,
   actions: z.number().int().nonnegative(),
   levels: z.array(TargetKindLevelSchema),
