@@ -16,6 +16,8 @@
  *  - the read FAILED: a line saying so, buttons inert — an unanswered read is
  *    never drawn as "no power source";
  *  - linked, switch state unknown: the toggle is inert (no direction to claim);
+ *  - linked, the switch ANSWERED it only reports (`switchSettable === false`):
+ *    no toggle, Restart stays; not known (`null`, or an older hub) keeps it;
  *  - linked, restarting: both buttons inert, the toggle reads "Restarting"
  *    (the hub refuses a second restart).
  *
@@ -50,6 +52,7 @@ const REFUSAL_KEYS: Readonly<Record<string, string>> = {
   'switch-missing': 'v2.powerSource.refused.switchMissing',
   'restart-in-progress': 'v2.powerSource.refused.restartInProgress',
   'switch-call-failed': 'v2.powerSource.refused.switchCallFailed',
+  'not-settable': 'v2.powerSource.refused.notSettable',
   'no-power-source': 'v2.powerSource.refused.noPowerSource',
 }
 
@@ -72,6 +75,8 @@ export function PowerSourceRow({ deviceId }: PowerSourceRowProps): React.JSX.Ele
   const restarting = data !== null && data.restartInProgress
   const inFlight = action.isPending
   const inert = unknown || restarting || inFlight
+  /** Only an ANSWERED "reports only" withdraws the toggle; unknown keeps it. */
+  const reportsOnly = data !== null && data.switchSettable === false
 
   const switchState = data === null ? 'unknown' : powerSwitchState(data)
   /** The toggle's direction: from on it powers off, from off it powers on. */
@@ -125,17 +130,19 @@ export function PowerSourceRow({ deviceId }: PowerSourceRowProps): React.JSX.Ele
         {t('v2.powerSource.title')}
       </Text>
       <View style={styles.actions}>
-        <Button
-          label={toggleLabel}
-          kind={switchState === 'on' ? 'primary' : 'secondary'}
-          grow
-          disabled={inert || toggleAction === null}
-          busy={busyToggle}
-          onPress={() => {
-            if (toggleAction !== null) run(toggleAction)
-          }}
-          testID="power-source-toggle"
-        />
+        {reportsOnly ? null : (
+          <Button
+            label={toggleLabel}
+            kind={switchState === 'on' ? 'primary' : 'secondary'}
+            grow
+            disabled={inert || toggleAction === null}
+            busy={busyToggle}
+            onPress={() => {
+              if (toggleAction !== null) run(toggleAction)
+            }}
+            testID="power-source-toggle"
+          />
+        )}
         <Button
           label={t('v2.powerSource.restart')}
           kind="danger"

@@ -10,6 +10,9 @@
  *    means the device has no power source.
  *  - **Unknown is not off.** `switchOn` stays `null` while the switch has not
  *    reported; it is never coerced to `false`.
+ *  - **Unknown is not "cannot".** `switchSettable` is `false` only when the
+ *    switch ANSWERED that it only reports; no link, a failed read or an older
+ *    hub that sends no field is `null`, and the row keeps its buttons.
  *
  * An action answers a typed result and never throws for an expected refusal
  * (switch offline, a restart already running); the refusal carries the hub's
@@ -23,6 +26,8 @@ export interface PowerSourceStatus {
   /** `null` while the switch has not reported — never `false` for unknown. */
   readonly switchOn: boolean | null
   readonly switchOnline: boolean | null
+  /** `false` only when the switch answered it cannot be set; `null` = not known. */
+  readonly switchSettable: boolean | null
   readonly restartInProgress: boolean
 }
 
@@ -48,6 +53,7 @@ export function parsePowerSourceStatus(raw: unknown): PowerSourceStatus | null {
     switchName: typeof raw.switchName === 'string' ? raw.switchName : null,
     switchOn,
     switchOnline,
+    switchSettable: typeof raw.switchSettable === 'boolean' ? raw.switchSettable : null,
     restartInProgress: raw.restartInProgress === true,
   }
 }

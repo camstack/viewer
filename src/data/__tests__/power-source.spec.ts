@@ -23,8 +23,17 @@ describe('parsePowerSourceStatus', () => {
       switchName: 'Plug',
       switchOn: true,
       switchOnline: true,
+      switchSettable: null,
       restartInProgress: false,
     })
+  })
+
+  it('keeps whether the switch can be set: true, false, null, and missing (older hub) as null', () => {
+    expect(parsePowerSourceStatus({ ...LINKED, switchSettable: true })?.switchSettable).toBe(true)
+    expect(parsePowerSourceStatus({ ...LINKED, switchSettable: false })?.switchSettable).toBe(false)
+    expect(parsePowerSourceStatus({ ...LINKED, switchSettable: null })?.switchSettable).toBeNull()
+    expect(parsePowerSourceStatus(LINKED)?.switchSettable).toBeNull()
+    expect(parsePowerSourceStatus({ ...LINKED, switchSettable: 'no' })?.switchSettable).toBeNull()
   })
 
   it('keeps an unreported switch as null, never false', () => {

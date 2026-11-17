@@ -4454,6 +4454,7 @@
         "switchMissing": "L'interruttore collegato non si trova.",
         "restartInProgress": "Un riavvio è già in corso.",
         "switchCallFailed": "L'interruttore non ha risposto.",
+        "notSettable": "Questo interruttore riporta solo il suo stato; non si può comandare da qui.",
         "noPowerSource": "Nessuna sorgente di alimentazione collegata.",
         "generic": "La richiesta è stata rifiutata."
       }

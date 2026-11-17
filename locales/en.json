@@ -4454,6 +4454,7 @@
         "switchMissing": "The linked power switch cannot be found.",
         "restartInProgress": "A restart is already running.",
         "switchCallFailed": "The power switch did not answer.",
+        "notSettable": "This power switch only reports its state; it cannot be switched from here.",
         "noPowerSource": "No power source is linked.",
         "generic": "The request was refused."
       }
