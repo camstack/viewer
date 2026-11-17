@@ -31,6 +31,14 @@ export interface WhatsNewEntry {
 // i18n-ok: release notes carry their own `en` + `it` text per entry (typed, held by whats-new.spec.ts)
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.722',
+    date: '2026-11-17',
+    notes: {
+      en: ['Device info shows the MAC, serial and other identifiers the device declares.'],
+      it: ['Le info del dispositivo mostrano MAC, numero di serie e gli altri identificatori dichiarati.'],
+    },
+  },
+  {
     version: '1.0.721',
     date: '2026-11-17',
     notes: {
