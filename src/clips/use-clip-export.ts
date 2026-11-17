@@ -21,6 +21,14 @@
  * Exports surface, which already owns the download plane, the retention and
  * the janitor — and which this modal must not grow a second copy of.
  *
+ * ## The Activity row is the SAME one the timeline selection adds
+ *
+ * Once the hub answers with a record, the hook adds it to the Activity list
+ * with `exportItemFrom` — exactly what `use-run-export.ts` does for the
+ * selection's Save. The hub-driven reconcile (`use-activity-host.ts`) only
+ * UPDATES rows already in the list, so a keep that skipped this step was
+ * produced on the hub and never shown in the Activity monitor (#567).
+ *
  * ## One request is one wake
  *
  * A clip export may wake a sleeping camera, and the authority for that is an
@@ -30,6 +38,8 @@
  */
 import { useCallback, useState } from 'react'
 
+import { useActivityStore } from '../activity/activity-instance.js'
+import { exportItemFrom } from '../activity/activity-model.js'
 import { useCreateExport, useExport, type CreateExportInput } from '../data/use-exports.js'
 import { log } from '../lib/logger.js'
 import type { Clip } from './clip-model.js'
@@ -57,8 +67,10 @@ export interface UseClipExport {
   readonly reset: () => void
 }
 
-export function useClipExport(): UseClipExport {
+/** `cameraName` is what the Activity row is titled with. */
+export function useClipExport(cameraName: string): UseClipExport {
   const createExport = useCreateExport()
+  const addActivity = useActivityStore((s) => s.add)
   const [exportId, setExportId] = useState<string | null>(null)
   const [clipId, setClipId] = useState<string | null>(null)
   /**
@@ -98,6 +110,7 @@ export function useClipExport(): UseClipExport {
             profile,
             exportId: record.id,
           })
+          addActivity(exportItemFrom(record, cameraName, Date.now()))
           setExportId(record.id)
         } catch (e) {
           const detail = e instanceof Error ? e.message : String(e)
@@ -111,7 +124,7 @@ export function useClipExport(): UseClipExport {
         }
       })()
     },
-    [createExport],
+    [addActivity, cameraName, createExport],
   )
 
   const start = useCallback(

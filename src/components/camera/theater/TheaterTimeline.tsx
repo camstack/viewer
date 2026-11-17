@@ -1413,7 +1413,7 @@ export const TheaterTimeline = memo(function TheaterTimeline(props: TheaterTimel
    *
    * The press always opens the modal; with one distinct copy it lists that one.
    */
-  const clipExport = useClipExport()
+  const clipExport = useClipExport(props.name)
   /** The clip whose picker is open, with the copies to offer. */
   const [qualityPick, setQualityPick] = useState<ClipQualityPick | null>(null)
 
@@ -1502,16 +1502,22 @@ export const TheaterTimeline = memo(function TheaterTimeline(props: TheaterTimel
   }, [clipsMode, derivedClips, clipExport, t])
 
   /**
-   * The HELD clip's keep, for the playback bar (#443) — its card's entry of
-   * the very map above, so the bar's download and the card's open the same
-   * `ClipExportModal` and spin on the same job.
+   * The SELECTED clip's keep, for the playback bar (#443, #567) — its card's
+   * entry of the very map above, so the bar's download and the card's open the
+   * same `ClipExportModal` and spin on the same job.
+   *
+   * Selected means the file held on the frame, or — for a clip of our own
+   * recording, which plays by SEEKING and is never held — the clip the
+   * sequencer is on (`activeClipId`). Outside clips mode the map is empty, so
+   * the bar draws nothing.
    */
-  const heldClipSave = useMemo((): ClipSaveBinding | undefined => {
-    const heldId = props.clipOnFrameId ?? null
-    if (heldId === null) return undefined
-    const entry = derivedClips.find((d) => d.clip.clipId === heldId)
+  const selectedClipId =
+    clipsSurface.axis === 'clip' ? (props.clipOnFrameId ?? null) : activeClipId
+  const selectedClipSave = useMemo((): ClipSaveBinding | undefined => {
+    if (selectedClipId === null) return undefined
+    const entry = derivedClips.find((d) => d.clip.clipId === selectedClipId)
     return entry === undefined ? undefined : clipSaves.get(cardIdForClip(entry))
-  }, [props.clipOnFrameId, derivedClips, clipSaves])
+  }, [selectedClipId, derivedClips, clipSaves])
 
   // The `Clip` view of the same list — what the compressed axis lays out and
   // what the advance sequencer walks.
@@ -2663,8 +2669,9 @@ export const TheaterTimeline = memo(function TheaterTimeline(props: TheaterTimel
             // The loop switch, on the SAME statement: the bar draws it beside
             // that track and both mean "a file is on screen".
             clipLoop: clipsSurface.axis === 'clip' ? props.clipLoop : undefined,
-            // The keep, on the same statement: the bar's download beside the loop.
-            clipDownload: clipsSurface.axis === 'clip' ? heldClipSave : undefined,
+            // The keep of the SELECTED clip: a held file, or the clip of our own
+            // recording the transport is seeking through (#567).
+            clipDownload: selectedClipSave,
             onJogForward: props.onJogForward,
             onStepFrame: props.onStepFrame,
             onSelectRate: props.onSelectRate,
