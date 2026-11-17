@@ -31,6 +31,20 @@ export interface WhatsNewEntry {
 // i18n-ok: release notes carry their own `en` + `it` text per entry (typed, held by whats-new.spec.ts)
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.721',
+    date: '2026-11-17',
+    notes: {
+      en: [
+        'Virtual machines, containers and apps show their own icon instead of a generic one.',
+        'Saving a notification rule from the phone keeps its tags.',
+      ],
+      it: [
+        'Macchine virtuali, container e app mostrano la loro icona invece di una generica.',
+        'Salvare una regola di notifica dal telefono mantiene i suoi tag.',
+      ],
+    },
+  },
+  {
     version: '1.0.720',
     date: '2026-11-17',
     notes: {
