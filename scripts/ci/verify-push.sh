@@ -93,6 +93,10 @@ const isCode = (f) =>
   f.startsWith('.github/')
 const isUi = (f) => {
   if (f.includes('/__tests__/') || f.endsWith('.spec.ts') || f.endsWith('.spec.tsx')) return false
+  // The test harness is not UI: ui:check skips it (ui-check-rules.mjs,
+  // isCheckedFile) and exits 2 on an empty list, so listing it here turned a
+  // harness-only change RED.
+  if (/(^|\/)(__mocks__|testing)\//.test(f)) return false
   return (
     ((f.startsWith('src/') || f.startsWith('app/') || f.startsWith('embed/src/')) &&
       (f.endsWith('.ts') || f.endsWith('.tsx'))) ||
