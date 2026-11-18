@@ -31,6 +31,14 @@ export interface WhatsNewEntry {
 // i18n-ok: release notes carry their own `en` + `it` text per entry (typed, held by whats-new.spec.ts)
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.725',
+    date: '2026-11-18',
+    notes: {
+      en: ['Plug-in heaters show their on/off switch next to the timed run.'],
+      it: ["Le stufe a presa mostrano l'interruttore accanto all'avvio a tempo."],
+    },
+  },
+  {
     version: '1.0.724',
     date: '2026-11-18',
     notes: {
