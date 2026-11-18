@@ -2439,8 +2439,8 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
   // rest (`defaultHeight`) whether or not the pinch may grow the box — the
   // growth is folded into `zoom.videoStyle` (see `zoomBoxHeightFor`), so the
   // WKWebView underneath keeps one frame for the life of the layout mode.
-  // Keeping the wrapper a true 16:9 area also aligns normalized detection
-  // boxes to the real video pixels (no letterbox offset).
+  // A stream that is not 16:9 is letterboxed inside it by the player, so the
+  // box overlays map onto the picture, not the wrapper (`picture-box.ts`).
   //
   // ALWAYS applied, and always returns the SAME property set — the third time
   // this exact trap has been paid for in this file, and the first two comments

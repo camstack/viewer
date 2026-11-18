@@ -29,6 +29,8 @@ import { useCurrentOccupancy } from '../../data/use-occupancy.js'
 import { useTheme } from '../../theme/theme-provider.js'
 import { RADIUS, withAlpha } from '../../theme/tokens.js'
 import { useEventKindResolver } from '../../data/use-event-kind-resolver.js'
+import { useStreamAspect } from '../../live/stream-aspect.js'
+import { pictureRectIn, placeNormalizedBox } from './overlay/picture-box.js'
 
 /** Wash of the parked box. The steel itself is `colors.stationary`. */
 const STATIONARY_WASH_ALPHA = 0.08
@@ -58,6 +60,10 @@ export function StationaryBoxesOverlay({ deviceId, enabled }: StationaryBoxesOve
   const resolver = useEventKindResolver([deviceId])
   const stationary = occupancy?.stationaryObjects ?? []
   const [size, setSize] = useState<Size>({ width: 0, height: 0 })
+  // The player letterboxes a stream that is not the box's shape: boxes are
+  // placed on the picture, never on the bands (`picture-box.ts`).
+  const aspect = useStreamAspect(deviceId)
+  const picture = pictureRectIn(size, aspect)
 
   const onLayout = (e: LayoutChangeEvent): void => {
     const { width, height } = e.nativeEvent.layout
@@ -70,10 +76,7 @@ export function StationaryBoxesOverlay({ deviceId, enabled }: StationaryBoxesOve
     <View style={StyleSheet.absoluteFill} pointerEvents="none" onLayout={onLayout}>
       {size.width > 0 && size.height > 0
         ? stationary.map((obj) => {
-            const left = obj.x1 * size.width
-            const top = obj.y1 * size.height
-            const width = (obj.x2 - obj.x1) * size.width
-            const height = (obj.y2 - obj.y1) * size.height
+            const { x: left, y: top, width, height } = placeNormalizedBox(obj, picture)
             if (width <= 0 || height <= 0) return null
             // Measured against the SNAPSHOT's arrival, not `Date.now()`:
             // reading the clock during render is impure. A new parked object
@@ -108,7 +111,7 @@ export function StationaryBoxesOverlay({ deviceId, enabled }: StationaryBoxesOve
                     {
                       left,
                       top: Math.max(0, top - 18),
-                      maxWidth: Math.max(24, size.width - left),
+                      maxWidth: Math.max(24, picture.x + picture.width - left),
                       backgroundColor: colors.stationary,
                     },
                   ]}

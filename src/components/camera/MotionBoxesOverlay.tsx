@@ -4,8 +4,10 @@
  * Subscribes to the device's live `detection.result` events (and, when
  * available, enriched `pipeline-analytics.frame-tracked` frames) via
  * `useDetections` and draws each detected object as an absolutely-positioned
- * rect, scaled from its normalized `{x1,y1,x2,y2}` box to the overlay's
- * measured size (`onLayout`). Each box carries a `name score%` tag when an
+ * rect, scaled from its normalized `{x1,y1,x2,y2}` box onto the PICTURE inside
+ * the overlay's measured box (`onLayout`): the player letterboxes a stream that
+ * is not the box's shape, so the box is mapped through `picture-box.ts`.
+ * Each box carries a `name score%` tag when an
  * enriched frame supplied a recognized identity/plate name, else `label
  * score%`, colored by the detection class. Detail boxes (face/plate — `kind:
  * 'detail'`) render with a thinner dashed border to read as a nested
@@ -27,6 +29,8 @@ import { useTheme } from '../../theme/theme-provider.js'
 import { RADIUS } from '../../theme/tokens.js'
 import { useKindPaint } from '../../../shared/palette.js'
 import { useEventKindResolver } from '../../data/use-event-kind-resolver.js'
+import { useStreamAspect } from '../../live/stream-aspect.js'
+import { pictureRectIn, placeNormalizedBox } from './overlay/picture-box.js'
 
 export interface MotionBoxesOverlayProps {
   readonly deviceId: number
@@ -48,6 +52,8 @@ export function MotionBoxesOverlay({ deviceId, enabled }: MotionBoxesOverlayProp
   const resolver = useEventKindResolver([deviceId])
   const paint = useKindPaint()
   const [size, setSize] = useState<Size>({ width: 0, height: 0 })
+  const aspect = useStreamAspect(deviceId)
+  const picture = pictureRectIn(size, aspect)
 
   const onLayout = (e: LayoutChangeEvent): void => {
     const { width, height } = e.nativeEvent.layout
@@ -58,11 +64,9 @@ export function MotionBoxesOverlay({ deviceId, enabled }: MotionBoxesOverlayProp
     <View style={StyleSheet.absoluteFill} pointerEvents="none" onLayout={onLayout}>
       {size.width > 0 && size.height > 0
         ? boxes.map((box, i) => {
-            // Boxes arrive normalized 0..1 — scale to the measured overlay.
-            const left = box.x1 * size.width
-            const top = box.y1 * size.height
-            const width = (box.x2 - box.x1) * size.width
-            const height = (box.y2 - box.y1) * size.height
+            // Boxes arrive normalized 0..1 of the frame — placed on the
+            // letterboxed picture, never on the bands around it.
+            const { x: left, y: top, width, height } = placeNormalizedBox(box, picture)
             if (width <= 0 || height <= 0) return null
 
             const color = paint(box.label)
@@ -80,7 +84,7 @@ export function MotionBoxesOverlay({ deviceId, enabled }: MotionBoxesOverlayProp
             // overlay level the only width bound is the screen, so the full
             // `label score%` fits; `adjustsFontSizeToFit` shrinks it only when a
             // long label would otherwise run past the right edge.
-            const labelMaxWidth = Math.max(24, size.width - left)
+            const labelMaxWidth = Math.max(24, picture.x + picture.width - left)
             return (
               <React.Fragment key={key}>
                 <View

@@ -39,6 +39,8 @@ import {
 import { RADIUS, withAlpha } from '../../theme/tokens.js'
 import { useTheme } from '../../theme/theme-provider.js'
 import { useEventKindResolver } from '../../data/use-event-kind-resolver.js'
+import { useStreamAspect } from '../../live/stream-aspect.js'
+import { pictureRectIn, placeNormalizedBox } from './overlay/picture-box.js'
 
 export interface DiscardedBoxesOverlayProps {
   readonly deviceId: number
@@ -59,6 +61,10 @@ export function DiscardedBoxesOverlay({ deviceId, enabled }: DiscardedBoxesOverl
   // raw taxonomy class — resolved below.
   const resolver = useEventKindResolver([deviceId])
   const [size, setSize] = useState<Size>({ width: 0, height: 0 })
+  // The player letterboxes a stream that is not the box's shape: boxes are
+  // placed on the picture, never on the bands (`picture-box.ts`).
+  const aspect = useStreamAspect(deviceId)
+  const picture = pictureRectIn(size, aspect)
 
   const onLayout = (e: LayoutChangeEvent): void => {
     const { width, height } = e.nativeEvent.layout
@@ -77,10 +83,7 @@ export function DiscardedBoxesOverlay({ deviceId, enabled }: DiscardedBoxesOverl
     <View style={StyleSheet.absoluteFill} pointerEvents="none" onLayout={onLayout}>
       {size.width > 0 && size.height > 0
         ? drawnBoxes.map((box, i) => {
-            const left = box.x1 * size.width
-            const top = box.y1 * size.height
-            const width = (box.x2 - box.x1) * size.width
-            const height = (box.y2 - box.y1) * size.height
+            const { x: left, y: top, width, height } = placeNormalizedBox(box, picture)
             if (width <= 0 || height <= 0) return null
 
             const pct = Math.round(box.score * 100)
@@ -94,7 +97,7 @@ export function DiscardedBoxesOverlay({ deviceId, enabled }: DiscardedBoxesOverl
                 : `${resolvedLabel} ${pct}%`
             // No identity across frames; index keeps keys stable per frame.
             const key = `${box.label}-${i}`
-            const labelMaxWidth = Math.max(24, size.width - left)
+            const labelMaxWidth = Math.max(24, picture.x + picture.width - left)
             return (
               <React.Fragment key={key}>
                 <View
