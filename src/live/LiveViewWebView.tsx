@@ -51,7 +51,8 @@ import { EmbedLogRouter, streamStatsFromSample } from './embed-log-route.js'
 import { useLiveHubUrl } from '../connection/use-live-hub-url.js'
 import { useTheme } from '../theme/theme-provider.js'
 import { StreamPoster } from '../components/camera/StreamPoster.js'
-import { RADIUS, SPACING } from '../theme/tokens.js'
+import { RADIUS, SPACING, withAlpha } from '../theme/tokens.js'
+
 import {
   DEFAULT_TARGET,
   type LiveViewHandle,
@@ -82,6 +83,9 @@ import { resolveSnapshotUri } from '../data/snapshot-media-url.js'
 import { log } from '../lib/logger.js'
 import { markBoot } from '../connection/boot-timeline.js'
 import { useNativeEmbedSource } from './use-native-embed-source.js'
+
+/** Opacity of the dim layer under the error card, over the poster photo. */
+const ERROR_SCRIM_ALPHA = 0.6
 
 /** Cross-fade duration for the poster cover → live video handoff. Long enough
  *  to read as a dissolve, short enough not to delay the first live frame. */
@@ -709,19 +713,28 @@ go();})(); true;`
   // WebRTC peer) while in the background; on return the embed page's JS resumes
   // but its peer is dead. Reconnect (keep the last frame) rather than reload
   // (blank) — the embed SPA survived the suspend; only the peer needs rebuilding.
-  const appStateRef = useRef<AppStateStatus>(AppState.currentState)
+  //
+  // Only a return from `background` rebuilds the peer. `inactive` alone — the
+  // notification shade, Control Centre, an app-switcher peek — suspends
+  // nothing: the peer is alive, and rebuilding it threw recorded playback off
+  // the cursor and onto the live edge (a fresh connection starts live).
+  // `background → inactive → active` still counts as a return from background.
+  const backgroundedRef = useRef<boolean>(AppState.currentState === 'background')
   useEffect(() => {
     const sub = AppState.addEventListener('change', (next: AppStateStatus) => {
-      const prev = appStateRef.current
-      appStateRef.current = next
-      if (next === 'active' && (prev === 'background' || prev === 'inactive')) {
-        log.info('live', 'foreground → reconnect', { prev })
-        reconnect()
-        onPeerReconnect?.()
+      if (next === 'background') {
+        backgroundedRef.current = true
+        return
       }
+      if (next !== 'active') return
+      if (!backgroundedRef.current) return
+      backgroundedRef.current = false
+      log.info('live', 'foreground → reconnect', { tags: { deviceId } })
+      reconnect()
+      onPeerReconnect?.()
     })
     return () => sub.remove()
-  }, [reconnect, onPeerReconnect])
+  }, [reconnect, onPeerReconnect, deviceId])
 
   // Self-heal on a network transition (Wi-Fi↔cellular, or offline→online): the
   // old ICE path is dead once the interface changes, so trigger a fast
@@ -1044,7 +1057,7 @@ go();})(); true;`
     // No active server configured — show the error surface with retry disabled
     // semantics (retry just re-evaluates once a server exists).
     return (
-      <View style={[styles.container, { backgroundColor: '#000', borderColor: colors.border }]}>
+      <View style={[styles.container, { backgroundColor: colors.mediaBlack, borderColor: colors.border }]}>
         <View style={styles.center}>
           <Text style={[styles.errorText, { color: colors.danger }]}>{t('v2.live.error')}</Text>
         </View>
@@ -1055,7 +1068,7 @@ go();})(); true;`
   return (
     <View
       ref={containerRef}
-      style={[styles.container, { backgroundColor: '#000', borderColor: colors.border }]}
+      style={[styles.container, { backgroundColor: colors.mediaBlack, borderColor: colors.border }]}
       onLayout={handleLayout}
     >
       <WebView
@@ -1086,13 +1099,13 @@ go();})(); true;`
         allowsPictureInPictureMediaPlayback
         // Transparent style background so the black container shows through
         // before first paint (WKWebView inherits the view's bg color).
-        style={[styles.web, videoStyle]}
-        containerStyle={styles.web}
+        style={[styles.web, { backgroundColor: colors.mediaBlack }, videoStyle]}
+        containerStyle={[styles.web, { backgroundColor: colors.mediaBlack }]}
       />
 
       {coverMounted && (
         <Animated.View
-          style={[styles.overlay, coverStyle]}
+          style={[styles.overlay, { backgroundColor: colors.mediaBlack }, coverStyle]}
           // The cover used to claim the touch stream on 'error' so its retry
           // button could be pressed — and it could not: the camera-detail
           // screen lays a full-bleed GestureDetector over the video as a LATER
@@ -1128,7 +1141,7 @@ go();})(); true;`
             //
             // Scrim under the error card so its text stays legible over the
             // poster photo (it used to sit on flat black).
-            <View style={styles.errorScrim}>
+            <View style={[styles.errorScrim, { backgroundColor: withAlpha(colors.mediaBlack, ERROR_SCRIM_ALPHA) }]}>
               <View style={styles.center}>
                 <Text style={[styles.errorText, { color: colors.danger }]}>
                   {t('v2.live.error')}
@@ -1168,28 +1181,24 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     overflow: 'hidden',
-    backgroundColor: '#000',
   },
   web: {
     flex: 1,
-    backgroundColor: '#000',
   },
   overlay: {
     // Fully OPAQUE: while the stream is not yet `playing` this overlay
     // completely COVERS the WebView, hiding the embed page's own (hard-coded,
     // English, un-editable) "Connecting…" loader behind it. The opacity now
     // comes from `StreamPoster` (last known frame → shimmer → themed surface);
-    // this `#000` is only the last-resort base beneath it. The overlay fades
+    // `mediaBlack` (applied at render) is only the last-resort base beneath it. The overlay fades
     // out on `playing` instead of unmounting instantly.
     ...StyleSheet.absoluteFill,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#000',
   },
   // Dim layer carrying the error card so its text reads over a poster photo.
   errorScrim: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(0,0,0,0.6)',
   },
   center: {
     flex: 1,

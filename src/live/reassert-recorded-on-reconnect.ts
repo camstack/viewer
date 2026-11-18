@@ -31,6 +31,25 @@ function targetToEmbedPlaybackTarget(target: WebrtcTarget): EmbedPlaybackTarget 
   return { kind: 'adaptive' }
 }
 
+/** The two machine facts the play button's recovery reads. */
+export interface PlayRecoveryInput {
+  readonly mode: MachinePlaybackMode
+  readonly playhead: number | null
+}
+
+/**
+ * Where a play press re-enters playback, or null when play is just "resume".
+ *
+ * Only after an ERROR: the hub holds no recorded pointer for this viewer any
+ * more, so a rate change would move nothing. The playhead survives the error
+ * (the machine stops adopting positions there), so it is the cursor the
+ * operator was on.
+ */
+export function resolvePlayRecovery(input: PlayRecoveryInput): number | null {
+  if (input.mode !== 'error') return null
+  return input.playhead
+}
+
 /** Profile for `playRecorded` after reconnect — honours the tier that was serving. */
 export function resolveRecordedProfileForReconnect(
   liveTarget: WebrtcTarget,

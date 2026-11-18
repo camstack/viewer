@@ -161,6 +161,7 @@ import { useTheme } from '../theme/theme-provider.js'
 import { LiveView, type LiveViewHandle } from '../live/LiveView.js'
 import type { PlayerStatus } from '../live/live-view-types.js'
 import {
+  resolvePlayRecovery,
   resolveRecordedProfileForReconnect,
   shouldReassertRecordedOnReconnect,
 } from '../live/reassert-recorded-on-reconnect.js'
@@ -1137,10 +1138,30 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
     // once — captured on-device as setRate 1→0→1→0 flapping within 300 ms:
     // pause became unreliable, jogs resumed playing, and recorded audio kept
     // sounding through "pause".
+    //
+    // A recording that FAILED has no pointer on the hub to resume: a rate
+    // change moves nothing, and the operator pressed play again and again.
+    // Play re-enters playback at the cursor instead — the playhead the machine
+    // kept through the error — so one press always recovers.
+    const recoverAt = resolvePlayRecovery(playback.state)
+    if (recoverAt !== null) {
+      log.info('playback', 'play after error → re-enter at the cursor', {
+        tags: { deviceId },
+        epoch: recoverAt,
+      })
+      setRecPaused(false)
+      // `adoptSeek` + a direct player seek, not `playback.seek`: the machine's
+      // commit dedupe would swallow a press within 2 s of the last seek to the
+      // same instant — and that instant is exactly where this one goes.
+      playback.adoptSeek(recoverAt, 'timeline')
+      liveRef.current?.seek(recoverAt)
+      if (speed !== 1) liveRef.current?.setRate(speed)
+      return
+    }
     const next = !recPaused
     setRecPaused(next)
     liveRef.current?.setRate(next ? 0 : speed)
-  }, [recPaused, speed])
+  }, [recPaused, speed, playback, deviceId])
   const onSelectRate = useCallback(
     (next: number) => {
       setSpeed(next)

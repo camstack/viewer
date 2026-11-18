@@ -48,7 +48,19 @@ export interface RecordedChannelLike {
   readonly readyState: string
   send(data: string): void
   addEventListener(type: 'message', cb: (ev: { data: unknown }) => void): void
+  addEventListener(type: 'open', cb: () => void): void
   removeEventListener(type: 'message', cb: (ev: { data: unknown }) => void): void
+  removeEventListener(type: 'open', cb: () => void): void
+}
+
+/**
+ * A recorded pointer move asked for while the channel was still NEGOTIATING —
+ * the playback position and rate the viewer wants once the channel can carry
+ * them. Only the newest of each is kept: a later one supersedes it.
+ */
+interface HeldPlayback {
+  readonly play: { readonly deviceId: number; readonly epochMs: number; readonly profile: string } | null
+  readonly rate: number | null
 }
 
 /** The rendered-frame callback surface (structurally HTMLVideoElement). */
@@ -429,8 +441,39 @@ export class RecordedTrackSession {
     )
   }
 
+  /**
+   * The pointer moves held for the channel's open edge (see
+   * {@link acceptsPointerMoves}). Null when nothing is waiting.
+   */
+  private held: HeldPlayback | null = null
+
   constructor(private readonly deps: RecordedTrackSessionDeps) {
     this.deps.channel.addEventListener('message', this.onMessage)
+    this.deps.channel.addEventListener('open', this.onOpen)
+  }
+
+  /**
+   * The channel's open edge: send what was asked for while it negotiated, in
+   * the order the viewer gave it — position first, then the rate (a paused
+   * viewer is paused AT that position).
+   */
+  private readonly onOpen = (): void => {
+    const held = this.held
+    this.held = null
+    if (held === null || this.disposed) return
+    this.deps.onLog?.('playback:held-flush', {
+      epochMs: held.play?.epochMs ?? null,
+      rate: held.rate,
+    })
+    if (held.play !== null) {
+      this.sendPlayRecorded(held.play.deviceId, held.play.epochMs, held.play.profile, 'play')
+    }
+    if (held.rate !== null) this.send({ t: 'setRate', rate: held.rate })
+  }
+
+  /** The channel exists and is still negotiating — not open, not dead. */
+  private negotiating(): boolean {
+    return !this.disposed && this.deps.channel.readyState === 'connecting'
   }
 
   private rvfcCapable(): boolean {
@@ -516,6 +559,15 @@ export class RecordedTrackSession {
     // The recorder takes the pointer back — the server's `leaveClip` is on
     // this same message, so the mirror moves with it.
     this.clipId = null
+    // A reconnect is in flight (the app came back to the foreground, the
+    // network changed): this connection's channel is still negotiating. The
+    // position is HELD for its open edge — refusing it here reported a dead
+    // stream for a connection that was a moment from working, and the viewer
+    // was dropped at the live edge instead of where the cursor stood.
+    if (this.negotiating()) {
+      this.held = { play: { deviceId, epochMs, profile }, rate: this.held?.rate ?? null }
+      return true
+    }
     return this.sendPlayRecorded(deviceId, epochMs, profile, 'play')
   }
 
@@ -551,6 +603,8 @@ export class RecordedTrackSession {
     offsetMs: number,
     profile?: string,
   ): boolean {
+    // A file supersedes a position held for the open edge.
+    this.held = null
     this.cancelPlaybackUpgrade()
     const sent = this.send({
       t: 'playClip',
@@ -664,7 +718,21 @@ export class RecordedTrackSession {
 
   /** Playback rate: 0 pauses; the server clamps the rest to [0.25, 4]. */
   setRate(rate: number): boolean {
+    // Held with the position it applies to — see `playRecorded`.
+    if (this.negotiating()) {
+      this.held = { play: this.held?.play ?? null, rate }
+      return true
+    }
     return this.send({ t: 'setRate', rate })
+  }
+
+  /**
+   * Whether the page may hand this session a pointer move: the channel is
+   * open, or still negotiating (a playback position and rate are then held
+   * for its open edge; every other move still reports the gap).
+   */
+  acceptsPointerMoves(): boolean {
+    return this.isOpen() || this.negotiating()
   }
 
   /** Feed exactly one frame forward/backward (server-side, while paused). */
@@ -690,6 +758,8 @@ export class RecordedTrackSession {
   /** Ungate the live feed (disposes the server feeder) and end any drag. */
   goLive(): boolean {
     this.cancelPlaybackUpgrade()
+    // Live supersedes a position held for the open edge.
+    this.held = null
     const sent = this.send({ t: 'goLive' })
     if (sent) {
       this.deps.onLog?.('scrub:push-golive', { clipId: this.clipId })
@@ -787,7 +857,9 @@ export class RecordedTrackSession {
     this.cancelPlaybackUpgrade()
     this.end()
     this.disposed = true
+    this.held = null
     this.deps.channel.removeEventListener('message', this.onMessage)
+    this.deps.channel.removeEventListener('open', this.onOpen)
   }
 
   /** One rendered-frame subscription at a time, re-armed per frame. */

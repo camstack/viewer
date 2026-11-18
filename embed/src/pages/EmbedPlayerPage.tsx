@@ -676,7 +676,10 @@ function EmbedPlayer({
     // instead of pretending with a second engine.
     const session = (): RecordedTrackSession | null => {
       const current = recordedSessionRef.current
-      if (!current?.isOpen()) return null
+      // A channel still negotiating (a reconnect in flight) takes a playback
+      // position and rate and sends them on its open edge — a play pressed, or
+      // the host's foreground re-assert, must not read as a dead stream.
+      if (!current?.acceptsPointerMoves()) return null
       return current
     }
     // Entry profile — see `resolvePlaybackProfile`.

@@ -235,7 +235,9 @@ describe('RecordedTrackSession — the pointer vocabulary', () => {
   })
 
   it('every pointer move refuses on a closed channel so the caller can report the gap', () => {
-    const ch = fakeChannel('connecting')
+    // `closed`, not `connecting`: a NEGOTIATING channel holds a playback
+    // position for its open edge (held-playback-on-reconnect.spec.ts).
+    const ch = fakeChannel('closed')
     const s = new RecordedTrackSession({ channel: ch, video: () => fakeVideo() })
     expect(s.playRecorded(101, 1_000, 'mid')).toBe(false)
     s.seek(1)
