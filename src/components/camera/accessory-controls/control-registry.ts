@@ -271,10 +271,12 @@ function baseControlKind(type: string): AccessoryControlKind {
 export function pickAccessoryControl(device: AccessoryControlInput): AccessoryControlPick {
   const set = new Set(device.features)
   const role = device.role ?? null
-  // A plug-in heater is a switch by type. Without the switch cap its only
-  // control is the timed run, which is drawn beside this pick, not as it.
+  // A plug-in heater is a switch by type, so `switch` is its base cap and the
+  // hub never lists it in `features` (that field carries only the secondary
+  // caps, e.g. `['timed-run']`). Its on/off is the switch control, like any
+  // switch; the timed run is drawn beside it, not as it.
   if (isSwitchHeater(device.type, role)) {
-    return { kind: set.has('switch') ? 'switch' : 'none' }
+    return { kind: 'switch' }
   }
   const base = baseControlKind(device.type)
   // A thermostat and an air conditioner are both `climate`; the role tells

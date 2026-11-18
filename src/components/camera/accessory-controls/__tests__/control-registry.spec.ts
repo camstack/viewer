@@ -222,9 +222,11 @@ describe('appliance types that bind a plain switch', () => {
       expect(pick(type, ['switch'])).toEqual({ kind: 'switch' })
     }
   })
-  it('a heater without a switch cap keeps no primary control', () => {
+  it('a heater as the hub lists it (features carry only timed-run) still gets its switch', () => {
+    // The hub never lists the base `switch` cap of a switch-type device in
+    // `features`; this is the shape of the live heater rows.
     expect(pickAccessoryControl({ type: 'switch', role: 'switch-heater', features: ['timed-run'] })).toEqual({
-      kind: 'none',
+      kind: 'switch',
     })
   })
 })
