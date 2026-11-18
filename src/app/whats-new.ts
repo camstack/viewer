@@ -31,6 +31,22 @@ export interface WhatsNewEntry {
 // i18n-ok: release notes carry their own `en` + `it` text per entry (typed, held by whats-new.spec.ts)
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.724',
+    date: '2026-11-18',
+    notes: {
+      en: [
+        'Playback resumes at the timeline cursor when you come back to the app.',
+        'No more "stream not available" after pulling down the notification shade.',
+        'Detection boxes sit on the picture itself on wide and panoramic cameras.',
+      ],
+      it: [
+        "La riproduzione riprende dal cursore della timeline quando torni nell'app.",
+        'Niente più "stream non disponibile" dopo aver abbassato la tendina.',
+        "I riquadri di rilevamento stanno sull'immagine anche sulle camere panoramiche.",
+      ],
+    },
+  },
+  {
     version: '1.0.723',
     date: '2026-11-18',
     notes: {
