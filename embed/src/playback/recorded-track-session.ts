@@ -86,12 +86,26 @@ export interface HeldPlayback {
 export type HeldDropReason = 'channel-closed' | 'open-timeout' | 'disposed'
 
 /**
- * How long a channel may stay `connecting` with a move held for it. Past this
- * the connection is not "a moment from working" any more: the move is dropped
- * and REPORTED (`onHeldDropped`), so the host's play recovery applies instead
- * of the operator watching the live edge under a timeline that says playback.
+ * The safety bound on a channel that never settles, measured from the
+ * channel's CREATION (this session's construction — the page builds one per
+ * `createDataChannel`), never from the hold. A held move lives as long as the
+ * channel is still negotiating: an iOS foreground return over TURN or
+ * cellular can take well over 10 s, and dropping the move there would show
+ * exactly the fault the hold exists to prevent. Past this bound the move is
+ * dropped and REPORTED (`onHeldDropped`), so the host's play recovery applies.
  */
-export const HELD_OPEN_TIMEOUT_MS = 10_000
+export const HELD_OPEN_TIMEOUT_MS = 30_000
+
+/**
+ * How long a move held on a channel that CLOSED waits to be carried into the
+ * next one. A real RTCDataChannel fires `close` after `pc.close()` (measured on
+ * Chromium 149, for an open channel and a `connecting` one alike), and the
+ * player's non-seamless reconnect closes the old peer, waits out the retry
+ * backoff (first step ≈1.5 s), fetches ICE servers and only THEN creates the
+ * new channel. Reported at once, the close would flash an error the carry was
+ * about to make unnecessary.
+ */
+export const HELD_CARRY_GRACE_MS = 5_000
 
 /** The rendered-frame callback surface (structurally HTMLVideoElement). */
 export interface RecordedVideoLike {
@@ -126,9 +140,10 @@ function isRecordedTrackState(value: unknown): value is RecordedTrackState {
 export interface RecordedTrackSessionDeps {
   readonly channel: RecordedChannelLike
   /**
-   * A move held for the open edge was DROPPED — the channel closed, it stayed
-   * `connecting` past {@link HELD_OPEN_TIMEOUT_MS}, or the session was disposed
-   * with it still held. The page reports it to the host as an error: a held
+   * A move held for the open edge was DROPPED — the channel closed and no
+   * carry took it within {@link HELD_CARRY_GRACE_MS}, the channel was still
+   * `connecting` {@link HELD_OPEN_TIMEOUT_MS} after its creation, or the
+   * session was disposed with it still held. The page reports it to the host as an error: a held
    * move that vanishes leaves the timeline saying playback over the live edge.
    */
   readonly onHeldDropped?: (reason: HeldDropReason) => void
@@ -483,8 +498,10 @@ export class RecordedTrackSession {
    * {@link acceptsPointerMoves}). Null when nothing is waiting.
    */
   private held: HeldPlayback | null = null
-  /** Bounds how long {@link held} may wait for the open edge. */
+  /** Bounds how long {@link held} may wait: the open bound, or the carry grace. */
   private heldTimer: ReturnType<typeof setTimeout> | null = null
+  /** When the channel was created — the open bound runs from here. */
+  private readonly createdAt = Date.now()
 
   constructor(private readonly deps: RecordedTrackSessionDeps) {
     this.deps.channel.addEventListener('message', this.onMessage)
@@ -492,14 +509,15 @@ export class RecordedTrackSession {
     this.deps.channel.addEventListener('close', this.onClose)
   }
 
-  /** Replace what is held, arming the open-edge bound on the first hold. */
+  /** Replace what is held, arming the channel's open bound on the first hold. */
   private hold(next: HeldPlayback): void {
     this.held = next
     if (this.heldTimer !== null) return
+    const remaining = Math.max(0, this.createdAt + HELD_OPEN_TIMEOUT_MS - Date.now())
     this.heldTimer = setTimeout(() => {
       this.heldTimer = null
       this.dropHeld('open-timeout')
-    }, HELD_OPEN_TIMEOUT_MS)
+    }, remaining)
   }
 
   /** Forget what is held without reporting it (sent, or superseded by a newer move). */
@@ -520,8 +538,20 @@ export class RecordedTrackSession {
     this.deps.onHeldDropped?.(reason)
   }
 
+  /**
+   * The channel closed with a move still held. Not reported yet: the player's
+   * reconnect is usually about to build the next channel, and the page carries
+   * the move into it (`takeHeld`). Only a carry that does not come within
+   * {@link HELD_CARRY_GRACE_MS} reports the drop.
+   */
   private readonly onClose = (): void => {
-    this.dropHeld('channel-closed')
+    if (this.held === null || this.disposed) return
+    if (this.heldTimer !== null) clearTimeout(this.heldTimer)
+    this.deps.onLog?.('playback:held-awaiting-carry', describeHeld(this.held))
+    this.heldTimer = setTimeout(() => {
+      this.heldTimer = null
+      this.dropHeld('channel-closed')
+    }, HELD_CARRY_GRACE_MS)
   }
 
   /**

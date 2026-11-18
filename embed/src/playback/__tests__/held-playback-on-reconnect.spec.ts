@@ -20,6 +20,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createRecordedCommandRouter } from '../recorded-command-router.js'
 import {
+  HELD_CARRY_GRACE_MS,
   HELD_OPEN_TIMEOUT_MS,
   RecordedTrackSession,
   type HeldDropReason,
@@ -146,22 +147,62 @@ describe('RecordedTrackSession — a reconnect in flight', () => {
 })
 
 describe('RecordedTrackSession — a held move is never lost in silence', () => {
-  it('connecting → closed: the held position is reported dropped, with the reason', () => {
+  it('connecting → closed with no next channel: reported dropped, with the reason, after the carry grace', () => {
+    vi.useFakeTimers()
     const ch = negotiatingChannel()
     const { session: s, drops, logs } = sessionOn(ch)
     s.playRecorded(7, CURSOR, 'low')
     ch.close()
+    // Not yet: a reconnect is usually about to build the next channel.
+    expect(drops).toEqual([])
+    expect(logs).toContain('playback:held-awaiting-carry')
+    vi.advanceTimersByTime(HELD_CARRY_GRACE_MS)
     expect(drops).toEqual(['channel-closed'])
     expect(logs).toContain('playback:held-dropped')
     expect(ch.sent).toEqual([])
   })
 
-  it('a channel stuck connecting is an error after the bound, not a wait forever', () => {
+  it('close fires BEFORE the next channel exists (pc.close → backoff → new channel): the move is still carried', () => {
+    vi.useFakeTimers()
+    const a = negotiatingChannel()
+    const first = sessionOn(a)
+    first.session.playRecorded(7, CURSOR, 'mid')
+    a.close()
+    vi.advanceTimersByTime(1_800)
+    const carried = first.session.takeHeld()
+    first.session.dispose()
+    const b = negotiatingChannel()
+    const second = sessionOn(b)
+    if (carried !== null) second.session.adoptHeld(carried)
+    vi.advanceTimersByTime(HELD_CARRY_GRACE_MS * 2)
+    b.open()
+    expect(first.drops).toEqual([])
+    expect(second.drops).toEqual([])
+    expect(sentMsgs(b)).toEqual([{ t: 'playRecorded', deviceId: 7, epoch: CURSOR, profile: 'mid' }])
+  })
+
+  it('a slow foreground return (the channel opens at 12 s) still applies the held move', () => {
     vi.useFakeTimers()
     const ch = negotiatingChannel()
     const { session: s, drops } = sessionOn(ch)
     s.playRecorded(7, CURSOR, 'low')
-    vi.advanceTimersByTime(HELD_OPEN_TIMEOUT_MS - 1)
+    s.setRate(0)
+    vi.advanceTimersByTime(12_000)
+    ch.open()
+    expect(drops).toEqual([])
+    expect(sentMsgs(ch)).toEqual([
+      { t: 'playRecorded', deviceId: 7, epoch: CURSOR, profile: 'low' },
+      { t: 'setRate', rate: 0 },
+    ])
+  })
+
+  it('the safety bound runs from the channel’s creation, not from the hold', () => {
+    vi.useFakeTimers()
+    const ch = negotiatingChannel()
+    const { session: s, drops } = sessionOn(ch)
+    vi.advanceTimersByTime(HELD_OPEN_TIMEOUT_MS - 5_000)
+    s.playRecorded(7, CURSOR, 'low')
+    vi.advanceTimersByTime(5_000 - 1)
     expect(drops).toEqual([])
     vi.advanceTimersByTime(1)
     expect(drops).toEqual(['open-timeout'])
