@@ -75,14 +75,14 @@ export function anchorStyle(anchor: OverlayAnchor): CSSProperties {
 export const AUDIO_LEVEL_THRESHOLDS_DBFS: readonly number[] = [-60, -53, -46, -39, -32, -24]
 export const AUDIO_LEVEL_STEPS = AUDIO_LEVEL_THRESHOLDS_DBFS.length
 
-/** Colour per rung, quiet → loud. Mirrors the viewer's `AUDIO_LEVEL_COLORS`. */
+/** Colour per rung, quiet → loud: green, amber, red as theme tokens (two rungs each). */
 export const AUDIO_LEVEL_COLORS: readonly string[] = [
-  '#22c55e',
-  '#84cc16',
-  '#eab308',
-  '#f59e0b',
-  '#f97316',
-  '#ef4444',
+  'var(--color-success)',
+  'var(--color-success)',
+  'var(--color-warning)',
+  'var(--color-warning)',
+  'var(--color-danger)',
+  'var(--color-danger)',
 ]
 
 export function audioLevelColor(logicalIndex: number): string {

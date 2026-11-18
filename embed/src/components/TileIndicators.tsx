@@ -167,15 +167,15 @@ export function TileMotionBadge({
           gap: ov(4),
           padding: `${ov(2)} ${ov(8)}`,
           borderRadius: ov(6),
-          background: 'rgba(245,158,11,0.15)',
-          color: '#f59e0b',
+          background: 'color-mix(in srgb, var(--color-warning) 15%, transparent)',
+          color: 'var(--color-warning)',
           fontSize: ov(11),
           fontWeight: 700,
           fontFamily: 'system-ui, sans-serif',
           whiteSpace: 'nowrap',
         }}
       >
-        <span style={{ width: ov(7), height: ov(7), borderRadius: ov(4), background: '#f59e0b' }} />
+        <span style={{ width: ov(7), height: ov(7), borderRadius: ov(4), background: 'var(--color-warning)' }} />
         Motion
       </span>
     </div>
@@ -234,7 +234,7 @@ export function TileAudioMeter({
                 width: ov(size.width),
                 height: ov(size.height),
                 borderRadius: ov(2),
-                background: lit ? audioLevelColor(logicalIndex) : '#71717a',
+                background: lit ? audioLevelColor(logicalIndex) : 'var(--color-foreground-disabled)',
                 opacity: lit ? 1 : 0.35,
               }}
             />
