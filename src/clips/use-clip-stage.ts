@@ -73,7 +73,7 @@ export interface UseClipStage {
   /** Re-send the held clip to the player, with the arguments the first
    *  dispatch used. See the implementation for why this is not derivable from
    *  {@link stage}. */
-  readonly replay: () => void
+  readonly replay: (offsetMs?: number) => void
   /** Step to the next/previous playable clip in `clips` and open it. No-op at
    *  the ends of the list and when no clip holds the frame. */
   readonly step: (clips: readonly Clip[], direction: 1 | -1) => void
@@ -357,18 +357,23 @@ export function useClipStage(
   /**
    * Send the held clip to the player again, exactly as it was sent the first
    * time. Idempotent by construction — same arguments, same file, offset 0 —
-   * and a no-op when the session owns the frame.
+   * and a no-op when the session owns the frame. `offsetMs` re-opens the same
+   * file at a FILE-relative position instead (play after a failure resumes
+   * where the clip stood).
    *
    * The caller decides WHEN (`clip-assert-on-player.ts`); this knows WHAT.
    * Splitting it that way keeps the provider inside the hook that already
    * holds it instead of leaking it onto the stage type, where it would be a
    * second place that can disagree about which provider a clip came from.
    */
-  const replay = useCallback((): void => {
-    const last = lastDispatchRef.current
-    if (last === null) return
-    ports.playClip(last.fileClipId, last.provider, 0, last.profile)
-  }, [ports])
+  const replay = useCallback(
+    (offsetMs?: number): void => {
+      const last = lastDispatchRef.current
+      if (last === null) return
+      ports.playClip(last.fileClipId, last.provider, offsetMs ?? 0, last.profile)
+    },
+    [ports],
+  )
 
   const reportPlayerState = useCallback(
     (state: EmbedPlaybackMode): void => {

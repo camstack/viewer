@@ -55,6 +55,7 @@ import {
 } from '../embed/host-bridge'
 import { useExclusiveIntercom } from '../embed/use-exclusive-intercom'
 import { RecordedTrackSession } from '../playback/recorded-track-session'
+import { createRecordedCommandRouter } from '../playback/recorded-command-router'
 import { fireInitialSeek } from '../playback/initial-seek'
 import { createLiveCaptureSession } from '../live/live-capture.js'
 import { takeSnapshot } from '../live/frame-snapshot.js'
@@ -505,7 +506,21 @@ function EmbedPlayer({
     },
   })
   const liveProfileRef = useRef<'high' | 'mid' | 'low'>('low')
-  const sessionGapReportedRef = useRef(false)
+  // Host command → recorded session, reporting a gap once (D42).
+  const commandRouterRef = useRef(
+    createRecordedCommandRouter({
+      current: () => recordedSessionRef.current,
+      onGap: (what) => {
+        emitHost({
+          type: 'log',
+          scope: 'recorded:session',
+          msg: 'pointer move with no open session',
+          data: { what },
+        })
+        emitHost({ type: 'recState', state: 'error' })
+      },
+    }),
+  )
   /**
    * The last `playClip` that could not be sent because the control channel was
    * not open yet, kept so it can be asserted the moment one is.
@@ -674,42 +689,16 @@ function EmbedPlayer({
     // move on the session; a page with no open channel has no recorded surface
     // (the live connection is down too), so it reports the gap honestly
     // instead of pretending with a second engine.
-    const session = (): RecordedTrackSession | null => {
-      const current = recordedSessionRef.current
-      // A channel still negotiating (a reconnect in flight) takes a playback
-      // position and rate and sends them on its open edge — a play pressed, or
-      // the host's foreground re-assert, must not read as a dead stream.
-      if (!current?.acceptsPointerMoves()) return null
-      return current
-    }
+    // See `recorded-command-router.ts`: a negotiating channel takes the moves
+    // its session can hold for the open edge; anything else is a gap.
+    const router = commandRouterRef.current
+    const session = (): RecordedTrackSession | null => router.session()
+    const withSession = router.run
     // Entry profile — see `resolvePlaybackProfile`.
     const playbackProfile = (): string =>
       resolvePlaybackProfile(targetRef.current, liveProfileRef.current)
     const climbAfterProbe = (session: RecordedTrackSession, epochMs: number): void => {
       climbRecordedAfterProbe(session, deviceId, epochMs, targetRef.current)
-    }
-    const noSession = (what: string): void => {
-      if (sessionGapReportedRef.current) return
-      sessionGapReportedRef.current = true
-      emitHost({
-        type: 'log',
-        scope: 'recorded:session',
-        msg: 'pointer move with no open session',
-        data: { what },
-      })
-      emitHost({ type: 'recState', state: 'error' })
-    }
-    const withSession = (
-      what: string,
-      action: (session: RecordedTrackSession) => boolean,
-    ): boolean => {
-      const current = session()
-      if (!current || !action(current)) {
-        noSession(what)
-        return false
-      }
-      sessionGapReportedRef.current = false
-      return true
     }
     // Release a scrub drag at `epochMs`: land playback on `low` immediately
     // (same profile as the drag — often already in RAM). If auto/forced want
@@ -741,6 +730,9 @@ function EmbedPlayer({
       // move on the per-viewer session — the track is the only surface.
       playRecorded: (devId, epochMs, profile) => {
         if (!Number.isFinite(epochMs)) return
+        // The newest intent wins: a clip still waiting for a channel is older
+        // than this position, and asserting it later would undo this move.
+        pendingClipRef.current = null
         withSession('playRecorded', (current) =>
           current.playRecorded(devId, epochMs, profile),
         )
@@ -789,7 +781,9 @@ function EmbedPlayer({
         emitHost({
           type: 'log',
           scope: 'clip:play',
-          msg: sent ? 'playClip sent to the broker' : 'playClip HELD — no open session yet',
+          msg: sent
+            ? 'playClip taken by the session (sent, or held for the channel open edge)'
+            : 'playClip HELD — no open session yet',
           data: { deviceId: devId, sent },
         })
       },
@@ -807,6 +801,7 @@ function EmbedPlayer({
           // no tier to climb to afterwards — the session refuses the climb
           // by name if asked.
           if (current.holdsClip()) return current.seek(epochMs)
+          pendingClipRef.current = null
           const ok = current.playRecorded(deviceId, epochMs, playbackProfile())
           if (ok) climbAfterProbe(current, epochMs)
           return ok
@@ -1091,11 +1086,19 @@ function EmbedPlayer({
         // (client-created, so it is negotiated into the offer). Each reconnect
         // builds a fresh connection + channel — replace the session with it.
         onControlChannel={(channel) => {
+          // A move the old session held for an open edge that never came (an
+          // auto-retry replaced a channel still negotiating) is CARRIED into
+          // this one — disposing it with the move would leave the operator on
+          // the live edge with the host's one re-assert already spent.
+          const carried = recordedSessionRef.current?.takeHeld() ?? null
           recordedSessionRef.current?.dispose()
-          sessionGapReportedRef.current = false
+          commandRouterRef.current.resetGap()
           recordedSessionRef.current = new RecordedTrackSession({
             channel,
             video: () => videoElRef.current,
+            // A held move that can no longer be sent (the channel closed, or
+            // stayed `connecting` too long): the host's play recovery applies.
+            onHeldDropped: () => emitHost({ type: 'recState', state: 'error' }),
             // Server playback state + playhead ride the same channel — the
             // page just forwards them to the host chrome.
             onState: (state) => emitHost({ type: 'recState', state }),
@@ -1183,6 +1186,9 @@ function EmbedPlayer({
           // nothing to carry it.
           channel.addEventListener('open', assertWaitingClip)
           assertWaitingClip()
+          // After the waiting clip: the carried move was asked for later, and
+          // the newest intent is where the pointer goes.
+          if (carried !== null) recordedSessionRef.current?.adoptHeld(carried)
           if (initialSeekRef.current !== null) {
             const fire = (): void => {
               const pending = initialSeekRef.current

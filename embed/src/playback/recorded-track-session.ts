@@ -48,20 +48,50 @@ export interface RecordedChannelLike {
   readonly readyState: string
   send(data: string): void
   addEventListener(type: 'message', cb: (ev: { data: unknown }) => void): void
-  addEventListener(type: 'open', cb: () => void): void
+  addEventListener(type: 'open' | 'close', cb: () => void): void
   removeEventListener(type: 'message', cb: (ev: { data: unknown }) => void): void
-  removeEventListener(type: 'open', cb: () => void): void
+  removeEventListener(type: 'open' | 'close', cb: () => void): void
 }
+
+/** Where the pointer was asked to go while the channel negotiated. */
+export type HeldIntent =
+  | {
+      readonly kind: 'play'
+      readonly deviceId: number
+      readonly epochMs: number
+      readonly profile: string
+    }
+  | {
+      readonly kind: 'clip'
+      readonly deviceId: number
+      readonly clipId: string
+      readonly provider: string
+      readonly offsetMs: number
+      readonly profile?: string
+    }
 
 /**
  * A recorded pointer move asked for while the channel was still NEGOTIATING —
- * the playback position and rate the viewer wants once the channel can carry
- * them. Only the newest of each is kept: a later one supersedes it.
+ * where the pointer goes and the rate the viewer wants once the channel can
+ * carry them. Only the NEWEST intent is kept (a recording position and a clip
+ * replace each other): the pointer is a state, and replaying an older one
+ * would put it somewhere the operator has already left.
  */
-interface HeldPlayback {
-  readonly play: { readonly deviceId: number; readonly epochMs: number; readonly profile: string } | null
+export interface HeldPlayback {
+  readonly intent: HeldIntent | null
   readonly rate: number | null
 }
+
+/** Why a held move never reached the wire. */
+export type HeldDropReason = 'channel-closed' | 'open-timeout' | 'disposed'
+
+/**
+ * How long a channel may stay `connecting` with a move held for it. Past this
+ * the connection is not "a moment from working" any more: the move is dropped
+ * and REPORTED (`onHeldDropped`), so the host's play recovery applies instead
+ * of the operator watching the live edge under a timeline that says playback.
+ */
+export const HELD_OPEN_TIMEOUT_MS = 10_000
 
 /** The rendered-frame callback surface (structurally HTMLVideoElement). */
 export interface RecordedVideoLike {
@@ -95,6 +125,13 @@ function isRecordedTrackState(value: unknown): value is RecordedTrackState {
 
 export interface RecordedTrackSessionDeps {
   readonly channel: RecordedChannelLike
+  /**
+   * A move held for the open edge was DROPPED — the channel closed, it stayed
+   * `connecting` past {@link HELD_OPEN_TIMEOUT_MS}, or the session was disposed
+   * with it still held. The page reports it to the host as an error: a held
+   * move that vanishes leaves the timeline saying playback over the live edge.
+   */
+  readonly onHeldDropped?: (reason: HeldDropReason) => void
   /** The <video> the track renders into. Null → position-message acks. */
   readonly video: () => RecordedVideoLike | null
   /** Server playback state — forward to the host's recState. */
@@ -446,10 +483,90 @@ export class RecordedTrackSession {
    * {@link acceptsPointerMoves}). Null when nothing is waiting.
    */
   private held: HeldPlayback | null = null
+  /** Bounds how long {@link held} may wait for the open edge. */
+  private heldTimer: ReturnType<typeof setTimeout> | null = null
 
   constructor(private readonly deps: RecordedTrackSessionDeps) {
     this.deps.channel.addEventListener('message', this.onMessage)
     this.deps.channel.addEventListener('open', this.onOpen)
+    this.deps.channel.addEventListener('close', this.onClose)
+  }
+
+  /** Replace what is held, arming the open-edge bound on the first hold. */
+  private hold(next: HeldPlayback): void {
+    this.held = next
+    if (this.heldTimer !== null) return
+    this.heldTimer = setTimeout(() => {
+      this.heldTimer = null
+      this.dropHeld('open-timeout')
+    }, HELD_OPEN_TIMEOUT_MS)
+  }
+
+  /** Forget what is held without reporting it (sent, or superseded by a newer move). */
+  private clearHeld(): void {
+    this.held = null
+    if (this.heldTimer !== null) {
+      clearTimeout(this.heldTimer)
+      this.heldTimer = null
+    }
+  }
+
+  /** A held move will never be sent: say so, with the reason. */
+  private dropHeld(reason: HeldDropReason): void {
+    const held = this.held
+    this.clearHeld()
+    if (held === null) return
+    this.deps.onLog?.('playback:held-dropped', { reason, ...describeHeld(held) })
+    this.deps.onHeldDropped?.(reason)
+  }
+
+  private readonly onClose = (): void => {
+    this.dropHeld('channel-closed')
+  }
+
+  /**
+   * Hand over what is held — the page carries it into the session that
+   * REPLACES this one (an auto-retry or reconnect built a new channel before
+   * this one opened). Clears it here, so disposing this session drops nothing.
+   */
+  takeHeld(): HeldPlayback | null {
+    const held = this.held
+    this.clearHeld()
+    return held
+  }
+
+  /**
+   * Take a move held by the session this one replaces, at its creation. The
+   * carried move is the NEWEST intent: the only thing this session can hold
+   * yet is a clip that waited for a channel because the old one could not take
+   * it — asked for before the old session held this move. So the carried
+   * intent and rate win, and only what they leave unset is kept. Sent now on
+   * an open channel, held on a negotiating one, reported dropped on a dead one.
+   */
+  adoptHeld(carried: HeldPlayback): void {
+    const merged: HeldPlayback = {
+      intent: carried.intent ?? this.held?.intent ?? null,
+      rate: carried.rate ?? this.held?.rate ?? null,
+    }
+    this.deps.onLog?.('playback:held-carried', describeHeld(merged))
+    if (this.isOpen()) {
+      this.clearHeld()
+      this.flushHeld(merged)
+      return
+    }
+    this.hold(merged)
+    if (!this.negotiating()) this.dropHeld('channel-closed')
+  }
+
+  /** Send a held move: the intent first, then the rate it applies to. */
+  private flushHeld(held: HeldPlayback): void {
+    const intent = held.intent
+    if (intent?.kind === 'play') {
+      this.sendPlayRecorded(intent.deviceId, intent.epochMs, intent.profile, 'play')
+    } else if (intent?.kind === 'clip') {
+      this.playClip(intent.deviceId, intent.clipId, intent.provider, intent.offsetMs, intent.profile)
+    }
+    if (held.rate !== null) this.send({ t: 'setRate', rate: held.rate })
   }
 
   /**
@@ -459,16 +576,10 @@ export class RecordedTrackSession {
    */
   private readonly onOpen = (): void => {
     const held = this.held
-    this.held = null
+    this.clearHeld()
     if (held === null || this.disposed) return
-    this.deps.onLog?.('playback:held-flush', {
-      epochMs: held.play?.epochMs ?? null,
-      rate: held.rate,
-    })
-    if (held.play !== null) {
-      this.sendPlayRecorded(held.play.deviceId, held.play.epochMs, held.play.profile, 'play')
-    }
-    if (held.rate !== null) this.send({ t: 'setRate', rate: held.rate })
+    this.deps.onLog?.('playback:held-flush', describeHeld(held))
+    this.flushHeld(held)
   }
 
   /** The channel exists and is still negotiating — not open, not dead. */
@@ -565,16 +676,17 @@ export class RecordedTrackSession {
     // stream for a connection that was a moment from working, and the viewer
     // was dropped at the live edge instead of where the cursor stood.
     if (this.negotiating()) {
-      this.held = { play: { deviceId, epochMs, profile }, rate: this.held?.rate ?? null }
+      this.hold({ intent: { kind: 'play', deviceId, epochMs, profile }, rate: this.held?.rate ?? null })
       return true
     }
     return this.sendPlayRecorded(deviceId, epochMs, profile, 'play')
   }
 
-  /** Whether the pointer is on a FILE right now. The page reads it to keep a
-   *  bare `seek` on the clip's axis instead of turning it into `playRecorded`. */
+  /** Whether the pointer is on a FILE right now — or is held to go onto one at
+   *  the open edge. The page reads it to keep a bare `seek` on the clip's axis
+   *  instead of turning it into `playRecorded`. */
   holdsClip(): boolean {
-    return this.clipId !== null
+    return this.clipId !== null || this.held?.intent?.kind === 'clip'
   }
 
   /**
@@ -603,9 +715,23 @@ export class RecordedTrackSession {
     offsetMs: number,
     profile?: string,
   ): boolean {
-    // A file supersedes a position held for the open edge.
-    this.held = null
     this.cancelPlaybackUpgrade()
+    // Held for the open edge like a recording position, and REPLACING it: the
+    // newest intent is where the pointer goes. The page's own retry slot
+    // (`pendingClipRef`) asserted AFTER the session's flush, so an older clip
+    // overwrote a newer position.
+    if (this.negotiating()) {
+      const clip: HeldIntent = {
+        kind: 'clip',
+        deviceId,
+        clipId,
+        provider,
+        offsetMs,
+        ...(profile === undefined ? {} : { profile }),
+      }
+      this.hold({ intent: clip, rate: this.held?.rate ?? null })
+      return true
+    }
     const sent = this.send({
       t: 'playClip',
       deviceId,
@@ -693,6 +819,13 @@ export class RecordedTrackSession {
    *  in-flight scrub intent so a later `playback:ready` cannot misattribute. */
   seek(epochMs: number): boolean {
     this.cancelPlaybackUpgrade()
+    // A clip held for the open edge: a seek on its (file-relative) axis moves
+    // the held offset. Any other seek on a negotiating channel is refused.
+    const held = this.held
+    if (this.negotiating() && held?.intent?.kind === 'clip') {
+      this.hold({ intent: { ...held.intent, offsetMs: epochMs }, rate: held.rate })
+      return true
+    }
     const sent = this.send({ t: 'seek', epoch: epochMs })
     if (sent) {
       this.playIntentAt = performance.now()
@@ -720,7 +853,7 @@ export class RecordedTrackSession {
   setRate(rate: number): boolean {
     // Held with the position it applies to — see `playRecorded`.
     if (this.negotiating()) {
-      this.held = { play: this.held?.play ?? null, rate }
+      this.hold({ intent: this.held?.intent ?? null, rate })
       return true
     }
     return this.send({ t: 'setRate', rate })
@@ -759,7 +892,7 @@ export class RecordedTrackSession {
   goLive(): boolean {
     this.cancelPlaybackUpgrade()
     // Live supersedes a position held for the open edge.
-    this.held = null
+    this.clearHeld()
     const sent = this.send({ t: 'goLive' })
     if (sent) {
       this.deps.onLog?.('scrub:push-golive', { clipId: this.clipId })
@@ -856,10 +989,12 @@ export class RecordedTrackSession {
   dispose(): void {
     this.cancelPlaybackUpgrade()
     this.end()
+    // Still held here means nobody carried it (`takeHeld`): report it.
+    this.dropHeld('disposed')
     this.disposed = true
-    this.held = null
     this.deps.channel.removeEventListener('message', this.onMessage)
     this.deps.channel.removeEventListener('open', this.onOpen)
+    this.deps.channel.removeEventListener('close', this.onClose)
   }
 
   /** One rendered-frame subscription at a time, re-armed per frame. */
@@ -890,5 +1025,17 @@ export class RecordedTrackSession {
     if (this.rvfcHandle === null) return
     this.deps.video()?.cancelVideoFrameCallback?.(this.rvfcHandle)
     this.rvfcHandle = null
+  }
+}
+
+/** The log shape of a held move: what it was, never the whole clip id. */
+function describeHeld(held: HeldPlayback): Record<string, unknown> {
+  const intent = held.intent
+  return {
+    intent: intent?.kind ?? null,
+    epochMs: intent?.kind === 'play' ? intent.epochMs : null,
+    clipId: intent?.kind === 'clip' ? intent.clipId.slice(0, 120) : null,
+    offsetMs: intent?.kind === 'clip' ? intent.offsetMs : null,
+    rate: held.rate,
   }
 }

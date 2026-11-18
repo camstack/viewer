@@ -56,13 +56,39 @@ describe('resolveRecordedProfileForReconnect', () => {
 })
 
 describe('resolvePlayRecovery', () => {
+  const EPOCH = 1_700_000_000_000
+  const NO_CLIP = { clip: null, embedFailed: false } as const
+
   it('re-enters at the kept playhead after an error', () => {
-    expect(resolvePlayRecovery({ mode: 'error', playhead: 1_700_000_000_000 })).toBe(1_700_000_000_000)
+    expect(resolvePlayRecovery({ mode: 'error', playhead: EPOCH, ...NO_CLIP })).toEqual({
+      kind: 'epoch',
+      epochMs: EPOCH,
+    })
   })
 
   it('is a plain resume in healthy playback, a gap, or live', () => {
-    expect(resolvePlayRecovery({ mode: 'playback', playhead: 1_700_000_000_000 })).toBeNull()
-    expect(resolvePlayRecovery({ mode: 'gap', playhead: 1_700_000_000_000 })).toBeNull()
-    expect(resolvePlayRecovery({ mode: 'live', playhead: null })).toBeNull()
+    const none = { kind: 'none' }
+    expect(resolvePlayRecovery({ mode: 'playback', playhead: EPOCH, ...NO_CLIP })).toEqual(none)
+    expect(resolvePlayRecovery({ mode: 'gap', playhead: EPOCH, ...NO_CLIP })).toEqual(none)
+    expect(resolvePlayRecovery({ mode: 'live', playhead: null, ...NO_CLIP })).toEqual(none)
+  })
+
+  it('a held clip recovers on its own file axis, never with an absolute epoch', () => {
+    expect(
+      resolvePlayRecovery({ mode: 'error', playhead: EPOCH, clip: { offsetMs: 12_000 }, embedFailed: false }),
+    ).toEqual({ kind: 'clip', offsetMs: 12_000 })
+    // The machine stays `live` under a clip (D570): the embed's error is the signal.
+    expect(
+      resolvePlayRecovery({ mode: 'live', playhead: null, clip: { offsetMs: 12_000 }, embedFailed: true }),
+    ).toEqual({ kind: 'clip', offsetMs: 12_000 })
+    expect(
+      resolvePlayRecovery({ mode: 'live', playhead: null, clip: { offsetMs: null }, embedFailed: true }),
+    ).toEqual({ kind: 'clip', offsetMs: 0 })
+  })
+
+  it('a healthy clip is a plain resume', () => {
+    expect(
+      resolvePlayRecovery({ mode: 'live', playhead: null, clip: { offsetMs: 5_000 }, embedFailed: false }),
+    ).toEqual({ kind: 'none' })
   })
 })

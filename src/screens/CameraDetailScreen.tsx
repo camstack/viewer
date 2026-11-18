@@ -1132,6 +1132,9 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
       if (result) promptKeepLiveClip(result)
     })()
   }, [playback.state.mode, clipHeld])
+  // The embed's last recorded state was `error` — the only failure signal under
+  // a clip, where the machine does not adopt it (see `resolvePlayRecovery`).
+  const embedFailedRef = useRef(false)
   const onToggleRecPause = useCallback(() => {
     // PURE state updater + side effect OUTSIDE it. The old shape called
     // `setRate` inside the updater, and React may invoke an updater more than
@@ -1143,25 +1146,44 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
     // change moves nothing, and the operator pressed play again and again.
     // Play re-enters playback at the cursor instead — the playhead the machine
     // kept through the error — so one press always recovers.
-    const recoverAt = resolvePlayRecovery(playback.state)
-    if (recoverAt !== null) {
+    const recovery = resolvePlayRecovery({
+      mode: playback.state.mode,
+      playhead: playback.state.playhead,
+      clip: clipStage.stage.kind === 'clip' ? { offsetMs: clipStage.progress.positionMs } : null,
+      embedFailed: embedFailedRef.current,
+    })
+    if (recovery.kind === 'clip') {
+      // A clip recovers on its own FILE-relative axis: the same file, where it
+      // stood. An absolute epoch here would be read as an offset into the file.
+      log.info('playback', 'play after error → re-open the clip at its position', {
+        tags: { deviceId },
+        offsetMs: recovery.offsetMs,
+      })
+      embedFailedRef.current = false
+      setRecPaused(false)
+      clipStage.replay(recovery.offsetMs)
+      if (speed !== 1) liveRef.current?.setRate(speed)
+      return
+    }
+    if (recovery.kind === 'epoch') {
       log.info('playback', 'play after error → re-enter at the cursor', {
         tags: { deviceId },
-        epoch: recoverAt,
+        epoch: recovery.epochMs,
       })
+      embedFailedRef.current = false
       setRecPaused(false)
       // `adoptSeek` + a direct player seek, not `playback.seek`: the machine's
       // commit dedupe would swallow a press within 2 s of the last seek to the
       // same instant — and that instant is exactly where this one goes.
-      playback.adoptSeek(recoverAt, 'timeline')
-      liveRef.current?.seek(recoverAt)
+      playback.adoptSeek(recovery.epochMs, 'timeline')
+      liveRef.current?.seek(recovery.epochMs)
       if (speed !== 1) liveRef.current?.setRate(speed)
       return
     }
     const next = !recPaused
     setRecPaused(next)
     liveRef.current?.setRate(next ? 0 : speed)
-  }, [recPaused, speed, playback, deviceId])
+  }, [recPaused, speed, playback, deviceId, clipStage])
   const onSelectRate = useCallback(
     (next: number) => {
       setSpeed(next)
@@ -1253,6 +1275,7 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
   const onEmbedPlaybackState = useCallback(
     (embed: Parameters<typeof playback.reportEmbedState>[0]): void => {
       playback.reportEmbedState(embed)
+      embedFailedRef.current = embed === 'error'
       // The clip's own wait: the machine ignores `loading` (it adopts only
       // gap/error while in playback), so under a clip the report has to reach
       // the stage or the ring never clears.
