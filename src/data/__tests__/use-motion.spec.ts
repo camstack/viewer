@@ -2,6 +2,9 @@ import { describe, it, expect } from 'vitest'
 import {
   parseMotionEvent,
   parseMotionAnalysis,
+  parseMotionZonesRaw,
+  composeMotionBoxes,
+  MOTION_ZONES_RAW_CATEGORY,
   MOTION_CATEGORY,
   motionHoldDeadline,
   isMotionHoldOn,
@@ -181,5 +184,61 @@ describe('parseMotionAnalysis — the regions an overlay can actually draw', () 
   it('a malformed event is null, never a throw', () => {
     expect(parseMotionAnalysis(null)).toBeNull()
     expect(parseMotionAnalysis({ data: {} })).toBeNull()
+  })
+})
+
+describe('parseMotionZonesRaw — every changed area, before the area bar', () => {
+  const envelope = {
+    source: { deviceId: 9 },
+    data: {
+      deviceId: 9,
+      timestamp: 1,
+      frameSize: { width: 640, height: 360 },
+      zones: [
+        { bbox: [320, 180, 384, 216], pixelCount: 500, changeScore: 0.4 },
+        { bbox: [0, 0, 0, 10], pixelCount: 1, changeScore: 1 },
+        { nope: true },
+      ],
+    },
+  }
+
+  it('is pinned to the hub bus category', () => {
+    expect(MOTION_ZONES_RAW_CATEGORY).toBe('detection.motion-zones-raw')
+  })
+
+  it('normalises [x1,y1,x2,y2] pixel boxes into frame coordinates, skipping malformed zones', () => {
+    const parsed = parseMotionZonesRaw(envelope)
+    expect(parsed?.deviceId).toBe(9)
+    expect(parsed?.zones).toEqual([
+      { x: 0.5, y: 0.5, w: 0.1, h: 0.1, pixelCount: 500, intensity: 0.4 },
+    ])
+  })
+
+  it('still yields raw boxes for a frame the filter judged not detected', () => {
+    // The same frame's `detection.motion-analysis` says detected=false and its
+    // regions are dropped by the hook; the raw layer is independent of it.
+    expect(parseMotionAnalysis({ data: { deviceId: 9, detected: false, regions: [] } })?.detected).toBe(false)
+    expect(parseMotionZonesRaw(envelope)?.zones).toHaveLength(1)
+  })
+
+  it('yields an empty set without frame dimensions, and null for non-events', () => {
+    expect(parseMotionZonesRaw({ data: { deviceId: 9, zones: [{ bbox: [0, 0, 4, 4] }] } })?.zones).toEqual([])
+    expect(parseMotionZonesRaw(null)).toBeNull()
+    expect(parseMotionZonesRaw({ data: { zones: [] } })).toBeNull()
+  })
+})
+
+describe('composeMotionBoxes — raw first, filtered marked on top', () => {
+  const a = { x: 0, y: 0, w: 0.2, h: 0.2, pixelCount: 10, intensity: 0.1 }
+  const b = { x: 0.5, y: 0.5, w: 0.3, h: 0.3, pixelCount: 90, intensity: 0.9 }
+
+  it('marks only the filtered regions and keeps every raw area', () => {
+    const boxes = composeMotionBoxes([a, b], [b])
+    expect(boxes.map((x) => x.filtered)).toEqual([false, false, true])
+    expect(boxes[2]).toMatchObject({ x: 0.5, y: 0.5 })
+  })
+
+  it('shows raw boxes alone when nothing passed the filter', () => {
+    expect(composeMotionBoxes([a], []).every((x) => !x.filtered)).toBe(true)
   })
 })

@@ -191,6 +191,61 @@ export function parseMotionRegions(payload: unknown): readonly TileMotionRegion[
   return out
 }
 
+/**
+ * Narrow a `detection.motion-zones-raw` payload into normalised boxes: EVERY
+ * changed area of the frame, whatever the area bar decided. `bbox` is
+ * `[x1, y1, x2, y2]` in pixels of `frameSize` (not the filtered regions'
+ * `{ x, y, w, h }`).
+ */
+export function parseMotionZonesRaw(payload: unknown): readonly TileMotionRegion[] {
+  if (!isRecord(payload) || !isRecord(payload.frameSize) || !Array.isArray(payload.zones)) {
+    return []
+  }
+  const frameW = typeof payload.frameSize.width === 'number' ? payload.frameSize.width : 0
+  const frameH = typeof payload.frameSize.height === 'number' ? payload.frameSize.height : 0
+  if (!(frameW > 0) || !(frameH > 0)) return []
+  const out: TileMotionRegion[] = []
+  for (const z of payload.zones) {
+    if (!isRecord(z) || !Array.isArray(z.bbox) || z.bbox.length !== 4) continue
+    const [x1, y1, x2, y2] = z.bbox
+    if (
+      typeof x1 !== 'number' ||
+      typeof y1 !== 'number' ||
+      typeof x2 !== 'number' ||
+      typeof y2 !== 'number' ||
+      !(x2 > x1) ||
+      !(y2 > y1)
+    ) {
+      continue
+    }
+    out.push({
+      x: x1 / frameW,
+      y: y1 / frameH,
+      w: (x2 - x1) / frameW,
+      h: (y2 - y1) / frameH,
+      pixelCount: typeof z.pixelCount === 'number' ? z.pixelCount : 0,
+    })
+  }
+  return out
+}
+
+/** One box of the tile's motion overlay: a raw changed area, or a region that
+ *  passed the area bar (`filtered`, drawn in the motion colour). */
+export interface TileMotionBox extends TileMotionRegion {
+  readonly filtered: boolean
+}
+
+/** Raw areas first, then the filtered regions on top, marked. */
+export function composeMotionBoxes(
+  raw: readonly TileMotionRegion[],
+  filtered: readonly TileMotionRegion[],
+): readonly TileMotionBox[] {
+  return [
+    ...raw.map((r): TileMotionBox => ({ ...r, filtered: false })),
+    ...filtered.map((r): TileMotionBox => ({ ...r, filtered: true })),
+  ]
+}
+
 /** Fill opacity for a region, ramped by changed-pixel count and clamped — the
  *  region is context, never the subject. */
 export function regionAlpha(pixelCount: number): number {

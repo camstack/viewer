@@ -4,14 +4,15 @@
  *
  * Not to be confused with `MotionBoxesOverlay`, which despite its name draws
  * DETECTION boxes (person, vehicle — from `detection.result`). These are the
- * raw changed-pixel regions from `motion.onMotionChanged`, and the two answer
+ * changed-pixel regions from `detection.motion-zones-raw` / `motion-analysis`, and the two answer
  * different questions: "what is it?" versus "where did the picture change?".
  * The second is what an operator tunes motion sensitivity against, which is why
  * the analysis schema calls its raw set "used for UI debug overlay".
  *
- * Deliberately quieter than the detection boxes: a thin dashed outline and a
- * faint fill whose opacity follows the region's pixel count, so a large slow
- * change and a small sharp one look different. No labels — a motion region has
+ * Two layers: every raw changed area gets a thin neutral outline; a region
+ * that passed the area bar (the ones that gate detection) additionally gets the
+ * motion-coloured border and a faint fill whose opacity follows its pixel
+ * count, so a large slow change and a small sharp one look different. No labels — a motion region has
  * no identity to name, and text here would compete with the detection boxes
  * that usually sit on top of it.
  *
@@ -21,7 +22,7 @@ import React, { useCallback, useState } from 'react'
 import { View, StyleSheet } from 'react-native'
 import type { LayoutChangeEvent } from 'react-native'
 
-import { useMotionRegions } from '../../data/use-motion.js'
+import { useMotionOverlayBoxes } from '../../data/use-motion.js'
 import { useTheme } from '../../theme/theme-provider.js'
 import { useStreamAspect } from '../../live/stream-aspect.js'
 import { pictureRectIn, placeNormalizedBox } from './overlay/picture-box.js'
@@ -59,7 +60,7 @@ export function alphaHex(alpha: number): string {
 export function MotionRegionsOverlay({ deviceId, enabled }: MotionRegionsOverlayProps) {
   const { colors } = useTheme()
   const [box, setBox] = useState<BoxSize>({ width: 0, height: 0 })
-  const regions = useMotionRegions(deviceId, enabled)
+  const regions = useMotionOverlayBoxes(deviceId, enabled)
   // The player letterboxes a stream that is not the box's shape: regions are
   // placed on the picture, never on the bands (`picture-box.ts`).
   const aspect = useStreamAspect(deviceId)
@@ -81,9 +82,14 @@ export function MotionRegionsOverlay({ deviceId, enabled }: MotionRegionsOverlay
                 key={`${r.x}:${r.y}:${r.w}:${r.h}:${i}`}
                 style={[
                   styles.region,
+                  r.filtered ? styles.filtered : styles.raw,
                   {
-                    borderColor: colors.warning,
-                    backgroundColor: `${colors.warning}${alphaHex(regionAlpha(r.pixelCount))}`,
+                    // Raw areas: neutral light stroke, no fill. A region that
+                    // passed the area bar gets the motion colour on top.
+                    borderColor: r.filtered ? colors.warning : colors.onPicture,
+                    backgroundColor: r.filtered
+                      ? `${colors.warning}${alphaHex(regionAlpha(r.pixelCount))}`
+                      : 'transparent',
                     left: at.x,
                     top: at.y,
                     width: at.width,
@@ -104,4 +110,6 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
     borderRadius: 2,
   },
+  raw: { borderWidth: 1, opacity: 0.7 },
+  filtered: { borderWidth: 2 },
 })

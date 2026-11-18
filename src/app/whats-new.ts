@@ -31,6 +31,14 @@ export interface WhatsNewEntry {
 // i18n-ok: release notes carry their own `en` + `it` text per entry (typed, held by whats-new.spec.ts)
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.726',
+    date: '2026-11-18',
+    notes: {
+      en: ['Live view shows every moving area; areas that trigger detection are outlined in orange.'],
+      it: ['La vista live mostra ogni area in movimento; quelle che attivano il rilevamento sono arancioni.'],
+    },
+  },
+  {
     version: '1.0.725',
     date: '2026-11-18',
     notes: {

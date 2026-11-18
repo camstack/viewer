@@ -30,6 +30,8 @@ import {
   meterRenderOrder,
   meterSegmentSize,
   parseMotionRegions,
+  parseMotionZonesRaw,
+  composeMotionBoxes,
   parseOccupancyCounts,
   regionAlpha,
   statsLine,
@@ -57,41 +59,64 @@ const STATS_POLL_MS = 1000
 // ── Motion regions ───────────────────────────────────────────────────────────
 
 export function TileMotionRegionsOverlay({ deviceId }: { readonly deviceId: number }) {
-  const [regions, setRegions] = useState<readonly TileMotionRegion[]>([])
-  const fade = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const [raw, setRaw] = useState<readonly TileMotionRegion[]>([])
+  const [filtered, setFiltered] = useState<readonly TileMotionRegion[]>([])
+  const rawFade = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const filteredFade = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
+  // The regions that passed the area bar — orange.
   useLiveEvent<Record<string, unknown>>(EventCategory.MotionAnalysis, (evt) => {
     const p = evt.data
     if (!p || p.deviceId !== deviceId) return
-    setRegions(parseMotionRegions(p))
-    if (fade.current) clearTimeout(fade.current)
-    fade.current = setTimeout(() => setRegions([]), REGIONS_FADE_MS)
+    setFiltered(parseMotionRegions(p))
+    if (filteredFade.current) clearTimeout(filteredFade.current)
+    filteredFade.current = setTimeout(() => setFiltered([]), REGIONS_FADE_MS)
+  })
+
+  // Every changed area, whatever the bar decided — neutral.
+  useLiveEvent<Record<string, unknown>>(EventCategory.MotionZonesRaw, (evt) => {
+    const p = evt.data
+    if (!p || p.deviceId !== deviceId) return
+    setRaw(parseMotionZonesRaw(p))
+    if (rawFade.current) clearTimeout(rawFade.current)
+    rawFade.current = setTimeout(() => setRaw([]), REGIONS_FADE_MS)
   })
 
   useEffect(
     () => () => {
-      if (fade.current) clearTimeout(fade.current)
+      if (rawFade.current) clearTimeout(rawFade.current)
+      if (filteredFade.current) clearTimeout(filteredFade.current)
     },
     [deviceId],
   )
 
-  if (regions.length === 0) return null
+  const boxes = composeMotionBoxes(raw, filtered)
+  if (boxes.length === 0) return null
   return (
     <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
-      {regions.map((r, i) => (
+      {boxes.map((r, i) => (
         <div
           // A region has no identity to track across frames; its geometry is
           // the only stable key within one.
-          key={`${r.x}:${r.y}:${r.w}:${r.h}:${i}`}
+          key={`${r.filtered ? 'f' : 'r'}:${r.x}:${r.y}:${r.w}:${r.h}:${i}`}
           style={{
             position: 'absolute',
             left: `${r.x * 100}%`,
             top: `${r.y * 100}%`,
             width: `${r.w * 100}%`,
             height: `${r.h * 100}%`,
-            border: '1px dashed #f59e0b',
             borderRadius: 2,
-            background: `rgba(245,158,11,${regionAlpha(r.pixelCount)})`,
+            ...(r.filtered
+              ? {
+                  border: '2px dashed var(--color-warning)',
+                  background: `color-mix(in srgb, var(--color-warning) ${Math.round(regionAlpha(r.pixelCount) * 100)}%, transparent)`,
+                }
+              : {
+                  border: '1px dashed var(--color-foreground)',
+                  // A themed halo, so the stroke reads on any picture.
+                  boxShadow: '0 0 0 1px var(--color-background)',
+                  opacity: 0.7,
+                }),
           }}
         />
       ))}

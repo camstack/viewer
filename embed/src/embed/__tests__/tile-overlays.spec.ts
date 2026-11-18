@@ -12,6 +12,8 @@ import {
   meterRenderOrder,
   meterSegmentSize,
   parseMotionRegions,
+  parseMotionZonesRaw,
+  composeMotionBoxes,
   parseOccupancyCounts,
   regionAlpha,
   statsLine,
@@ -182,5 +184,39 @@ describe('occupancy tile is event-driven', () => {
     expect(src).toContain('ZoneAnalyticsOccupancyChanged')
     expect(src).not.toContain('OCCUPANCY_POLL_MS')
     expect(src).toContain('queryCurrentSnapshot')
+  })
+})
+
+describe('parseMotionZonesRaw', () => {
+  const payload = {
+    deviceId: 1,
+    frameSize: { width: 640, height: 360 },
+    zones: [
+      { bbox: [320, 180, 384, 216], pixelCount: 500, changeScore: 0.4 },
+      { bbox: [5, 5, 5, 9] },
+      { nope: true },
+    ],
+  }
+
+  it('NORMALISES [x1,y1,x2,y2] pixel boxes in frame coordinates', () => {
+    expect(parseMotionZonesRaw(payload)).toEqual([{ x: 0.5, y: 0.5, w: 0.1, h: 0.1, pixelCount: 500 }])
+  })
+
+  it('does not depend on the filter verdict (no `detected` needed)', () => {
+    expect(parseMotionZonesRaw({ ...payload, detected: false })).toHaveLength(1)
+  })
+
+  it('draws nothing without frame dimensions, and survives garbage', () => {
+    expect(parseMotionZonesRaw({ ...payload, frameSize: { width: 0, height: 0 } })).toEqual([])
+    expect(parseMotionZonesRaw(null)).toEqual([])
+  })
+})
+
+describe('composeMotionBoxes', () => {
+  const a = { x: 0, y: 0, w: 0.2, h: 0.2, pixelCount: 1 }
+  const b = { x: 0.5, y: 0.5, w: 0.3, h: 0.3, pixelCount: 9 }
+
+  it('lists raw first and marks the filtered regions', () => {
+    expect(composeMotionBoxes([a, b], [b]).map((x) => x.filtered)).toEqual([false, false, true])
   })
 })

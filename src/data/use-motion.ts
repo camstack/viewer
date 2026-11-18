@@ -17,7 +17,7 @@
  * (e.g. "not registered") and we treat the camera as inactive — no throw, no
  * badge. The event subscription for a category nothing emits is simply silent.
  */
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useConnection } from '../connection/ConnectionProvider.js'
 import { useSettingsStore } from '../store/settings-store.js'
@@ -43,6 +43,11 @@ export const MOTION_CATEGORY = 'motion.on-motion-changed'
  *  (`packages/types/src/enums/event-category.ts`). */
 export const MOTION_ANALYSIS_CATEGORY = 'detection.motion-analysis'
 
+/** Every changed area of an analysed frame BEFORE the area bar — the motion
+ *  overlay's neutral layer. `EventCategory.MotionZonesRaw` in `@camstack/types`
+ *  (payload `MotionZonesRawPayload`). The hub forwards it to viewer clients
+ *  exactly as it does `detection.motion-analysis`. */
+export const MOTION_ZONES_RAW_CATEGORY = 'detection.motion-zones-raw'
 
 /** What the hook returns: a single boolean the UI keys its indicator off. */
 export interface MotionState {
@@ -141,6 +146,79 @@ export function parseMotionAnalysis(event: unknown): ParsedMotionAnalysis | null
         .filter((r): r is MotionRegion => r !== null)
     : []
   return { deviceId, detected: data.detected === true, regions }
+}
+
+/** A parsed `detection.motion-zones-raw` frame: every changed area, normalised. */
+export interface ParsedMotionZonesRaw {
+  readonly deviceId: number
+  readonly zones: readonly MotionRegion[]
+}
+
+/**
+ * Narrow a `detection.motion-zones-raw` payload into normalised boxes.
+ *
+ * `zones[].bbox` is `[x1, y1, x2, y2]` in PIXELS of `frameSize` (a different
+ * shape from the filtered regions' `{ x, y, w, h }`), `changeScore` is 0..1.
+ * A frame with zones is parsed whatever the filter decided: these are the
+ * areas the filter judged, not the ones it kept.
+ */
+export function parseMotionZonesRaw(event: unknown): ParsedMotionZonesRaw | null {
+  if (!isRecord(event)) return null
+  const data = isRecord(event.data) ? event.data : event
+  const src = isRecord(event.source) ? event.source : null
+  const deviceId = typeof data.deviceId === 'number' ? data.deviceId : src?.deviceId
+  if (typeof deviceId !== 'number') return null
+  const size = isRecord(data.frameSize) ? data.frameSize : null
+  const frameW = size && typeof size.width === 'number' ? size.width : 0
+  const frameH = size && typeof size.height === 'number' ? size.height : 0
+  if (!(frameW > 0) || !(frameH > 0) || !Array.isArray(data.zones)) {
+    return { deviceId, zones: [] }
+  }
+  const zones: MotionRegion[] = []
+  for (const z of data.zones) {
+    if (!isRecord(z) || !Array.isArray(z.bbox) || z.bbox.length !== 4) continue
+    const [x1, y1, x2, y2] = z.bbox
+    if (
+      typeof x1 !== 'number' ||
+      typeof y1 !== 'number' ||
+      typeof x2 !== 'number' ||
+      typeof y2 !== 'number' ||
+      !(x2 > x1) ||
+      !(y2 > y1)
+    ) {
+      continue
+    }
+    zones.push({
+      x: x1 / frameW,
+      y: y1 / frameH,
+      w: (x2 - x1) / frameW,
+      h: (y2 - y1) / frameH,
+      pixelCount: typeof z.pixelCount === 'number' ? z.pixelCount : 0,
+      intensity: typeof z.changeScore === 'number' ? z.changeScore : 0,
+    })
+  }
+  return { deviceId, zones }
+}
+
+/** One box of the motion overlay: a raw changed area, or a region that passed
+ *  the area bar (and so gates detection). */
+export interface MotionOverlayBox extends MotionRegion {
+  readonly filtered: boolean
+}
+
+/**
+ * The overlay's boxes for one moment: every raw area first, then the filtered
+ * regions on top, marked. Raw first so the orange border lands over the
+ * neutral one it matches.
+ */
+export function composeMotionBoxes(
+  raw: readonly MotionRegion[],
+  filtered: readonly MotionRegion[],
+): readonly MotionOverlayBox[] {
+  return [
+    ...raw.map((r): MotionOverlayBox => ({ ...r, filtered: false })),
+    ...filtered.map((r): MotionOverlayBox => ({ ...r, filtered: true })),
+  ]
 }
 
 /** A parsed `detection.motion-analysis` frame. */
@@ -243,28 +321,33 @@ export function useMotion(deviceId: number, enabled: boolean): MotionState {
 }
 
 /**
- * The moving AREAS, for the motion-region overlay.
+ * The moving AREAS, for the motion overlay: every raw changed area
+ * (`detection.motion-zones-raw`, always) plus the regions that passed the area
+ * bar (`detection.motion-analysis` with `detected`), marked `filtered`.
  *
  * Separate from {@link useMotion} on purpose. That hook is mounted by the card,
  * the grid tile and the highlight border — everything that only needs a
  * boolean — and giving it an array would make every one of them re-render on
  * each motion frame for a value they never read.
  *
- * Regions arrive only on the event; there is no poll, because a region set has
- * no meaningful "current" value between frames. They are cleared when motion
- * drops, so the overlay empties instead of freezing on the last shape.
+ * Boxes arrive only on events; there is no poll, because a box set has no
+ * meaningful "current" value between frames. Each layer is cleared when its
+ * stream says nothing moved, so the overlay empties instead of freezing on the
+ * last shape. The motion pill and highlight keep reading `useMotion`.
  */
-export function useMotionRegions(
+export function useMotionOverlayBoxes(
   deviceId: number,
   enabled: boolean,
-): readonly MotionRegion[] {
+): readonly MotionOverlayBox[] {
   const { controller, state: connState } = useConnection()
   const connected = enabled && connState === 'connected'
-  const [regions, setRegions] = useState<readonly MotionRegion[]>([])
+  const [raw, setRaw] = useState<readonly MotionRegion[]>([])
+  const [filtered, setFiltered] = useState<readonly MotionRegion[]>([])
 
   useEffect(() => {
     if (!connected) {
-      setRegions([])
+      setRaw([])
+      setFiltered([])
       return
     }
     const system = controller.getSystem()
@@ -273,18 +356,25 @@ export function useMotionRegions(
     // fires only when motion STARTS or STOPS, so the overlay would freeze on
     // the geometry of that one instant. This one fires per analysed frame and
     // carries the frame dimensions the pixel bboxes need.
-    const unsubscribe = system.subscribeEvent(MOTION_ANALYSIS_CATEGORY, (event: unknown) => {
+    const offFiltered = system.subscribeEvent(MOTION_ANALYSIS_CATEGORY, (event: unknown) => {
       const parsed = parseMotionAnalysis(event)
       if (!parsed || parsed.deviceId !== deviceId) return
-      setRegions(parsed.detected ? parsed.regions : [])
+      setFiltered(parsed.detected ? parsed.regions : [])
+    })
+    const offRaw = system.subscribeEvent(MOTION_ZONES_RAW_CATEGORY, (event: unknown) => {
+      const parsed = parseMotionZonesRaw(event)
+      if (!parsed || parsed.deviceId !== deviceId) return
+      setRaw(parsed.zones)
     })
     return () => {
-      unsubscribe()
-      setRegions([])
+      offFiltered()
+      offRaw()
+      setRaw([])
+      setFiltered([])
     }
   }, [controller, connected, deviceId])
 
-  return regions
+  return useMemo(() => composeMotionBoxes(raw, filtered), [raw, filtered])
 }
 
 // ── Configurable linger (grid highlight persistence) ──────────────────────────
