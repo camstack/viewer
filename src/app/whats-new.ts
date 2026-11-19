@@ -35,11 +35,11 @@ export const WHATS_NEW: readonly WhatsNewEntry[] = [
     date: '2026-11-19',
     notes: {
       en: [
-        'Tap a device icon to switch it; buttons of one device now sit in one group.',
+        'Tap a device row or its icon to open it; buttons of one device sit in one group.',
         'Locks get an Open door button; both ask for a second tap to confirm.',
       ],
       it: [
-        "Tocca l'icona di un dispositivo per cambiarne stato; i pulsanti sono raggruppati.",
+        "Tocca riga o icona di un dispositivo per aprirlo; i pulsanti sono raggruppati.",
         'Le serrature hanno Apri porta; entrambe chiedono un secondo tocco per confermare.',
       ],
     },

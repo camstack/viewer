@@ -225,16 +225,27 @@ export const AccessoryRow = memo(function AccessoryRow({
   if (!editing) {
     return (
       <View style={[styles.row, { borderBottomColor: colors.borderSubtle }]}>
-        <View style={[styles.iconWrap, { backgroundColor: colors.backgroundElevated }]}>
-          <CatalogIcon iconKey={row.iconKey} size={ICON_SIZE} color={accent} />
-        </View>
-        <View style={styles.label}>
-          <Text style={[styles.name, { fontSize: ui.font.sm, color: nameColor }]} numberOfLines={1}>
-            {row.label}
-          </Text>
-          {offlineBadge}
-          {caption}
-        </View>
+        <Pressable
+          onPress={() => {
+            hapticTap()
+            openDetail()
+          }}
+          accessibilityRole="button"
+          accessibilityLabel={t('v2.deviceDetail.openFor', vars)}
+          testID={`accessory-open-${row.device.id}`}
+          style={styles.opener}
+        >
+          <View style={[styles.iconWrap, { backgroundColor: colors.backgroundElevated }]}>
+            <CatalogIcon iconKey={row.iconKey} size={ICON_SIZE} color={accent} />
+          </View>
+          <View style={styles.label}>
+            <Text style={[styles.name, { fontSize: ui.font.sm, color: nameColor }]} numberOfLines={1}>
+              {row.label}
+            </Text>
+            {offlineBadge}
+            {caption}
+          </View>
+        </Pressable>
         <View style={styles.control}>
           <AccessoryControl device={row.device} />
         </View>
@@ -367,6 +378,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   iconEditable: { borderWidth: 1, borderStyle: 'dashed' },
+  opener: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: SPACING.md },
   label: { flex: 1, gap: 2 },
   // Flush with the row: the dashed underline is the only chrome the field
   // wears, so a box or a tall inset would make it a second vocabulary. The

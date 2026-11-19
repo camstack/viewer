@@ -4442,7 +4442,6 @@
       "editValue": "Edit {{name}}",
       "save": "Save",
       "confirmOffWhileRunning": "The device is running. Turn it off anyway?",
-      "tilePress": "Toggle {{name}}",
       "tapAgain": {
         "unlock": "Tap again to unlock",
         "open": "Tap again to open the door",

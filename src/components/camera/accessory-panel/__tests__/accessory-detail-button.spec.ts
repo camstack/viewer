@@ -31,7 +31,7 @@ describe('the row opens the device detail', () => {
       React.createElement(AccessoryDeviceList, { deviceId: 101, cameraName: 'Front door', editing: false}),
       { hub: HUB },
     )
-    fireEvent.click(await screen.findByLabelText('Details of Faretto'))
+    fireEvent.click((await screen.findAllByLabelText('Details of Faretto'))[0]!)
     await waitFor(() => expect(routerCalls().some((c) => c.kind === 'push')).toBe(true))
     expect(routerCalls().find((c) => c.kind === 'push')?.target).toBe('/device/900?name=Faretto&type=light')
   })
@@ -47,7 +47,7 @@ describe('the row opens the device detail', () => {
       }),
       { hub: HUB },
     )
-    fireEvent.click(await screen.findByLabelText('Details of Faretto'))
+    fireEvent.click((await screen.findAllByLabelText('Details of Faretto'))[0]!)
     await waitFor(() => expect(opened).toEqual([900]))
     expect(routerCalls().some((c) => c.kind === 'push')).toBe(false)
   })
@@ -58,6 +58,6 @@ describe('the row opens the device detail', () => {
       { hub: HUB },
     )
     await screen.findByLabelText('Rename Faretto')
-    expect(screen.queryByLabelText('Details of Faretto')).toBeNull()
+    expect(screen.queryAllByLabelText('Details of Faretto')).toHaveLength(0)
   })
 })

@@ -40,19 +40,19 @@ describe('Devices panel: list -> detail -> back', () => {
     mountScreen(React.createElement(CameraAccessoryPanel, { deviceId: 101, cameraName: 'Front door' }), {
       hub: HUB,
     })
-    const details = await screen.findByLabelText('Details of Faretto')
+    const details = (await screen.findAllByLabelText('Details of Faretto'))[0]!
     expect(screen.queryByTestId('card-webview')).toBeNull()
 
     fireEvent.click(details)
     await waitFor(() => expect(screen.getByTestId('card-webview')).toBeTruthy())
     expect(routerCalls().some((c) => c.kind === 'push')).toBe(false)
     // The list is still mounted (hidden), not rebuilt.
-    expect(screen.getByLabelText('Details of Faretto')).toBe(details)
+    expect(screen.getAllByLabelText('Details of Faretto')[0]).toBe(details)
 
     const card = screen.getByTestId('card-webview')
     fireEvent.click(screen.getByLabelText('Back'))
     // The list is back. The document stays mounted, hidden, for the next device.
     await waitFor(() => expect(screen.getByTestId('card-webview')).toBe(card))
-    expect(screen.getByLabelText('Details of Faretto')).toBe(details)
+    expect(screen.getAllByLabelText('Details of Faretto')[0]).toBe(details)
   })
 })

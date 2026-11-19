@@ -4442,7 +4442,6 @@
       "editValue": "Modifica {{name}}",
       "save": "Salva",
       "confirmOffWhileRunning": "Il dispositivo è in funzione. Spegnerlo comunque?",
-      "tilePress": "Cambia stato di {{name}}",
       "tapAgain": {
         "unlock": "Tocca di nuovo per sbloccare",
         "open": "Tocca di nuovo per aprire la porta",

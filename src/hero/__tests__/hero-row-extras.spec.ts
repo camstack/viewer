@@ -121,3 +121,41 @@ describe('the fallback control', () => {
     expect(screen.queryByTestId('legacy-control')).toBeNull()
   })
 })
+
+describe('the row opens the device', () => {
+  const mount = (onOpen: () => void, model: HeroRowModel): void => {
+    mountScreen(
+      React.createElement(HeroRowBody, { deviceId: 4, name: 'TV', online: true, model, onOpen, openLabel: 'Open TV' }),
+      { hub: {} },
+    )
+  }
+  const powered: HeroRowModel = {
+    ...base,
+    primary: { kind: 'toggle', id: 'own-power', label: { en: 'Power', it: 'Power' }, on: true, turnOn: act('own-power.on'), turnOff: act('own-power.off') },
+  }
+
+  it('the left icon opens the detail and sends no command', () => {
+    const onOpen = vi.fn()
+    mount(onOpen, powered)
+    fireEvent.click(screen.getByTestId('hero-row-scene-4'))
+    expect(onOpen).toHaveBeenCalledTimes(1)
+  })
+  it('the name opens the detail', () => {
+    const onOpen = vi.fn()
+    mount(onOpen, powered)
+    fireEvent.click(screen.getByTestId('hero-row-name-4'))
+    expect(onOpen).toHaveBeenCalledTimes(1)
+  })
+  it('a right-side control does not open the detail', () => {
+    const onOpen = vi.fn()
+    mount(onOpen, { ...base, primary: remote, extras: [] })
+    fireEvent.click(screen.getByTestId('hero-row-remote-4'))
+    expect(onOpen).not.toHaveBeenCalled()
+  })
+  it('the power switch does not open the detail', () => {
+    const onOpen = vi.fn()
+    mount(onOpen, powered)
+    fireEvent.click(screen.getByLabelText('own-power.off'))
+    expect(onOpen).not.toHaveBeenCalled()
+  })
+})

@@ -1,25 +1,15 @@
 /**
- * tile-press — the two small state machines behind a pressable scene tile, as
- * pure functions so a spec can drive them with a clock.
+ * tile-press — the double-tap arm of a confirmed press, as pure functions so a
+ * spec can drive them with a clock.
  *
- *  - ARM: an action that declares a `confirm` (unlock, open the door) is never
- *    asked with a dialog — a `Modal` over the sheet the row lives in hangs iOS.
- *    The first tap ARMS (the tile turns warning and the row says "Tap again to
- *    unlock"), a second tap of the SAME action inside {@link ARM_WINDOW_MS}
- *    sends it, and the window closing disarms.
- *  - SETTLE: after a press the tile waits for the device to REPORT the new state
- *    (the row model's `stateKey` changes) — never optimistic. It gives up after
- *    {@link SETTLE_TIMEOUT_MS} and reverts.
+ * An action that declares a `confirm` (unlock, open the door) is never asked
+ * with a dialog — a `Modal` over the sheet the row lives in hangs iOS. The first
+ * tap ARMS (the row says "Tap again to …"), a second tap of the SAME action
+ * inside {@link ARM_WINDOW_MS} sends it, and the window closing disarms.
  */
 
 /** How long an armed tile stays armed. */
 export const ARM_WINDOW_MS = 3000
-
-/** How long the tile waits for the device to report the new state. */
-export const SETTLE_TIMEOUT_MS = 10_000
-
-/** How often the hero is read back while a press is unsettled. */
-export const SETTLE_POLL_MS = 1500
 
 export interface ArmState {
   readonly armedId: string | null
@@ -50,27 +40,4 @@ export function pressOutcome(state: ArmState, id: string, needsConfirm: boolean,
   if (!needsConfirm) return { decision: 'fire', next: DISARMED }
   if (isArmed(state, id, now)) return { decision: 'fire', next: DISARMED }
   return { decision: 'arm', next: { armedId: id, armedAt: now } }
-}
-
-/** What the tile shows between a press and the device's report. */
-export type TilePhase = 'idle' | 'pending'
-
-export interface SettleState {
-  readonly phase: TilePhase
-  /** The row model's `stateKey` at the press; the report is any other value. */
-  readonly pressedAt: string | null
-}
-
-export const SETTLED: SettleState = { phase: 'idle', pressedAt: null }
-
-export function pressed(stateKey: string): SettleState {
-  return { phase: 'pending', pressedAt: stateKey }
-}
-
-/**
- * The key a press is settled against: what the device reports of itself. The
- * state word and the look the hub drew for it, so a change of either counts.
- */
-export function tileStateKey(model: { readonly state: string; readonly look: { readonly icon: string; readonly tone: string } }): string {
-  return `${model.state}|${model.look.icon}|${model.look.tone}`
 }

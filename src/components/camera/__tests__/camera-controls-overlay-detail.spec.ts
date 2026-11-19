@@ -57,7 +57,7 @@ describe('controls sheet: linked device detail', () => {
       React.createElement(CameraControlsOverlay, { visible: true, camera: CAMERA, onClose: () => undefined }),
       { hub: HUB },
     )
-    const details = await screen.findByLabelText('Details of Faretto')
+    const details = (await screen.findAllByLabelText('Details of Faretto'))[0]!
     expect(getComputedStyle(pads()).display).not.toBe('none')
 
     fireEvent.click(details)
