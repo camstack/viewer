@@ -47,12 +47,13 @@ describe('advanced accessory capability wiring', () => {
     expect(logic).toContain("method: 'setTargetRange'")
   })
 
-  it('exposes fan presets and direction', () => {
-    const source = read('controls.tsx')
-    expect(source).toContain("'fanControl', 'setPreset'")
-    expect(source).toContain("'fanControl', 'setDirection'")
-    expect(source).toContain("value: 'forward'")
-    expect(source).toContain("value: 'reverse'")
+  it('the fan row is one icon group (power, speed down, speed up) and a readout', () => {
+    const row = componentSource('controls.tsx', 'FanControl')
+    expect(row.match(/<IconButtonGroup>/g)).toHaveLength(1)
+    expect(row).toContain("'fanControl',\n        'setPercentage'")
+    for (const left of ['setPreset', 'setDirection', 'setOscillating', '<OptionPicker']) {
+      expect(row, `the fan row no longer carries ${left}`).not.toContain(left)
+    }
   })
 
   it('exposes humidifier mode and water-heater mode/away', () => {

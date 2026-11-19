@@ -14,7 +14,7 @@ import { View, Text, StyleSheet } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import {
   Power, Lock, LockOpen, DoorOpen, ChevronUp, ChevronDown, Square,
-  Sun, Fan, Wind, Zap, RotateCw,
+  Sun, Fan, Zap,
 } from '../../../lib/icons.js'
 import { useTheme } from '../../../theme/theme-provider.js'
 import { SPACING } from '../../../theme/tokens.js'
@@ -470,7 +470,7 @@ export function ClimateControl({ deviceId, online }: AccessoryControlProps) {
   )
 }
 
-// ── Fan (on/off via switch + speed stepper + optional oscillate) ──────────────
+// ── Fan (on/off via switch + speed stepper; the other fan settings live on the device page) ──
 
 export function FanControl({ deviceId, online, extras }: GroupedControlProps) {
   const { t } = useTranslation()
@@ -482,17 +482,6 @@ export function FanControl({ deviceId, online, extras }: GroupedControlProps) {
   const speed = fan.data?.speed ?? 0
   const step = fan.data?.percentageStep ?? FAN_DEFAULT_STEP
   const on = sw.data?.on ?? speed > 0
-  const oscillating = fan.data?.oscillating ?? null
-  const preset = fan.data?.preset ?? ''
-  const direction = fan.data?.direction ?? null
-  const presetOptions = (fan.data?.availablePresets ?? []).map((candidate) => ({
-    value: candidate,
-    label: formatToken(candidate),
-  }))
-  const directionOptions = [
-    { value: 'forward', label: formatToken('forward') },
-    { value: 'reverse', label: formatToken('reverse') },
-  ]
 
   const toggle = useCallback(async () => {
     await mutator.run('switch', 'setState', { on: !on })
@@ -513,31 +502,10 @@ export function FanControl({ deviceId, online, extras }: GroupedControlProps) {
     [mutator, speed, step, fan, sw],
   )
 
-  const setPreset = useCallback(
-    async (next: string) => {
-      await mutator.run('fanControl', 'setPreset', { preset: next })
-      void fan.refetch()
-    },
-    [mutator, fan],
-  )
-  const setDirection = useCallback(
-    async (next: 'forward' | 'reverse') => {
-      await mutator.run('fanControl', 'setDirection', { direction: next })
-      void fan.refetch()
-    },
-    [mutator, fan],
-  )
-
-  const toggleOscillate = useCallback(async () => {
-    await mutator.run('fanControl', 'setOscillating', { oscillating: !(oscillating ?? false) })
-    void fan.refetch()
-  }, [mutator, oscillating, fan])
-
   if (fan.isLoading && !fan.data) return <ControlSpinner />
   const disabled = !online || mutator.pending
   return (
-    <View style={styles.fanColumn}>
-      <View style={styles.cluster}>
+    <View style={styles.cluster}>
       <IconButtonGroup>
         <IconButton
           icon={Fan}
@@ -546,15 +514,6 @@ export function FanControl({ deviceId, online, extras }: GroupedControlProps) {
           disabled={disabled}
           onPress={() => void toggle()}
         />
-        {oscillating !== null ? (
-          <IconButton
-            icon={Wind}
-            label={t('v2.accessories.oscillate')}
-            active={oscillating}
-            disabled={disabled}
-            onPress={() => void toggleOscillate()}
-          />
-        ) : null}
         <IconButton
           icon={ChevronDown}
           label={t('v2.accessories.speedDown')}
@@ -573,29 +532,6 @@ export function FanControl({ deviceId, online, extras }: GroupedControlProps) {
         {`${Math.round(speed)}%`}
       </Text>
       {extras?.after}
-      </View>
-      <View style={[styles.cluster, styles.wrapCluster]}>
-      {presetOptions.length > 0 ? (
-        <OptionPicker
-          label={t('v2.accessories.preset')}
-          icon={Sun}
-          selected={preset || null}
-          options={presetOptions}
-          disabled={disabled}
-          onSelect={(next) => void setPreset(next)}
-        />
-      ) : null}
-      {direction !== null ? (
-        <OptionPicker
-          label={t('v2.accessories.direction')}
-          icon={RotateCw}
-          selected={direction}
-          options={directionOptions}
-          disabled={disabled}
-          onSelect={(next) => void setDirection(next as 'forward' | 'reverse')}
-        />
-      ) : null}
-      </View>
     </View>
   )
 }
@@ -620,8 +556,6 @@ export function ButtonControl({ deviceId, online }: AccessoryControlProps) {
 
 const styles = StyleSheet.create({
   cluster: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm },
-  /** Group and readout on one line, the preset and direction pickers under it: the name keeps its room. */
-  fanColumn: { alignItems: 'flex-end', gap: SPACING.xs },
   wrapCluster: { flexWrap: 'wrap', justifyContent: 'flex-end' },
   coverPct: { fontSize: 12, fontWeight: '600', minWidth: 34, textAlign: 'right' },
   readout: { fontSize: 12, fontWeight: '600', minWidth: 34, textAlign: 'center' },
