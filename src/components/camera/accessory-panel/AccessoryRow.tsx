@@ -63,8 +63,9 @@ import { AccessoryControl } from '../accessory-controls/AccessoryControl.js'
 import { CatalogIcon } from '../../CatalogIcon.js'
 import { OfflineBadge } from '../../device/OfflineBadge.js'
 import { isDeviceOffline } from '../../device/device-reachability.js'
-import { heroRowKeepsShortcuts } from '../accessory-controls/control-registry.js'
-import { HeroRowBody } from '../../../hero/HeroRowBody.js'
+import { heroRowKeepsShortcuts, pickAccessoryControl } from '../accessory-controls/control-registry.js'
+import { HeroRowBody, rowControls } from '../../../hero/HeroRowBody.js'
+import { HeroToggleSegments } from '../../../hero/HeroToggleSegments.js'
 import type { HeroRowModel } from '@camstack/types'
 import { deviceRoute } from '../../../remote/device-route.js'
 
@@ -204,7 +205,15 @@ export const AccessoryRow = memo(function AccessoryRow({
         customIcon={customIcon}
         caption={captionText}
         fallbackControl={<AccessoryControl device={row.device} />}
-        shortcuts={heroRowKeepsShortcuts(row.device) ? <AccessoryControl device={row.device} /> : null}
+        shortcuts={heroRowKeepsShortcuts(row.device) ? (
+          <AccessoryControl
+            device={row.device}
+            // A device the registry has no control for (a pet fountain) keeps its model toggle (the pump) in the group beside its timer.
+            leading={pickAccessoryControl(row.device).kind === 'none' && rowControls(model).some((control) => control.kind === 'toggle')
+              ? <HeroToggleSegments deviceId={row.device.id} online={row.device.online} controls={rowControls(model)} />
+              : null}
+          />
+        ) : null}
         openLabel={t('v2.deviceDetail.openFor', vars)}
         onOpen={openDetail}
       />

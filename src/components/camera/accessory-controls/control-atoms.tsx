@@ -24,6 +24,7 @@ import Animated, {
 import { ChevronDown, ChevronUp, type LucideIcon } from '../../../lib/icons.js'
 import { hapticAction, hapticTap } from '../../../lib/haptics.js'
 import { MOTION_EASE } from '../../../theme/motion.js'
+import { ICON_SEGMENT_SIZE, useInIconGroup } from '../../ui/IconButtonGroup.js'
 import { useTheme } from '../../../theme/theme-provider.js'
 import { RADIUS, SPACING, withAlpha } from '../../../theme/tokens.js'
 
@@ -183,6 +184,11 @@ export interface IconButtonProps {
   readonly onPress: () => void
   readonly disabled?: boolean
   readonly active?: boolean
+  /**
+   * ARMED: the first tap of a double-tap confirm landed and the button waits for
+   * the second. Drawn in the warning tone, which wins over `active`.
+   */
+  readonly warn?: boolean
   /** See {@link ControlHaptic}. Defaults to `tap`. */
   readonly haptic?: ControlHaptic
   /**
@@ -211,12 +217,17 @@ export function IconButton({
   onPress,
   disabled,
   active,
+  warn,
   pulsing,
   haptic = 'tap',
 }: IconButtonProps) {
   const { colors } = useTheme()
-  const bg = active ? colors.primary : colors.backgroundElevated
-  const fg = active ? colors.primaryForeground : colors.foreground
+  // Inside an `IconButtonGroup` the button is a flat segment of the capsule, not a round button of its own.
+  const inGroup = useInIconGroup()
+  const bg = warn === true
+    ? withAlpha(colors.warning, 0.2)
+    : active === true ? colors.primary : inGroup ? undefined : colors.backgroundElevated
+  const fg = warn === true ? colors.warning : active === true ? colors.primaryForeground : colors.foreground
   const pulse = useSharedValue<number>(1)
   const pulseStyle = useAnimatedStyle(() => ({ opacity: pulse.get() }))
 
@@ -251,7 +262,7 @@ export function IconButton({
       onPress={() => { fireControlHaptic(haptic); onPress() }}
       disabled={disabled}
       style={[
-        styles.icon,
+        inGroup ? styles.segment : styles.icon,
         { backgroundColor: bg, borderColor: colors.border },
         // A disabled button is dimmed outright; a pulsing one is animated. The
         // two never multiply — a pulse inside a 0.45 opacity is invisible.
@@ -337,6 +348,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: StyleSheet.hairlineWidth,
+  },
+  segment: {
+    width: ICON_SEGMENT_SIZE,
+    height: ICON_SEGMENT_SIZE,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderLeftWidth: StyleSheet.hairlineWidth,
   },
   stepper: {
     width: 30,

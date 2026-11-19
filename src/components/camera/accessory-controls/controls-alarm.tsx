@@ -26,7 +26,7 @@
 import React, { useCallback, useRef, useState } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
-import { ShieldAlert, ShieldCheck, ShieldOff } from '../../../lib/icons.js'
+import { House, Luggage, Moon, Plane, Shield, ShieldAlert, ShieldOff, type LucideIcon } from '../../../lib/icons.js'
 import { useTheme } from '../../../theme/theme-provider.js'
 import { RADIUS, SPACING } from '../../../theme/tokens.js'
 import { useAlarmStatus, useCapMutator, type AlarmArmMode } from '../../../data/use-accessory-controls.js'
@@ -41,17 +41,31 @@ import {
 import { useNcErrorText } from '../../notifications/use-nc-error-text.js'
 import {
   alarmControlModel,
+  alarmModeGlyph,
   alarmRefusalLine,
+  type AlarmModeGlyph,
   capRefusalDevices,
   type AlarmBypassedView,
   type AlarmExcludedView,
 } from './alarm-control-model.js'
-import { ControlSpinner, PillButton } from './control-atoms.js'
+import { ControlSpinner, IconButton } from './control-atoms.js'
+import { IconButtonGroup } from '../../ui/IconButtonGroup.js'
+import type { GroupExtras } from './group-extras.js'
 
 export interface AlarmControlProps {
   readonly deviceId: number
   /** False when the accessory is offline — controls render disabled. */
   readonly online: boolean
+  /** The row's "On motion", drawn inside the mode group. */
+  readonly extras?: GroupExtras
+}
+
+const GLYPH_ICONS: Readonly<Record<AlarmModeGlyph, LucideIcon>> = {
+  house: House,
+  plane: Plane,
+  moon: Moon,
+  luggage: Luggage,
+  shield: Shield,
 }
 
 /** An nc arm outcome and when it arrived (compared with the live view's fetch time). */
@@ -109,7 +123,7 @@ function capProblem(error: string | null, t: Translate): string | null {
   return devices !== null ? t('v2.accessories.alarmRefusedCap', { devices }) : error
 }
 
-export function AlarmControl({ deviceId, online }: AlarmControlProps) {
+export function AlarmControl({ deviceId, online, extras }: AlarmControlProps) {
   const { t } = useTranslation()
   const { colors } = useTheme()
   const errorText = useNcErrorText()
@@ -200,26 +214,30 @@ export function AlarmControl({ deviceId, online }: AlarmControlProps) {
     <View style={styles.column}>
       <View style={[styles.cluster, styles.wrapCluster]}>
         {loading ? <ControlSpinner /> : null}
-        {model.modes.map((mode) => (
-          <PillButton
-            key={mode}
-            label={t(`v2.accessories.armMode.${mode}`, { defaultValue: mode })}
-            icon={ShieldCheck}
-            active={state === `armed_${mode}`}
-            disabled={!online || armBusy || !model.canArm}
+        <IconButtonGroup>
+          {model.modes.map((mode) => (
+            <IconButton
+              key={mode}
+              label={t(`v2.accessories.armMode.${mode}`, { defaultValue: mode })}
+              icon={GLYPH_ICONS[alarmModeGlyph(mode)]}
+              active={state === `armed_${mode}`}
+              disabled={!online || armBusy || !model.canArm}
+              haptic="action"
+              onPress={() => arm(mode)}
+            />
+          ))}
+          <IconButton
+            label={t('v2.accessories.disarm')}
+            icon={ShieldOff}
+            // Drawn "at rest" only on a panel KNOWN to be disarmed.
+            active={state === 'disarmed'}
+            disabled={!online || disarmBusy || !model.canDisarm}
             haptic="action"
-            onPress={() => arm(mode)}
+            onPress={disarm}
           />
-        ))}
-        <PillButton
-          label={t('v2.accessories.disarm')}
-          icon={ShieldOff}
-          // Drawn "at rest" only on a panel KNOWN to be disarmed.
-          active={state === 'disarmed'}
-          disabled={!online || disarmBusy || !model.canDisarm}
-          haptic="action"
-          onPress={disarm}
-        />
+          {extras?.items}
+        </IconButtonGroup>
+        {extras?.after}
       </View>
       {model.lookupUnknown ? (
         <Text style={[styles.note, { color: colors.warning }]}>{t('v2.accessories.alarmLookupUnknown')}</Text>
@@ -250,7 +268,7 @@ export function AlarmControl({ deviceId, online }: AlarmControlProps) {
           <Text style={[styles.note, { color: colors.foreground }]}>
             {refusalText(model.refusal.blocking, t)}
           </Text>
-          <PillButton
+          <IconButton
             label={t('v2.accessories.armAnyway')}
             icon={ShieldAlert}
             disabled={!online || armBusy}

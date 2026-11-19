@@ -18,7 +18,9 @@ import {
 } from './control-registry.js'
 import { useCanActuate } from '../../../hooks/use-user-scope.js'
 import { MotionTriggerToggle } from './MotionTriggerToggle.js'
-import { TimedRunControl } from './TimedRunControl.js'
+import { TimedRunItems, TimedRunTime } from './TimedRunControl.js'
+import { IconButtonGroup } from '../../ui/IconButtonGroup.js'
+import type { GroupExtras } from './group-extras.js'
 import { hasTimedRun } from '../../../data/timed-run.js'
 import {
   SwitchControl, BrightnessControl, LockControl, CoverControl,
@@ -41,34 +43,39 @@ export interface AccessoryControlComponentProps {
 export function PrimaryControl({
   device,
   pick: given,
-}: AccessoryControlComponentProps & { readonly pick?: AccessoryControlPick }): React.ReactElement | null {
+  extras,
+}: AccessoryControlComponentProps & {
+  readonly pick?: AccessoryControlPick
+  /** The row's other actions (a timer, "On motion"), drawn inside the control's own icon group. */
+  readonly extras?: GroupExtras
+}): React.ReactElement | null {
   const pick = given ?? pickAccessoryControl(device)
   const common = { deviceId: device.id, online: device.online }
   switch (pick.kind) {
     case 'cover':
-      return <CoverControl {...common} capKey="cover" />
+      return <CoverControl {...common} capKey="cover" extras={extras} />
     case 'valve':
-      return <CoverControl {...common} capKey="valve" />
+      return <CoverControl {...common} capKey="valve" extras={extras} />
     case 'lock':
-      return <LockControl {...common} />
+      return <LockControl {...common} features={device.features} extras={extras} />
     case 'alarm':
-      return <AlarmControl {...common} />
+      return <AlarmControl {...common} extras={extras} />
     case 'climate':
       return <ClimateControl {...common} />
     case 'fan':
-      return <FanControl {...common} />
+      return <FanControl {...common} extras={extras} />
     case 'brightness':
-      return <BrightnessControl {...common} />
+      return <BrightnessControl {...common} extras={extras} />
     case 'switch':
-      return <SwitchControl {...common} />
+      return <SwitchControl {...common} extras={extras} />
     case 'button':
       return <ButtonControl {...common} />
     case 'media-player':
-      return <MediaPlayerControl {...common} features={device.features} deviceName={device.name} />
+      return <MediaPlayerControl {...common} features={device.features} deviceName={device.name} extras={extras} />
     case 'vacuum':
-      return <VacuumControl {...common} />
+      return <VacuumControl {...common} extras={extras} />
     case 'lawn-mower':
-      return <LawnMowerControl {...common} />
+      return <LawnMowerControl {...common} extras={extras} />
     case 'pet-feeder':
       return <PetFeederControl {...common} />
     case 'humidifier':
@@ -101,7 +108,17 @@ export function PrimaryControl({
   }
 }
 
-export function AccessoryControl({ device }: AccessoryControlComponentProps) {
+/** The kinds whose control draws the row's extras inside its own icon group. */
+const GROUPING_KINDS: ReadonlySet<AccessoryControlPick['kind']> = new Set<AccessoryControlPick['kind']>([
+  'cover', 'valve', 'lock', 'alarm', 'fan', 'brightness', 'switch', 'media-player', 'vacuum', 'lawn-mower',
+])
+
+export interface AccessoryControlWithLeadingProps extends AccessoryControlComponentProps {
+  /** Icon segments drawn FIRST in the device's group (a pet fountain's pump toggle). */
+  readonly leading?: React.ReactNode
+}
+
+export function AccessoryControl({ device, leading = null }: AccessoryControlWithLeadingProps) {
   const pick = pickAccessoryControl(device)
   /**
    * SCOPE GATE (`actuate`). A session that may see this camera but not act on
@@ -121,22 +138,34 @@ export function AccessoryControl({ device }: AccessoryControlComponentProps) {
 
   // A timed run starts the device, so it is gated like an actuator.
   const showTimedRun = hasTimedRun(device.features) && canActuate
+  const showLeading = leading !== null && canActuate
 
-  if (!showTimedRun) {
-    // No motion-trigger → just the primary control (or nothing for kind 'none').
-    if (!showMotion) return showPrimary ? <PrimaryControl device={device} /> : null
-    // Motion-trigger-only accessory (no controllable primary): the toggle IS the row.
-    if (pick.kind === 'none') {
-      return <MotionTriggerToggle deviceId={device.id} online={device.online} />
-    }
+  const hasExtras = showMotion || showTimedRun || showLeading
+  if (!hasExtras) return showPrimary ? <PrimaryControl device={device} /> : null
+  // Motion-trigger-only accessory (no controllable primary, nothing else): the toggle IS the row.
+  if (pick.kind === 'none' && showMotion && !showTimedRun && !showLeading) {
+    return <MotionTriggerToggle deviceId={device.id} online={device.online} />
   }
 
-  // Extras sit alongside the primary control; with no controllable primary they ARE the row.
+  const extras: GroupExtras = {
+    items: (
+      <>
+        {showLeading ? leading : null}
+        {showTimedRun ? <TimedRunItems deviceId={device.id} online={device.online} /> : null}
+        {showMotion ? <MotionTriggerToggle deviceId={device.id} online={device.online} iconOnly /> : null}
+      </>
+    ),
+    after: showTimedRun ? <TimedRunTime deviceId={device.id} online={device.online} /> : null,
+  }
+  const primary = showPrimary && pick.kind !== 'none'
+  if (primary && GROUPING_KINDS.has(pick.kind)) return <PrimaryControl device={device} extras={extras} />
+
+  // The primary has no group of its own (or there is none): the extras are one group beside it.
   return (
     <View style={styles.row}>
-      {showMotion ? <MotionTriggerToggle deviceId={device.id} online={device.online} /> : null}
-      {showTimedRun ? <TimedRunControl deviceId={device.id} online={device.online} /> : null}
-      {showPrimary && pick.kind !== 'none' ? <PrimaryControl device={device} /> : null}
+      <IconButtonGroup>{extras.items}</IconButtonGroup>
+      {extras.after}
+      {primary ? <PrimaryControl device={device} /> : null}
     </View>
   )
 }

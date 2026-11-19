@@ -254,3 +254,19 @@ export function alarmRefusalLine(blocking: readonly NcAlarmOpenDevice[]): AlarmR
     ? { key: 'v2.accessories.alarmRefusedNone' }
     : { key: 'v2.accessories.alarmRefused', devices: blocking }
 }
+
+/** Which glyph an arm mode wears on its icon-only button; every mode a distinct one. */
+export type AlarmModeGlyph = 'house' | 'plane' | 'moon' | 'luggage' | 'shield'
+
+const ALARM_MODE_GLYPHS: Readonly<Record<AlarmArmMode, AlarmModeGlyph>> = {
+  home: 'house',
+  away: 'plane',
+  night: 'moon',
+  vacation: 'luggage',
+  custom_bypass: 'shield',
+}
+
+/** The glyph of an arm mode: home is a house, away a plane, night a moon, vacation a suitcase, custom a shield. */
+export function alarmModeGlyph(mode: AlarmArmMode): AlarmModeGlyph {
+  return ALARM_MODE_GLYPHS[mode]
+}

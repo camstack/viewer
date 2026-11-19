@@ -13,7 +13,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { View, Text, StyleSheet } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import {
-  Power, Lock, LockOpen, ChevronUp, ChevronDown, Square,
+  Power, Lock, LockOpen, DoorOpen, ChevronUp, ChevronDown, Square,
   Sun, Fan, Wind, Zap, RotateCw,
 } from '../../../lib/icons.js'
 import { useTheme } from '../../../theme/theme-provider.js'
@@ -31,6 +31,10 @@ import { createTrailingCommit, type TrailingCommit } from './trailing-commit.js'
 import { FAN_DEFAULT_STEP, stepPercentage } from './fan-logic.js'
 import { formatCoverPosition } from './cover-position.js'
 import { PillButton, IconButton, ControlSpinner, OptionPicker, StepperArrows } from './control-atoms.js'
+import { IconButtonGroup } from '../../ui/IconButtonGroup.js'
+import type { GroupExtras } from './group-extras.js'
+import { useRowArm } from '../../../hero/row-arm.js'
+import { LOCK_OPEN_ACTION, lockOpenAvailable } from '../../../hero/tile-action.js'
 import { BRIGHTNESS_LEVEL, FAN_SPEED, quantityArgs } from '../../../data/quantity-fields.js'
 
 export interface AccessoryControlProps {
@@ -43,7 +47,12 @@ const BRIGHTNESS_STEP = 20
 
 // ── Switch (generic on/off — also non-dimmable lights & sirens) ───────────────
 
-export function SwitchControl({ deviceId, online }: AccessoryControlProps) {
+export interface GroupedControlProps extends AccessoryControlProps {
+  /** The row's "On motion" / timed run, drawn inside this control's button group. */
+  readonly extras?: GroupExtras
+}
+
+export function SwitchControl({ deviceId, online, extras }: GroupedControlProps) {
   const { t } = useTranslation()
   const status = useSwitchStatus(deviceId, online)
   const mutator = useCapMutator(deviceId)
@@ -53,6 +62,25 @@ export function SwitchControl({ deviceId, online }: AccessoryControlProps) {
     void status.refetch()
   }, [mutator, on, status])
   if (status.isLoading && !status.data) return <ControlSpinner />
+  // A switch that carries the motion toggle or a timed run groups its power with them: [power · timer].
+  if (extras !== undefined) {
+    return (
+      <View style={styles.cluster}>
+        <IconButtonGroup>
+          <IconButton
+            icon={Power}
+            label={on ? t('v2.accessories.powerOff') : t('v2.accessories.powerOn')}
+            active={on}
+            disabled={!online || mutator.pending}
+            haptic="action"
+            onPress={() => void toggle()}
+          />
+          {extras.items}
+        </IconButtonGroup>
+        {extras.after}
+      </View>
+    )
+  }
   return (
     <PillButton
       label={on ? t('v2.accessories.on') : t('v2.accessories.off')}
@@ -69,7 +97,7 @@ export function SwitchControl({ deviceId, online }: AccessoryControlProps) {
 
 // ── Brightness (dimmable light: on/off + −/+ level) ──────────────────────────
 
-export function BrightnessControl({ deviceId, online }: AccessoryControlProps) {
+export function BrightnessControl({ deviceId, online, extras }: GroupedControlProps) {
   const { t } = useTranslation()
   const { colors } = useTheme()
   const brightness = useBrightnessStatus(deviceId, online)
@@ -98,43 +126,54 @@ export function BrightnessControl({ deviceId, online }: AccessoryControlProps) {
   const disabled = !online || mutator.pending
   return (
     <View style={styles.cluster}>
-      <IconButton
-        icon={Sun}
-        label={on ? t('v2.accessories.off') : t('v2.accessories.on')}
-        active={on}
-        disabled={disabled}
-        onPress={() => void toggle()}
-      />
-      <IconButton
-        icon={ChevronDown}
-        label={t('v2.accessories.dimDown')}
-        disabled={disabled}
-        onPress={() => void setLevel(level - BRIGHTNESS_STEP)}
-      />
+      <IconButtonGroup>
+        <IconButton
+          icon={Sun}
+          label={on ? t('v2.accessories.off') : t('v2.accessories.on')}
+          active={on}
+          disabled={disabled}
+          onPress={() => void toggle()}
+        />
+        <IconButton
+          icon={ChevronDown}
+          label={t('v2.accessories.dimDown')}
+          disabled={disabled}
+          onPress={() => void setLevel(level - BRIGHTNESS_STEP)}
+        />
+        <IconButton
+          icon={ChevronUp}
+          label={t('v2.accessories.dimUp')}
+          disabled={disabled}
+          onPress={() => void setLevel(level + BRIGHTNESS_STEP)}
+        />
+        {extras?.items}
+      </IconButtonGroup>
       <Text style={[styles.readout, { color: colors.foregroundMuted }]} numberOfLines={1}>
         {`${Math.round(level)}%`}
       </Text>
-      <IconButton
-        icon={ChevronUp}
-        label={t('v2.accessories.dimUp')}
-        disabled={disabled}
-        onPress={() => void setLevel(level + BRIGHTNESS_STEP)}
-      />
+      {extras?.after}
     </View>
   )
 }
 
 // ── Lock (lock / unlock) ──────────────────────────────────────────────────────
 
-export function LockControl({ deviceId, online }: AccessoryControlProps) {
+export interface LockControlProps extends GroupedControlProps {
+  /** The device's wire `features`; `lock-open` offers "Open door" (the hero's own condition for `lock.open`). */
+  readonly features?: readonly string[]
+}
+
+export function LockControl({ deviceId, online, features = [], extras }: LockControlProps) {
   const { t } = useTranslation()
   const status = useLockStatus(deviceId, online)
   const mutator = useCapMutator(deviceId)
-  const state = status.data?.state ?? 'unlocked'
+  const arm = useRowArm()
+  const reported = status.data?.state ?? null
+  const state = reported ?? 'unlocked'
   const transitioning = state === 'locking' || state === 'unlocking'
   const locked = state === 'locked'
   const run = useCallback(
-    async (method: 'lock' | 'unlock') => {
+    async (method: 'lock' | 'unlock' | 'open') => {
       await mutator.run('lockControl', method, {})
       void status.refetch()
     },
@@ -142,36 +181,52 @@ export function LockControl({ deviceId, online }: AccessoryControlProps) {
   )
   if (status.isLoading && !status.data) return <ControlSpinner />
   const disabled = !online || mutator.pending || transitioning
+  const openOffered = lockOpenAvailable(features, reported)
   return (
     <View style={styles.cluster}>
-      <PillButton
-        label={t('v2.accessories.lock')}
-        icon={Lock}
-        active={locked}
-        disabled={disabled}
-        haptic="action"
-        onPress={() => void run('lock')}
-      />
-      <PillButton
-        label={t('v2.accessories.unlock')}
-        icon={LockOpen}
-        active={!locked}
-        disabled={disabled}
-        haptic="action"
-        onPress={() => void run('unlock')}
-      />
+      <IconButtonGroup>
+        <IconButton
+          icon={Lock}
+          label={t('v2.accessories.lock')}
+          active={locked}
+          disabled={disabled}
+          haptic="action"
+          onPress={() => void run('lock')}
+        />
+        <IconButton
+          icon={LockOpen}
+          label={t('v2.accessories.unlock')}
+          active={!locked}
+          disabled={disabled}
+          haptic="action"
+          onPress={() => void run('unlock')}
+        />
+        {openOffered ? (
+          // Releasing the latch is asked like an unlock: no dialog, a second tap inside the window sends it.
+          <IconButton
+            icon={DoorOpen}
+            label={t('v2.accessories.openDoor')}
+            warn={arm.armedId === LOCK_OPEN_ACTION.id}
+            disabled={disabled}
+            haptic="action"
+            onPress={() => arm.press(LOCK_OPEN_ACTION.id, true, () => void run('open'))}
+          />
+        ) : null}
+        {extras?.items}
+      </IconButtonGroup>
+      {extras?.after}
     </View>
   )
 }
 
 // ── Cover & Valve (open / stop / close) ───────────────────────────────────────
 
-export interface PositionControlProps extends AccessoryControlProps {
+export interface PositionControlProps extends GroupedControlProps {
   /** `cover` or `valve` — both share the open/close/stop method surface. */
   readonly capKey: 'cover' | 'valve'
 }
 
-export function CoverControl({ deviceId, online, capKey }: PositionControlProps) {
+export function CoverControl({ deviceId, online, capKey, extras }: PositionControlProps) {
   const { t } = useTranslation()
   const { colors } = useTheme()
   // valve status shape ⊆ cover status (state + position) — useCoverStatus guards
@@ -204,30 +259,34 @@ export function CoverControl({ deviceId, online, capKey }: PositionControlProps)
           {openPct}
         </Text>
       ) : null}
-      <IconButton
-        icon={ChevronUp}
-        label={t('v2.accessories.open')}
-        active={state === 'open' || state === 'opening'}
-        // The move takes ten to twenty seconds, and until it ends this button
-        // is the only evidence the command landed.
-        pulsing={state === 'opening'}
-        disabled={disabled}
-        onPress={() => void run('open')}
-      />
-      <IconButton
-        icon={Square}
-        label={t('v2.accessories.stop')}
-        disabled={disabled}
-        onPress={() => void run('stop')}
-      />
-      <IconButton
-        icon={ChevronDown}
-        label={t('v2.accessories.close')}
-        active={state === 'closed' || state === 'closing'}
-        pulsing={state === 'closing'}
-        disabled={disabled}
-        onPress={() => void run('close')}
-      />
+      <IconButtonGroup>
+        <IconButton
+          icon={ChevronUp}
+          label={t('v2.accessories.open')}
+          active={state === 'open' || state === 'opening'}
+          // The move takes ten to twenty seconds, and until it ends this button
+          // is the only evidence the command landed.
+          pulsing={state === 'opening'}
+          disabled={disabled}
+          onPress={() => void run('open')}
+        />
+        <IconButton
+          icon={Square}
+          label={t('v2.accessories.stop')}
+          disabled={disabled}
+          onPress={() => void run('stop')}
+        />
+        <IconButton
+          icon={ChevronDown}
+          label={t('v2.accessories.close')}
+          active={state === 'closed' || state === 'closing'}
+          pulsing={state === 'closing'}
+          disabled={disabled}
+          onPress={() => void run('close')}
+        />
+        {extras?.items}
+      </IconButtonGroup>
+      {extras?.after}
     </View>
   )
 }
@@ -413,7 +472,7 @@ export function ClimateControl({ deviceId, online }: AccessoryControlProps) {
 
 // ── Fan (on/off via switch + speed stepper + optional oscillate) ──────────────
 
-export function FanControl({ deviceId, online }: AccessoryControlProps) {
+export function FanControl({ deviceId, online, extras }: GroupedControlProps) {
   const { t } = useTranslation()
   const { colors } = useTheme()
   const sw = useSwitchStatus(deviceId, online)
@@ -478,13 +537,41 @@ export function FanControl({ deviceId, online }: AccessoryControlProps) {
   const disabled = !online || mutator.pending
   return (
     <View style={[styles.cluster, styles.wrapCluster]}>
-      <IconButton
-        icon={Fan}
-        label={on ? t('v2.accessories.off') : t('v2.accessories.on')}
-        active={on}
-        disabled={disabled}
-        onPress={() => void toggle()}
-      />
+      <IconButtonGroup>
+        <IconButton
+          icon={Fan}
+          label={on ? t('v2.accessories.off') : t('v2.accessories.on')}
+          active={on}
+          disabled={disabled}
+          onPress={() => void toggle()}
+        />
+        {oscillating !== null ? (
+          <IconButton
+            icon={Wind}
+            label={t('v2.accessories.oscillate')}
+            active={oscillating}
+            disabled={disabled}
+            onPress={() => void toggleOscillate()}
+          />
+        ) : null}
+        <IconButton
+          icon={ChevronDown}
+          label={t('v2.accessories.speedDown')}
+          disabled={disabled}
+          onPress={() => void setSpeed(-1)}
+        />
+        <IconButton
+          icon={ChevronUp}
+          label={t('v2.accessories.speedUp')}
+          disabled={disabled}
+          onPress={() => void setSpeed(1)}
+        />
+        {extras?.items}
+      </IconButtonGroup>
+      <Text style={[styles.readout, { color: colors.foregroundMuted }]} numberOfLines={1}>
+        {`${Math.round(speed)}%`}
+      </Text>
+      {extras?.after}
       {presetOptions.length > 0 ? (
         <OptionPicker
           label={t('v2.accessories.preset')}
@@ -503,30 +590,6 @@ export function FanControl({ deviceId, online }: AccessoryControlProps) {
           options={directionOptions}
           disabled={disabled}
           onSelect={(next) => void setDirection(next as 'forward' | 'reverse')}
-        />
-      ) : null}
-      <IconButton
-        icon={ChevronDown}
-        label={t('v2.accessories.speedDown')}
-        disabled={disabled}
-        onPress={() => void setSpeed(-1)}
-      />
-      <Text style={[styles.readout, { color: colors.foregroundMuted }]} numberOfLines={1}>
-        {`${Math.round(speed)}%`}
-      </Text>
-      <IconButton
-        icon={ChevronUp}
-        label={t('v2.accessories.speedUp')}
-        disabled={disabled}
-        onPress={() => void setSpeed(1)}
-      />
-      {oscillating !== null ? (
-        <IconButton
-          icon={Wind}
-          label={t('v2.accessories.oscillate')}
-          active={oscillating}
-          disabled={disabled}
-          onPress={() => void toggleOscillate()}
         />
       ) : null}
     </View>
@@ -553,7 +616,7 @@ export function ButtonControl({ deviceId, online }: AccessoryControlProps) {
 
 const styles = StyleSheet.create({
   cluster: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm },
-  wrapCluster: { flexWrap: 'wrap' },
+  wrapCluster: { flexWrap: 'wrap', justifyContent: 'flex-end' },
   coverPct: { fontSize: 12, fontWeight: '600', minWidth: 34, textAlign: 'right' },
   readout: { fontSize: 12, fontWeight: '600', minWidth: 34, textAlign: 'center' },
   /** Setpoint over the current temperature — two short lines that together stay

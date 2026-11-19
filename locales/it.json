@@ -2977,7 +2977,8 @@
         },
         "cancelFailedTitle": "Impossibile annullare il timer",
         "cancelFailed": "Il timer è ancora attivo."
-      }
+      },
+      "openDoor": "Apri porta"
     },
     "updates": {
       "install": "Riavvia ora",
@@ -4440,7 +4441,13 @@
       "stepUp": "Aumenta {{name}}",
       "editValue": "Modifica {{name}}",
       "save": "Salva",
-      "confirmOffWhileRunning": "Il dispositivo è in funzione. Spegnerlo comunque?"
+      "confirmOffWhileRunning": "Il dispositivo è in funzione. Spegnerlo comunque?",
+      "tilePress": "Cambia stato di {{name}}",
+      "tapAgain": {
+        "unlock": "Tocca di nuovo per sbloccare",
+        "open": "Tocca di nuovo per aprire la porta",
+        "confirm": "Tocca di nuovo per confermare"
+      }
     },
     "powerSource": {
       "title": "Alimentazione",

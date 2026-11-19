@@ -13,7 +13,7 @@
  */
 import { useCallback, useEffect, useMemo } from 'react'
 import { useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query'
-import type { HeroAction, HeroModel, HeroRowModel } from '@camstack/types'
+import type { HeroAction, HeroCall, HeroModel, HeroRowModel } from '@camstack/types'
 import { useConnection } from '../connection/ConnectionProvider.js'
 import { capQuery } from '../data/cap-query.js'
 import { useCapMutator } from '../data/use-accessory-controls.js'
@@ -107,6 +107,10 @@ export interface HeroCaller {
   readonly error: string | null
   /** Send a hero action's cap call (the device id is added), then re-read the hero. */
   readonly runAction: (action: HeroAction) => Promise<void>
+  /** Send a cap call that is not (or not only) a hero action — a tile press the row model does not list — then re-read. */
+  readonly runCall: (call: HeroCall) => Promise<void>
+  /** Read the hero back now; a press that waits for the device's report polls with it. */
+  readonly refresh: () => Promise<void>
   /** Send a value to a slider / picker's call. */
   readonly runValue: (call: { cap: string; method: string; valueArg: string }, value: string | number) => Promise<void>
 }
@@ -118,13 +122,14 @@ export function useHeroCaller(deviceId: number): HeroCaller {
     () => queryClient.invalidateQueries({ queryKey: HERO_QUERY_ROOT }),
     [queryClient],
   )
-  const runAction = useCallback(
-    async (action: HeroAction): Promise<void> => {
-      await mutator.run(capRouterKey(action.call.cap), action.call.method, action.call.args)
+  const runCall = useCallback(
+    async (call: HeroCall): Promise<void> => {
+      await mutator.run(capRouterKey(call.cap), call.method, call.args)
       await reread()
     },
     [mutator, reread],
   )
+  const runAction = useCallback((action: HeroAction): Promise<void> => runCall(action.call), [runCall])
   const runValue = useCallback(
     async (call: { cap: string; method: string; valueArg: string }, value: string | number): Promise<void> => {
       await mutator.run(capRouterKey(call.cap), call.method, { [call.valueArg]: value })
@@ -132,5 +137,5 @@ export function useHeroCaller(deviceId: number): HeroCaller {
     },
     [mutator, reread],
   )
-  return { pending: mutator.pending, error: mutator.error, runAction, runValue }
+  return { pending: mutator.pending, error: mutator.error, runAction, runCall, refresh: reread, runValue }
 }

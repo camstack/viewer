@@ -18,7 +18,7 @@ import {
 } from '../../../data/timed-run.js'
 import { SPACING, TABULAR } from '../../../theme/tokens.js'
 import { useTheme } from '../../../theme/theme-provider.js'
-import { PillButton } from './control-atoms.js'
+import { IconButton, PillButton } from './control-atoms.js'
 
 export interface TimedRunControlProps {
   readonly deviceId: number
@@ -118,6 +118,48 @@ export function TimedRunArmedGroup({ left, disabled, onStop, onRestart }: TimedR
       </Text>
       <PillButton label={t('v2.accessories.timedRun.restart')} icon={RotateCcw} disabled={disabled} haptic="action" onPress={onRestart} />
     </View>
+  )
+}
+
+/**
+ * The timed run as segments of the device's icon group: a timer while idle, and
+ * stop · restart while armed. The time left is `TimedRunTime`, drawn beside the group.
+ */
+export function TimedRunItems({ deviceId, online }: TimedRunControlProps) {
+  const { t } = useTranslation()
+  const { quickRun, left, busy, start, stop, restart } = useTimedRunController(deviceId, online)
+  if (quickRun === null) return null
+  if (left !== null) {
+    return (
+      <>
+        <IconButton label={t('v2.accessories.timedRun.stop')} icon={Square} active disabled={busy} onPress={() => void stop()} />
+        <IconButton label={t('v2.accessories.timedRun.restart')} icon={RotateCcw} disabled={busy} haptic="action" onPress={() => void restart()} />
+      </>
+    )
+  }
+  return (
+    <IconButton
+      label={t('v2.accessories.timedRun.quickRun', {
+        duration: quickRun.duration,
+        unit: t(`v2.accessories.timedRun.unit.${quickRun.unit}`),
+      })}
+      icon={Timer}
+      disabled={busy}
+      haptic="action"
+      onPress={() => void start()}
+    />
+  )
+}
+
+/** The time left of an armed timed run, as text; nothing while idle. */
+export function TimedRunTime({ deviceId, online }: TimedRunControlProps) {
+  const { colors } = useTheme()
+  const { left } = useTimedRunController(deviceId, online)
+  if (left === null) return null
+  return (
+    <Text style={[styles.time, TABULAR, { color: colors.foreground }]} numberOfLines={1}>
+      {formatRemaining(left)}
+    </Text>
   )
 }
 

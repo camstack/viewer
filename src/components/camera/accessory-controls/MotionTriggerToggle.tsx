@@ -16,15 +16,17 @@ import React, { useCallback } from 'react'
 import { Activity } from '../../../lib/icons.js'
 import { useTranslation } from 'react-i18next'
 import { useMotionTriggerStatus, useCapMutator } from '../../../data/use-accessory-controls.js'
-import { PillButton, ControlSpinner } from './control-atoms.js'
+import { IconButton, PillButton, ControlSpinner } from './control-atoms.js'
 
 export interface MotionTriggerToggleProps {
   readonly deviceId: number
   /** False when the accessory is offline — the toggle renders disabled. */
   readonly online: boolean
+  /** Icon-only: a segment of the device's `IconButtonGroup` (the label stays as the accessibility label). */
+  readonly iconOnly?: boolean
 }
 
-export function MotionTriggerToggle({ deviceId, online }: MotionTriggerToggleProps) {
+export function MotionTriggerToggle({ deviceId, online, iconOnly = false }: MotionTriggerToggleProps) {
   const { t } = useTranslation()
   const status = useMotionTriggerStatus(deviceId, online)
   const mutator = useCapMutator(deviceId)
@@ -34,6 +36,17 @@ export function MotionTriggerToggle({ deviceId, online }: MotionTriggerTogglePro
     void status.refetch()
   }, [mutator, on, status])
   if (status.isLoading && !status.data) return <ControlSpinner />
+  if (iconOnly) {
+    return (
+      <IconButton
+        label={t('v2.accessories.onMotion')}
+        icon={Activity}
+        active={on}
+        disabled={!online || mutator.pending}
+        onPress={() => void toggle()}
+      />
+    )
+  }
   return (
     <PillButton
       label={t('v2.accessories.onMotion')}

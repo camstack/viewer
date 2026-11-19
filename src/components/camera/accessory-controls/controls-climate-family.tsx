@@ -10,12 +10,12 @@
 import React, { useCallback } from 'react'
 import { View, Text, StyleSheet } from 'react-native'
 import { useTranslation } from 'react-i18next'
-import { Power, ChevronUp, ChevronDown, Droplet } from '../../../lib/icons.js'
+import { Power, ChevronUp, ChevronDown, Droplet, House } from '../../../lib/icons.js'
 import { useTheme } from '../../../theme/theme-provider.js'
 import { SPACING } from '../../../theme/tokens.js'
 import { useCapMutator } from '../../../data/use-accessory-controls.js'
 import { useHumidifierStatus, useWaterHeaterStatus } from '../../../data/use-accessory-controls-ext.js'
-import { IconButton, ControlSpinner, OptionPicker, PillButton } from './control-atoms.js'
+import { IconButton, ControlSpinner, OptionPicker } from './control-atoms.js'
 import { stepValue } from './numeric-logic.js'
 import type { AccessoryControlProps } from './controls.js'
 
@@ -181,9 +181,9 @@ export function WaterHeaterControl({ deviceId, online }: AccessoryControlProps) 
         />
       ) : null}
       {away !== null ? (
-        <PillButton
+        <IconButton
+          icon={House}
           label={t('v2.accessories.away')}
-          icon={Power}
           active={away}
           disabled={disabled}
           onPress={() => void toggleAway()}

@@ -2977,7 +2977,8 @@
         },
         "cancelFailedTitle": "Could not cancel the timer",
         "cancelFailed": "The timer is still running."
-      }
+      },
+      "openDoor": "Open door"
     },
     "updates": {
       "install": "Restart now",
@@ -4440,7 +4441,13 @@
       "stepUp": "Increase {{name}}",
       "editValue": "Edit {{name}}",
       "save": "Save",
-      "confirmOffWhileRunning": "The device is running. Turn it off anyway?"
+      "confirmOffWhileRunning": "The device is running. Turn it off anyway?",
+      "tilePress": "Toggle {{name}}",
+      "tapAgain": {
+        "unlock": "Tap again to unlock",
+        "open": "Tap again to open the door",
+        "confirm": "Tap again to confirm"
+      }
     },
     "powerSource": {
       "title": "Power",

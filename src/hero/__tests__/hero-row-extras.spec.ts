@@ -5,7 +5,7 @@
  * remote button, never sent to the hub. An older hub sends no `extras`.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, screen } from '@testing-library/react'
+import { cleanup, fireEvent, screen, within } from '@testing-library/react'
 import React from 'react'
 import type { HeroAction, HeroControl, HeroRowModel } from '@camstack/types'
 import { mountScreen } from '../../testing/mount.js'
@@ -80,7 +80,7 @@ describe('an automation row', () => {
   })
   const run: HeroControl = { kind: 'action', action: { ...act('automation.run'), label: { en: 'Run now', it: 'Esegui ora' } } }
 
-  it('draws Run now and the enabled switch once each, the switch named by what it does', () => {
+  it('draws Run now and the enabled switch once each, as one icon group, the switch named by what it does', () => {
     mountScreen(
       React.createElement(HeroRowBody, {
         deviceId: 4,
@@ -92,10 +92,9 @@ describe('an automation row', () => {
       }),
       { hub: {} },
     )
-    expect(screen.getAllByTestId('hero-action-automation.run')).toHaveLength(1)
-    const power = screen.getAllByTestId('hero-power-automation.enabled')
-    expect(power).toHaveLength(1)
-    expect(power[0]?.getAttribute('aria-label')).toBe('automation.disable')
+    const group = screen.getByRole('toolbar')
+    expect(within(group).getAllByLabelText('Run now')).toHaveLength(1)
+    expect(within(group).getAllByLabelText('automation.disable')).toHaveLength(1)
   })
 })
 

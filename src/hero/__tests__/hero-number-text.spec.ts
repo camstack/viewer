@@ -51,6 +51,8 @@ const stubCaller: HeroCaller = {
   pending: false,
   error: null,
   runAction: async () => undefined,
+  runCall: async () => undefined,
+  refresh: async () => undefined,
   runValue,
 }
 

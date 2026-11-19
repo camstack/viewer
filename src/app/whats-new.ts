@@ -31,6 +31,20 @@ export interface WhatsNewEntry {
 // i18n-ok: release notes carry their own `en` + `it` text per entry (typed, held by whats-new.spec.ts)
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.727',
+    date: '2026-11-19',
+    notes: {
+      en: [
+        'Tap a device icon to switch it; buttons of one device now sit in one group.',
+        'Locks get an Open door button; both ask for a second tap to confirm.',
+      ],
+      it: [
+        "Tocca l'icona di un dispositivo per cambiarne stato; i pulsanti sono raggruppati.",
+        'Le serrature hanno Apri porta; entrambe chiedono un secondo tocco per confermare.',
+      ],
+    },
+  },
+  {
     version: '1.0.726',
     date: '2026-11-18',
     notes: {
