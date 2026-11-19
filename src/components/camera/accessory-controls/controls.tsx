@@ -536,7 +536,8 @@ export function FanControl({ deviceId, online, extras }: GroupedControlProps) {
   if (fan.isLoading && !fan.data) return <ControlSpinner />
   const disabled = !online || mutator.pending
   return (
-    <View style={[styles.cluster, styles.wrapCluster]}>
+    <View style={styles.fanColumn}>
+      <View style={styles.cluster}>
       <IconButtonGroup>
         <IconButton
           icon={Fan}
@@ -572,6 +573,8 @@ export function FanControl({ deviceId, online, extras }: GroupedControlProps) {
         {`${Math.round(speed)}%`}
       </Text>
       {extras?.after}
+      </View>
+      <View style={[styles.cluster, styles.wrapCluster]}>
       {presetOptions.length > 0 ? (
         <OptionPicker
           label={t('v2.accessories.preset')}
@@ -592,6 +595,7 @@ export function FanControl({ deviceId, online, extras }: GroupedControlProps) {
           onSelect={(next) => void setDirection(next as 'forward' | 'reverse')}
         />
       ) : null}
+      </View>
     </View>
   )
 }
@@ -616,6 +620,8 @@ export function ButtonControl({ deviceId, online }: AccessoryControlProps) {
 
 const styles = StyleSheet.create({
   cluster: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm },
+  /** Group and readout on one line, the preset and direction pickers under it: the name keeps its room. */
+  fanColumn: { alignItems: 'flex-end', gap: SPACING.xs },
   wrapCluster: { flexWrap: 'wrap', justifyContent: 'flex-end' },
   coverPct: { fontSize: 12, fontWeight: '600', minWidth: 34, textAlign: 'right' },
   readout: { fontSize: 12, fontWeight: '600', minWidth: 34, textAlign: 'center' },

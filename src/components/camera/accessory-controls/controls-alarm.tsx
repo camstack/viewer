@@ -48,7 +48,7 @@ import {
   type AlarmBypassedView,
   type AlarmExcludedView,
 } from './alarm-control-model.js'
-import { ControlSpinner, IconButton } from './control-atoms.js'
+import { ControlSpinner, IconButton, PillButton } from './control-atoms.js'
 import { IconButtonGroup } from '../../ui/IconButtonGroup.js'
 import type { GroupExtras } from './group-extras.js'
 
@@ -268,7 +268,8 @@ export function AlarmControl({ deviceId, online, extras }: AlarmControlProps) {
           <Text style={[styles.note, { color: colors.foreground }]}>
             {refusalText(model.refusal.blocking, t)}
           </Text>
-          <IconButton
+          {/* A warning override keeps its word: labelled, never icon-only. */}
+          <PillButton
             label={t('v2.accessories.armAnyway')}
             icon={ShieldAlert}
             disabled={!online || armBusy}

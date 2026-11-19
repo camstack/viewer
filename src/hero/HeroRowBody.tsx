@@ -244,11 +244,11 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  label: { flex: 1, minWidth: 0, gap: 2 },
+  label: { flex: 1, minWidth: 100, gap: 2 },
   name: { fontSize: TYPOGRAPHY.size.md, fontWeight: TYPOGRAPHY.weight.medium },
   caption: { fontSize: TYPOGRAPHY.size.xs },
   // Shrinks (and wraps its own cluster) before it can squeeze the name to nothing.
-  control: { flexShrink: 1, maxWidth: '60%' },
+  control: { flexShrink: 1, maxWidth: '55%' },
   controls: { flexShrink: 0, flexDirection: 'row', alignItems: 'center', gap: SPACING.xs },
   remote: { width: 36, height: 36, borderRadius: 18, borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center' },
   fact: { flexDirection: 'row', alignItems: 'center', gap: SPACING.xs, flexShrink: 0, maxWidth: 120 },

@@ -37,6 +37,8 @@ export function useTileCommand({ action, stateKey, caller, arm }: UseTileCommand
   const [settle, setSettle] = useState<SettleState>(SETTLED)
   const [shake, setShake] = useState(0)
   const [reported, setReported] = useState(0)
+  // True once THIS press's call has answered; only then is `caller.error` this press's verdict.
+  const [callDone, setCallDone] = useState(false)
   const { refresh, error } = caller
 
   // Adjusted during render (React's pattern for state derived from props), so
@@ -45,8 +47,9 @@ export function useTileCommand({ action, stateKey, caller, arm }: UseTileCommand
     if (settle.pressedAt !== stateKey) {
       setSettle(SETTLED)
       setReported((n) => n + 1)
-    } else if (error !== null) {
-      // The call itself was refused or never left: no report is coming.
+    } else if (callDone && error !== null) {
+      // This press's call was refused or never left: no report is coming. (An error left by
+      // another control of the row is not read before the call has answered.)
       setSettle(SETTLED)
       setShake((n) => n + 1)
     }
@@ -77,10 +80,9 @@ export function useTileCommand({ action, stateKey, caller, arm }: UseTileCommand
     if (settle.phase === 'pending') return
     arm.press(action.id, action.confirm !== null, () => {
       hapticAction()
-      // The call goes first: it clears the previous error in the same batch the
-      // pending state is set in, so an old refusal never fails this press.
-      void caller.runCall(action.call)
+      setCallDone(false)
       setSettle(pressed(stateKey))
+      void caller.runCall(action.call).then(() => setCallDone(true))
     })
   }, [settle.phase, arm, action, stateKey, caller])
 
