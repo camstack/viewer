@@ -2228,7 +2228,10 @@
         "ruleName": "Nome della regola",
         "ruleId": "Id della regola",
         "brokenReason": "Perché la regola è rotta",
-        "offendingIds": "Dispositivi o destinazioni eliminati"
+        "offendingIds": "Dispositivi o destinazioni eliminati",
+        "faultCode": "Codice guasto",
+        "faultLabel": "Nome del guasto",
+        "faults": "Guasti"
       },
       "templateField": {
         "groups": {

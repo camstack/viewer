@@ -31,6 +31,20 @@ export interface WhatsNewEntry {
 // i18n-ok: release notes carry their own `en` + `it` text per entry (typed, held by whats-new.spec.ts)
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.728',
+    date: '2026-11-20',
+    notes: {
+      en: [
+        'A battery camera starts playing by itself when it is awake.',
+        'Notification rules keep fault codes and the alert action when saved here.',
+      ],
+      it: [
+        'Una telecamera a batteria parte da sola quando è sveglia.',
+        'Le regole di notifica mantengono codici guasto e azione dell’allarme al salvataggio.',
+      ],
+    },
+  },
+  {
     version: '1.0.727',
     date: '2026-11-19',
     notes: {

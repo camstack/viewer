@@ -244,6 +244,12 @@ export const NcSystemEventConditionSchema = z.object({
    * Unmirrored, a phone save strips them (`formToInput` re-emits the condition).
    */
   commandActions: z.array(z.string().min(1)).min(1).optional(),
+  /**
+   * `device-attention-*` only: fault codes this rule speaks about (declared by
+   * the integration through `error.listFaultTypes`). Absent or empty = any fault.
+   * Unmirrored, a phone save strips them.
+   */
+  faultCodes: z.array(z.string().min(1)).optional(),
   /** `device-command` only: how the command settled. */
   commandOutcomes: z.array(z.enum(NC_COMMAND_OUTCOMES)).min(1).optional(),
   /** `device-command` only: who asked. */
@@ -920,6 +926,8 @@ export const NcRuleInputSchema = z.object({
   groupWithinSec: z.number().int().min(0).max(NC_GROUP_WITHIN_MAX_SEC).optional(),
   /** Mirror of the hub's `askVerdict` (#243): absent and `false` mean off. */
   askVerdict: z.boolean().optional(),
+  /** Mirror of the hub's `offerAlertAction`: absent = on, `false` = the alert's own action is not offered. Unmirrored, a phone save would drop it. */
+  offerAlertAction: z.boolean().optional(),
   /** Mirror of the hub's operator `tags` (D1054). Unmirrored, a phone save would drop them. */
   tags: NcRuleTagsSchema.optional(),
 })
@@ -971,6 +979,8 @@ export const NcRulePatchSchema = z.object({
   groupWithinSec: z.number().int().min(0).max(NC_GROUP_WITHIN_MAX_SEC).optional(),
   /** Mirror of the hub's `askVerdict` (#243): absent and `false` mean off. */
   askVerdict: z.boolean().optional(),
+  /** Mirror of the hub's `offerAlertAction`: absent = on, `false` = the alert's own action is not offered. Unmirrored, a phone save would drop it. */
+  offerAlertAction: z.boolean().optional(),
   /** Mirror of the hub's operator `tags` (D1054). Unmirrored, a phone save would drop them. */
   tags: NcRuleTagsSchema.optional(),
 })

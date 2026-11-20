@@ -2228,7 +2228,10 @@
         "ruleName": "Rule name",
         "ruleId": "Rule id",
         "brokenReason": "Why the rule is broken",
-        "offendingIds": "Deleted devices or destinations"
+        "offendingIds": "Deleted devices or destinations",
+        "faultCode": "Fault code",
+        "faultLabel": "Fault name",
+        "faults": "Faults"
       },
       "templateField": {
         "groups": {

@@ -1028,6 +1028,8 @@ export interface NcSystemEventFilterVisibility {
   readonly commandActions: boolean
   readonly commandOutcomes: boolean
   readonly commandActorKinds: boolean
+  /** `device-attention-*` fault codes → `faultCodes`; carried through a phone save, authored on the admin. */
+  readonly faultCodes: boolean
 }
 
 /**
