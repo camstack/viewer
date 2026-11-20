@@ -13,7 +13,8 @@ export interface BatteryStatus {
   /** The charge, 0–100 (`level` on the hub; an older hub calls it `percentage`). */
   readonly level: number
   readonly charging: 'dc' | 'solar' | 'none' | 'unknown'
-  readonly sleeping: boolean
+  /** `null` when the hub did not say — unknown is not awake. */
+  readonly sleeping: boolean | null
   readonly binary?: boolean
 }
 
@@ -26,14 +27,14 @@ export function toBatteryStatus(raw: unknown): BatteryStatus | null {
   const battery: {
     level: number
     charging: BatteryStatus['charging']
-    sleeping: boolean
+    sleeping: boolean | null
     binary?: boolean
   } = {
     level,
     // 'none' is a NEGATIVE the hub reported; anything it did not say is unknown.
     charging:
       charging === 'dc' || charging === 'solar' || charging === 'none' ? charging : 'unknown',
-    sleeping: raw.sleeping === true,
+    sleeping: typeof raw.sleeping === 'boolean' ? raw.sleeping : null,
   }
   if (raw.binary === true) battery.binary = true
   return battery

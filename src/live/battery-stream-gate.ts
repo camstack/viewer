@@ -1,19 +1,38 @@
 /**
- * battery-stream-gate — a battery camera is never dialled without being asked.
+ * battery-stream-gate — a sleeping camera is never dialled without being asked.
  *
  * ## The cost this exists to stop paying
  *
  * Opening a camera MOUNTS `LiveView`, and mounting is starting: there is no
  * `autoStart` prop and no `start()` on `LiveViewHandle`, by design. On a wired
- * camera that is exactly right. On a battery camera it is an act with a price
- * the operator did not agree to — the hub wakes the firmware out of low-power
- * mode to serve the stream, and every accidental open (a mis-tap in the camera
- * list, a deep link, a back-navigation that remounts the screen) spends real
- * battery. The operator's words: "deve partire in pausa per non svegliarla
- * involontariamente, l'utente deve premere play per far partire lo stream e di
- * conseguenza svegliarla".
+ * camera, or a battery camera that is already awake, that is exactly right. On
+ * a camera that is ASLEEP it is an act with a price the operator did not agree
+ * to — the hub wakes the firmware out of low-power mode to serve the stream,
+ * and every accidental open (a mis-tap in the camera list, a deep link, a
+ * back-navigation that remounts the screen) spends real battery. The
+ * operator's words: "deve partire in pausa per non svegliarla involontariamente,
+ * l'utente deve premere play per far partire lo stream e di conseguenza
+ * svegliarla".
  *
  * So the pause is DERIVED, never latched, and the play button is the wake.
+ *
+ * ## The rule: auto-play depends on the SLEEPING STATE, not on the battery
+ *
+ * With no operator choice yet, a camera is held when it is battery-powered AND
+ * its sleep state is not known to be awake: `sleeping === true`, or `sleeping
+ * === null` (the battery query has not answered, failed, or carried no
+ * `sleeping`). Unknown holds — it must never auto-dial. A battery camera known
+ * to be awake (`sleeping === false`) auto-plays like a wired one.
+ *
+ * ## The first known state decides; a later sleep never re-dials
+ *
+ * The default is decided per screen/tile mount from the FIRST known sleeping
+ * state ({@link firstKnownSleeping} latches it). A camera that falls asleep
+ * WHILE streaming keeps its decision: the gate does not flip to held and tear
+ * the running stream down (the hub closes it on its own), and a gate that
+ * re-derived on every `sleeping` change would also re-dial in a loop as the
+ * camera wakes and sleeps. A camera first seen asleep stays held until the
+ * operator presses play.
  *
  * ## Why `cameraKnown` is a separate input, and why it holds
  *
@@ -33,10 +52,9 @@
  * ## Why the operator's choice wins in BOTH directions
  *
  * Once they have touched the transport, the gate is out of the way entirely: a
- * battery camera the operator started stays started across re-renders, and one
- * they paused stays paused. A rule that kept re-asserting the initial pause
- * would fight the play button — the exact shape of a control that "does
- * nothing".
+ * camera the operator started stays started across re-renders, and one they
+ * paused stays paused. A rule that kept re-asserting the initial pause would
+ * fight the play button — the exact shape of a control that "does nothing".
  */
 
 export interface LiveStreamGateInput {
@@ -49,32 +67,63 @@ export interface LiveStreamGateInput {
   readonly cameraKnown: boolean
   /** That answer carried `battery-operated`. */
   readonly batteryPowered: boolean
+  /**
+   * The camera's sleep state from the battery status: `true` asleep, `false`
+   * awake, `null` unknown (not answered, failed, or the field was absent).
+   * Meaningful only for a battery camera; use the LATCHED value
+   * ({@link firstKnownSleeping}) so a later sleep does not flip the gate.
+   */
+  readonly sleeping: boolean | null
+}
+
+/**
+ * Latch the first KNOWN sleeping state per camera. `known` carries the live
+ * value (`null` = unknown); an id already latched is never changed, and the
+ * same object is returned when nothing new was learned (cheap to compare).
+ */
+export function firstKnownSleeping(
+  latched: Readonly<Record<number, boolean>>,
+  known: Readonly<Record<number, boolean | null>>,
+): Readonly<Record<number, boolean>> {
+  let next: Record<number, boolean> | null = null
+  for (const [key, value] of Object.entries(known)) {
+    const id = Number(key)
+    if (value === null || latched[id] !== undefined) continue
+    next ??= { ...latched }
+    next[id] = value
+  }
+  return next ?? latched
 }
 
 /** Whether the live stream must stay unmounted (poster shown) right now. */
 export function resolveLivePaused(input: LiveStreamGateInput): boolean {
   if (input.operatorChoice !== null) return input.operatorChoice
   if (!input.cameraKnown) return true
-  return input.batteryPowered
+  return input.batteryPowered && input.sleeping !== false
 }
 
 /**
- * True when the picture is held BECAUSE of the battery rule and the operator
- * has not yet pressed play — the one state that earns the play disc and the
- * "this camera runs on battery" hint.
+ * True when the picture is held because the camera sleeps (or its sleep state
+ * is not yet known) and the operator has not yet pressed play — the one state
+ * that earns the play disc.
  *
  * Deliberately narrower than {@link resolveLivePaused}: a camera the operator
- * paused themselves needs no explanation (they did it), and a camera we have
- * not identified yet must not be described as battery-powered when it may be
- * mains-wired.
+ * paused themselves needs no explanation (they did it), and a camera whose
+ * list entry has not arrived must not be described as battery-powered when it
+ * may be mains-wired.
  */
 export function isBatteryHold(input: LiveStreamGateInput): boolean {
-  return input.operatorChoice === null && input.cameraKnown && input.batteryPowered
+  return (
+    input.operatorChoice === null &&
+    input.cameraKnown &&
+    input.batteryPowered &&
+    input.sleeping !== false
+  )
 }
 
 /**
  * Whether `LiveView` may mount. Mounting IS starting the WebRTC peer, and
- * recorded playback rides that same peer — so a held battery camera that
+ * recorded playback rides that same peer — so a held (sleeping or unknown) camera that
  * mounts "just to scrub" is already awake.
  *
  * Play is the only live wake. A first scrub (seeking, no playhead) stays on
@@ -131,7 +180,7 @@ export function shouldMountLiveView(input: LiveViewMountInput): boolean {
 
 /**
  * Returning to the live edge remounts the player on a camera that is allowed
- * to stream. On a held battery camera it is a wake: the timeline snaps home,
+ * to stream. On a held camera it is a wake: the timeline snaps home,
  * the poster stays, nothing is negotiated.
  */
 export function shouldDialLiveOnGoLive(liveHeld: boolean): boolean {
@@ -149,14 +198,14 @@ export function shouldDialLiveOnGoLive(liveHeld: boolean): boolean {
  *
  * Two sets rather than one, because a single "paused" set cannot express the
  * difference the gate is built on. `pausedIds` is "the operator stopped this";
- * `startedIds` is "the operator started this", which a battery camera needs
- * because its DEFAULT is stopped — and dropping it from `pausedIds` would only
+ * `startedIds` is "the operator started this", which a tile held by default
+ * (asleep or unknown) needs because its DEFAULT is stopped — and dropping it from `pausedIds` would only
  * return it to that default, so the play button would appear to do nothing.
  */
 export interface GridTransport {
   /** Tiles the operator explicitly paused. */
   readonly pausedIds: ReadonlySet<number>
-  /** Battery tiles the operator explicitly started (their wake was asked for). */
+  /** Held-by-default tiles the operator explicitly started (their wake was asked for). */
   readonly startedIds: ReadonlySet<number>
 }
 
@@ -168,6 +217,30 @@ export function tileOperatorChoice(transport: GridTransport, deviceId: number): 
   return null
 }
 
+/** One wall camera as the gate sees it. */
+export interface GateCamera {
+  readonly id: number
+  readonly batteryPowered: boolean
+  /** Latched sleep state ({@link firstKnownSleeping}); `null` = unknown. */
+  readonly sleeping: boolean | null
+}
+
+/** Ids held by DEFAULT (before any operator choice): asleep or unknown battery cameras. */
+export function defaultHeldIds(cameras: readonly GateCamera[]): ReadonlySet<number> {
+  return new Set(
+    cameras
+      .filter((camera) =>
+        resolveLivePaused({
+          operatorChoice: null,
+          cameraKnown: true,
+          batteryPowered: camera.batteryPowered,
+          sleeping: camera.sleeping,
+        }),
+      )
+      .map((camera) => camera.id),
+  )
+}
+
 /**
  * Ids whose tile must NOT be streaming — what the wall hands the embed.
  *
@@ -175,47 +248,41 @@ export function tileOperatorChoice(transport: GridTransport, deviceId: number): 
  * list produced it.
  */
 export function heldTileIds(
-  cameras: readonly { readonly id: number; readonly batteryPowered: boolean }[],
+  cameras: readonly GateCamera[],
   transport: GridTransport,
 ): readonly number[] {
+  const byDefault = defaultHeldIds(cameras)
   return cameras
-    .filter((camera) =>
-      resolveLivePaused({
-        operatorChoice: tileOperatorChoice(transport, camera.id),
-        cameraKnown: true,
-        batteryPowered: camera.batteryPowered,
-      }),
-    )
+    .filter((camera) => {
+      const choice = tileOperatorChoice(transport, camera.id)
+      return choice !== null ? choice : byDefault.has(camera.id)
+    })
     .map((camera) => camera.id)
 }
 
 /**
  * The in-tile transport button, as a new transport (never a mutation).
  *
- * One button, two meanings, and the gate is what tells them apart: on a battery
- * tile that has never been started the press means START, so it records a
- * start rather than removing a pause that was never there. Every other press is
- * the ordinary toggle — and un-pausing a battery tile records a start too,
- * otherwise it would fall straight back to its held default.
+ * One button, two meanings, and the gate is what tells them apart: on a tile
+ * held by default (asleep or unknown) that has never been started the press
+ * means START, so it records a start rather than removing a pause that was
+ * never there. Every other press is the ordinary toggle — and un-pausing a
+ * held-by-default tile records a start too, otherwise it would fall straight
+ * back to its held default.
  */
 export function toggleTileTransport(
   transport: GridTransport,
   deviceId: number,
-  batteryPowered: boolean,
+  heldByDefault: boolean,
 ): GridTransport {
   const pausedIds = new Set(transport.pausedIds)
   const startedIds = new Set(transport.startedIds)
   if (pausedIds.has(deviceId)) {
     pausedIds.delete(deviceId)
-    if (batteryPowered) startedIds.add(deviceId)
+    if (heldByDefault) startedIds.add(deviceId)
     return { pausedIds, startedIds }
   }
-  const held = isBatteryHold({
-    operatorChoice: tileOperatorChoice(transport, deviceId),
-    cameraKnown: true,
-    batteryPowered,
-  })
-  if (held) {
+  if (tileOperatorChoice(transport, deviceId) === null && heldByDefault) {
     startedIds.add(deviceId)
     return { pausedIds, startedIds }
   }
@@ -229,7 +296,7 @@ export function toggleTileTransport(
  *
  * Any tile the operator paused ⇒ the button reads Play and resumes EVERY tile;
  * none paused ⇒ it reads Pause and pauses every tile on the wall. "Resume all"
- * is an explicit, wall-wide instruction to start every tile, battery ones
+ * is an explicit, wall-wide instruction to start every tile, held-by-default ones
  * included: without recording that consent they would fall straight back to
  * held and the button would half-work.
  *
@@ -239,10 +306,10 @@ export function toggleTileTransport(
 export function toggleWallTransport(
   transport: GridTransport,
   wallIds: readonly number[],
-  batteryIds: ReadonlySet<number>,
+  heldByDefaultIds: ReadonlySet<number>,
 ): GridTransport {
   if (transport.pausedIds.size > 0) {
-    return { pausedIds: new Set(), startedIds: new Set(batteryIds) }
+    return { pausedIds: new Set(), startedIds: new Set(heldByDefaultIds) }
   }
   return { pausedIds: new Set(wallIds), startedIds: transport.startedIds }
 }

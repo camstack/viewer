@@ -3487,8 +3487,8 @@
       "camera": "Camera"
     },
     "battery": {
-      "holdHint": "This camera runs on battery — press play to start the stream and wake it.",
-      "startStreamA11y": "Start the stream and wake the battery camera"
+      "holdHint": "This camera is not streaming — press play to start it. A sleeping camera wakes up.",
+      "startStreamA11y": "Start the stream; a sleeping camera wakes up"
     },
     "faceReview": {
       "loading": "Loading faces…",

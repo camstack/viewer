@@ -6,7 +6,10 @@ import {
   shouldDialLiveOnGoLive,
   tileOperatorChoice,
   heldTileIds,
+  defaultHeldIds,
+  firstKnownSleeping,
   toggleTileTransport,
+  toggleWallTransport,
   type GridTransport,
   type LiveStreamGateInput,
   type LiveViewMountInput,
@@ -16,7 +19,54 @@ const gate = (patch: Partial<LiveStreamGateInput>): LiveStreamGateInput => ({
   operatorChoice: null,
   cameraKnown: true,
   batteryPowered: false,
+  sleeping: null,
   ...patch,
+})
+
+describe('resolveLivePaused — sleeping state × battery × operator choice', () => {
+  const cases: readonly (readonly [string, Partial<LiveStreamGateInput>, boolean])[] = [
+    ['battery, asleep: held', { batteryPowered: true, sleeping: true }, true],
+    ['battery, awake: plays like a wired camera', { batteryPowered: true, sleeping: false }, false],
+    ['battery, sleep state unknown: held, never auto-dialled', { batteryPowered: true, sleeping: null }, true],
+    ['wired, sleeping unknown: plays', { sleeping: null }, false],
+    ['wired, a stray sleeping flag is ignored: plays', { sleeping: true }, false],
+    ['unknown camera list, awake: still held', { cameraKnown: false, batteryPowered: true, sleeping: false }, true],
+    ['operator play beats asleep', { batteryPowered: true, sleeping: true, operatorChoice: false }, false],
+    ['operator play beats unknown', { batteryPowered: true, sleeping: null, operatorChoice: false }, false],
+    ['operator pause beats awake', { batteryPowered: true, sleeping: false, operatorChoice: true }, true],
+  ]
+  it.each(cases)('%s', (_name, patch, held) => {
+    expect(resolveLivePaused(gate(patch))).toBe(held)
+  })
+})
+
+describe('isBatteryHold — the hold follows the sleeping state', () => {
+  it('asleep and unknown hold with the disc', () => {
+    expect(isBatteryHold(gate({ batteryPowered: true, sleeping: true }))).toBe(true)
+    expect(isBatteryHold(gate({ batteryPowered: true, sleeping: null }))).toBe(true)
+  })
+  it('an awake battery camera is not held, so no disc', () => {
+    expect(isBatteryHold(gate({ batteryPowered: true, sleeping: false }))).toBe(false)
+  })
+})
+
+describe('firstKnownSleeping — decide on the first known state, never re-dial', () => {
+  it('keeps the first known value per camera and ignores later flips', () => {
+    const a = firstKnownSleeping({}, { 1: false, 2: null })
+    expect(a).toEqual({ 1: false })
+    const b = firstKnownSleeping(a, { 1: true, 2: true })
+    expect(b).toEqual({ 1: false, 2: true })
+  })
+  it('returns the same object when nothing new was learned', () => {
+    const a = { 1: false }
+    expect(firstKnownSleeping(a, { 1: true, 2: null })).toBe(a)
+  })
+  it('a camera that falls asleep while streaming stays un-held', () => {
+    const latched = firstKnownSleeping(firstKnownSleeping({}, { 1: false }), { 1: true })
+    expect(
+      resolveLivePaused(gate({ batteryPowered: true, sleeping: latched[1] ?? null })),
+    ).toBe(false)
+  })
 })
 
 describe('resolveLivePaused — mounting is starting, so the gate decides before the mount', () => {
@@ -73,12 +123,25 @@ describe('isBatteryHold — only the state that has something honest to say', ()
 
 // ── The GRID, where the wall owns the transport as two id sets ──────────────
 
-const WIRED = { id: 1, batteryPowered: false }
-const BATT = { id: 2, batteryPowered: true }
+const WIRED = { id: 1, batteryPowered: false, sleeping: null }
+const BATT = { id: 2, batteryPowered: true, sleeping: true }
+const AWAKE = { id: 3, batteryPowered: true, sleeping: false }
+const UNKNOWN = { id: 4, batteryPowered: true, sleeping: null }
 const WALL = [WIRED, BATT]
 const empty: GridTransport = { pausedIds: new Set(), startedIds: new Set() }
 
 describe('heldTileIds — what the embedded wall boots paused', () => {
+  it('an awake battery tile streams; an unknown one is held', () => {
+    expect(heldTileIds([WIRED, BATT, AWAKE, UNKNOWN], empty)).toEqual([2, 4])
+    expect([...defaultHeldIds([WIRED, BATT, AWAKE, UNKNOWN])]).toEqual([2, 4])
+  })
+  it('wall resume-all records a start only for tiles held by default', () => {
+    const paused: GridTransport = { pausedIds: new Set([1, 3]), startedIds: new Set() }
+    const next = toggleWallTransport(paused, [1, 2, 3, 4], defaultHeldIds([WIRED, BATT, AWAKE, UNKNOWN]))
+    expect([...next.pausedIds]).toEqual([])
+    expect([...next.startedIds].sort()).toEqual([2, 4])
+  })
+
   it('holds every battery tile and no wired one', () => {
     expect(heldTileIds(WALL, empty)).toEqual([2])
   })

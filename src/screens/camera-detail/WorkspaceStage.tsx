@@ -42,13 +42,15 @@ import React, { useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { useWorkspaceStore } from '../../store/workspace-store.js'
-import { FEATURE, useCameras, type CameraInfo } from '../../data/use-cameras.js'
+import { useCameras, type CameraInfo } from '../../data/use-cameras.js'
 import {
+  defaultHeldIds,
   heldTileIds,
   toggleTileTransport,
   toggleWallTransport,
   type GridTransport,
 } from '../../live/battery-stream-gate.js'
+import { useWallGateCameras } from '../../live/use-wall-gate-cameras.js'
 import type { GridCellPanelKind } from '../../grid/cell-controls.js'
 import type { GridCellSpan } from '../../grid-embed/embed-messages.js'
 import { GridControlBar } from '../../components/grid/GridControlBar.js'
@@ -129,35 +131,41 @@ export function WorkspaceStage({
     () => devices.map((id) => (cameras ?? []).find((c) => c.id === id)).filter(isCamera),
     [devices, cameras],
   )
-  const batteryIds = useMemo(
-    () => new Set(onScreen.filter((c) => c.features.includes(FEATURE.battery)).map((c) => c.id)),
-    [onScreen],
+  // Battery flag + latched sleep state per camera, from one batched request.
+  const gateCameras = useWallGateCameras(onScreen, true)
+  const heldByDefaultIds = useMemo(() => defaultHeldIds(gateCameras), [gateCameras])
+  const sleepingById = useMemo(
+    () => Object.fromEntries(gateCameras.map((c) => [c.id, c.sleeping])),
+    [gateCameras],
   )
 
   // What the wall boots paused, and is pushed on change. A battery camera added
   // to a view arrives HELD — the grid page's rule ("opening a grid must never
   // wake a battery camera") says nothing about how the wall was opened, and
-  // adding one to a view woke it.
+  // adding one to a view woke it. An awake battery camera plays like a wired
+  // one; a sleeping or not-yet-known one arrives held.
   // Walks `devices` — the PROP — not the resolved camera rows. A camera the
   // query has not answered for yet is treated as mains-powered, so the
-  // operator's own press always lands and the battery HOLD arms as soon as the
-  // list says the camera is on a battery. Deriving this from the resolved rows
+  // operator's own press always lands and the HOLD arms as soon as the list
+  // says the camera is on a battery. Deriving this from the resolved rows
   // instead made a pause a no-op until the query returned: an unanswered query
   // is not a decision, and it must never look like one.
   const pausedIds = useMemo(
     () =>
       heldTileIds(
-        devices.map((id) => ({ id, batteryPowered: batteryIds.has(id) })),
+        devices.map(
+          (id) => gateCameras.find((c) => c.id === id) ?? { id, batteryPowered: false, sleeping: null },
+        ),
         transport,
       ),
-    [devices, batteryIds, transport],
+    [devices, gateCameras, transport],
   )
 
   const onPauseToggle = useCallback(
     (deviceId: number) => {
-      setTransport((prev) => toggleTileTransport(prev, deviceId, batteryIds.has(deviceId)))
+      setTransport((prev) => toggleTileTransport(prev, deviceId, heldByDefaultIds.has(deviceId)))
     },
-    [batteryIds],
+    [heldByDefaultIds],
   )
 
   const onAudioToggle = useCallback((deviceId: number) => {
@@ -198,6 +206,7 @@ export function WorkspaceStage({
       spans={spans}
       audioOnIds={audioOnIds}
       pausedIds={pausedIds}
+      sleepingById={sleepingById}
       onAudioToggle={onAudioToggle}
       onPauseToggle={onPauseToggle}
       cellsOverlay={
@@ -212,7 +221,7 @@ export function WorkspaceStage({
           docked
           anyPaused={transport.pausedIds.size > 0}
           onTogglePause={() =>
-            setTransport((prev) => toggleWallTransport(prev, devices, batteryIds))
+            setTransport((prev) => toggleWallTransport(prev, devices, heldByDefaultIds))
           }
           cameras={onScreen}
           audioOnIds={audioOnSet}

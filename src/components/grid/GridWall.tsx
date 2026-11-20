@@ -53,6 +53,8 @@ interface GridWallProps {
   readonly ptzIds?: readonly number[]
   /** A tile asked for one of the screen's cell panels (linked devices, the
    *  shared view-options menu, or the compact list). */
+  /** Latched sleep state per camera (`null` = unknown) for the tile's gate. */
+  readonly sleepingById?: Readonly<Record<number, boolean | null>>
   readonly onCellPanelOpen?: (kind: GridCellPanelKind, deviceId: number) => void
 }
 
@@ -66,6 +68,7 @@ export function GridWall({
   paused = false,
   layers = EMPTY_LAYERS,
   ptzIds,
+  sleepingById,
   onCellPanelOpen,
 }: GridWallProps) {
   // The wall knows its cameras, so the switched-off fan-out is mounted HERE
@@ -97,6 +100,7 @@ export function GridWall({
                   layers={layers}
                   onCellPanel={onCellPanelOpen}
                   hasPtz={ptzIds?.includes(camera.id) ?? false}
+                  sleeping={sleepingById?.[camera.id] ?? null}
                 />
               ))}
             </View>

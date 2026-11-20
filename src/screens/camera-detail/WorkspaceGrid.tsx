@@ -185,6 +185,8 @@ export interface WorkspaceGridProps {
    */
   readonly audioOnIds: readonly number[]
   readonly pausedIds: readonly number[]
+  /** Latched sleep state per camera for the native wall's tile gate. */
+  readonly sleepingById?: Readonly<Record<number, boolean | null>>
   readonly onAudioToggle: (deviceId: number) => void
   readonly onPauseToggle: (deviceId: number) => void
   /**
@@ -217,6 +219,7 @@ export function WorkspaceGrid({
   spans,
   audioOnIds,
   pausedIds,
+  sleepingById,
   onAudioToggle,
   onPauseToggle,
   cellsOverlay,
@@ -345,6 +348,7 @@ export function WorkspaceGrid({
             layout={layoutChoice}
             audioOnIds={audioOnIds}
             pausedIds={pausedIds}
+            sleepingById={sleepingById}
             box={box}
             onCellPanel={onCellPanel}
           />
@@ -390,6 +394,7 @@ export interface NativeWorkspaceWallProps {
    *  page gives it. iOS/web keep the per-cell answer through the embed. */
   readonly audioOnIds: readonly number[]
   readonly pausedIds: readonly number[]
+  readonly sleepingById?: Readonly<Record<number, boolean | null>>
   /** The measured content box, or null until it has been. */
   readonly box: WallBox | null
   readonly onCellPanel: (kind: GridCellPanelKind, deviceId: number) => void
@@ -413,6 +418,7 @@ export function NativeWorkspaceWall({
   layout: layoutChoice = 'auto',
   audioOnIds,
   pausedIds,
+  sleepingById,
   box,
   onCellPanel,
 }: NativeWorkspaceWallProps): React.JSX.Element {
@@ -433,6 +439,7 @@ export function NativeWorkspaceWall({
           layers={layers}
           muted={audioOnIds.length === 0}
           paused={pausedIds.length > 0}
+          sleepingById={sleepingById}
           onCellPanelOpen={onCellPanel}
         />
       ) : null}

@@ -3487,8 +3487,8 @@
       "camera": "Videocamera"
     },
     "battery": {
-      "holdHint": "La camera è a batteria: premi play per avviare lo stream e svegliarla.",
-      "startStreamA11y": "Avvia lo stream e sveglia la camera a batteria"
+      "holdHint": "La camera non è in streaming: premi play per avviarlo. Una camera in sospensione si sveglia.",
+      "startStreamA11y": "Avvia lo stream; una camera in sospensione si sveglia"
     },
     "faceReview": {
       "loading": "Caricamento volti…",

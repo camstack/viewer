@@ -42,6 +42,7 @@ describe('the single-camera player', () => {
     expect(screen).toContain('operatorChoice: pauseChoice')
     expect(screen).toContain('cameraKnown,')
     expect(screen).toContain('batteryPowered: hasBattery')
+    expect(screen).toContain('sleeping: gateSleeping')
     expect(screen).toContain('known: cam !== undefined')
   })
 

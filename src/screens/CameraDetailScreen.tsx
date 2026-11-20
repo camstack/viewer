@@ -455,7 +455,8 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
   // The charge decides the name chip's dot — a sleeping camera wears the moon
   // the cameras page already wears, never the green "online" dot. The badges
   // themselves live in the toolbar (`toolbar-status-layout.ts`).
-  const { data: battery = null } = useBattery(deviceId, hasBattery)
+  const batteryQuery = useBattery(deviceId, hasBattery)
+  const battery = batteryQuery.data ?? null
   const cameraSleeping = hasBattery && battery?.sleeping === true
   const hasTwoWayAudio = features.includes(FEATURE.twoWayAudio)
   const hasDoorbell = features.includes(FEATURE.doorbell)
@@ -593,10 +594,20 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
   // is empty on the first render of a cold start, and a latched `false` there
   // would dial a sleeping camera before we ever learned it runs on battery.
   const [pauseChoice, setPauseChoice] = useState<boolean | null>(null)
+  // The camera's sleep state, decided ONCE from the first known (fresh) answer
+  // and then latched: a camera that falls asleep while streaming must not flip
+  // the gate to held (that would tear the stream down and re-dial in a loop),
+  // and a stale cached "awake" must not auto-dial a camera that sleeps now.
+  const liveSleeping =
+    hasBattery && !batteryQuery.isStale ? (battery?.sleeping ?? null) : null
+  const [latchedSleeping, setLatchedSleeping] = useState<boolean | null>(null)
+  if (latchedSleeping === null && liveSleeping !== null) setLatchedSleeping(liveSleeping)
+  const gateSleeping = latchedSleeping ?? liveSleeping
   const streamGate: LiveStreamGateInput = {
     operatorChoice: pauseChoice,
     cameraKnown,
     batteryPowered: hasBattery,
+    sleeping: gateSleeping,
   }
   const paused = resolveLivePaused(streamGate)
   // The sink is memoized on `[]`, so goLive reads the hold through a ref —
@@ -641,6 +652,7 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
         operatorChoice: prev,
         cameraKnown,
         batteryPowered: hasBattery,
+        sleeping: gateSleeping,
       }),
     )
   }

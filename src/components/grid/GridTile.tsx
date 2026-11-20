@@ -81,6 +81,8 @@ interface GridTileProps {
    *  (on a compact cell it is offered by the host's list instead, exactly as
    *  on the embed wall). */
   readonly hasPtz?: boolean
+  /** The camera's latched sleep state from the wall (`null` = unknown → held). */
+  readonly sleeping?: boolean | null
 }
 
 /** Ms the revealed cell actions stay up (matches the embed tile's overlay). */
@@ -98,6 +100,7 @@ export const GridTile = React.memo(function GridTile({
   layers = EMPTY_LAYERS,
   onCellPanel,
   hasPtz = false,
+  sleeping = null,
 }: GridTileProps) {
   const { colors } = useTheme()
   const { t } = useTranslation()
@@ -106,8 +109,9 @@ export const GridTile = React.memo(function GridTile({
   // dot only separates online from offline; without this a tile whose detection
   // was deliberately turned off is pixel-identical to one whose detector died.
   const switchedOff = useSwitchedOffFor(camera.id)
-  // A battery camera on the wall gets the SAME protection as the single-camera
-  // player: opening a grid never wakes it. `paused` above is the wall-wide
+  // A SLEEPING (or not yet known) battery camera on the wall gets the SAME
+  // protection as the single-camera player: opening a grid never wakes it. An
+  // awake one plays like a wired tile. `paused` above is the wall-wide
   // operator toggle; this is per-tile, and the two compose — the wall can pause
   // a battery tile the operator already started, and un-pausing the wall does
   // not silently start one they never asked for.
@@ -120,6 +124,7 @@ export const GridTile = React.memo(function GridTile({
     operatorChoice: tilePlayChoice,
     cameraKnown: true,
     batteryPowered: camera.features.includes(FEATURE.battery),
+    sleeping,
   }
   const batteryHold = isBatteryHold(tileGate)
   const effectivePaused = paused || resolveLivePaused(tileGate)

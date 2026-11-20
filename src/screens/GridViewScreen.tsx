@@ -103,7 +103,13 @@ import type { StreamQuality } from '../store/settings-store.js'
 import { useDeviceSettingsStore } from '../store/device-settings-store.js'
 import { buildTileOverlayMap, type GridHighlightEmbedConfig } from '../grid-embed/embed-config.js'
 import { useCameras, FEATURE, type CameraInfo } from '../data/use-cameras.js'
-import { heldTileIds, toggleTileTransport, toggleWallTransport } from '../live/battery-stream-gate.js'
+import {
+  defaultHeldIds,
+  heldTileIds,
+  toggleTileTransport,
+  toggleWallTransport,
+} from '../live/battery-stream-gate.js'
+import { useWallGateCameras } from '../live/use-wall-gate-cameras.js'
 import { useSettings } from '../data/use-settings.js'
 import { useScreenActive } from '../hooks/use-screen-active.js'
 import { backToCameras } from '../navigation/back-to-cameras.js'
@@ -222,8 +228,8 @@ export function GridViewScreen({ gridId, adhocCameraIds }: GridViewScreenProps) 
   /**
    * Battery tiles the operator explicitly STARTED.
    *
-   * A battery camera's default on this wall is stopped — opening a grid must
-   * never wake one (`live/battery-stream-gate.ts`). That default cannot live in
+   * A sleeping (or not yet known) battery camera's default on this wall is
+   * stopped — opening a grid must never wake one; an awake one plays (`live/battery-stream-gate.ts`). That default cannot live in
    * `pausedIds`: seeding it there would make `anyPaused` true, flip the bar's
    * mass button to Play on a wall nobody paused, and blanket-pause the Android
    * native wall (which reads the aggregate, not per-tile). So the operator's
@@ -390,10 +396,14 @@ export function GridViewScreen({ gridId, adhocCameraIds }: GridViewScreenProps) 
   // Pause aggregation: any paused (grid or individual) → mass button shows Play
   // and resumes ALL; none paused → shows Pause and pauses ALL.
   const anyPaused = pausedIds.size > 0
-  /** Every battery camera on this wall — the gate's only per-camera input. */
-  const batteryIds = useMemo(
-    () => new Set(wallCameras.filter((c) => c.features.includes(FEATURE.battery)).map((c) => c.id)),
-    [wallCameras],
+  /** Every wall camera with its battery flag and latched sleep state — the
+   *  gate's per-camera input (one batched request for the whole wall). */
+  const gateCameras = useWallGateCameras(wallCameras, screenActive)
+  /** Tiles held by default: sleeping or not-yet-known battery cameras. */
+  const heldByDefaultIds = useMemo(() => defaultHeldIds(gateCameras), [gateCameras])
+  const sleepingById = useMemo(
+    () => Object.fromEntries(gateCameras.map((c) => [c.id, c.sleeping])),
+    [gateCameras],
   )
   /**
    * What the EMBEDDED wall (iOS + web) boots paused, and is pushed on change.
@@ -411,28 +421,21 @@ export function GridViewScreen({ gridId, adhocCameraIds }: GridViewScreenProps) 
   }, [screenActive, pausedIds, wallCameras])
   const embedPausedIds = useMemo(
     () =>
-      heldTileIds(
-        wallCameras.map((c) => ({ id: c.id, batteryPowered: batteryIds.has(c.id) })),
-        { pausedIds: wallPausedIds, startedIds },
-      ),
-    [wallCameras, batteryIds, wallPausedIds, startedIds],
+      heldTileIds(gateCameras, { pausedIds: wallPausedIds, startedIds }),
+    [gateCameras, wallPausedIds, startedIds],
   )
   const togglePauseTile = (id: number): void => {
-    // ONE decision, taken in the gate: on a battery tile that has never run,
-    // this press means START (and wakes the camera); everywhere else it is the
-    // ordinary pause/resume it always was.
-    const next = toggleTileTransport(
-      { pausedIds, startedIds },
-      id,
-      batteryIds.has(id),
-    )
+    // ONE decision, taken in the gate: on a tile held by default (asleep or
+    // not yet known) that has never run, this press means START (and wakes the
+    // camera); everywhere else it is the ordinary pause/resume it always was.
+    const next = toggleTileTransport({ pausedIds, startedIds }, id, heldByDefaultIds.has(id))
     setPausedIds(next.pausedIds)
     setStartedIds(next.startedIds)
   }
   const toggleMassPause = (): void => {
     // The SAME mass toggle the camera-detail wall's bar runs
     // (`toggleWallTransport`): one meaning of "pause all" for every wall.
-    const next = toggleWallTransport({ pausedIds, startedIds }, wallIds, batteryIds)
+    const next = toggleWallTransport({ pausedIds, startedIds }, wallIds, heldByDefaultIds)
     setPausedIds(next.pausedIds)
     setStartedIds(next.startedIds)
   }
@@ -692,6 +695,7 @@ export function GridViewScreen({ gridId, adhocCameraIds }: GridViewScreenProps) 
             paused={anyPaused || !screenActive}
             layers={layers}
             ptzIds={ptzIds}
+            sleepingById={sleepingById}
             onCellPanelOpen={openCellPanel}
           />
           {chrome}
