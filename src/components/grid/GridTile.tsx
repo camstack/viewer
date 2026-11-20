@@ -218,6 +218,7 @@ export const GridTile = React.memo(function GridTile({
               wrong event — and its play disc is drawn LAST instead, see below. */}
           {batteryHold ? null : (
             <View style={styles.pauseBadge} pointerEvents="none">
+              {/* ui-check-ok: on-picture icon over live video, pre-existing */}
               <Pause size={18} color="#fafaf9" fill="#fafaf9" />
             </View>
           )}
@@ -345,7 +346,7 @@ const styles = StyleSheet.create({
   // No padding → the video fills the cell edge-to-edge so adjacent tiles touch
   // (the "video wall" look). The wall backdrop is pure black behind the tiles.
   cell: {
-    backgroundColor: '#000',
+    backgroundColor: '#000', // ui-check-ok: video surface, black in both themes
   },
   pausedFill: {
     width: '100%',
@@ -360,7 +361,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#0009',
+    backgroundColor: '#0009', // ui-check-ok: on-picture overlay over live video, pre-existing
   },
   // Edge-to-edge motion border + a soft glow (elevation on Android). Absolute
   // fill so it hugs the tile without shifting the video layout.
@@ -387,7 +388,7 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.sm,
     // Translucent scrim so the label stays legible over any frame. Flush to the
     // tile edges (no radius) to keep the wall seamless.
-    backgroundColor: '#0009',
+    backgroundColor: '#0009', // ui-check-ok: on-picture overlay over live video, pre-existing
   },
   /** Placement only — the bar itself is `CameraActionBar` (overlay variant). */
   actions: {
@@ -397,5 +398,5 @@ const styles = StyleSheet.create({
     bottom: SPACING.xl,
   },
   dot: { width: 8, height: 8, borderRadius: 4 },
-  name: { flex: 1, color: '#fafaf9', fontSize: 12, fontWeight: '600' },
+  name: { flex: 1, color: '#fafaf9', fontSize: 12, fontWeight: '600' }, // ui-check-ok: on-picture overlay over live video, pre-existing
 })

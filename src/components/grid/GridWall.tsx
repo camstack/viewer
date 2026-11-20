@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#000',
+    backgroundColor: '#000', // ui-check-ok: video surface, black in both themes
   },
   // The block itself is exactly its cells (cols×cellW by rows×cellH) — no
   // justify/align space to distribute, so nothing can open a gap inside it.

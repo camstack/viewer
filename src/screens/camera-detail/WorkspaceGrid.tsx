@@ -375,6 +375,7 @@ export function WorkspaceGrid({
         accessibilityLabel={t('v2.cameraShelf.closeView')}
         style={({ pressed }) => [styles.close, { opacity: pressed ? 0.7 : 1 }]}
       >
+        {/* ui-check-ok: on-picture icon over live video, pre-existing */}
         <X size={16} color="#fafaf9" />
       </Pressable>
     </View>
@@ -448,7 +449,7 @@ export function NativeWorkspaceWall({
 }
 
 const styles = StyleSheet.create({
-  nativeBox: { flex: 1, minHeight: 0, backgroundColor: '#000' },
+  nativeBox: { flex: 1, minHeight: 0, backgroundColor: '#000' }, // ui-check-ok: video surface, black in both themes
 })
 
 function makeStyles(colors: ColorTokens) {
@@ -459,7 +460,7 @@ function makeStyles(colors: ColorTokens) {
       alignSelf: 'stretch',
       borderRadius: RADIUS.md,
       overflow: 'hidden',
-      backgroundColor: '#000',
+      backgroundColor: '#000', // ui-check-ok: video surface, black in both themes
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.border,
     },
@@ -482,7 +483,7 @@ function makeStyles(colors: ColorTokens) {
       borderRadius: 14,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: 'rgba(0,0,0,0.55)',
+      backgroundColor: 'rgba(0,0,0,0.55)', // ui-check-ok: on-picture overlay over live video, pre-existing
     },
   })
 }
