@@ -203,6 +203,7 @@ export const AccessoryRow = memo(function AccessoryRow({
         online={row.device.online}
         model={model}
         customIcon={customIcon}
+        controlKind={pickAccessoryControl(row.device).kind}
         caption={captionText}
         fallbackControl={<AccessoryControl device={row.device} />}
         shortcuts={heroRowKeepsShortcuts(row.device) ? (

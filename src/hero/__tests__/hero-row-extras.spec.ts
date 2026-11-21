@@ -9,6 +9,7 @@ import { cleanup, fireEvent, screen, within } from '@testing-library/react'
 import React from 'react'
 import type { HeroAction, HeroControl, HeroRowModel } from '@camstack/types'
 import { mountScreen } from '../../testing/mount.js'
+import type { AccessoryControlKind } from '../../components/camera/accessory-controls/control-registry.js'
 import { HeroRowBody, rowControls } from '../HeroRowBody.js'
 import { routerCalls } from '../../testing/native-stubs/expo-router.js'
 
@@ -123,9 +124,9 @@ describe('the fallback control', () => {
 })
 
 describe('the row opens the device', () => {
-  const mount = (onOpen: () => void, model: HeroRowModel): void => {
+  const mount = (onOpen: () => void, model: HeroRowModel, controlKind: AccessoryControlKind = 'none'): void => {
     mountScreen(
-      React.createElement(HeroRowBody, { deviceId: 4, name: 'TV', online: true, model, onOpen, openLabel: 'Open TV' }),
+      React.createElement(HeroRowBody, { deviceId: 4, name: 'TV', online: true, model, controlKind, onOpen, openLabel: 'Open TV' }),
       { hub: {} },
     )
   }
@@ -134,11 +135,18 @@ describe('the row opens the device', () => {
     primary: { kind: 'toggle', id: 'own-power', label: { en: 'Power', it: 'Power' }, on: true, turnOn: act('own-power.on'), turnOff: act('own-power.off') },
   }
 
-  it('the left icon opens the detail and sends no command', () => {
+  it('the left icon of a type with no quick action opens the detail and sends no command', () => {
     const onOpen = vi.fn()
-    mount(onOpen, powered)
+    mount(onOpen, { ...powered, primary: null }, 'sensor')
     fireEvent.click(screen.getByTestId('hero-row-scene-4'))
     expect(onOpen).toHaveBeenCalledTimes(1)
+  })
+  it('the left icon of a powered type is its power button, and does not open the detail', () => {
+    const onOpen = vi.fn()
+    mount(onOpen, powered, 'media-player')
+    expect(screen.getByTestId('tile-action-4').getAttribute('aria-label')).toContain('TV')
+    fireEvent.click(screen.getByTestId('tile-action-4'))
+    expect(onOpen).not.toHaveBeenCalled()
   })
   it('the name opens the detail', () => {
     const onOpen = vi.fn()

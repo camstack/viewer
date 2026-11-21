@@ -28,7 +28,8 @@ import { useTheme } from '../theme/theme-provider.js'
 import { SPACING, TYPOGRAPHY } from '../theme/tokens.js'
 import { HeroControlView } from './HeroControlView.js'
 import { HeroIconGroup, isGroupablePress } from './HeroIconGroup.js'
-import { HeroSceneTile, SCENE_TILE_MINI } from './HeroSceneTile.js'
+import { QuickActionTile } from './QuickActionTile.js'
+import type { AccessoryControlKind } from '../components/camera/accessory-controls/control-registry.js'
 import { isPrimaryGated } from './hero-parse.js'
 import { heroLocale, rowView, toneColor } from './hero-view.js'
 import { RowArmContext, useArmedConfirm, type RowArm } from './row-arm.js'
@@ -62,6 +63,8 @@ export interface HeroRowBodyProps {
    * INSTEAD of the model's single primary control, which cannot express it.
    */
   readonly shortcuts?: React.ReactNode
+  /** The registry's control kind for the device: it decides what tapping the left icon does (`none` = nothing). */
+  readonly controlKind?: AccessoryControlKind
   readonly onOpen: () => void
   readonly openLabel: string
 }
@@ -93,7 +96,7 @@ export function HeroRowBody(props: HeroRowBodyProps): React.JSX.Element {
   )
 }
 
-function HeroRowContent({ deviceId, name, online, model, customIcon = null, caption = null, fallbackControl = null, shortcuts = null, onOpen, openLabel, arm }: HeroRowBodyProps & { readonly arm: RowArm }): React.JSX.Element {
+function HeroRowContent({ deviceId, name, online, model, customIcon = null, caption = null, fallbackControl = null, shortcuts = null, controlKind = 'none', onOpen, openLabel, arm }: HeroRowBodyProps & { readonly arm: RowArm }): React.JSX.Element {
   const { t, i18n } = useTranslation()
   const { colors } = useTheme()
   const { width } = useWindowDimensions()
@@ -110,6 +113,20 @@ function HeroRowContent({ deviceId, name, online, model, customIcon = null, capt
   const armedCaption = arm.armedId === null ? null : t(armCaptionKey(arm.armedId))
   return (
     <View style={[styles.row, { borderBottomColor: colors.borderSubtle }]} testID={`hero-row-${deviceId}`}>
+      {/* The tile is its own target (the type's quick action, or a plain icon); tile and name still sit side by side. */}
+      <QuickActionTile
+        deviceId={deviceId}
+        name={name}
+        online={online}
+        controlKind={controlKind}
+        model={model}
+        icon={sceneIcon}
+        tone={view.tone}
+        muted={sceneMuted}
+        testID={`hero-row-scene-${deviceId}`}
+        onOpen={onOpen}
+        openLabel={openLabel}
+      />
       <Pressable
         onPress={() => {
           hapticTap()
@@ -120,7 +137,6 @@ function HeroRowContent({ deviceId, name, online, model, customIcon = null, capt
         testID={`hero-row-open-${deviceId}`}
         style={styles.opener}
       >
-        <HeroSceneTile icon={sceneIcon} tone={view.tone} muted={sceneMuted} testID={`hero-row-scene-${deviceId}`} />
         <View style={styles.label}>
           <Text testID={`hero-row-name-${deviceId}`} style={[styles.name, { color: offline ? colors.foregroundMuted : colors.foreground }]} numberOfLines={1}>
             {name}
@@ -207,8 +223,8 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  // Tile and name are one press target: the row opens the device. The controls beside it keep their own presses.
-  opener: { flex: 1, minWidth: 100 + SCENE_TILE_MINI + SPACING.md, flexDirection: 'row', alignItems: 'center', gap: SPACING.md },
+  // The name opens the device; the tile and the controls beside it keep their own presses.
+  opener: { flex: 1, minWidth: 100, flexDirection: 'row', alignItems: 'center', gap: SPACING.md },
   label: { flex: 1, minWidth: 100, gap: 2 },
   name: { fontSize: TYPOGRAPHY.size.md, fontWeight: TYPOGRAPHY.weight.medium },
   caption: { fontSize: TYPOGRAPHY.size.xs },

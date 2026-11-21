@@ -4549,6 +4549,15 @@
     },
     "linkedDevices": {
       "title": "Linked devices"
+    },
+    "tileAction": {
+      "powerOn": "Turn on {{device}}",
+      "powerOff": "Turn off {{device}}",
+      "open": "Open {{device}}",
+      "close": "Close {{device}}",
+      "stop": "Stop {{device}}",
+      "lock": "Lock {{device}}",
+      "unlock": "Unlock {{device}}"
     }
   },
   "prototype": {
