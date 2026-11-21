@@ -26,12 +26,9 @@ import { MotionBoxesOverlay } from '../camera/MotionBoxesOverlay.js'
 import { StationaryBoxesOverlay } from '../camera/StationaryBoxesOverlay.js'
 import { DiscardedBoxesOverlay } from '../camera/DiscardedBoxesOverlay.js'
 import { MotionRegionsOverlay } from '../camera/MotionRegionsOverlay.js'
-import { AudioLevelMeter } from '../camera/AudioLevelMeter.js'
-import { OccupancyBadge } from '../camera/OccupancyBadge.js'
-import { StreamStatsOverlay } from '../camera/StreamStatsOverlay.js'
-import { LiveViewersBadge } from '../camera/LiveViewersBadge.js'
 import { OverlayFrame } from '../camera/overlay/OverlayFrame.js'
-import { useCameraOverlay } from '../../hooks/use-camera-view-options.js'
+import { OverlayLayer as OverlayLayerView } from '../camera/overlay/OverlayLayer.js'
+import { useOverlayConfig } from '../../hooks/use-camera-view-options.js'
 import { qualityToTarget } from '../../live/quality-target.js'
 import { useSnapshot } from '../../data/use-snapshot.js'
 import { SnapshotImage } from '../camera/SnapshotImage.js'
@@ -159,7 +156,7 @@ export const GridTile = React.memo(function GridTile({
    * tile. Live only: a paused or offline tile shows a snapshot, and an
    * indicator over a frozen frame describes a moment that has passed.
    */
-  const overlay = useCameraOverlay(camera.id)
+  const overlay = useOverlayConfig()
   const live = !effectivePaused && camera.online
   const liveRef = useRef<LiveViewHandle | null>(null)
   const getStats = useCallback(
@@ -249,26 +246,25 @@ export const GridTile = React.memo(function GridTile({
       {/* The read-outs, laid over the picture's own rectangle (a spanned cell
           letterboxes it) at the device's overlay size. */}
       <OverlayFrame fit="contain">
-        {overlay.audioMeter !== 'off' && live ? (
-          // No `onSetPosition`: on a tile the meter is a read-out, and a picker
-          // opening over a 200pt cell would swallow the tap that reveals the
-          // tile's own controls.
-          <AudioLevelMeter deviceId={camera.id} position={overlay.audioMeter} />
-        ) : null}
-        {overlay.occupancy !== 'off' ? (
-          <OccupancyBadge deviceId={camera.id} enabled={live} corner={overlay.occupancy} />
-        ) : null}
-        {overlay.stats !== 'off' && live ? (
-          // The full panel is 150-220pt wide: on a smaller cell it would cover
-          // the picture it describes, so the read-out shrinks to one line rather
-          // than disappearing.
-          <StreamStatsOverlay
-            getStats={getStats}
-            position={overlay.stats}
-            compact={!statsPanelFits(width, height)}
-          />
-        ) : null}
-        <LiveViewersBadge deviceId={camera.id} position={overlay.viewers} enabled={live} />
+        {/* No audio picker and no controls on a tile: the meter is a read-out,
+            and a picker over a 200pt cell would swallow the tap that reveals
+            the tile's own controls. Nothing fades (no auto-hiding controls). */}
+        <OverlayLayerView
+          deviceId={camera.id}
+          config={overlay}
+          controlsVisible
+          deviceInfo="off"
+          getStats={getStats}
+          statsCompact={!statsPanelFits(width, height)}
+          gates={{
+            audioMeter: live,
+            occupancy: live,
+            stats: live,
+            viewers: live,
+            readouts: false,
+            doorbell: false,
+          }}
+        />
       </OverlayFrame>
       {/* Motion highlight — a colored border/glow around the tile while motion is
           active (and for the configured linger after). Non-interactive; painted

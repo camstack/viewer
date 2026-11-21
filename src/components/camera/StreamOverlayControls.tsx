@@ -1,9 +1,15 @@
 /**
- * StreamOverlayControls — composer for the single-camera ON-VIDEO discs.
+ * StreamOverlayControls — composer for the single-camera ON-VIDEO discs AND the
+ * stream's overlay stack they live in.
  *
  * It does not paint buttons itself. It builds an `items` list from stream
- * state and hands it to `OverlayDiscGroup`, which owns hide/show, auto-hide,
- * press re-arm and the disc chrome. History is just another left-cluster
+ * state and hands it to `useDiscClusters` (the `OverlayDiscGroup` behaviour:
+ * hide/show, auto-hide, press re-arm and the disc chrome). The two clusters are
+ * OVERLAYS like the others — each with a position of its own in the global
+ * overlay document (`controlsLeft` / `controlsRight`, bottom-left and
+ * bottom-right by default) — so this component also mounts the `OverlayLayer`:
+ * the controls, the camera name and the badges share one stack per corner and
+ * never overlap. History is just another left-cluster
  * item when `timelineToggle` is provided (fill / landscape). A sibling
  * History disc that ignored `visible` is how tap-to-hide left the timeline
  * trigger on screen (operator, 2026-08-23).
@@ -37,10 +43,12 @@ import { Platform } from 'react-native'
 import { Play, Pause, Maximize2, Minimize2 } from '../../lib/icons.js'
 import { useTranslation } from 'react-i18next'
 import {
-  OverlayDiscGroup,
+  useDiscClusters,
   type OverlayDisc,
   type OverlayEdgePad,
 } from './OverlayDiscGroup.js'
+import { OverlayFrame, type OverlayFrameProps } from './overlay/OverlayFrame.js'
+import { OverlayLayer, type OverlayLayerProps } from './overlay/OverlayLayer.js'
 import {
   muteDisc,
   talkDisc,
@@ -66,6 +74,11 @@ export interface StreamPtzToggle {
 }
 
 export interface StreamOverlayControlsProps {
+  /** How the overlay container fits the picture (scale only — overlays anchor
+   *  to the container) and the stream's aspect. */
+  readonly frame: Pick<OverlayFrameProps, 'fit' | 'aspect'>
+  /** Everything the stack draws besides the controls themselves. */
+  readonly layer: Omit<OverlayLayerProps, 'controls' | 'controlsVisible' | 'edgePad'>
   /** Parent-owned visibility (the stage's single-tap gesture toggles it). */
   readonly visible: boolean
   /** Inactivity auto-hide callback — the parent owns `visible`. */
@@ -120,6 +133,8 @@ export interface StreamOverlayControlsProps {
 }
 
 export function StreamOverlayControls({
+  frame,
+  layer,
   visible,
   onRequestHide,
   paused,
@@ -198,14 +213,17 @@ export function StreamOverlayControls({
     t,
   ])
 
+  const clusters = useDiscClusters({
+    visible,
+    onRequestHide,
+    holdOpen: paused,
+    items,
+    activity,
+  })
+
   return (
-    <OverlayDiscGroup
-      visible={visible}
-      onRequestHide={onRequestHide}
-      holdOpen={paused}
-      items={items}
-      edgePad={edgePad}
-      activity={activity}
-    />
+    <OverlayFrame fit={frame.fit} aspect={frame.aspect}>
+      <OverlayLayer {...layer} controls={clusters} controlsVisible={visible} edgePad={edgePad} />
+    </OverlayFrame>
   )
 }

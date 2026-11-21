@@ -4,57 +4,52 @@ import { join } from 'node:path'
 import {
   addReadout,
   doorbellBadgeEnabled,
+  FADE_DEFAULTS,
+  FADEABLE_OVERLAYS,
   isDefaultOverlay,
-  normaliseOverlay,
-  LEGACY_STATS_POSITION,
+  isOverlayShown,
   OVERLAY_DEFAULTS,
-  OVERLAY_LAYERS,
+  parseOverlayConfig,
   patchOverlay,
+  patchReadout,
+  placeOverlay,
   readoutId,
   readoutsAt,
   removeReadout,
-  type CameraOverlayConfig,
+  setFade,
   type OverlayReadout,
 } from '../overlay-config.js'
 import { parseLiveFields, formatLiveValue } from '../../../../data/use-device-live-fields.js'
-
-describe('detection boxes and motion regions are two overlays, not one', () => {
-  it('the layers are independent', () => {
-    // They were briefly merged on the mistaken belief that only one overlay
-    // existed. `motion.onMotionChanged` carries `regions[]` — the viewer was
-    // simply parsing them away, so there was nothing to draw and the switch
-    // looked dead. Different questions: "what is it?" vs "where did the picture
-    // change?". The full layer vocabulary lives in `overlay-layers.spec.ts`.
-    const config = normaliseOverlay({ boxes: true, motionBoxes: false }) as CameraOverlayConfig
-    expect(config.layers).toContain('objects')
-    expect(config.layers).not.toContain('motion')
-  })
-
-  it('each is drawn by its OWN component', () => {
-    const screen = readFileSync(
-      join(process.cwd(), 'src', 'screens', 'CameraDetailScreen.tsx'),
-      'utf8',
-    )
-    expect(screen).toContain('MotionBoxesOverlay')
-    expect(screen).toContain('MotionRegionsOverlay')
-  })
-})
 
 function readout(over: Partial<OverlayReadout> = {}): OverlayReadout {
   const source = over.source ?? { kind: 'audioDbfs' as const }
   return { id: readoutId(source), source, label: 'Audio', corner: 'top-right', ...over }
 }
 
-describe('overlay config', () => {
-  it('fresh cameras show the audio meter, not occupancy', () => {
-    // Occupancy used to ship on (it was unconditional). The operator's call is
-    // the other way around: occupancy off until asked for, the VU on at
-    // top-center on both the single player and every grid tile.
+describe('the defaults of the one global overlay document', () => {
+  it('the camera name is an overlay, on at the top-left, and it fades with the controls', () => {
+    expect(OVERLAY_DEFAULTS.cameraName).toBe('top-left')
+    expect(OVERLAY_DEFAULTS.fade.cameraName).toBe(true)
+  })
+
+  it('no other overlay fades by default', () => {
+    for (const id of FADEABLE_OVERLAYS) {
+      expect(FADE_DEFAULTS[id], id).toBe(id === 'cameraName')
+    }
+  })
+
+  it('the control groups default to the bottom corners, left and right', () => {
+    expect(OVERLAY_DEFAULTS.controlsLeft).toBe('bottom-left')
+    expect(OVERLAY_DEFAULTS.controlsRight).toBe('bottom-right')
+  })
+
+  it('fresh installs show the audio meter, not occupancy', () => {
     expect([...OVERLAY_DEFAULTS.layers]).toEqual([])
     expect(OVERLAY_DEFAULTS.stats).toBe('off')
-    expect(OVERLAY_DEFAULTS.motionBadge).toBe('off')
-    expect(OVERLAY_DEFAULTS.highlightBorder).toBe(true)
     expect(OVERLAY_DEFAULTS.occupancy).toBe('off')
+    expect(OVERLAY_DEFAULTS.viewers).toBe('off')
+    expect(OVERLAY_DEFAULTS.doorbell).toBe(false)
+    expect(OVERLAY_DEFAULTS.highlightBorder).toBe(true)
     expect(OVERLAY_DEFAULTS.audioMeter).toBe('top-center')
     expect(isDefaultOverlay(OVERLAY_DEFAULTS)).toBe(true)
   })
@@ -65,30 +60,75 @@ describe('overlay config', () => {
     expect(OVERLAY_DEFAULTS.stats).toBe('off')
   })
 
-  it('every field has a consumer — a switch that toggles nothing is a bug', () => {
-    // A field used to exist that no component implemented: its switch in the
-    // panel did nothing at all, and that is exactly how it was reported.
-    const screen = readFileSync(
-      join(process.cwd(), 'src', 'screens', 'CameraDetailScreen.tsx'),
-      'utf8',
-    )
-    for (const key of Object.keys(OVERLAY_DEFAULTS)) {
-      if (key === 'readouts') continue // consumed by OverlayReadouts, not the screen
-      // The motion pill is gone; the overlay (regions / border) is the motion
-      // treatment. The field stays so stored documents still parse.
-      if (key === 'motionBadge') continue
-      // `layers` is read one MEMBER at a time, through `hasLayer` — the union
-      // is the field, and each member must reach a drawing component.
-      if (key === 'layers') {
-        for (const layer of OVERLAY_LAYERS) {
-          expect(screen).toContain(`hasLayer(overlay, '${layer}')`)
-        }
-        continue
-      }
-      expect(screen).toContain(`overlay.${key}`)
-    }
+  it('any change makes it a non-default document (so it is persisted)', () => {
+    expect(isDefaultOverlay(placeOverlay(OVERLAY_DEFAULTS, 'cameraName', 'off'))).toBe(false)
+    expect(isDefaultOverlay(setFade(OVERLAY_DEFAULTS, 'cameraName', false))).toBe(false)
+    expect(isDefaultOverlay({ ...OVERLAY_DEFAULTS, controlsLeft: 'top-left' })).toBe(false)
+    expect(isDefaultOverlay({ ...OVERLAY_DEFAULTS, viewers: 'top-left' })).toBe(false)
+  })
+})
+
+describe('placing an overlay', () => {
+  it('moves it and appends it to the order, so the order is the placing order', () => {
+    const a = placeOverlay(OVERLAY_DEFAULTS, 'stats', 'top-left')
+    const b = placeOverlay(a, 'occupancy', 'top-left')
+    expect(b.stats).toBe('top-left')
+    expect([...b.order]).toEqual(['stats', 'occupancy'])
+    // Placing again moves it to the end — never duplicates it.
+    expect([...placeOverlay(b, 'stats', 'bottom-right').order]).toEqual(['occupancy', 'stats'])
   })
 
+  it('switching off leaves the order alone', () => {
+    const a = placeOverlay(OVERLAY_DEFAULTS, 'stats', 'top-left')
+    expect([...placeOverlay(a, 'stats', 'off').order]).toEqual(['stats'])
+  })
+
+  it('a control group can move but never be switched off', () => {
+    expect(placeOverlay(OVERLAY_DEFAULTS, 'controlsLeft', 'off')).toBe(OVERLAY_DEFAULTS)
+    expect(placeOverlay(OVERLAY_DEFAULTS, 'controlsLeft', 'top-left').controlsLeft).toBe('top-left')
+    expect(placeOverlay(OVERLAY_DEFAULTS, 'controlsRight', 'top-right').controlsRight).toBe('top-right')
+  })
+})
+
+describe('fade: an overlay hides with the auto-hiding controls', () => {
+  it('follows controlsVisible only when its flag is on', () => {
+    // Camera name: fade ON by default.
+    expect(isOverlayShown(OVERLAY_DEFAULTS, 'cameraName', true)).toBe(true)
+    expect(isOverlayShown(OVERLAY_DEFAULTS, 'cameraName', false)).toBe(false)
+    // Everything else stays while the controls are gone.
+    expect(isOverlayShown(OVERLAY_DEFAULTS, 'stats', false)).toBe(true)
+    expect(isOverlayShown(OVERLAY_DEFAULTS, 'audioMeter', false)).toBe(true)
+  })
+
+  it('a flag turned on makes that overlay follow the controls', () => {
+    const c = setFade(OVERLAY_DEFAULTS, 'stats', true)
+    expect(isOverlayShown(c, 'stats', false)).toBe(false)
+    expect(isOverlayShown(c, 'stats', true)).toBe(true)
+    // …and turned off lets the camera name stay.
+    expect(isOverlayShown(setFade(OVERLAY_DEFAULTS, 'cameraName', false), 'cameraName', false)).toBe(true)
+  })
+
+  it('setFade never mutates its input', () => {
+    setFade(OVERLAY_DEFAULTS, 'stats', true)
+    expect(OVERLAY_DEFAULTS.fade.stats).toBe(false)
+  })
+
+  it('the control groups and the device pill are not decided by a flag', () => {
+    expect(isOverlayShown(OVERLAY_DEFAULTS, 'controlsLeft', false)).toBe(true)
+    expect(isOverlayShown(OVERLAY_DEFAULTS, 'deviceInfo', false)).toBe(true)
+  })
+
+  it('a readout follows its OWN flag', () => {
+    const r = readout({ fade: true })
+    const c = addReadout(OVERLAY_DEFAULTS, r)
+    expect(isOverlayShown(c, `readout:${r.id}`, false)).toBe(false)
+    expect(isOverlayShown(c, `readout:${r.id}`, true)).toBe(true)
+    const kept = patchReadout(c, r.id, { fade: false })
+    expect(isOverlayShown(kept, `readout:${r.id}`, false)).toBe(true)
+  })
+})
+
+describe('overlay config', () => {
   it('pinning the same source twice replaces rather than stacks', () => {
     // Two identical chips would draw on top of each other in one corner and
     // only the top one could be removed.
@@ -112,12 +152,26 @@ describe('overlay config', () => {
     expect(readoutsAt(config, 'top-right')).toHaveLength(2)
     expect(removeReadout(config, a.id).readouts).toHaveLength(1)
   })
+
+  it('a field of THIS camera is a different readout from the same field of device 7', () => {
+    const own = readoutId({ kind: 'cameraField', sectionId: 's', fieldKey: 'temp' })
+    const other = readoutId({ kind: 'deviceField', deviceId: 7, sectionId: 's', fieldKey: 'temp' })
+    expect(own).not.toBe(other)
+  })
 })
 
-describe('storage normalisation', () => {
+describe('the global config read (parseOverlayConfig)', () => {
+  it('anything that is not an object is the defaults, never a throw', () => {
+    expect(parseOverlayConfig(null)).toBe(OVERLAY_DEFAULTS)
+    expect(parseOverlayConfig('nope')).toBe(OVERLAY_DEFAULTS)
+    expect(parseOverlayConfig(undefined)).toBe(OVERLAY_DEFAULTS)
+  })
+
+  it('an empty object reads as the defaults', () => {
+    expect(isDefaultOverlay(parseOverlayConfig({}))).toBe(true)
+  })
+
   it('drops a single broken readout and keeps the rest of the overlay', () => {
-    // A sensor removed from the system should cost its own chip, not the
-    // operator's meter placement.
     const raw = {
       layers: ['motion'],
       audioMeter: 'bottom-left',
@@ -126,92 +180,45 @@ describe('storage normalisation', () => {
         { id: 'y', source: { kind: 'audioDbfs' }, label: 'Audio', corner: 'top-left' },
       ],
     }
-    const config = normaliseOverlay(raw) as CameraOverlayConfig
+    const config = parseOverlayConfig(raw)
     expect([...config.layers]).toEqual(['motion'])
     expect(config.audioMeter).toBe('bottom-left')
     expect(config.readouts).toHaveLength(1)
     expect(config.readouts[0]?.label).toBe('Audio')
   })
 
-  it('rejects an unknown meter position instead of persisting it', () => {
-    const config = normaliseOverlay({ audioMeter: 'middle-of-nowhere' }) as CameraOverlayConfig
-    expect(config.audioMeter).toBe(OVERLAY_DEFAULTS.audioMeter)
+  it('rejects an unknown position instead of persisting it', () => {
+    expect(parseOverlayConfig({ audioMeter: 'middle-of-nowhere' }).audioMeter).toBe(OVERLAY_DEFAULTS.audioMeter)
+    expect(parseOverlayConfig({ cameraName: 'somewhere' }).cameraName).toBe('top-left')
+    expect(parseOverlayConfig({ viewers: true }).viewers).toBe('off')
   })
 
-  it('non-objects degrade to undefined, never a throw', () => {
-    expect(normaliseOverlay(null)).toBeUndefined()
-    expect(normaliseOverlay('nope')).toBeUndefined()
-  })
-})
-
-describe('stream stats is placed like every other overlay', () => {
-  // A boolean until 2026-10-07. A stored `true` must keep drawing — at the
-  // corner a tile always drew it — and a stored `false` must stay off.
-  it('migrates the stored boolean', () => {
-    expect((normaliseOverlay({ stats: true }) as CameraOverlayConfig).stats).toBe(LEGACY_STATS_POSITION)
-    expect((normaliseOverlay({ stats: false }) as CameraOverlayConfig).stats).toBe('off')
-    expect((normaliseOverlay({}) as CameraOverlayConfig).stats).toBe('off')
+  it('a control group never reads as off, and keeps a chosen anchor', () => {
+    expect(parseOverlayConfig({ controlsLeft: 'off' }).controlsLeft).toBe('bottom-left')
+    expect(parseOverlayConfig({ controlsRight: 'top-right' }).controlsRight).toBe('top-right')
   })
 
-  it('keeps a chosen anchor and refuses an unknown one', () => {
-    expect((normaliseOverlay({ stats: 'bottom-left' }) as CameraOverlayConfig).stats).toBe('bottom-left')
-    expect((normaliseOverlay({ stats: 'somewhere' }) as CameraOverlayConfig).stats).toBe('off')
-  })
-})
-
-describe('legacy camelCase corners migrate, never silently reset', () => {
-  // Until 2026-08-02 the corner overlays spoke a four-value camelCase
-  // vocabulary (`bottomLeft`) while the audio meter spoke the nine-value
-  // kebab one. Cameras persisted in that era still hold camelCase in
-  // `occupancy` and in each readout's `corner`; the unification must carry
-  // them across, because "unknown value → default" would move the operator's
-  // occupancy strip without a word.
-  it('occupancy: a stored topRight lands on top-right (NOT the default)', () => {
-    // Deliberately a NON-default corner: `bottomLeft` would land on
-    // `bottom-left` even through a broken migration, because that is also the
-    // default — proven when the guard was removed to check it fails.
-    const config = normaliseOverlay({ occupancy: 'topRight' }) as CameraOverlayConfig
-    expect(config.occupancy).toBe('top-right')
+  it('the name can be switched off', () => {
+    expect(parseOverlayConfig({ cameraName: 'off' }).cameraName).toBe('off')
   })
 
-  it('occupancy: every legacy corner maps to its kebab twin', () => {
-    const pairs: readonly (readonly [string, string])[] = [
-      ['topLeft', 'top-left'],
-      ['topRight', 'top-right'],
-      ['bottomLeft', 'bottom-left'],
-      ['bottomRight', 'bottom-right'],
-    ]
-    for (const [legacy, canonical] of pairs) {
-      const config = normaliseOverlay({ occupancy: legacy }) as CameraOverlayConfig
-      expect(config.occupancy).toBe(canonical)
-    }
+  it('fade is read flag by flag; a missing or junk flag is its default', () => {
+    const c = parseOverlayConfig({ fade: { stats: true, cameraName: 'yes' } })
+    expect(c.fade.stats).toBe(true)
+    expect(c.fade.cameraName).toBe(true)
+    expect(c.fade.viewers).toBe(false)
   })
 
-  it("occupancy: 'off' and the canonical form pass through; junk falls to the default", () => {
-    expect((normaliseOverlay({ occupancy: 'off' }) as CameraOverlayConfig).occupancy).toBe('off')
-    expect((normaliseOverlay({ occupancy: 'top-center' }) as CameraOverlayConfig).occupancy).toBe(
-      'top-center',
-    )
-    expect((normaliseOverlay({ occupancy: 'middle' }) as CameraOverlayConfig).occupancy).toBe(
-      OVERLAY_DEFAULTS.occupancy,
-    )
+  it('order keeps known ids once and drops the rest', () => {
+    const c = parseOverlayConfig({ order: ['stats', 'bogus', 'stats', 'occupancy', 7] })
+    expect([...c.order]).toEqual(['stats', 'occupancy'])
   })
 
-  it("a readout's legacy corner migrates; junk re-anchors to top-right", () => {
-    const raw = {
-      readouts: [
-        { id: 'a', source: { kind: 'audioDbfs' }, label: 'Audio', corner: 'bottomLeft' },
-        {
-          id: 'b',
-          source: { kind: 'deviceField', deviceId: 7, sectionId: 's', fieldKey: 'temp' },
-          label: 'Temp',
-          corner: 'nowhere',
-        },
-      ],
-    }
-    const config = normaliseOverlay(raw) as CameraOverlayConfig
-    expect(config.readouts[0]?.corner).toBe('bottom-left')
-    expect(config.readouts[1]?.corner).toBe('top-right')
+  it('a document written by the per-camera model reads as defaults for what it lacks', () => {
+    // No migration beyond defaults: the retired fields are simply not read.
+    const c = parseOverlayConfig({ boxes: 'all', stats: true })
+    expect(c.stats).toBe('off')
+    expect([...c.layers]).toEqual([])
   })
 })
 
@@ -250,92 +257,33 @@ describe('live fields', () => {
   })
 })
 
-describe('the motion badge became a position, and old values must survive it', () => {
-  // It was a boolean pinned to the top-right. Falling back to the default for
-  // a stored boolean would switch the badge back ON for an operator who had
-  // turned it off — a setting silently undone by a refactor.
-  it('a stored `true` lands where the badge always drew', () => {
-    expect((normaliseOverlay({ motionBadge: true }) as CameraOverlayConfig).motionBadge).toBe(
-      'top-right',
-    )
-  })
-
-  it('a stored `false` becomes off, NOT the default', () => {
-    expect((normaliseOverlay({ motionBadge: false }) as CameraOverlayConfig).motionBadge).toBe('off')
-  })
-
-  it('a position passes through, and junk falls back to the default', () => {
-    expect((normaliseOverlay({ motionBadge: 'bottom-left' }) as CameraOverlayConfig).motionBadge).toBe(
-      'bottom-left',
-    )
-    expect((normaliseOverlay({ motionBadge: 'nowhere' }) as CameraOverlayConfig).motionBadge).toBe(
-      OVERLAY_DEFAULTS.motionBadge,
-    )
-  })
-
-  it('the legacy camelCase spelling migrates here too', () => {
-    expect((normaliseOverlay({ motionBadge: 'bottomRight' }) as CameraOverlayConfig).motionBadge).toBe(
-      'bottom-right',
-    )
+describe('every overlay of the document has a consumer', () => {
+  it('the layer draws each placed overlay; the screen hands it the document', () => {
+    const layer = readFileSync(join(process.cwd(), 'src', 'components', 'camera', 'overlay', 'OverlayLayer.tsx'), 'utf8')
+    const screen = readFileSync(join(process.cwd(), 'src', 'screens', 'CameraDetailScreen.tsx'), 'utf8')
+    for (const node of ['<AudioLevelMeter', '<OccupancyBadge', '<StreamStatsOverlay', '<LiveViewersBadge', '<DoorbellBadge']) {
+      expect(layer, node).toContain(node)
+    }
+    expect(screen).toContain('config: overlay')
   })
 
   it('the motion pill is not mounted — the overlay is the motion treatment', () => {
-    const screen = readFileSync(join(process.cwd(), 'src', 'screens', 'CameraDetailScreen.tsx'), 'utf8')
-    const card = readFileSync(join(process.cwd(), 'src', 'components', 'CameraCard.tsx'), 'utf8')
-    const tile = readFileSync(join(process.cwd(), 'src', 'components', 'grid', 'GridTile.tsx'), 'utf8')
-    const embed = readFileSync(
-      join(process.cwd(), 'embed', 'src', 'components', 'GridTilePlayer.tsx'),
-      'utf8',
-    )
-    const listSheet = readFileSync(
-      join(process.cwd(), 'src', 'components', 'camera', 'CamerasDisplaySheet.tsx'),
-      'utf8',
-    )
-    expect(screen).not.toContain('<MotionBadge')
-    expect(card).not.toContain('<MotionBadge')
-    expect(tile).not.toContain('<MotionBadge')
-    expect(embed).not.toContain('<TileMotionBadge')
-    expect(listSheet).not.toContain('listMotionBadge')
+    const read = (...p: string[]): string => readFileSync(join(process.cwd(), ...p), 'utf8')
+    expect(read('src', 'screens', 'CameraDetailScreen.tsx')).not.toContain('<MotionBadge')
+    expect(read('src', 'components', 'CameraCard.tsx')).not.toContain('<MotionBadge')
+    expect(read('src', 'components', 'grid', 'GridTile.tsx')).not.toContain('<MotionBadge')
+    expect(read('embed', 'src', 'components', 'GridTilePlayer.tsx')).not.toContain('<TileMotionBadge')
   })
-})
 
-describe('one placement map, not one per overlay', () => {
-  it('the readouts and the badge both use ANCHOR_PLACEMENT', () => {
+  it('the readouts and the badges use the stack, not a private placement map', () => {
     const readouts = readFileSync(
       join(process.cwd(), 'src', 'components', 'camera', 'overlay', 'OverlayReadouts.tsx'),
       'utf8',
     )
-    const badge = readFileSync(
-      join(process.cwd(), 'src', 'components', 'camera', 'MotionBadge.tsx'),
-      'utf8',
-    )
-    expect(readouts).toContain('ANCHOR_PLACEMENT')
-    expect(badge).toContain('ANCHOR_PLACEMENT')
-    // The private copy that used to live in OverlayReadouts is gone.
     expect(readouts).not.toContain('CORNER_STYLE')
+    expect(readouts).not.toContain('ANCHOR_PLACEMENT')
   })
 })
-
-describe('live viewers is placed like every other overlay', () => {
-  it('is off for a camera that never placed it, and an old document stays default', () => {
-    expect(OVERLAY_DEFAULTS.viewers).toBe('off')
-    expect((normaliseOverlay({}) as CameraOverlayConfig).viewers).toBe('off')
-    expect(isDefaultOverlay(OVERLAY_DEFAULTS)).toBe(true)
-  })
-
-  it('keeps a stored position, and rejects junk back to off', () => {
-    expect((normaliseOverlay({ viewers: 'bottom-right' }) as CameraOverlayConfig).viewers).toBe(
-      'bottom-right',
-    )
-    expect((normaliseOverlay({ viewers: 'somewhere' }) as CameraOverlayConfig).viewers).toBe('off')
-    expect((normaliseOverlay({ viewers: true }) as CameraOverlayConfig).viewers).toBe('off')
-  })
-
-  it('a camera that placed it is no longer the default document (so it is persisted)', () => {
-    expect(isDefaultOverlay({ ...OVERLAY_DEFAULTS, viewers: 'top-left' })).toBe(false)
-  })
-})
-
 
 describe('the doorbell badge is an opt-in overlay', () => {
   const live = { hasDoorbell: true, overlaysVisible: true }
@@ -346,14 +294,14 @@ describe('the doorbell badge is an opt-in overlay', () => {
   })
 
   it('a document stored before the field existed reads as off', () => {
-    const stored = normaliseOverlay({ audioMeter: 'top-center', occupancy: 'off' })
-    expect(stored?.doorbell).toBe(false)
+    const stored = parseOverlayConfig({ audioMeter: 'top-center', occupancy: 'off' })
+    expect(stored.doorbell).toBe(false)
   })
 
   it('draws on a doorbell camera once switched on, and persists', () => {
     const on = patchOverlay(OVERLAY_DEFAULTS, { doorbell: true })
     expect(isDefaultOverlay(on)).toBe(false)
-    expect(normaliseOverlay(on)?.doorbell).toBe(true)
+    expect(parseOverlayConfig(on).doorbell).toBe(true)
     expect(doorbellBadgeEnabled({ ...live, switchedOn: on.doorbell })).toBe(true)
   })
 

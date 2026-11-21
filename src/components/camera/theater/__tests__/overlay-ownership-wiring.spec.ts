@@ -100,9 +100,11 @@ describe('position choices go through ONE picker, inline, never cycled', () => {
     // viewers count on 2026-10-14.
     const src = read('components/camera/theater/TimelineOverlayPanel.tsx')
     const rows = src.match(/<PanelPositionRow/g) ?? []
-    expect(rows.length).toBe(5)
-    expect(src).toContain('onChange={(stats) => patch({ stats })}')
-    expect(src).toContain('onChange={(viewers) => patch({ viewers })}')
+    // audio, occupancy, stats, viewers, device info + camera name and the two
+    // control groups (the global layout rows).
+    expect(rows.length).toBe(8)
+    expect(src).toContain("place('stats', next)")
+    expect(src).toContain("place('viewers', next)")
     for (const field of ['audioMeter', 'occupancy', 'deviceInfo']) {
       expect(src).toContain(field)
     }

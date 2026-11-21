@@ -23,16 +23,11 @@ import { useHostNetwork } from '../../data/use-host-network.js'
 import { networkLabel, type HostNetworkStatus } from '../../data/host-network.js'
 import { useTheme } from '../../theme/theme-provider.js'
 import { TABULAR, SPACING, RADIUS } from '../../theme/tokens.js'
-import { ANCHOR_PLACEMENT, type OverlayPosition } from './overlay/overlay-position.js'
 import { LOW_BATTERY_PCT } from './BatteryBadge.js'
 import { useScaledPx, useStyleScaler } from './overlay/OverlayFrame.js'
 
 /** Below this wifi quality the link reads as weak (warning colour). */
 const WEAK_WIFI_PCT = 35
-
-export interface DeviceInfoOverlayProps {
-  readonly position: OverlayPosition
-}
 
 /** The glyph size every row of the pill is drawn at, before the overlay size. */
 const GLYPH_PX = 14
@@ -49,14 +44,13 @@ function NetworkGlyph({ status, color, size }: NetworkGlyphProps): React.JSX.Ele
   return <Wifi size={size} color={color} />
 }
 
-export function DeviceInfoOverlay({ position }: DeviceInfoOverlayProps): React.JSX.Element | null {
+export function DeviceInfoOverlay(): React.JSX.Element {
   const battery = useHostBattery()
   const network = useHostNetwork()
   const clock = useHostClock()
   const { colors } = useTheme()
   const sx = useStyleScaler()
   const px = useScaledPx()
-  if (position === 'off') return null
   const glyph = px(GLYPH_PX)
 
   const muted = colors.foregroundMuted
@@ -75,11 +69,7 @@ export function DeviceInfoOverlay({ position }: DeviceInfoOverlayProps): React.J
   const netText = network === null ? null : networkLabel(network)
 
   return (
-    <View
-      pointerEvents="none"
-      style={[styles.layer, ANCHOR_PLACEMENT[position] as object]}
-      testID="device-info-overlay"
-    >
+    <View pointerEvents="none" testID="device-info-overlay">
       <View style={[sx(styles.pill), { backgroundColor: colors.surface }]}>
         <View style={sx(styles.item)} testID="device-info-clock">
           <Clock size={glyph} color={muted} />
@@ -107,10 +97,6 @@ export function DeviceInfoOverlay({ position }: DeviceInfoOverlayProps): React.J
 }
 
 const styles = StyleSheet.create({
-  layer: {
-    position: 'absolute',
-    zIndex: 20,
-  },
   pill: {
     flexDirection: 'row',
     alignItems: 'center',

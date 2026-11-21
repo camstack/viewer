@@ -117,16 +117,28 @@ export function OverlayDiscButton({
   )
 }
 
-export function OverlayDiscGroup({
+/** The two clusters of a group as unplaced nodes — `null` for an empty one. */
+export interface DiscClusters {
+  readonly left: React.ReactNode
+  readonly right: React.ReactNode
+}
+
+/**
+ * The group's behaviour WITHOUT its placement: the auto-hide countdown, the
+ * press re-arm, and the two clusters as plain nodes. `OverlayDiscGroup` pins
+ * them to the bottom corners; the single-camera stream hands them to its
+ * overlay stack instead, where each is an overlay with a position of its own
+ * (`OverlayConfig.controlsLeft` / `controlsRight`). One behaviour, two
+ * placements — never a second copy of the timer.
+ */
+export function useDiscClusters({
   visible,
   onRequestHide,
   holdOpen = false,
   items,
-  edgePad,
   discSize = OVERLAY_DISC_SIZE,
   activity = 0,
-}: OverlayDiscGroupProps) {
-  const fade = useControlsTransitions()
+}: Omit<OverlayDiscGroupProps, 'edgePad'>): DiscClusters {
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
@@ -149,68 +161,69 @@ export function OverlayDiscGroup({
     [holdOpen, onRequestHide],
   )
 
-  const leftItems = useMemo(
-    () => items.filter((item) => item.cluster === 'left'),
-    [items],
+  const cluster = useCallback(
+    (which: OverlayDiscCluster): React.ReactNode => {
+      const own = items.filter((item) => item.cluster === which)
+      if (own.length === 0) return null
+      return (
+        <GlassGroup style={[styles.cluster, { gap: clusterGap(discSize) }]} pointerEvents="box-none">
+          {own.map((item) => (
+            <OverlayDiscButton
+              key={item.id}
+              icon={item.icon}
+              label={item.label}
+              active={item.active}
+              badge={item.badge}
+              size={discSize}
+              onPress={press(item.onPress)}
+            />
+          ))}
+        </GlassGroup>
+      )
+    },
+    [items, discSize, press],
   )
-  const rightItems = useMemo(
-    () => items.filter((item) => item.cluster === 'right'),
-    [items],
-  )
+
+  return { left: cluster('left'), right: cluster('right') }
+}
+
+export function OverlayDiscGroup({
+  visible,
+  onRequestHide,
+  holdOpen,
+  items,
+  edgePad,
+  discSize = OVERLAY_DISC_SIZE,
+  activity,
+}: OverlayDiscGroupProps) {
+  const fade = useControlsTransitions()
+  const clusters = useDiscClusters({ visible, onRequestHide, holdOpen, items, discSize, activity })
 
   if (!visible) return null
 
   return (
     <Animated.View style={StyleSheet.absoluteFill} pointerEvents="box-none" entering={fade.entering} exiting={fade.exiting}>
-      {leftItems.length > 0 ? (
-        <GlassGroup
+      {clusters.left !== null ? (
+        <View
           style={[
             styles.bottomLeft,
-            {
-              gap: clusterGap(discSize),
-              left: (edgePad?.left ?? 0) + SPACING.md,
-              bottom: (edgePad?.bottom ?? 0) + SPACING.md,
-            },
+            { left: (edgePad?.left ?? 0) + SPACING.md, bottom: (edgePad?.bottom ?? 0) + SPACING.md },
           ]}
           pointerEvents="box-none"
         >
-          {leftItems.map((item) => (
-            <OverlayDiscButton
-              key={item.id}
-              icon={item.icon}
-              label={item.label}
-              active={item.active}
-              badge={item.badge}
-              size={discSize}
-              onPress={press(item.onPress)}
-            />
-          ))}
-        </GlassGroup>
+          {clusters.left}
+        </View>
       ) : null}
-      {rightItems.length > 0 ? (
-        <GlassGroup
+      {clusters.right !== null ? (
+        <View
           style={[
             styles.bottomRight,
-            {
-              gap: clusterGap(discSize),
-              right: (edgePad?.right ?? 0) + SPACING.md,
-              bottom: (edgePad?.bottom ?? 0) + SPACING.md,
-            },
+            { right: (edgePad?.right ?? 0) + SPACING.md, bottom: (edgePad?.bottom ?? 0) + SPACING.md },
           ]}
           pointerEvents="box-none"
         >
-          {rightItems.map((item) => (
-            <OverlayDiscButton
-              key={item.id}
-              icon={item.icon}
-              label={item.label}
-              active={item.active}
-              badge={item.badge}
-              size={discSize}
-              onPress={press(item.onPress)}
-            />
-          ))}
-        </GlassGroup>
+          {clusters.right}
+        </View>
       ) : null}
     </Animated.View>
   )
@@ -225,13 +238,15 @@ function clusterGap(discSize: number): number {
 const styles = StyleSheet.create({
   bottomLeft: {
     position: 'absolute',
-    flexDirection: 'row',
-    gap: SPACING.md,
   },
   bottomRight: {
     position: 'absolute',
+  },
+  // Wraps rather than overflowing: a cluster in a narrow corner (a phone in
+  // portrait, a grid tile) breaks onto a second row of discs.
+  cluster: {
     flexDirection: 'row',
-    gap: SPACING.md,
+    flexWrap: 'wrap',
   },
   badge: {
     position: 'absolute',

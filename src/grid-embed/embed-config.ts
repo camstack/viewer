@@ -8,7 +8,7 @@
 import type { GridQuality, GridLayout, ResolvedGridOptions, GridHighlightSettings } from '../store/grid-store.js'
 import type { HighlightAppearance } from '../store/settings-store.js'
 import { DEFAULT_OVERLAY_SIZE, type OverlaySize } from '../components/camera/overlay/overlay-size.js'
-import { hasLayer, type CameraOverlayConfig } from '../components/camera/overlay/overlay-config.js'
+import { hasLayer, type OverlayConfig } from '../components/camera/overlay/overlay-config.js'
 import type { OverlayAnchor, OverlayPosition } from '../components/camera/overlay/overlay-position.js'
 import type { GridCellSpan } from './embed-messages.js'
 import type { TileLabelsEmbedConfig } from './tile-labels.js'
@@ -73,7 +73,7 @@ export interface TileOverlayEmbedConfig {
  * an internal refactor is how a wall goes blank after an OTA.
  */
 export function tileOverlayFor(
-  overlay: CameraOverlayConfig,
+  overlay: OverlayConfig,
   size: OverlaySize = DEFAULT_OVERLAY_SIZE,
 ): TileOverlayEmbedConfig | null {
   const config: TileOverlayEmbedConfig = {
@@ -93,7 +93,7 @@ export function tileOverlayFor(
 /** One camera's resolved overlay, as the caller reads it out of the prefs. */
 export interface CameraOverlayEntry {
   readonly deviceId: number
-  readonly overlay: CameraOverlayConfig
+  readonly overlay: OverlayConfig
 }
 
 /** The per-device map the embed receives — only the cameras that placed

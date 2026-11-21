@@ -113,9 +113,6 @@ export function DoorbellBadge({ deviceId, enabled }: DoorbellBadgeProps) {
 
 const styles = StyleSheet.create({
   badge: {
-    position: 'absolute',
-    top: SPACING.md,
-    left: SPACING.md,
     flexDirection: 'row',
     alignItems: 'center',
     gap: SPACING.xs,

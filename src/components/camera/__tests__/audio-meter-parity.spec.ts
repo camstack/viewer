@@ -25,11 +25,15 @@ import {
 const SRC = join(process.cwd(), 'src')
 
 describe('one meter, three hosts', () => {
-  it('native grid tile and single player both mount AudioLevelMeter', () => {
+  it('native grid tile and single player both mount the ONE overlay layer, which mounts AudioLevelMeter', () => {
     const tile = readFileSync(join(SRC, 'components', 'grid', 'GridTile.tsx'), 'utf8')
     const screen = readFileSync(join(SRC, 'screens', 'CameraDetailScreen.tsx'), 'utf8')
-    expect(tile).toContain('<AudioLevelMeter')
-    expect(screen).toContain('<AudioLevelMeter')
+    const layer = readFileSync(join(SRC, 'components', 'camera', 'overlay', 'OverlayLayer.tsx'), 'utf8')
+    const controls = readFileSync(join(SRC, 'components', 'camera', 'StreamOverlayControls.tsx'), 'utf8')
+    expect(layer).toContain('<AudioLevelMeter')
+    expect(tile).toContain('<OverlayLayerView')
+    expect(screen).toContain('<StreamOverlayControls')
+    expect(controls).toContain('<OverlayLayer')
     expect(tile).not.toContain('TileAudioMeter')
   })
 

@@ -88,7 +88,7 @@ import {
   type GridHighlightEmbedConfig,
   type TileOverlayEmbedConfig,
 } from '../../grid-embed/embed-config.js'
-import { OVERLAY_DEFAULTS } from '../../components/camera/overlay/overlay-config.js'
+import { useOverlayConfig } from '../../hooks/use-camera-view-options.js'
 import { useCameraPrefsStore } from '../../store/camera-prefs-store.js'
 import { useDeviceSettingsStore } from '../../store/device-settings-store.js'
 import type { GridLayout } from '../../store/grid-store.js'
@@ -253,20 +253,20 @@ export function WorkspaceGrid({
   // — it is a separate bundle behind a WebView — so the host resolves the map
   // and pushes it. Without this every per-camera view-options menu the wall
   // offers, the PRIMARY's included, would edit a document nothing paints.
-  const prefsById = useCameraPrefsStore((s) => s.prefs.byId)
   const hydratePrefs = useCameraPrefsStore((s) => s.hydrate)
   // Device-local: how big the wall's indicators are drawn on THIS screen.
   const overlaySize = useDeviceSettingsStore((s) => s.settings.overlaySize)
   useEffect(() => {
     void hydratePrefs()
   }, [hydratePrefs])
+  const globalOverlay = useOverlayConfig()
   const overlays = useMemo<Readonly<Record<string, TileOverlayEmbedConfig>>>(
     () =>
       buildTileOverlayMap(
-        wallDeviceIds.map((id) => ({ deviceId: id, overlay: prefsById[id]?.overlay ?? OVERLAY_DEFAULTS })),
+        wallDeviceIds.map((id) => ({ deviceId: id, overlay: globalOverlay })),
         overlaySize,
       ),
-    [wallDeviceIds, prefsById, overlaySize],
+    [wallDeviceIds, globalOverlay, overlaySize],
   )
 
   // ONE measurement of the content box, for both branches. See the docblock for

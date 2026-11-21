@@ -1,10 +1,11 @@
 /**
  * OverlayReadouts — the operator's pinned values, drawn over the picture.
  *
- * Four absolutely-positioned corner stacks, each holding the readouts assigned
- * to it. Non-interactive by construction (`pointerEvents="none"` on the root and
- * on every chip): the picture underneath owns pinch, pan, and the single tap
- * that reveals the controls, and a chip that swallowed a tap would break the
+ * Each readout is one entry of the stream's overlay stack (`OverlayStack`),
+ * at the corner it is assigned to, laid out with the other overlays of that
+ * corner. Non-interactive by construction (`pointerEvents="none"` on every
+ * chip): the picture underneath owns pinch, pan, and the single tap that
+ * reveals the controls, and a chip that swallowed a tap would break the
  * gesture in the one place the operator is most likely to aim — a corner.
  *
  * Data comes in two shapes and this component fetches BOTH, once each:
@@ -23,24 +24,35 @@ import {
   useDeviceLiveFields,
   type DeviceLiveField,
 } from '../../../data/use-device-live-fields.js'
-import { readoutsAt, type CameraOverlayConfig, type OverlayReadout } from './overlay-config.js'
-import { ANCHOR_PLACEMENT, OVERLAY_ANCHORS } from './overlay-position.js'
+import { isOverlayShown, type OverlayConfig, type OverlayReadout } from './overlay-config.js'
 import { useStyleScaler } from './OverlayFrame.js'
+import type { OverlayStackEntry } from './OverlayStack.js'
 import { useTheme } from '../../../theme/theme-provider.js'
 
-export interface OverlayReadoutsProps {
+export interface UseReadoutEntriesInput {
+  /** The camera the stream shows — the device a `cameraField` reads from. */
   readonly deviceId: number
-  readonly config: CameraOverlayConfig
+  readonly config: OverlayConfig
   /** Draw only while the picture is live and visible — a chip over a frozen
    *  frame reports a value that does not belong to what is on screen. */
   readonly enabled: boolean
+  /** The auto-hiding controls are showing (what a readout's `fade` follows). */
+  readonly controlsVisible: boolean
 }
 
-/** The device ids the config's readouts refer to, de-duplicated. */
-export function readoutDeviceIds(config: CameraOverlayConfig): readonly number[] {
+/** The device a readout reads its field from, or null for the audio level. */
+function sourceDeviceId(r: OverlayReadout, cameraDeviceId: number): number | null {
+  if (r.source.kind === 'deviceField') return r.source.deviceId
+  if (r.source.kind === 'cameraField') return cameraDeviceId
+  return null
+}
+
+/** The device ids the config's readouts read from, de-duplicated. */
+export function readoutDeviceIds(config: OverlayConfig, cameraDeviceId: number): readonly number[] {
   const ids = new Set<number>()
   for (const r of config.readouts) {
-    if (r.source.kind === 'deviceField') ids.add(r.source.deviceId)
+    const id = sourceDeviceId(r, cameraDeviceId)
+    if (id !== null) ids.add(id)
   }
   return [...ids]
 }
@@ -98,10 +110,21 @@ function ReadoutChip({ label, value }: { readonly label: string; readonly value:
   )
 }
 
-export function OverlayReadouts({ deviceId, config, enabled }: OverlayReadoutsProps) {
+/**
+ * The stack entries of the operator's pinned readouts, plus the probes that
+ * feed them (render `probes` anywhere inside the frame — they draw nothing).
+ */
+export function useReadoutEntries({
+  deviceId,
+  config,
+  enabled,
+  controlsVisible,
+}: UseReadoutEntriesInput): {
+  readonly entries: readonly OverlayStackEntry[]
+  readonly probes: React.ReactNode
+} {
   const { t } = useTranslation()
-  const sx = useStyleScaler()
-  const deviceIds = useMemo(() => readoutDeviceIds(config), [config])
+  const deviceIds = useMemo(() => readoutDeviceIds(config, deviceId), [config, deviceId])
   const [byDevice, setByDevice] = React.useState<Readonly<Record<number, readonly DeviceLiveField[]>>>(
     {},
   )
@@ -125,11 +148,9 @@ export function OverlayReadouts({ deviceId, config, enabled }: OverlayReadoutsPr
           offLabel: t('v2.common.off'),
         })
       }
-      const fields = byDevice[r.source.deviceId] ?? []
-      const match =
-        r.source.kind === 'deviceField'
-          ? matchDeviceLiveField(fields, r.source.sectionId, r.source.fieldKey)
-          : undefined
+      const source = sourceDeviceId(r, deviceId)
+      const fields = source === null ? [] : (byDevice[source] ?? [])
+      const match = matchDeviceLiveField(fields, r.source.sectionId, r.source.fieldKey)
       if (!match) return '—'
       const opts: { precision?: number; unit?: string; onLabel: string; offLabel: string } = {
         onLabel: t('v2.common.on'),
@@ -141,33 +162,31 @@ export function OverlayReadouts({ deviceId, config, enabled }: OverlayReadoutsPr
       if (unit !== undefined) opts.unit = unit
       return formatLiveValue(match.value, opts)
     },
-    [byDevice, dbfs, t],
+    [byDevice, dbfs, deviceId, t],
   )
 
-  if (!enabled || config.readouts.length === 0) return null
-
-  return (
-    <>
-      {deviceIds.map((id) => (
+  const entries = useMemo<readonly OverlayStackEntry[]>(
+    () =>
+      !enabled
+        ? []
+        : config.readouts
+            .filter((r) => isOverlayShown(config, `readout:${r.id}`, controlsVisible))
+            .map((r) => ({
+              id: `readout:${r.id}` as const,
+              anchor: r.corner,
+              node: <ReadoutChip label={r.label} value={valueFor(r)} />,
+            })),
+    [enabled, config, controlsVisible, valueFor],
+  )
+  const probes = enabled
+    ? deviceIds.map((id) => (
         <DeviceFieldsProbe key={id} deviceId={id} enabled={enabled} onFields={onFields} />
-      ))}
-      {OVERLAY_ANCHORS.map((corner) => {
-        const items = readoutsAt(config, corner)
-        if (items.length === 0) return null
-        return (
-          <View key={corner} pointerEvents="none" style={[sx(styles.stack), ANCHOR_PLACEMENT[corner]]}>
-            {items.map((r) => (
-              <ReadoutChip key={r.id} label={r.label} value={valueFor(r)} />
-            ))}
-          </View>
-        )
-      })}
-    </>
-  )
+      ))
+    : null
+  return { entries, probes }
 }
 
 const styles = StyleSheet.create({
-  stack: { position: 'absolute', gap: 4 },
   chip: {
     flexDirection: 'row',
     alignItems: 'baseline',

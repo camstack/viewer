@@ -23,7 +23,6 @@ import { useCurrentOccupancy } from '../../data/use-occupancy.js'
 import { occupancyClassCounts } from '../../data/occupancy.js'
 import { useEventKindResolver } from '../../data/use-event-kind-resolver.js'
 import { useKindPaint } from '../../../shared/palette.js'
-import { type OverlayAnchor } from './overlay/overlay-position.js'
 import { useScaledPx, useStyleScaler } from './overlay/OverlayFrame.js'
 
 /** Cap the number of class chips so a busy scene stays a compact strip. */
@@ -33,12 +32,10 @@ interface OccupancyBadgeProps {
   readonly deviceId: number
   /** Mount + poll only while true (the caller gates this to the live edge). */
   readonly enabled: boolean
-  /** Which anchor to sit at. Defaults to the bottom-left it always occupied. */
-  readonly corner?: OverlayAnchor
 }
 
 /** Live occupancy strip. Empty (renders nothing) with no occupancy. */
-export function OccupancyBadge({ deviceId, enabled, corner = 'bottom-left' }: OccupancyBadgeProps) {
+export function OccupancyBadge({ deviceId, enabled }: OccupancyBadgeProps) {
   const { colors } = useTheme()
   const sx = useStyleScaler()
   const px = useScaledPx()
@@ -53,7 +50,7 @@ export function OccupancyBadge({ deviceId, enabled, corner = 'bottom-left' }: Oc
   const extra = counts.length - chips.length
 
   return (
-    <View style={[sx(styles.row), CORNER[corner]]} pointerEvents="none">
+    <View style={sx(styles.row)} pointerEvents="none">
       {chips.map(({ className, count }) => {
         const Glyph = resolver.resolveIcon(className)
         const color = paint(className)
@@ -82,23 +79,8 @@ export function OccupancyBadge({ deviceId, enabled, corner = 'bottom-left' }: Oc
   )
 }
 
-/** Absolute placement per anchor — the strip itself is identical at all eight.
- *  Edge midpoints stretch between the opposing edges and centre the row inside
- *  (`justifyContent` = main/horizontal axis, `alignItems` = cross/vertical). */
-const CORNER: Readonly<Record<OverlayAnchor, object>> = {
-  'top-left': { top: SPACING.md, left: SPACING.md },
-  'top-center': { top: SPACING.md, left: 0, right: 0, justifyContent: 'center' },
-  'top-right': { top: SPACING.md, right: SPACING.md },
-  'left-center': { left: SPACING.md, top: 0, bottom: 0, alignItems: 'center' },
-  'right-center': { right: SPACING.md, top: 0, bottom: 0, alignItems: 'center' },
-  'bottom-left': { bottom: SPACING.md, left: SPACING.md },
-  'bottom-center': { bottom: SPACING.md, left: 0, right: 0, justifyContent: 'center' },
-  'bottom-right': { bottom: SPACING.md, right: SPACING.md },
-}
-
 const styles = StyleSheet.create({
   row: {
-    position: 'absolute',
     flexDirection: 'row',
     alignItems: 'center',
     gap: SPACING.xs,

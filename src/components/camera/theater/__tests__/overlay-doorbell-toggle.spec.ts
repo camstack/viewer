@@ -10,7 +10,7 @@ import React from 'react'
 import { cleanup, fireEvent } from '@testing-library/react'
 
 import { mountScreen } from '../../../../testing/mount.js'
-import { OVERLAY_DEFAULTS, type CameraOverlayConfig } from '../../overlay/overlay-config.js'
+import { OVERLAY_DEFAULTS, type OverlayConfig } from '../../overlay/overlay-config.js'
 import { OverlaySettingsSections } from '../TimelineOverlayPanel.js'
 
 vi.mock('../../../../connection/ConnectionProvider.js', async () =>
@@ -19,7 +19,7 @@ vi.mock('../../../../connection/ConnectionProvider.js', async () =>
 
 const HIGHLIGHT = { motion: true, audio: false, detection: false } as never
 
-function mount(hasDoorbell: boolean | undefined, onChange: (c: CameraOverlayConfig) => void) {
+function mount(hasDoorbell: boolean | undefined, onChange: (c: OverlayConfig) => void) {
   return mountScreen(
     React.createElement(OverlaySettingsSections, {
       deviceId: 7,
@@ -44,7 +44,8 @@ describe('doorbell overlay switch', () => {
   it('is offered for a doorbell camera, off, and turns the overlay on', () => {
     const onChange = vi.fn()
     const view = mount(true, onChange)
-    const label = view.getByText('Doorbell')
+    // Two rows carry the name: the switch (live indicators, first) and its fade toggle.
+    const label = view.getAllByText('Doorbell')[0] as HTMLElement
     const row = label.parentElement as HTMLElement
     fireEvent.click(row.querySelector('input[type="checkbox"], [role="switch"]') as HTMLElement)
     expect(onChange).toHaveBeenCalledTimes(1)

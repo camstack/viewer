@@ -36,6 +36,7 @@ import { MotionBorder } from './camera/MotionBorder.js'
 import { CameraStatusDot } from './camera/CameraStatusDot.js'
 import { isLiveEdge, shouldRequestSnapshot, type TileCameraState } from './camera/tile-snapshot-gate.js'
 import { OccupancyBadge } from './camera/OccupancyBadge.js'
+import { OverlayStack } from './camera/overlay/OverlayStack.js'
 import { GlassButton } from './ui/GlassButton.js'
 import { GlassGroup } from './ui/GlassSurface.js'
 
@@ -267,11 +268,18 @@ export const CameraCard = React.memo(function CameraCard({
         {/* Live occupancy — compact class chips, bottom-left over the thumbnail
             (only at the live edge for online, awake cams). Renders nothing when
             the scene is empty or the analytics cap is absent. */}
-        <OccupancyBadge
-          deviceId={camera.id}
-          enabled={liveEdge && listOverlays.occupancy !== 'off'}
-          corner={listOverlays.occupancy === 'off' ? 'bottom-left' : listOverlays.occupancy}
-        />
+        {listOverlays.occupancy !== 'off' ? (
+          <OverlayStack
+            userOrder={[]}
+            entries={[
+              {
+                id: 'occupancy',
+                anchor: listOverlays.occupancy,
+                node: <OccupancyBadge deviceId={camera.id} enabled={liveEdge} />,
+              },
+            ]}
+          />
+        ) : null}
 
         {/* Live motion — a pulsing ring around the whole card. Mounted only
             while motion (with linger) is active AND the list setting asks

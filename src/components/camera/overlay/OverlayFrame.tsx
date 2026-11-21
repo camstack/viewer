@@ -1,16 +1,22 @@
 /**
- * OverlayFrame — the box the read-outs over a picture are laid out in.
+ * OverlayFrame — the container the informational overlays over a stream are
+ * laid out in.
  *
- * Wraps every overlay that sits ON the picture. It measures its container,
- * works out where the VIDEO actually is inside it (`videoRectIn` — a
- * letterboxed stream is measured on the picture, not on the bars around it) and
- * does two things with that rectangle:
+ * Wraps every overlay that sits ON the stream. It measures its container and
+ * does two things:
  *
- *  1. it IS the coordinate space the overlays anchor to, so `top-left` is the
- *     picture's corner, not the window's;
+ *  1. it IS the coordinate space the overlays anchor to — the stream
+ *     CONTAINER, not the letterboxed picture: `top-left` is the container's
+ *     corner, so a letterboxed stream's badges sit on the bars' edge, next to
+ *     the camera name, instead of floating inside the picture. (The box
+ *     overlays — detections, motion — are NOT in this frame: they map onto the
+ *     picture, `picture-box.ts`.) Several overlays in one corner are laid out
+ *     by `OverlayStack` (`overlay-stack.ts`);
  *  2. it publishes the size multiplier for the device's overlay size level
  *     ({@link overlayScale}), which {@link useStyleScaler} / {@link useOverlayScale}
- *     read — one number every overlay multiplies its dimensions by.
+ *     read — one number every overlay multiplies its dimensions by. The scale
+ *     is still a share of the RENDERED VIDEO width (`videoRectIn`), so a
+ *     letterboxed stream is measured on the picture, not on the bars around it.
  *
  * An overlay rendered OUTSIDE a frame (a card in the cameras list) reads the
  * context default: scale 1, exactly what it always drew.
@@ -92,14 +98,7 @@ export function OverlayFrame({
   )
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="box-none" onLayout={onLayout}>
-      <OverlayMetricsContext.Provider value={metrics}>
-        <View
-          pointerEvents="box-none"
-          style={{ position: 'absolute', left: rect.x, top: rect.y, width: rect.width, height: rect.height }}
-        >
-          {children}
-        </View>
-      </OverlayMetricsContext.Provider>
+      <OverlayMetricsContext.Provider value={metrics}>{children}</OverlayMetricsContext.Provider>
     </View>
   )
 }

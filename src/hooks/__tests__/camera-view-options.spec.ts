@@ -1,9 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import {
-  mergeHighlightPatch,
-  resolveCameraViewOptions,
-} from '../use-camera-view-options.js'
-import { OVERLAY_DEFAULTS } from '../../components/camera/overlay/overlay-config.js'
+import { mergeHighlightPatch, resolveCameraHighlight } from '../use-camera-view-options.js'
 import { GRID_HIGHLIGHT_DEFAULTS } from '../../store/grid-store.js'
 
 /**
@@ -12,24 +8,21 @@ import { GRID_HIGHLIGHT_DEFAULTS } from '../../store/grid-store.js'
  * configured from the wall and the same camera opened alone can never show
  * different values.
  */
-describe('resolveCameraViewOptions', () => {
+describe('resolveCameraHighlight', () => {
   it('resolves an unconfigured camera to the defaults (never undefined)', () => {
-    const resolved = resolveCameraViewOptions(undefined)
-    expect(resolved.overlay).toEqual(OVERLAY_DEFAULTS)
-    expect(resolved.highlight).toEqual(GRID_HIGHLIGHT_DEFAULTS)
-  })
-
-  it('returns the stored overlay document when the camera has one', () => {
-    const overlay = { ...OVERLAY_DEFAULTS, boxes: 'all' as const }
-    expect(resolveCameraViewOptions({ overlay }).overlay).toEqual(overlay)
+    expect(resolveCameraHighlight(undefined)).toEqual(GRID_HIGHLIGHT_DEFAULTS)
   })
 
   it('fills missing highlight members from the defaults', () => {
-    const resolved = resolveCameraViewOptions({
+    const resolved = resolveCameraHighlight({
       highlight: { ...GRID_HIGHLIGHT_DEFAULTS, motion: true },
     })
-    expect(resolved.highlight.motion).toBe(true)
-    expect(resolved.highlight.audioDb).toBe(GRID_HIGHLIGHT_DEFAULTS.audioDb)
+    expect(resolved.motion).toBe(true)
+    expect(resolved.audioDb).toBe(GRID_HIGHLIGHT_DEFAULTS.audioDb)
+  })
+
+  it('the overlay is NOT per camera: a camera pref carries no overlay document', () => {
+    expect(Object.keys(resolveCameraHighlight(undefined))).not.toContain('overlay')
   })
 })
 

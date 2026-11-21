@@ -23,7 +23,7 @@
  * unconditional — an operator could not turn them off at all. "What is on this
  * camera's picture" had no single answer and no per-camera answer.
  *
- * Now it has both: these sections edit `CameraOverlayConfig` (see
+ * Now it has both: these sections edit `OverlayConfig` (see
  * `overlay/overlay-config.ts`), persisted per camera with the rest of the
  * prefs, and `CameraDetailScreen` draws from the same document.
  *
@@ -72,8 +72,15 @@ import {
   Users,
   Plus,
   X,
+  EyeOff,
+  Tag,
+  Gamepad2,
+  Maximize2,
 } from '../../../lib/icons.js'
 import { useSettingsStore } from '../../../store/settings-store.js'
+import { useDeviceSettingsStore } from '../../../store/device-settings-store.js'
+import { SelectRow, type SelectOption } from '../../ui/SelectRow.js'
+import { OVERLAY_SIZES, type OverlaySize } from '../overlay/overlay-size.js'
 
 import { useTheme } from '../../../theme/theme-provider.js'
 import { SPACING } from '../../../theme/tokens.js'
@@ -95,12 +102,17 @@ import { useLinkedDevices } from '../../../data/use-linked-devices.js'
 import { ReadoutPickerSheet } from '../overlay/ReadoutPickerSheet.js'
 import {
   addReadout,
+  FADEABLE_OVERLAYS,
   patchOverlay,
   patchReadout,
+  placeOverlay,
+  setFade,
+  type FadeableOverlay,
+  type OverlayItemId,
   readoutId,
   removeReadout,
   toggleLayer,
-  type CameraOverlayConfig,
+  type OverlayConfig,
   type OverlayReadoutSource,
 } from '../overlay/overlay-config.js'
 import { type OverlayAnchor, type OverlayPosition } from '../overlay/overlay-position.js'
@@ -111,8 +123,8 @@ export interface OverlaySettingsSectionsProps {
    *  grid-wide (and the ones no tile paints) are not drawn — see
    *  `grid/view-options-scope`, the one list that decides this. */
   readonly context: ViewOptionsContext
-  readonly config: CameraOverlayConfig
-  readonly onChange: (next: CameraOverlayConfig) => void
+  readonly config: OverlayConfig
+  readonly onChange: (next: OverlayConfig) => void
   /** The border's trigger settings (shared `GridHighlightSettings` document —
    *  the cluster-label member of that document is timeline chrome and is
    *  rendered by the hosting menu below these sections, not here). */
@@ -130,6 +142,24 @@ const PICTURE_ROWS: readonly ViewOptionRow[] = [
   ...rowsInGroup('detection'),
   ...rowsInGroup('liveIndicators'),
 ]
+
+const FADE_ICON: Readonly<Record<FadeableOverlay, LucideIcon>> = {
+  cameraName: Tag,
+  doorbell: BellRing,
+  audioMeter: AudioLines,
+  stats: Activity,
+  occupancy: Users,
+  viewers: Eye,
+}
+
+const FADE_LABEL: Readonly<Record<FadeableOverlay, string>> = {
+  cameraName: 'v2.overlay.cameraName',
+  doorbell: 'v2.overlay.doorbell',
+  audioMeter: 'v2.cameraMenu.audioLevel',
+  stats: 'v2.cameraMenu.streamStats',
+  occupancy: 'v2.overlay.occupancy',
+  viewers: 'v2.overlay.liveViewers',
+}
 
 export function OverlaySettingsSections({
   deviceId,
@@ -159,9 +189,22 @@ export function OverlaySettingsSections({
   const { data: linked } = useLinkedDevices(deviceId)
 
   const patch = useCallback(
-    (p: Partial<CameraOverlayConfig>) => onChange(patchOverlay(config, p)),
+    (p: Partial<OverlayConfig>) => onChange(patchOverlay(config, p)),
     [config, onChange],
   )
+
+  const place = useCallback(
+    (id: OverlayItemId, next: OverlayPosition) => onChange(placeOverlay(config, id, next)),
+    [config, onChange],
+  )
+  // The overlay size is a DEVICE setting (a share of the picture on this
+  // screen); the shortcut here edits the very value Settings > Viewing edits.
+  const overlaySize = useDeviceSettingsStore((st) => st.settings.overlaySize)
+  const setOverlaySize = useDeviceSettingsStore((st) => st.setOverlaySize)
+  const sizeOptions: readonly SelectOption<OverlaySize>[] = OVERLAY_SIZES.map((size) => ({
+    value: size,
+    label: t(`v2.settings.overlaySize${size === 'small' ? 'Small' : size === 'medium' ? 'Medium' : 'Large'}`),
+  }))
 
   const pin = useCallback(
     (source: OverlayReadoutSource, label: string, unit?: string, precision?: number) => {
@@ -248,7 +291,7 @@ export function OverlaySettingsSections({
               icon={AudioLines}
               label={t('v2.cameraMenu.audioLevel')}
               value={config.audioMeter}
-              onChange={(audioMeter) => patch({ audioMeter })}
+              onChange={(next) => place('audioMeter', next)}
             />
           ) : null}
           {shows('occupancy') ? (
@@ -256,7 +299,7 @@ export function OverlaySettingsSections({
               icon={Users}
               label={t('v2.overlay.occupancy')}
               value={config.occupancy}
-              onChange={(occupancy) => patch({ occupancy })}
+              onChange={(next) => place('occupancy', next)}
             />
           ) : null}
           {shows('stats') ? (
@@ -264,7 +307,7 @@ export function OverlaySettingsSections({
               icon={Activity}
               label={t('v2.cameraMenu.streamStats')}
               value={config.stats}
-              onChange={(stats) => patch({ stats })}
+              onChange={(next) => place('stats', next)}
             />
           ) : null}
           {shows('liveViewers') ? (
@@ -272,7 +315,7 @@ export function OverlaySettingsSections({
               icon={Eye}
               label={t('v2.overlay.liveViewers')}
               value={config.viewers}
-              onChange={(viewers) => patch({ viewers })}
+              onChange={(next) => place('viewers', next)}
             />
           ) : null}
           {hasDoorbell ? (
@@ -291,6 +334,60 @@ export function OverlaySettingsSections({
               onChange={setDeviceInfo}
             />
           ) : null}
+        </>
+      ) : null}
+
+      {/* ── GROUP: layout — where the name and the two control groups sit, how
+          big every overlay is drawn, and which ones hide with the controls.
+          ONE document for every stream. A tile has no auto-hiding controls
+          and draws its own name, so only the size applies there. */}
+      <Text style={[styles.section, { color: colors.foregroundMuted }]}>
+        {t('v2.overlay.layoutSection')}
+      </Text>
+      <SelectRow
+        icon={Maximize2}
+        label={t('v2.settings.overlaySize')}
+        options={sizeOptions}
+        value={overlaySize}
+        onChange={setOverlaySize}
+      />
+      {context === 'single' ? (
+        <>
+          <PanelPositionRow
+            icon={Tag}
+            label={t('v2.overlay.cameraName')}
+            value={config.cameraName}
+            onChange={(next) => place('cameraName', next)}
+          />
+          <PanelPositionRow
+            icon={Gamepad2}
+            label={t('v2.overlay.controlsLeft')}
+            value={config.controlsLeft}
+            allowOff={false}
+            onChange={(next) => place('controlsLeft', next)}
+          />
+          <PanelPositionRow
+            icon={Gamepad2}
+            label={t('v2.overlay.controlsRight')}
+            value={config.controlsRight}
+            allowOff={false}
+            onChange={(next) => place('controlsRight', next)}
+          />
+          <Text style={[styles.section, { color: colors.foregroundMuted }]}>
+            {t('v2.overlay.fadeSection')}
+          </Text>
+          <Text style={[styles.hint, { color: colors.foregroundSubtle }]}>
+            {t('v2.overlay.fadeHint')}
+          </Text>
+          {FADEABLE_OVERLAYS.filter((id) => id !== 'doorbell' || hasDoorbell).map((id) => (
+            <PanelToggleRow
+              key={id}
+              icon={FADE_ICON[id]}
+              label={t(FADE_LABEL[id])}
+              value={config.fade[id]}
+              onValueChange={() => onChange(setFade(config, id, !config.fade[id]))}
+            />
+          ))}
         </>
       ) : null}
 
@@ -316,6 +413,21 @@ export function OverlaySettingsSections({
             }}
             cellSize={22}
           />
+          {context === 'single' ? (
+            <Pressable
+              accessibilityRole="switch"
+              accessibilityState={{ checked: r.fade === true }}
+              accessibilityLabel={t('v2.overlay.fadeReadout')}
+              onPress={() => onChange(patchReadout(config, r.id, { fade: r.fade !== true }))}
+              style={styles.removeBtn}
+            >
+              {r.fade === true ? (
+                <EyeOff size={16} color={colors.primary} />
+              ) : (
+                <Eye size={16} color={colors.foregroundMuted} />
+              )}
+            </Pressable>
+          ) : null}
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={t('v2.overlay.removeReadout')}
@@ -361,6 +473,8 @@ interface PanelPositionRowProps {
   readonly label: string
   readonly value: OverlayPosition
   readonly onChange: (position: OverlayPosition) => void
+  /** False for what must always be somewhere (the two control groups). */
+  readonly allowOff?: boolean
 }
 
 function PanelPositionRow({
@@ -368,13 +482,14 @@ function PanelPositionRow({
   label,
   value,
   onChange,
+  allowOff = true,
 }: PanelPositionRowProps): React.JSX.Element {
   const { colors } = useTheme()
   return (
     <View style={styles.placementRow}>
       <Icon size={18} color={colors.foregroundMuted} />
       <Text style={[styles.placementLabel, { color: colors.foreground }]}>{label}</Text>
-      <OverlayPositionPicker value={value} onChange={onChange} allowOff />
+      <OverlayPositionPicker value={value} onChange={onChange} allowOff={allowOff} />
     </View>
   )
 }

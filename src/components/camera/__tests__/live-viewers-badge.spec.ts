@@ -24,8 +24,8 @@ afterEach(() => cleanup())
 
 const PATH = 'streamBroker.getLiveViewerCounts'
 
-function badge(position: 'top-left' | 'off' = 'top-left', enabled = true): React.ReactElement {
-  return React.createElement(LiveViewersBadge, { deviceId: 7, position, enabled })
+function badge(enabled = true): React.ReactElement {
+  return React.createElement(LiveViewersBadge, { deviceId: 7, enabled })
 }
 
 /** The hub was asked AND its answer has been through the hook and rendered —
@@ -82,14 +82,8 @@ describe('LiveViewersBadge', () => {
     expect(screen.queryByTestId('live-viewers-badge')).toBeNull()
   })
 
-  it('does not even ask the hub while it is switched off', () => {
-    mountScreen(badge('off'), { hub: { [PATH]: [{ deviceId: 7, viewers: 5 }] } })
-    expect(screen.queryByTestId('live-viewers-badge')).toBeNull()
-    expect(hubCalls().some((c) => c.path === PATH)).toBe(false)
-  })
-
   it('does not ask while the picture is not live', () => {
-    mountScreen(badge('top-left', false), { hub: { [PATH]: [{ deviceId: 7, viewers: 5 }] } })
+    mountScreen(badge(false), { hub: { [PATH]: [{ deviceId: 7, viewers: 5 }] } })
     expect(screen.queryByTestId('live-viewers-badge')).toBeNull()
     expect(hubCalls().some((c) => c.path === PATH)).toBe(false)
   })

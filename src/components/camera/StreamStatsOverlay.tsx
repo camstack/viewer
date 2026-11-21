@@ -14,13 +14,9 @@ import { useTranslation } from 'react-i18next'
 import type { StreamStats } from '../../live/live-view-types.js'
 import { useTheme } from '../../theme/theme-provider.js'
 import { useStyleScaler } from './overlay/OverlayFrame.js'
-import { ANCHOR_PLACEMENT, type OverlayAnchor } from './overlay/overlay-position.js'
 
 export interface StreamStatsOverlayProps {
   readonly getStats: () => Promise<StreamStats | null>
-  /** Where the read-out sits — the operator's per-camera choice, placed by the
-   *  same `ANCHOR_PLACEMENT` map as every other overlay. */
-  readonly position: OverlayAnchor
   /** ONE line instead of the panel — for a GRID CELL, where the 150-220pt card
    *  would cover the picture it is describing. The knob stays alive at every
    *  cell size: shrinking the read-out is an answer, hiding it is not. */
@@ -40,7 +36,7 @@ function compactLine(stats: StreamStats | null): string | null {
 /** Poll cadence for the stats read-out. */
 const POLL_MS = 1000
 
-export function StreamStatsOverlay({ getStats, position, compact = false }: StreamStatsOverlayProps) {
+export function StreamStatsOverlay({ getStats, compact = false }: StreamStatsOverlayProps) {
   const { t } = useTranslation()
   const { colors } = useTheme()
   const sx = useStyleScaler()
@@ -65,15 +61,13 @@ export function StreamStatsOverlay({ getStats, position, compact = false }: Stre
     const line = compactLine(stats)
     return (
       <View
-        style={[styles.anchor, ANCHOR_PLACEMENT[position]]}
+        style={[sx(styles.compact), backdrop]}
         pointerEvents="none"
         testID="stream-stats-overlay"
       >
-        <View style={[sx(styles.compact), backdrop]}>
-          <Text style={[sx(styles.compactText), { color: colors.foreground }]} numberOfLines={1}>
-            {line ?? t('v2.stats.waiting')}
-          </Text>
-        </View>
+        <Text style={[sx(styles.compactText), { color: colors.foreground }]} numberOfLines={1}>
+          {line ?? t('v2.stats.waiting')}
+        </Text>
       </View>
     )
   }
@@ -98,37 +92,31 @@ export function StreamStatsOverlay({ getStats, position, compact = false }: Stre
 
   return (
     <View
-      style={[styles.anchor, ANCHOR_PLACEMENT[position]]}
+      style={[sx(styles.panel), backdrop]}
       pointerEvents="none"
       testID="stream-stats-overlay"
     >
-      <View style={[sx(styles.panel), backdrop]}>
-        <Text style={[sx(styles.title), { color: colors.warning }]}>{t('v2.stats.title')}</Text>
-        {rows.length === 0 ? (
-          <Text style={[sx(styles.dim), { color: colors.foregroundMuted }]}>{t('v2.stats.waiting')}</Text>
-        ) : (
-          rows.map((r) => (
-            <View key={r.label} style={sx(styles.row)}>
-              <Text style={[sx(styles.label), { color: colors.foregroundMuted }]}>{r.label}</Text>
-              <Text style={[sx(styles.value), { color: colors.foreground }]}>{r.value}</Text>
-            </View>
-          ))
-        )}
-        {stats?.source === 'playback' ? (
-          <Text style={[sx(styles.hint), { color: colors.foregroundDisabled }]}>
-            {t('v2.stats.playbackHint')}
-          </Text>
-        ) : null}
-      </View>
+      <Text style={[sx(styles.title), { color: colors.warning }]}>{t('v2.stats.title')}</Text>
+      {rows.length === 0 ? (
+        <Text style={[sx(styles.dim), { color: colors.foregroundMuted }]}>{t('v2.stats.waiting')}</Text>
+      ) : (
+        rows.map((r) => (
+          <View key={r.label} style={sx(styles.row)}>
+            <Text style={[sx(styles.label), { color: colors.foregroundMuted }]}>{r.label}</Text>
+            <Text style={[sx(styles.value), { color: colors.foreground }]}>{r.value}</Text>
+          </View>
+        ))
+      )}
+      {stats?.source === 'playback' ? (
+        <Text style={[sx(styles.hint), { color: colors.foregroundDisabled }]}>
+          {t('v2.stats.playbackHint')}
+        </Text>
+      ) : null}
     </View>
   )
 }
 
 const styles = StyleSheet.create({
-  // The positioned box; the corner's edges come from `ANCHOR_PLACEMENT`.
-  anchor: {
-    position: 'absolute',
-  },
   panel: {
     minWidth: 150,
     maxWidth: 220,

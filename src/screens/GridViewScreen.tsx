@@ -29,6 +29,7 @@
  * safe-area insets (no header now), then refined by `onLayout`, so it's never
  * blank on first paint.
  */
+import { useOverlayConfig } from '../hooks/use-camera-view-options.js'
 import React, { useEffect, useMemo, useState } from 'react'
 import {
   View,
@@ -69,7 +70,6 @@ import { GridTapDismiss } from '../components/grid/GridTapDismiss.js'
 import { shouldInterceptGridTap, type GridPanelsOpen } from '../grid/panel-dismiss.js'
 import { useCanActuate } from '../hooks/use-user-scope.js'
 import {
-  OVERLAY_DEFAULTS,
   type OverlayLayer,
 } from '../components/camera/overlay/overlay-config.js'
 import { useCameraPrefsStore } from '../store/camera-prefs-store.js'
@@ -330,23 +330,23 @@ export function GridViewScreen({ gridId, adhocCameraIds }: GridViewScreenProps) 
    * wall the store is empty, and an empty store resolves to the DEFAULT overlay
    * — a wall that silently draws factory settings over configured cameras.
    */
-  const prefsById = useCameraPrefsStore((s) => s.prefs.byId)
   const hydratePrefs = useCameraPrefsStore((s) => s.hydrate)
   // Device-local: how big the wall's indicators are drawn on THIS screen.
   const overlaySize = useDeviceSettingsStore((s) => s.settings.overlaySize)
   useEffect(() => {
     void hydratePrefs()
   }, [hydratePrefs])
+  const globalOverlay = useOverlayConfig()
   const tileOverlays = useMemo(
     () =>
       buildTileOverlayMap(
         wallCameras.map((c) => ({
           deviceId: c.id,
-          overlay: prefsById[c.id]?.overlay ?? OVERLAY_DEFAULTS,
+          overlay: globalOverlay,
         })),
         overlaySize,
       ),
-    [wallCameras, prefsById, overlaySize],
+    [wallCameras, globalOverlay, overlaySize],
   )
 
   // PTZ: which wall cameras support it (drives the in-tile PTZ buttons).

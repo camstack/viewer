@@ -1,5 +1,20 @@
 /**
- * overlay-config — what the operator has chosen to draw ON the video, per camera.
+ * overlay-config — what the operator has chosen to draw ON the video, for EVERY
+ * stream.
+ *
+ * ## One document, not one per camera (2026-11-21)
+ *
+ * The overlay configuration is global: one document, an ACCOUNT setting (a
+ * viewing preference of the person — it follows them to their other devices,
+ * unlike the overlay SIZE, which is a share of THIS screen and stays at the
+ * device level), applied to every live stream — the single view and every
+ * grid tile. The per-camera copies this module used to describe are gone, with
+ * no migration: a camera that carried its own document reads the defaults.
+ *
+ * Every placeable overlay — including the camera name and the two control
+ * groups — has a position, and the ones that draw over the picture have a
+ * `fade` flag (hide with the auto-hiding controls). Overlays that share an
+ * anchor are stacked, never overlapped: see `overlay-stack.ts`.
  *
  * ## Why this exists
  *
@@ -47,8 +62,16 @@ import {
 export type OverlayReadoutSource =
   | { readonly kind: 'audioDbfs' }
   | {
+      /** A live field of the camera the overlay is DRAWN ON. The document is
+       *  global, so "this camera" cannot be a device id: it is whichever stream
+       *  the chip lands on. */
+      readonly kind: 'cameraField'
+      readonly sectionId: string
+      readonly fieldKey: string
+    }
+  | {
       readonly kind: 'deviceField'
-      /** The device that owns the field — the camera itself, or one linked to it. */
+      /** The device that owns the field — a device linked to the camera. */
       readonly deviceId: number
       /** Section id within that device's live-info aggregate. */
       readonly sectionId: string
@@ -69,6 +92,8 @@ export interface OverlayReadout {
   /** Where the chip sits — always somewhere: removing the chip is how a
    *  readout goes away, so its position space has no `off`. */
   readonly corner: OverlayAnchor
+  /** Hide with the auto-hiding controls. Absent = false. */
+  readonly fade?: boolean
 }
 
 /**
@@ -124,59 +149,110 @@ export const LAYER_LABEL_KEY = {
   stationary: 'v2.overlay.layerStationary',
 } as const satisfies Readonly<Record<OverlayLayer, string>>
 
-/** The per-camera overlay document. */
-export interface CameraOverlayConfig {
+/** Every overlay with its own `fade` flag — the ones that can hide with the
+ *  auto-hiding controls. The control groups are not in the list: they ARE the
+ *  auto-hiding controls, so they always fade. */
+export type FadeableOverlay =
+  | 'cameraName'
+  | 'doorbell'
+  | 'audioMeter'
+  | 'stats'
+  | 'occupancy'
+  | 'viewers'
+
+export const FADEABLE_OVERLAYS: readonly FadeableOverlay[] = Object.freeze([
+  'cameraName',
+  'doorbell',
+  'audioMeter',
+  'stats',
+  'occupancy',
+  'viewers',
+]) as readonly FadeableOverlay[]
+
+/** The identity of one thing drawn in a corner stack: a named overlay, the
+ *  device-info pill, or one pinned readout (`readout:<id>`). */
+export type OverlayItemId =
+  | 'cameraName'
+  | 'controlsLeft'
+  | 'controlsRight'
+  | 'doorbell'
+  | 'motionBadge'
+  | 'audioMeter'
+  | 'stats'
+  | 'occupancy'
+  | 'viewers'
+  | 'deviceInfo'
+  | `readout:${string}`
+
+/** The global overlay document — what every live stream draws over its picture. */
+export interface OverlayConfig {
   /**
    * What the box overlay draws — a CHECKABLE SET of {@link OverlayLayer}, in
    * `OVERLAY_LAYERS` order. Empty = nothing on the picture.
-   *
-   * This replaced a `boxes: 'off'|'kept'|'all'` scale AND a separate
-   * `motionBoxes` boolean. `normaliseOverlay` migrates both, preserving what
-   * the screen DREW rather than what the field was called — see
-   * {@link migrateLegacyLayers}.
    */
   readonly layers: readonly OverlayLayer[]
-  /** The transient "motion" pill: an anchor, or off.
-   *
-   *  Was a boolean pinned to the top-right. It became a position on
-   *  2026-08-02 so the operator can place it like every other overlay — and so
-   *  the cameras list can show it too, where the top-right is already taken.
-   *  `normaliseOverlay` migrates the stored booleans. */
+  /** The transient "motion" pill: an anchor, or off. */
   readonly motionBadge: OverlayPosition
-  /** The per-camera highlight border. */
+  /** The highlight border. */
   readonly highlightBorder: boolean
   /** Audio meter placement. `OverlayPosition` carries its own `off` member,
    *  so this is one field and not a boolean plus an anchor. */
   readonly audioMeter: OverlayPosition
   /** Occupancy chips: an anchor, or off. */
   readonly occupancy: OverlayPosition
-  /** WebRTC/playback health read-out: an anchor, or off.
-   *
-   *  Was a boolean (top-left panel on the single view, top-right pill on a
-   *  tile) until 2026-10-07; it is placed with the same selector as the motion
-   *  badge, the audio meter and the occupancy chips. `normaliseOverlay`
-   *  migrates the stored booleans. */
+  /** WebRTC/playback health read-out: an anchor, or off. */
   readonly stats: OverlayPosition
   /** How many people watch this camera live right now: an anchor, or off.
    *  Hidden while the count is 0 or unanswered — an unanswered query must never
    *  read as "nobody watching". */
   readonly viewers: OverlayPosition
-  /** The live doorbell badge (top-left, "last ring N ago", pulses while
-   *  ringing). OPT-IN: off until the operator asks for it, and offered only for
-   *  a camera with the doorbell feature. A switch and not a position — the badge
-   *  has one place. */
+  /** The live doorbell badge ("last ring N ago", pulses while ringing). OPT-IN:
+   *  off until the operator asks for it, and offered only for a camera with the
+   *  doorbell feature. A switch and not a position — it sits at
+   *  {@link DOORBELL_ANCHOR}, in the stack of that corner. */
   readonly doorbell: boolean
+  /** The camera's name over the picture: an anchor, or off. ON at the top-left
+   *  by default — it used to be a fixed, always-on tag. */
+  readonly cameraName: OverlayPosition
+  /** The left control group (mute, talk, history, PTZ). An anchor and never
+   *  `off`: hiding the controls outright would leave nothing to press. */
+  readonly controlsLeft: OverlayAnchor
+  /** The right control group (play/pause, PiP, fullscreen). Same as above. */
+  readonly controlsRight: OverlayAnchor
+  /** Per overlay: hide together with the auto-hiding controls. */
+  readonly fade: Readonly<Record<FadeableOverlay, boolean>>
+  /**
+   * The operator's stacking order, first = nearest the corner. An overlay
+   * joins the END when it is placed, so "user order" is simply the order they
+   * were placed in. Ids absent from the list follow in the default order
+   * (`overlay-stack.ts`). Never required to be complete or clean: stale and
+   * unknown ids are dropped on read.
+   */
+  readonly order: readonly OverlayItemId[]
   readonly readouts: readonly OverlayReadout[]
 }
 
+/** The corner the doorbell badge sits in. */
+export const DOORBELL_ANCHOR: OverlayAnchor = 'top-left'
+
+/** `fade` defaults: only the camera name hides with the controls — it did
+ *  before this was a flag, and every other overlay stays visible as it was. */
+export const FADE_DEFAULTS: Readonly<Record<FadeableOverlay, boolean>> = Object.freeze({
+  cameraName: true,
+  doorbell: false,
+  audioMeter: false,
+  stats: false,
+  occupancy: false,
+  viewers: false,
+})
+
 /**
- * Fresh-camera defaults. Occupancy is off until the operator places it (it
- * used to ship on because the chips were unconditional). The audio meter is
- * on at top-center — the same place, the same component — on the single
- * player and on every grid tile. Boxes and stats stay off. The motion pill
- * stays off: the overlay (regions / highlight border) is the motion treatment.
+ * Defaults. Occupancy is off until the operator places it. The audio meter is
+ * on at top-center. Boxes and stats stay off, and so does the motion pill (the
+ * regions / highlight border are the motion treatment). The camera name is on
+ * at the top-left and fades; the control groups sit where they always did.
  */
-export const OVERLAY_DEFAULTS: CameraOverlayConfig = Object.freeze({
+export const OVERLAY_DEFAULTS: OverlayConfig = Object.freeze({
   layers: Object.freeze([]) as readonly OverlayLayer[],
   motionBadge: 'off',
   highlightBorder: true,
@@ -185,34 +261,36 @@ export const OVERLAY_DEFAULTS: CameraOverlayConfig = Object.freeze({
   stats: 'off',
   viewers: 'off',
   doorbell: false,
+  cameraName: 'top-left',
+  controlsLeft: 'bottom-left',
+  controlsRight: 'bottom-right',
+  fade: FADE_DEFAULTS,
+  order: Object.freeze([]) as readonly OverlayItemId[],
   readouts: Object.freeze([]) as readonly OverlayReadout[],
-}) as CameraOverlayConfig
-
-/** Where a camera stored with the retired `stats: true` draws its read-out. */
-export const LEGACY_STATS_POSITION: OverlayAnchor = 'top-right'
+}) as OverlayConfig
 
 // ── Pure reducers ────────────────────────────────────────────────────────────
 
 /** Apply a partial patch, returning a NEW config. */
 export function patchOverlay(
-  config: CameraOverlayConfig,
-  patch: Partial<CameraOverlayConfig>,
-): CameraOverlayConfig {
+  config: OverlayConfig,
+  patch: Partial<OverlayConfig>,
+): OverlayConfig {
   return { ...config, ...patch }
 }
 
 /** Is this layer drawn? A membership test, never a truthiness test — every
  *  layer name is a truthy string. */
-export function hasLayer(config: CameraOverlayConfig, layer: OverlayLayer): boolean {
+export function hasLayer(config: OverlayConfig, layer: OverlayLayer): boolean {
   return config.layers.includes(layer)
 }
 
 /** Flip ONE layer, leaving the other three exactly as they were. Returns a NEW
  *  config, with the set back in canonical order. */
 export function toggleLayer(
-  config: CameraOverlayConfig,
+  config: OverlayConfig,
   layer: OverlayLayer,
-): CameraOverlayConfig {
+): OverlayConfig {
   const next = hasLayer(config, layer)
     ? config.layers.filter((l) => l !== layer)
     : [...config.layers, layer]
@@ -228,22 +306,22 @@ export function toggleLayer(
  * removed by tapping.
  */
 export function addReadout(
-  config: CameraOverlayConfig,
+  config: OverlayConfig,
   readout: OverlayReadout,
-): CameraOverlayConfig {
+): OverlayConfig {
   const without = config.readouts.filter((r) => !sameSource(r.source, readout.source))
   return { ...config, readouts: [...without, readout] }
 }
 
-export function removeReadout(config: CameraOverlayConfig, id: string): CameraOverlayConfig {
+export function removeReadout(config: OverlayConfig, id: string): OverlayConfig {
   return { ...config, readouts: config.readouts.filter((r) => r.id !== id) }
 }
 
 export function patchReadout(
-  config: CameraOverlayConfig,
+  config: OverlayConfig,
   id: string,
   patch: Partial<Omit<OverlayReadout, 'id' | 'source'>>,
-): CameraOverlayConfig {
+): OverlayConfig {
   return {
     ...config,
     readouts: config.readouts.map((r) => (r.id === id ? { ...r, ...patch } : r)),
@@ -251,22 +329,29 @@ export function patchReadout(
 }
 
 export function sameSource(a: OverlayReadoutSource, b: OverlayReadoutSource): boolean {
-  if (a.kind !== b.kind) return false
-  if (a.kind === 'audioDbfs' || b.kind === 'audioDbfs') return true
-  return a.deviceId === b.deviceId && a.sectionId === b.sectionId && a.fieldKey === b.fieldKey
+  if (a.kind === 'audioDbfs') return b.kind === 'audioDbfs'
+  if (a.kind === 'cameraField') {
+    return b.kind === 'cameraField' && a.sectionId === b.sectionId && a.fieldKey === b.fieldKey
+  }
+  return (
+    b.kind === 'deviceField' &&
+    a.deviceId === b.deviceId &&
+    a.sectionId === b.sectionId &&
+    a.fieldKey === b.fieldKey
+  )
 }
 
 /** A deterministic id for a source — so the same field always maps to the same
  *  readout, and a config round-tripped through storage keeps its identity. */
 export function readoutId(source: OverlayReadoutSource): string {
-  return source.kind === 'audioDbfs'
-    ? 'audio-dbfs'
-    : `dev:${source.deviceId}:${source.sectionId}:${source.fieldKey}`
+  if (source.kind === 'audioDbfs') return 'audio-dbfs'
+  if (source.kind === 'cameraField') return `cam:${source.sectionId}:${source.fieldKey}`
+  return `dev:${source.deviceId}:${source.sectionId}:${source.fieldKey}`
 }
 
 /** The readouts assigned to one corner, in insertion order. */
 export function readoutsAt(
-  config: CameraOverlayConfig,
+  config: OverlayConfig,
   corner: OverlayAnchor,
 ): readonly OverlayReadout[] {
   return config.readouts.filter((r) => r.corner === corner)
@@ -278,7 +363,8 @@ function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null
 }
 
-/** The retired fields a stored document may still carry. Named rather than
+
+/** The retired fields a stored GRID document may still carry. Named rather than
  *  read off a `Record<string, unknown>` so the migration below type-checks. */
 export interface LegacyLayerFields {
   /** @deprecated → the `objects` / `discarded` / `stationary` layers. */
@@ -315,7 +401,7 @@ function legacyRung(rawBoxes: unknown, rawDiscarded: unknown): 'off' | 'kept' | 
 }
 
 /**
- * Migrate the retired `boxes` / `discardedBoxes` / `motionBoxes` fields onto the
+ * Migrate the retired GRID document's `boxes` / `discardedBoxes` / `motionBoxes` fields onto the
  * layer set. Table-driven, because every one of these rows is a picture some
  * operator is looking at right now:
  *
@@ -336,6 +422,7 @@ export function migrateLegacyLayers(raw: LegacyLayerFields): readonly OverlayLay
   return canonicalLayers(withMotion)
 }
 
+
 /** Keep only known layers, drop duplicates, and return them in
  *  `OVERLAY_LAYERS` order — so a set compares by value however it was clicked
  *  or however storage happened to serialise it. */
@@ -347,6 +434,13 @@ export function canonicalLayers(raw: unknown): readonly OverlayLayer[] {
 function normaliseSource(raw: unknown): OverlayReadoutSource | null {
   if (!isRecord(raw)) return null
   if (raw.kind === 'audioDbfs') return { kind: 'audioDbfs' }
+  if (
+    raw.kind === 'cameraField' &&
+    typeof raw.sectionId === 'string' &&
+    typeof raw.fieldKey === 'string'
+  ) {
+    return { kind: 'cameraField', sectionId: raw.sectionId, fieldKey: raw.fieldKey }
+  }
   if (
     raw.kind === 'deviceField' &&
     typeof raw.deviceId === 'number' &&
@@ -378,6 +472,7 @@ function normaliseReadout(raw: unknown): OverlayReadout | null {
     unit?: string
     precision?: number
     corner: OverlayAnchor
+    fade?: boolean
   } = {
     id: typeof raw.id === 'string' && raw.id.length > 0 ? raw.id : readoutId(source),
     source,
@@ -385,67 +480,73 @@ function normaliseReadout(raw: unknown): OverlayReadout | null {
     corner,
   }
   if (typeof raw.unit === 'string' && raw.unit.length > 0) readout.unit = raw.unit
+  if (raw.fade === true) readout.fade = true
   if (typeof raw.precision === 'number' && Number.isFinite(raw.precision)) {
     readout.precision = Math.max(0, Math.min(6, Math.trunc(raw.precision)))
   }
   return readout
 }
 
+const OVERLAY_ITEM_NAMES: ReadonlySet<string> = new Set([
+  'cameraName',
+  'controlsLeft',
+  'controlsRight',
+  'doorbell',
+  'motionBadge',
+  'audioMeter',
+  'stats',
+  'occupancy',
+  'viewers',
+  'deviceInfo',
+])
+
+function isOverlayItemId(v: unknown): v is OverlayItemId {
+  return typeof v === 'string' && (OVERLAY_ITEM_NAMES.has(v) || v.startsWith('readout:'))
+}
+
+function parseFade(raw: unknown): Readonly<Record<FadeableOverlay, boolean>> {
+  const stored = isRecord(raw) ? raw : {}
+  const out: Record<FadeableOverlay, boolean> = { ...FADE_DEFAULTS }
+  for (const key of FADEABLE_OVERLAYS) {
+    if (typeof stored[key] === 'boolean') out[key] = stored[key]
+  }
+  return out
+}
+
 /**
- * Narrow whatever storage returned into a config, field by field.
- *
- * Never throws and never rejects a document wholesale: a readout pointing at a
- * device that has since been removed is dropped on its own, and the rest of the
- * overlay survives. An operator who loses one chip to a deleted sensor should
- * not also lose the audio meter's corner.
+ * Narrow whatever storage (or the account) returned into the overlay document,
+ * field by field. Never throws and never rejects a document wholesale: an
+ * unknown value falls back to ITS default, a readout that cannot be read is
+ * dropped on its own, and the rest survives.
  */
-export function normaliseOverlay(raw: unknown): CameraOverlayConfig | undefined {
-  if (!isRecord(raw)) return undefined
-  // Both position fields migrate the legacy camelCase corner spelling — the
-  // vocabularies were unified on 2026-08-02 and a persisted `bottomLeft` must
-  // land on `bottom-left`, never silently reset to the default.
-  const audioMeter: OverlayPosition = normalisePosition(raw.audioMeter) ?? OVERLAY_DEFAULTS.audioMeter
-  const occupancy: OverlayPosition =
-    normalisePosition(raw.occupancy) ?? OVERLAY_DEFAULTS.occupancy
-  // `motionBadge` was a BOOLEAN until 2026-08-02. A camera persisted before
-  // that holds true/false, and dropping to the default would silently switch
-  // the badge back on for someone who had turned it off — so map the old
-  // vocabulary explicitly: true → where it always drew, false → off.
-  const motionBadge: OverlayPosition =
-    raw.motionBadge === true
-      ? 'top-right'
-      : raw.motionBadge === false
-        ? 'off'
-        : (normalisePosition(raw.motionBadge) ?? OVERLAY_DEFAULTS.motionBadge)
+export function parseOverlayConfig(raw: unknown): OverlayConfig {
+  if (!isRecord(raw)) return OVERLAY_DEFAULTS
+  const position = (v: unknown, fallback: OverlayPosition): OverlayPosition =>
+    normalisePosition(v) ?? fallback
+  const anchor = (v: unknown, fallback: OverlayAnchor): OverlayAnchor =>
+    normaliseAnchor(v) ?? fallback
   const readouts = Array.isArray(raw.readouts)
     ? raw.readouts.map(normaliseReadout).filter((r): r is OverlayReadout => r !== null)
     : OVERLAY_DEFAULTS.readouts
-  // A canonical `layers` is authoritative: a document that carries it has
-  // already been migrated, and re-reading the retired fields would let a
-  // stale `boxes` resurrect a layer the operator has since switched off.
-  // `stats` was a BOOLEAN until 2026-10-07: true → the top-right corner (where
-  // the tile pill always drew, and the one corner of the single view no other
-  // chrome claims), false → off.
-  const stats: OverlayPosition =
-    raw.stats === true
-      ? LEGACY_STATS_POSITION
-      : raw.stats === false
-        ? 'off'
-        : (normalisePosition(raw.stats) ?? OVERLAY_DEFAULTS.stats)
-  const viewers: OverlayPosition = normalisePosition(raw.viewers) ?? OVERLAY_DEFAULTS.viewers
-  const layers = Array.isArray(raw.layers)
-    ? canonicalLayers(raw.layers)
-    : migrateLegacyLayers(raw)
+  const seen = new Set<string>()
+  const order = (Array.isArray(raw.order) ? raw.order : []).filter(
+    (id): id is OverlayItemId => isOverlayItemId(id) && !seen.has(id) && !!seen.add(id),
+  )
   return {
-    layers,
-    motionBadge,
+    layers: canonicalLayers(raw.layers),
+    motionBadge: position(raw.motionBadge, OVERLAY_DEFAULTS.motionBadge),
     highlightBorder: raw.highlightBorder !== false,
-    audioMeter,
-    occupancy,
-    stats,
-    viewers,
+    audioMeter: position(raw.audioMeter, OVERLAY_DEFAULTS.audioMeter),
+    occupancy: position(raw.occupancy, OVERLAY_DEFAULTS.occupancy),
+    stats: position(raw.stats, OVERLAY_DEFAULTS.stats),
+    viewers: position(raw.viewers, OVERLAY_DEFAULTS.viewers),
     // Strictly `true`: a document stored before the field existed reads as off.
     doorbell: raw.doorbell === true,
+    cameraName: position(raw.cameraName, OVERLAY_DEFAULTS.cameraName),
+    controlsLeft: anchor(raw.controlsLeft, OVERLAY_DEFAULTS.controlsLeft),
+    controlsRight: anchor(raw.controlsRight, OVERLAY_DEFAULTS.controlsRight),
+    fade: parseFade(raw.fade),
+    order,
     readouts,
   }
 }
@@ -454,16 +555,81 @@ export function normaliseOverlay(raw: unknown): CameraOverlayConfig | undefined 
  *  operator switched it on, while the live overlays are showing. */
 export function doorbellBadgeEnabled(input: {
   readonly hasDoorbell: boolean
-  /** `CameraOverlayConfig.doorbell` */
+  /** `OverlayConfig.doorbell` */
   readonly switchedOn: boolean
   readonly overlaysVisible: boolean
 }): boolean {
   return input.hasDoorbell && input.switchedOn && input.overlaysVisible
 }
 
+/**
+ * Move an overlay to a position. A placed overlay joins the END of the order
+ * (the operator's own order is the order they placed things in), and moving to
+ * `off` leaves the order alone. Returns a NEW config.
+ */
+export function placeOverlay(
+  config: OverlayConfig,
+  id: OverlayItemId,
+  next: OverlayPosition,
+): OverlayConfig {
+  const order = next === 'off' ? config.order : [...config.order.filter((o) => o !== id), id]
+  switch (id) {
+    case 'cameraName':
+      return { ...config, cameraName: next, order }
+    case 'audioMeter':
+      return { ...config, audioMeter: next, order }
+    case 'occupancy':
+      return { ...config, occupancy: next, order }
+    case 'stats':
+      return { ...config, stats: next, order }
+    case 'viewers':
+      return { ...config, viewers: next, order }
+    case 'motionBadge':
+      return { ...config, motionBadge: next, order }
+    case 'controlsLeft':
+      return next === 'off' ? config : { ...config, controlsLeft: next, order }
+    case 'controlsRight':
+      return next === 'off' ? config : { ...config, controlsRight: next, order }
+    default:
+      return config
+  }
+}
+
+/** Set one overlay's `fade` flag. Returns a NEW config. */
+export function setFade(
+  config: OverlayConfig,
+  id: FadeableOverlay,
+  on: boolean,
+): OverlayConfig {
+  return { ...config, fade: { ...config.fade, [id]: on } }
+}
+
+/**
+ * Is this overlay drawn right now? An overlay with `fade` on follows the
+ * auto-hiding controls (`controlsVisible`); one without stays. The two control
+ * groups are the controls themselves and always follow them — the disc group
+ * owns that hide, so they answer `true` here.
+ */
+export function isOverlayShown(
+  config: OverlayConfig,
+  id: OverlayItemId,
+  controlsVisible: boolean,
+): boolean {
+  if (id === 'controlsLeft' || id === 'controlsRight' || id === 'deviceInfo') return true
+  if (id.startsWith('readout:')) {
+    const readout = config.readouts.find((r) => `readout:${r.id}` === id)
+    return readout?.fade === true ? controlsVisible : true
+  }
+  return isFadeable(id) && config.fade[id] ? controlsVisible : true
+}
+
+function isFadeable(id: OverlayItemId): id is FadeableOverlay {
+  return (FADEABLE_OVERLAYS as readonly string[]).includes(id)
+}
+
 /** True when the config is indistinguishable from the defaults — the store
  *  drops it rather than persisting a document that says nothing. */
-export function isDefaultOverlay(config: CameraOverlayConfig): boolean {
+export function isDefaultOverlay(config: OverlayConfig): boolean {
   return (
     config.layers.length === 0 &&
     config.motionBadge === OVERLAY_DEFAULTS.motionBadge &&
@@ -473,6 +639,11 @@ export function isDefaultOverlay(config: CameraOverlayConfig): boolean {
     config.stats === OVERLAY_DEFAULTS.stats &&
     config.viewers === OVERLAY_DEFAULTS.viewers &&
     config.doorbell === OVERLAY_DEFAULTS.doorbell &&
+    config.cameraName === OVERLAY_DEFAULTS.cameraName &&
+    config.controlsLeft === OVERLAY_DEFAULTS.controlsLeft &&
+    config.controlsRight === OVERLAY_DEFAULTS.controlsRight &&
+    FADEABLE_OVERLAYS.every((k) => config.fade[k] === FADE_DEFAULTS[k]) &&
+    config.order.length === 0 &&
     config.readouts.length === 0
   )
 }

@@ -13,6 +13,7 @@
  *    `info` blue (charging) and the muted caption tone next to controls drawn in
  *    the icon colour. Neutral = the icon colour; only a real warning is coloured.
  */
+import { OVERLAY_DEFAULTS } from '../overlay/overlay-config.js'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import React from 'react'
 import { cleanup, render, screen } from '@testing-library/react'
@@ -26,6 +27,9 @@ import { setTestPlatform } from '../../../testing/platform-control.js'
 import { batteryBadgeColor } from '../BatteryBadge.js'
 import { denseWash } from '../../ui/GlassSurface.js'
 
+vi.mock('../../../connection/ConnectionProvider.js', async () =>
+  (await import('../../../testing/connection-stub.js')).connectionStubModule(),
+)
 vi.mock('expo-modules-core', () => ({ requireOptionalNativeModule: () => null }))
 
 interface RecordedGlassButton {
@@ -82,6 +86,14 @@ function mountDiscs(state: DiscState) {
       ThemeProvider,
       null,
       React.createElement(StreamOverlayControls, {
+        frame: { fit: 'cover' as const },
+        layer: {
+          deviceId: 1,
+          config: OVERLAY_DEFAULTS,
+          gates: { audioMeter: false, occupancy: false, stats: false, viewers: false, readouts: false, doorbell: false },
+          deviceInfo: 'off' as const,
+          getStats: () => Promise.resolve(null),
+        },
         visible: true,
         onRequestHide: noop,
         paused: state.paused,

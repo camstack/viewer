@@ -10,6 +10,7 @@
  */
 import React from 'react'
 import { DeviceInfoOverlay } from '../camera/DeviceInfoOverlay.js'
+import { OverlayStack } from '../camera/overlay/OverlayStack.js'
 import { OverlayFrame } from '../camera/overlay/OverlayFrame.js'
 import { useSettingsStore } from '../../store/settings-store.js'
 
@@ -22,7 +23,10 @@ export function GridDeviceInfo(): React.JSX.Element | null {
   if (position === 'off') return null
   return (
     <OverlayFrame fit="cover" maxScale={WALL_MAX_SCALE}>
-      <DeviceInfoOverlay position={position} />
+      <OverlayStack
+        userOrder={[]}
+        entries={[{ id: 'deviceInfo', anchor: position, node: <DeviceInfoOverlay /> }]}
+      />
     </OverlayFrame>
   )
 }

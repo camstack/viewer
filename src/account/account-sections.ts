@@ -3,8 +3,9 @@
  * namespace, and how each is read, applied and found in another hub's cache.
  *
  *   viewer.app      settings (account half) · language · reelFilter ·
- *                   reelHighlight · eventsView
- *   viewer.cameras  prefs (names, hidden, order, highlight, overlay,
+ *                   reelHighlight · eventsView · overlays (the one global
+ *                   overlay document)
+ *   viewer.cameras  prefs (names, hidden, order, highlight,
  *                   clip / recording source, accessories)
  *   viewer.grids    grids (definitions; the layout is per device)
  *
@@ -31,6 +32,8 @@ import {
   eventsViewPrefsOf,
   useEventsFilterStore,
 } from '../store/events-filter-store.js'
+import { OVERLAY_CONFIG_STORAGE_KEY, useOverlayConfigStore } from '../store/overlay-config-store.js'
+import { OVERLAY_DEFAULTS } from '../components/camera/overlay/overlay-config.js'
 import { CAMERA_PREFS_STORAGE_KEY, useCameraPrefsStore } from '../store/camera-prefs-store.js'
 import { accountGridsOf, useGridStore } from '../store/grid-store.js'
 
@@ -131,6 +134,16 @@ export function buildAccountSections(): readonly AccountSection[] {
       read: (s) => eventsViewPrefsOf(s.filter),
       apply: (v) => useEventsFilterStore.getState().applyAccount(v),
       readCached: (id) => cachedJson(EVENTS_FILTER_STORAGE_KEY, id, eventsViewPrefsOf(EVENTS_DEFAULTS)),
+    }),
+    section({
+      namespace: 'viewer.app',
+      name: 'overlays',
+      store: useOverlayConfigStore,
+      slice: (s) => s.overlay,
+      scope: (s) => (s.hydrated ? s.serverId : null),
+      read: (s) => s.overlay,
+      apply: (v) => useOverlayConfigStore.getState().applyAccount(v),
+      readCached: (id) => cachedJson(OVERLAY_CONFIG_STORAGE_KEY, id, OVERLAY_DEFAULTS),
     }),
     section({
       namespace: 'viewer.cameras',

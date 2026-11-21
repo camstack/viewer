@@ -26,15 +26,15 @@ import { useTranslation } from 'react-i18next'
 
 import { TimelinePanelHost } from './TimelinePanelHost.js'
 import { CameraViewOptionsSurface } from '../CameraViewOptionsSurface.js'
-import type { CameraOverlayConfig } from '../overlay/overlay-config.js'
+import type { OverlayConfig } from '../overlay/overlay-config.js'
 import type { GridHighlightSettings } from '../../../store/grid-store.js'
 
 export interface TimelineViewOptionsPanelProps {
   /** The camera this panel is configuring — the switch group's target. */
   readonly deviceId: number
   /** The per-camera overlay document + its writer. */
-  readonly overlayConfig: CameraOverlayConfig
-  readonly onChangeOverlay: (next: CameraOverlayConfig) => void
+  readonly overlayConfig: OverlayConfig
+  readonly onChangeOverlay: (next: OverlayConfig) => void
   /** Per-camera highlight settings + patcher. */
   readonly highlight: GridHighlightSettings
   readonly onSetHighlight: (patch: Partial<GridHighlightSettings>) => void

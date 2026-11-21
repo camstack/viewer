@@ -65,7 +65,7 @@ import { ClusterLabelRow } from './HighlightTriggerRows.js'
 import { ClipSourceRow } from './ClipSourceRow.js'
 import { RecordingSourceRow } from './RecordingSourceRow.js'
 import { OverlaySettingsSections } from './theater/TimelineOverlayPanel.js'
-import type { CameraOverlayConfig } from './overlay/overlay-config.js'
+import type { OverlayConfig } from './overlay/overlay-config.js'
 import type { GridHighlightSettings } from '../../store/grid-store.js'
 import { useCanDelete } from '../../hooks/use-user-scope.js'
 import {
@@ -83,8 +83,8 @@ export interface CameraViewOptionsSurfaceProps {
   readonly context: ViewOptionsContext
   /** The per-camera overlay document + its writer — edited by the inline
    *  overlay sections. */
-  readonly overlayConfig: CameraOverlayConfig
-  readonly onChangeOverlay: (next: CameraOverlayConfig) => void
+  readonly overlayConfig: OverlayConfig
+  readonly onChangeOverlay: (next: OverlayConfig) => void
   /** Per-camera highlight settings + patcher. The border triggers are edited
    *  by the inline overlay sections; the `clusterLabel` member by this
    *  surface's own timeline section. One document, one patcher, two sections. */

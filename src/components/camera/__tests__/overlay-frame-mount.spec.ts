@@ -62,7 +62,8 @@ function Probe(): React.ReactElement {
 
 interface Mounted {
   readonly scale: number
-  readonly picture: { left: number; top: number; width: number; height: number }
+  /** The coordinate space the children are laid out in — the CONTAINER. */
+  readonly container: Record<'position' | 'left' | 'top' | 'right' | 'bottom', string>
 }
 
 async function mountFrame(
@@ -92,12 +93,7 @@ async function mountFrame(
   const style = getComputedStyle(probe.parentElement as HTMLElement)
   return {
     scale: Number(probe.textContent),
-    picture: {
-      left: parseFloat(style.left),
-      top: parseFloat(style.top),
-      width: parseFloat(style.width),
-      height: parseFloat(style.height),
-    },
+    container: { position: style.position, left: style.left, top: style.top, right: style.right, bottom: style.bottom },
   }
 }
 
@@ -106,18 +102,16 @@ describe('OverlayFrame', () => {
   // medium on a phone-portrait picture is what small used to be.
   it('portrait (cover): the picture IS the box, medium is ~0.64x', async () => {
     const m = await mountFrame(390, 219, 'cover', 'medium')
-    expect(m.picture).toEqual({ left: 0, top: 0, width: 390, height: 219 })
     expect(m.scale).toBeCloseTo(overlayScale(390, 'medium'), 5)
     expect(m.scale).toBeGreaterThan(0.6)
     expect(m.scale).toBeLessThan(0.7)
   })
 
-  it('landscape fullscreen (contain): the frame is the PICTURE, bars excluded, and the size follows it', async () => {
+  it('landscape fullscreen (contain): children lay out in the CONTAINER (bars included), the size follows the PICTURE', async () => {
     const m = await mountFrame(932, 430, 'contain', 'medium')
     const expected = videoRectIn({ width: 932, height: 430 }, 'contain')
-    expect(m.picture.width).toBeCloseTo(expected.width, 1)
-    expect(m.picture.height).toBe(430)
-    expect(m.picture.left).toBeCloseTo(expected.x, 1)
+    // Overlays anchor to the container's corners, not the letterboxed picture.
+    expect(m.container).toEqual({ position: 'absolute', left: '0px', top: '0px', right: '0px', bottom: '0px' })
     // A bigger picture, bigger read-outs — measured on the picture, not the screen.
     expect(m.scale).toBeCloseTo(overlayScale(expected.width, 'medium'), 5)
     expect(m.scale).toBeGreaterThan(1.2)
@@ -127,8 +121,7 @@ describe('OverlayFrame', () => {
     const wide = await mountFrame(800, 450, 'contain', 'medium')
     cleanup()
     const fourThree = await mountFrame(800, 450, 'contain', 'medium', 4 / 3)
-    expect(wide.picture.width).toBe(800)
-    expect(fourThree.picture.width).toBeCloseTo(600, 1)
+    expect(fourThree.container).toEqual(wide.container)
     expect(fourThree.scale).toBeLessThan(wide.scale)
   })
 
@@ -163,7 +156,6 @@ describe('an overlay inside the frame is drawn at the frame\'s size', () => {
         fit: 'cover',
         children: React.createElement(LiveViewersBadge, {
           deviceId: 7,
-          position: 'top-left',
           enabled: true,
         }),
       }),

@@ -189,16 +189,12 @@ import {
   shouldDialLiveOnGoLive,
   type LiveStreamGateInput,
 } from '../live/battery-stream-gate.js'
-import { StreamStatsOverlay } from '../components/camera/StreamStatsOverlay.js'
-import { OverlayFrame } from '../components/camera/overlay/OverlayFrame.js'
-import { LiveViewersBadge } from '../components/camera/LiveViewersBadge.js'
 import { useStreamAspect } from '../live/stream-aspect.js'
 import { MotionBoxesOverlay } from '../components/camera/MotionBoxesOverlay.js'
 import { StationaryBoxesOverlay } from '../components/camera/StationaryBoxesOverlay.js'
 import { MotionRegionsOverlay } from '../components/camera/MotionRegionsOverlay.js'
 import { DiscardedBoxesOverlay } from '../components/camera/DiscardedBoxesOverlay.js'
-import { AudioLevelMeter } from '../components/camera/AudioLevelMeter.js'
-import { DeviceInfoOverlay } from '../components/camera/DeviceInfoOverlay.js'
+import { AudioMeterPicker } from '../components/camera/AudioLevelMeter.js'
 import { useSettingsStore } from '../store/settings-store.js'
 import type { OverlayPosition } from '../components/camera/overlay/overlay-position.js'
 import { ZoneDrawOverlay } from '../components/camera/ZoneDrawOverlay.js'
@@ -267,7 +263,7 @@ import { useBattery } from '../data/use-battery.js'
 
 import { useSettings } from '../data/use-settings.js'
 import { useMotionHighlight } from '../data/use-motion.js'
-import { MOTION, timingTo, useReducedMotion, usePopTransitions } from '../theme/motion.js'
+import { MOTION, timingTo, useReducedMotion } from '../theme/motion.js'
 import {
   sideTimelineWidth,
   timelineShown,
@@ -275,8 +271,6 @@ import {
 } from '../components/camera/theater/timeline-dock.js'
 import { timelineDockDisc } from '../components/camera/stream-control-items.js'
 import { CameraStatusDot } from '../components/camera/CameraStatusDot.js'
-import { OccupancyBadge } from '../components/camera/OccupancyBadge.js'
-import { DoorbellBadge } from '../components/camera/DoorbellBadge.js'
 import { useRunOnKeyChange } from '../hooks/use-run-on-key-change.js'
 import { useDetections } from '../data/use-detections.js'
 import { useAudioActive } from '../data/use-audio.js'
@@ -285,8 +279,7 @@ import { useHeld } from '../data/use-held.js'
 import { useCameraLocalStore } from '../store/camera-local-store.js'
 import { useDeviceSettingsStore } from '../store/device-settings-store.js'
 import { opensMuted } from '../live/audio-on-open.js'
-import { doorbellBadgeEnabled, hasLayer, patchOverlay } from '../components/camera/overlay/overlay-config.js'
-import { OverlayReadouts } from '../components/camera/overlay/OverlayReadouts.js'
+import { doorbellBadgeEnabled, hasLayer, placeOverlay } from '../components/camera/overlay/overlay-config.js'
 import { useCameraViewOptions } from '../hooks/use-camera-view-options.js'
 import { useCanActuate } from '../hooks/use-user-scope.js'
 import type { GridHighlightEmbedConfig } from '../grid-embed/embed-config.js'
@@ -399,7 +392,6 @@ export const WALL_STAGE_TEST_ID = 'wall-stage'
 const EMPTY_FRAME_CLIPS: readonly Clip[] = []
 
 export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScreenProps) {
-  const namePop = usePopTransitions()
   const { t } = useTranslation()
   const confirm = useConfirm()
   const notice = useNotice()
@@ -1331,9 +1323,7 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
   const detectionBoxesOn = hasLayer(overlay, 'objects')
   const discardedBoxesOn = hasLayer(overlay, 'discarded')
   const stationaryBoxesOn = hasLayer(overlay, 'stationary')
-  const statsPosition: OverlayPosition = overlay.stats
   const streamAspect = useStreamAspect(deviceId)
-  const audioPosition: OverlayPosition = overlay.audioMeter
   const deviceInfoPosition = useSettingsStore((s) => s.settings.deviceInfo)
   const [fullscreen, setFullscreen] = useState(false)
   // Controls visibility is owned here so the stage's single-tap gesture (not a
@@ -1566,8 +1556,14 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
 
   // Tapping the meter on the video moves it — the fast spatial way, and it
   // writes to the SAME document the panel edits, so the two never disagree.
+  const [audioPickerOpen, setAudioPickerOpen] = useState(false)
+  const onOpenAudioPicker = useCallback(() => setAudioPickerOpen(true), [])
+  const onCloseAudioPicker = useCallback(() => setAudioPickerOpen(false), [])
   const onSetAudioPosition = useCallback(
-    (position: OverlayPosition) => onSetOverlay(patchOverlay(overlay, { audioMeter: position })),
+    (position: OverlayPosition) => {
+      onSetOverlay(placeOverlay(overlay, 'audioMeter', position))
+      setAudioPickerOpen(false)
+    },
     [onSetOverlay, overlay],
   )
   const onToggleControls = useCallback(() => setControlsVisible((v) => !v), [])
@@ -2928,29 +2924,6 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
             />
           ) : null}
 
-          {/* Camera name — shown only while the controls overlay is visible. */}
-          {controlsVisible ? (
-            <Animated.View entering={namePop.entering} exiting={namePop.exiting} style={styles.nameTag} pointerEvents="none">
-            {/* `dense` for the on-video discs' reason (`OverlayDiscButton`):
-                it pops in from opacity 0, over the picture. */}
-            <GlassSurface
-              contentStyle={styles.nameTagRow}
-              pointerEvents="none"
-              dense
-            >
-              {cameraSleeping && !disabled ? (
-                <Moon size={12} color={colors.foreground} />
-              ) : (
-                <CameraStatusDot deviceId={deviceId} online={online} disabled={disabled} size={9} />
-              )}
-              <Text style={[styles.nameText, { color: colors.foreground }]} numberOfLines={1}>
-                {name}
-              </Text>
-            </GlassSurface>
-            </Animated.View>
-          ) : null}
-
-
           {/* Go-Live: the timeline's horizontal "Go to live" pill is the single
               return-to-live affordance (it remounts the player via onGoLive). The
               old over-video pill was removed to avoid duplication. */}
@@ -2960,79 +2933,9 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
               in TheaterTimeline). The over-video jog row was removed so the nav
               controls no longer sit on the stream. */}
 
-          {/* Everything the operator pins ON the picture — audio meter, device
-              info, doorbell, occupancy, readouts, stream stats, live viewers —
-              in ONE frame laid over the VIDEO's rendered rectangle (letterbox
-              excluded, `fit` as the player fits it). The frame is the anchor
-              space and carries the device's overlay size, so a landscape or
-              fullscreen picture and a portrait one scale the same way. The
-              meter sits above the gesture layer (not inside the zoom
-              transform) so the operator can tap it to reposition inline. */}
-          <OverlayFrame fit={fill || isWideDetail ? 'contain' : 'cover'} aspect={streamAspect}>
-            {/* Live audio-level meter — adaptive VU overlay, toggled from the
-                view-options menu (like the bounding-box overlay). Pinned to the
-                player FRAME (a sibling above the gesture layer, not inside the
-                zoom transform) so the operator can tap it to reposition inline.
-                Live-edge only (the dBFS stream is the current frame). */}
-            {audioPosition !== 'off' && liveOverlaysVisible ? (
-              <AudioLevelMeter
-                deviceId={deviceId}
-                position={audioPosition}
-                onSetPosition={onSetAudioPosition}
-              />
-            ) : null}
-
-            {/* Phone battery — global setting, same corner vocabulary as the meter. */}
-            {deviceInfoPosition !== 'off' ? (
-              <DeviceInfoOverlay position={deviceInfoPosition} />
-            ) : null}
-
-            {/* Live doorbell badge — top-left, non-interactive sibling overlay.
-                Pulses while ringing (a press within RING_WINDOW_MS), otherwise a
-                subtle "last ring N ago" pill. Opt-in per camera (`overlay.doorbell`,
-                off by default) and gated on the `doorbell-button` feature, so
-                non-doorbell cameras render nothing (the hook stays idle when
-                `enabled` is false, and self-hides when it never rang). */}
-            <DoorbellBadge
-              deviceId={deviceId}
-              enabled={doorbellBadgeEnabled({ hasDoorbell, switchedOn: overlay.doorbell, overlaysVisible: liveOverlaysVisible })}
-            />
-
-            {/* Live occupancy — class chips (glyph + count) from the
-                zone-analytics current snapshot. LIVE only: the snapshot is the
-                current frame, and occupancy for a recorded playhead / the events
-                page needs DURABLE server-side history (60-min ring today → a
-                server task). Self-hides when there is no occupancy. */}
-            <OccupancyBadge
-              deviceId={deviceId}
-              enabled={overlay.occupancy !== 'off' && status.isLive && !paused}
-              corner={overlay.occupancy === 'off' ? 'bottom-left' : overlay.occupancy}
-            />
-
-            {/* The operator's pinned readouts — the live dBFS, and any live field
-                of this camera or a device linked to it. Non-interactive, so the
-                corners still belong to the picture's gestures. */}
-            <OverlayReadouts
-              deviceId={deviceId}
-              config={overlay}
-              enabled={liveOverlaysVisible && status.isLive}
-            />
-
-            {/* Stream-stats read-out — toggled from the view-options menu. On
-                iOS the numbers come from the WebView embed's own samples
-                (`LiveViewWebView.getStats`), so ONE overlay serves every
-                platform and honours the chosen position. */}
-            {statsPosition !== 'off' ? (
-              <StreamStatsOverlay getStats={getStats} position={statsPosition} />
-            ) : null}
-
-            {/* Live viewers — how many people watch this camera right now. */}
-            <LiveViewersBadge
-              deviceId={deviceId}
-              position={overlay.viewers}
-              enabled={liveOverlaysVisible && status.isLive}
-            />
-          </OverlayFrame>
+          {audioPickerOpen ? (
+            <AudioMeterPicker position={overlay.audioMeter} onPick={onSetAudioPosition} onClose={onCloseAudioPicker} />
+          ) : null}
 
           {/* The battery hold uses the ORDINARY transports (the stream controls'
               play and the playback bar's play) — the dedicated centre disc +
@@ -3048,6 +2951,35 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
               Visibility is parent-owned — the stage's single-tap gesture
               toggles it. */}
           <StreamOverlayControls
+            frame={{ fit: fill || isWideDetail ? 'contain' : 'cover', aspect: streamAspect }}
+            layer={{
+              deviceId,
+              config: overlay,
+              hasDoorbell,
+              deviceInfo: deviceInfoPosition,
+              getStats,
+              gates: {
+                audioMeter: liveOverlaysVisible,
+                readouts: liveOverlaysVisible && status.isLive,
+                viewers: liveOverlaysVisible && status.isLive,
+                occupancy: status.isLive && !paused,
+                stats: true,
+                doorbell: doorbellBadgeEnabled({ hasDoorbell, switchedOn: overlay.doorbell, overlaysVisible: liveOverlaysVisible }),
+              },
+              name: (
+                <GlassSurface contentStyle={styles.nameTagRow} pointerEvents="none" dense>
+                  {cameraSleeping && !disabled ? (
+                    <Moon size={12} color={colors.foreground} />
+                  ) : (
+                    <CameraStatusDot deviceId={deviceId} online={online} disabled={disabled} size={9} />
+                  )}
+                  <Text style={[styles.nameText, { color: colors.foreground }]} numberOfLines={1}>
+                    {name}
+                  </Text>
+                </GlassSurface>
+              ),
+              onPressAudioMeter: onOpenAudioPicker,
+            }}
             visible={controlsVisible}
             onRequestHide={onHideControls}
             paused={effectivePaused}
@@ -3649,12 +3581,6 @@ const styles = StyleSheet.create({
   poster: {
     flex: 1,
     backgroundColor: '#000', // ui-check-ok: video stage — a camera picture sits on black in both themes
-  },
-  nameTag: {
-    position: 'absolute',
-    top: 8,
-    left: 8,
-    maxWidth: '70%',
   },
   nameTagRow: {
     flexDirection: 'row',

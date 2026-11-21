@@ -3310,7 +3310,6 @@
       "reasonNms": "soppresso da NMS",
       "reasonClassFilter": "filtro classe",
       "reasonZoneGate": "regola di zona",
-      "motionBadge": "Badge movimento",
       "highlightBorder": "Bordo evidenziazione",
       "occupancy": "Occupazione",
       "deviceInfo": "Informazioni dispositivo",
@@ -3335,7 +3334,14 @@
         "bottom-left": "In basso a sinistra",
         "bottom-center": "In basso al centro",
         "bottom-right": "In basso a destra"
-      }
+      },
+      "layoutSection": "Disposizione",
+      "cameraName": "Nome della camera",
+      "controlsLeft": "Controlli a sinistra",
+      "controlsRight": "Controlli a destra",
+      "fadeSection": "Nascondi con i controlli",
+      "fadeHint": "Questi overlay scompaiono quando i controlli si nascondono da soli.",
+      "fadeReadout": "Nascondi con i controlli"
     },
     "clips": {
       "title": "Clip",

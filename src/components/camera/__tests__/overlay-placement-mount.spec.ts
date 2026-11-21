@@ -4,86 +4,39 @@
  * Every read-out over the picture sits where the operator put it.
  *
  * The stream-stats overlay was reported "always bottom-left" whatever its
- * position said. The component itself was never wrong (it places itself with
- * `ANCHOR_PLACEMENT`, like the device-information pill and the audio meter);
- * on iOS the thing on screen was a DIFFERENT overlay — the WebView embed's own
- * pill, which has no position at all. These specs pin both halves: the host
- * components honour all eight anchors, and iOS no longer hands the job to the
- * embed.
+ * position said. On iOS the thing on screen was a DIFFERENT overlay — the
+ * WebView embed's own pill, which has no position at all. Placement is now the
+ * stack's job (`overlay-stack`): these specs pin that every anchor gets a box
+ * on its own edges, and that iOS does not hand the job to the embed.
  */
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, screen } from '@testing-library/react'
-import React from 'react'
+import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-import { mountScreen } from '../../../testing/mount.js'
-import { StreamStatsOverlay } from '../StreamStatsOverlay.js'
-import { LiveViewersBadge } from '../LiveViewersBadge.js'
-import {
-  ANCHOR_PLACEMENT,
-  OVERLAY_ANCHORS,
-  type OverlayAnchor,
-} from '../overlay/overlay-position.js'
+import { OVERLAY_ANCHORS, type OverlayAnchor } from '../overlay/overlay-position.js'
+import { stackBox } from '../overlay/overlay-stack.js'
 
-vi.mock('../../../connection/ConnectionProvider.js', async () =>
-  (await import('../../../testing/connection-stub.js')).connectionStubModule(),
-)
+const INSET = { top: 8, bottom: 8, left: 8, right: 8 } as const
 
-afterEach(() => cleanup())
-
-const EDGES = ['top', 'bottom', 'left', 'right'] as const
-
-/** The edge offsets ANCHOR_PLACEMENT asks for, as CSS strings. */
-function expectedEdges(anchor: OverlayAnchor): Readonly<Record<string, string>> {
-  const placement = ANCHOR_PLACEMENT[anchor]
-  const out: Record<string, string> = {}
-  for (const edge of EDGES) {
-    const value: unknown = Reflect.get(placement, edge)
-    if (typeof value === 'number') out[edge] = `${String(value)}px`
-  }
-  return out
+function edgesOf(anchor: OverlayAnchor): readonly string[] {
+  const box = stackBox(anchor, new Set([anchor]), INSET)
+  return (['top', 'bottom', 'left', 'right'] as const).filter((edge) => box[edge] !== undefined)
 }
 
-function edgesOf(el: HTMLElement): Readonly<Record<string, string>> {
-  const style = getComputedStyle(el)
-  const out: Record<string, string> = {}
-  for (const edge of EDGES) {
-    const value = style.getPropertyValue(edge)
-    if (value !== '' && value !== 'auto') out[edge] = value
-  }
-  return out
-}
-
-const getStats = (): Promise<null> => Promise.resolve(null)
-
-describe('the stream-stats overlay renders at the configured position', () => {
-  it.each(OVERLAY_ANCHORS)('panel at %s', (anchor) => {
-    mountScreen(React.createElement(StreamStatsOverlay, { getStats, position: anchor }))
-    expect(edgesOf(screen.getByTestId('stream-stats-overlay'))).toEqual(expectedEdges(anchor))
-  })
-
-  it.each(OVERLAY_ANCHORS)('grid-cell one-liner at %s', (anchor) => {
-    mountScreen(React.createElement(StreamStatsOverlay, { getStats, position: anchor, compact: true }))
-    expect(edgesOf(screen.getByTestId('stream-stats-overlay'))).toEqual(expectedEdges(anchor))
+describe('every anchor is laid out on its own edges', () => {
+  it.each(OVERLAY_ANCHORS)('%s', (anchor) => {
+    const edges = edgesOf(anchor)
+    if (anchor.startsWith('top')) expect(edges).toContain('top')
+    if (anchor.startsWith('bottom')) expect(edges).toContain('bottom')
+    if (anchor.startsWith('top') || anchor.startsWith('bottom')) {
+      expect(edges).not.toContain(anchor.startsWith('top') ? 'bottom' : 'top')
+    }
+    if (anchor.endsWith('left')) expect(edges).toContain('left')
+    if (anchor.endsWith('right')) expect(edges).toContain('right')
   })
 
   it('is NOT pinned bottom-left: top-right is top and right only', () => {
-    mountScreen(React.createElement(StreamStatsOverlay, { getStats, position: 'top-right' }))
-    const edges = edgesOf(screen.getByTestId('stream-stats-overlay'))
-    expect(edges).not.toHaveProperty('bottom')
-    expect(edges).not.toHaveProperty('left')
-  })
-})
-
-describe('the live-viewers badge renders at the configured position', () => {
-  it.each(OVERLAY_ANCHORS)('at %s', async (anchor) => {
-    mountScreen(
-      React.createElement(LiveViewersBadge, { deviceId: 7, position: anchor, enabled: true }),
-      { hub: { 'streamBroker.getLiveViewerCounts': [{ deviceId: 7, viewers: 2 }] } },
-    )
-    const badge = await screen.findByTestId('live-viewers-badge')
-    expect(edgesOf(badge)).toEqual(expectedEdges(anchor))
+    expect(edgesOf('top-right')).toEqual(['top', 'right'])
   })
 })
 
@@ -97,7 +50,8 @@ describe('iOS no longer hands the stats read-out to the WebView embed', () => {
     // bottom-left; turning it on is what made the position setting do nothing.
     expect(screenSrc).not.toMatch(/showStats=\{[^}]*useWebViewPlayer/)
     expect(screenSrc).not.toMatch(/statsPosition !== 'off' && !useWebViewPlayer/)
-    expect(screenSrc).toContain('<StreamStatsOverlay getStats={getStats} position={statsPosition} />')
+    expect(read('components', 'camera', 'overlay', 'OverlayLayer.tsx')).toContain('<StreamStatsOverlay getStats={getStats}')
+    expect(screenSrc).toContain('getStats,')
   })
 
   it('the WebView handle answers getStats from the embed\'s own samples first', () => {

@@ -26,12 +26,6 @@ import { log } from '../lib/logger.js'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { GRID_HIGHLIGHT_DEFAULTS, type GridHighlightSettings } from './grid-store.js'
 import {
-  isDefaultOverlay,
-  normaliseOverlay,
-  OVERLAY_DEFAULTS,
-  type CameraOverlayConfig,
-} from '../components/camera/overlay/overlay-config.js'
-import {
   EMPTY_ACCESSORY_PREFS,
   isEmptyAccessoryPrefs,
   parseAccessoryPrefs,
@@ -52,9 +46,6 @@ export interface CameraPref {
    *  highlight shape; in detail the triggers themselves are the enablement (no
    *  separate master toggle). */
   readonly highlight?: GridHighlightSettings
-  /** What this camera draws over its picture. Absent = the defaults, which
-   *  reproduce what the screen drew before the overlay config existed. */
-  readonly overlay?: CameraOverlayConfig
   /**
    * Which ONE of this camera's clip sources the clip surface reads
    * (`analytics`, `native:reolink:onboard`, …). Open vocabulary: the hub owns
@@ -147,7 +138,6 @@ function mergePref(
     localName?: string
     hidden?: boolean
     highlight?: GridHighlightSettings
-    overlay?: CameraOverlayConfig
     clipProvider?: string
     recordingProvider?: string
     accessories?: CameraAccessoryPrefs
@@ -163,12 +153,7 @@ function mergePref(
   if (typeof merged.recordingProvider === 'string' && merged.recordingProvider.length > 0) {
     next.recordingProvider = merged.recordingProvider
   }
-  // A config equal to the defaults is stored as ABSENCE — otherwise every
-  // camera the operator merely LOOKED at would carry a document, and a future
-  // change to a default would be silently pinned to the old value on all of
-  // them.
-  if (merged.overlay && !isDefaultOverlay(merged.overlay)) next.overlay = merged.overlay
-  // Same rule as `overlay`: a document that says nothing is stored as absence.
+  // A document that says nothing is stored as absence.
   if (merged.accessories && !isEmptyAccessoryPrefs(merged.accessories)) {
     next.accessories = merged.accessories
   }
@@ -251,22 +236,6 @@ export function cameraRecordingProvider(prefs: AppCameraPrefs, id: number): stri
   return prefs.byId[id]?.recordingProvider
 }
 
-/** Replace this camera's overlay document. */
-export function setCameraOverlayEntry(
-  prefs: AppCameraPrefs,
-  id: number,
-  overlay: CameraOverlayConfig,
-): AppCameraPrefs {
-  return mergePref(prefs, id, { overlay })
-}
-
-/** This camera's overlay config, defaults filled in. Never undefined — the
- *  caller draws something either way, so "no document" has to mean "defaults"
- *  rather than a branch at every render site. */
-export function cameraOverlay(prefs: AppCameraPrefs, id: number): CameraOverlayConfig {
-  return prefs.byId[id]?.overlay ?? OVERLAY_DEFAULTS
-}
-
 /** This camera's local accessory document, empty when never customised. */
 export function cameraAccessoryPrefs(prefs: AppCameraPrefs, id: number): CameraAccessoryPrefs {
   return prefs.byId[id]?.accessories ?? EMPTY_ACCESSORY_PREFS
@@ -329,7 +298,6 @@ function parsePref(raw: unknown): CameraPref | null {
     localName?: string
     hidden?: boolean
     highlight?: GridHighlightSettings
-    overlay?: CameraOverlayConfig
     clipProvider?: string
     recordingProvider?: string
     accessories?: CameraAccessoryPrefs
@@ -346,8 +314,6 @@ function parsePref(raw: unknown): CameraPref | null {
   if (typeof r.recordingProvider === 'string' && r.recordingProvider.trim().length > 0) {
     next.recordingProvider = r.recordingProvider.trim()
   }
-  const overlay = normaliseOverlay(r.overlay)
-  if (overlay && !isDefaultOverlay(overlay)) next.overlay = overlay
   const accessories = parseAccessoryPrefs(r.accessories)
   if (accessories !== undefined) next.accessories = accessories
   return Object.keys(next).length > 0 ? next : null
@@ -404,7 +370,6 @@ interface CameraPrefsState {
   setLocalName: (id: number, name: string) => void
   setHidden: (id: number, hidden: boolean) => void
   setCameraHighlight: (id: number, highlight: GridHighlightSettings) => void
-  setCameraOverlay: (id: number, overlay: CameraOverlayConfig) => void
   /** Choose which ONE of this camera's clip sources the clip surface reads.
    *  `undefined` clears the pick back to the default (CamStack). */
   setCameraClipProvider: (id: number, sourceId: string | undefined) => void
@@ -466,12 +431,6 @@ export const useCameraPrefsStore = create<CameraPrefsState>((set, get) => ({
 
   setHidden: (id, hidden) => {
     const prefs = setHiddenEntry(get().prefs, id, hidden)
-    set({ prefs })
-    persist(prefs)
-  },
-
-  setCameraOverlay: (id, overlay) => {
-    const prefs = setCameraOverlayEntry(get().prefs, id, overlay)
     set({ prefs })
     persist(prefs)
   },

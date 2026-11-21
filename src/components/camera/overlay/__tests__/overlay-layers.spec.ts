@@ -4,9 +4,10 @@ import {
   OVERLAY_LAYERS,
   hasLayer,
   isDefaultOverlay,
-  normaliseOverlay,
+  migrateLegacyLayers,
+  parseOverlayConfig,
   toggleLayer,
-  type CameraOverlayConfig,
+  type OverlayConfig,
   type OverlayLayer,
 } from '../overlay-config.js'
 
@@ -27,7 +28,7 @@ import {
  *     (`SUPPRESS_IOU`, server `stationary-registry.ts`), so a parked object can
  *     never arrive through `objects` or `discarded`.
  */
-const config = (raw: unknown): CameraOverlayConfig => normaliseOverlay(raw) as CameraOverlayConfig
+const config = (raw: unknown): OverlayConfig => parseOverlayConfig(raw)
 
 describe('the layer vocabulary', () => {
   it('is exactly the four independent layers, in display order', () => {
@@ -88,7 +89,7 @@ describe('the layer vocabulary', () => {
  *   motionBoxes: true               | + motion
  *   junk / absent                   | —
  */
-describe('migration preserves the picture, not the vocabulary', () => {
+describe('the GRID document\'s migration preserves the picture, not the vocabulary', () => {
   const CASES: readonly (readonly [string, unknown, readonly OverlayLayer[]])[] = [
     ["boxes: 'off'", { boxes: 'off' }, []],
     ["boxes: 'kept' still draws the parked objects it drew", { boxes: 'kept' }, ['objects', 'stationary']],
@@ -104,16 +105,14 @@ describe('migration preserves the picture, not the vocabulary', () => {
 
   for (const [name, raw, expected] of CASES) {
     it(name, () => {
-      expect([...config(raw).layers]).toEqual([...expected])
+      expect([...migrateLegacyLayers(raw as Parameters<typeof migrateLegacyLayers>[0])]).toEqual([...expected])
     })
   }
 
-  it('a migrated legacy document is never mistaken for the defaults', () => {
-    // `isDefaultOverlay` decides whether the store persists anything at all —
-    // a false positive here silently discards the operator's choice.
-    expect(isDefaultOverlay(config({ boxes: 'kept' }))).toBe(false)
-    expect(isDefaultOverlay(config({ motionBoxes: true }))).toBe(false)
-    expect(isDefaultOverlay(config({ discardedBoxes: true }))).toBe(false)
+  it('the global overlay document does NOT migrate: retired fields read as the defaults', () => {
+    expect(isDefaultOverlay(config({ boxes: 'kept' }))).toBe(true)
+    expect(isDefaultOverlay(config({ motionBoxes: true }))).toBe(true)
+    expect(isDefaultOverlay(config({ discardedBoxes: true }))).toBe(true)
   })
 
   it('an already-migrated document passes through, deduped and ordered', () => {
@@ -133,7 +132,7 @@ describe('migration preserves the picture, not the vocabulary', () => {
     expect([...config({ layers: [], boxes: 'all', motionBoxes: true }).layers]).toEqual([])
   })
 
-  it('the retired fields are not on the migrated document', () => {
+  it('the retired fields are not on the parsed document', () => {
     // A second switch that disagrees with the first is worse than no switch.
     const keys = Object.keys(config({ boxes: 'all', motionBoxes: true, discardedBoxes: true }))
     expect(keys).not.toContain('boxes')

@@ -47,7 +47,7 @@ describe('OverlayDiscGroup is the single on-video disc cluster', () => {
 
   it('the stream overlay is a composer, not a second hide path', () => {
     const overlay = read(OVERLAY)
-    expect(overlay).toContain('<OverlayDiscGroup')
+    expect(overlay).toContain('useDiscClusters(')
     expect(overlay).toContain('timelineToggle')
     expect(overlay).not.toMatch(/if\s*\(\s*!visible\s*\)\s*return\s+null/)
   })

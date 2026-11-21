@@ -65,7 +65,11 @@ export const ReadoutPickerSheet = memo(function ReadoutPickerSheet({
 
   const pinField = (f: DeviceLiveField): void => {
     onPin(
-      { kind: 'deviceField', deviceId: target.deviceId, sectionId: f.sectionId, fieldKey: f.key },
+      // The document is global: a field of THIS camera is "whichever camera the
+      // chip is drawn on", never this camera's device id.
+      target.deviceId === cameraDeviceId
+        ? { kind: 'cameraField', sectionId: f.sectionId, fieldKey: f.key }
+        : { kind: 'deviceField', deviceId: target.deviceId, sectionId: f.sectionId, fieldKey: f.key },
       f.label,
       f.unit,
       f.precision,

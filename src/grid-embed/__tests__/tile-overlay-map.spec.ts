@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { buildTileOverlayMap, tileOverlayFor } from '../embed-config.js'
 import {
   OVERLAY_DEFAULTS,
-  type CameraOverlayConfig,
+  type OverlayConfig,
 } from '../../components/camera/overlay/overlay-config.js'
 
 /**
@@ -16,7 +16,7 @@ import {
  * and, just as importantly, every camera that placed none must not, because the
  * map is re-pushed across the WebView bridge whenever any camera's prefs change.
  */
-function overlay(patch: Partial<CameraOverlayConfig>): CameraOverlayConfig {
+function overlay(patch: Partial<OverlayConfig>): OverlayConfig {
   return { ...OVERLAY_DEFAULTS, ...patch }
 }
 

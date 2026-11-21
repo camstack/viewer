@@ -19,6 +19,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 const SRC = join(process.cwd(), 'src')
+const CAMERA_OVERLAY = join(SRC, 'components', 'camera', 'overlay')
 const SURFACE = join(SRC, 'components', 'camera', 'CameraViewOptionsSurface.tsx')
 const SECTIONS = join(SRC, 'components', 'camera', 'theater', 'TimelineOverlayPanel.tsx')
 const THEATER_PANEL = join(SRC, 'components', 'camera', 'theater', 'TimelineViewOptionsPanel.tsx')
@@ -102,12 +103,15 @@ describe('what the cell menu offers, the TILE draws', () => {
    */
   it('the native tile paints every per-camera indicator', () => {
     const tile = code(TILE)
-    expect(tile).toContain('useCameraOverlay(camera.id)')
+    // ONE global overlay document, drawn by the shared layer.
+    expect(tile).toContain('useOverlayConfig()')
     expect(tile).toContain('<MotionRegionsOverlay')
     expect(tile).not.toContain('<MotionBadge')
-    expect(tile).toContain('<AudioLevelMeter')
-    expect(tile).toContain('<OccupancyBadge')
-    expect(tile).toContain('<StreamStatsOverlay')
+    expect(tile).toContain('<OverlayLayerView')
+    const layer = code(join(CAMERA_OVERLAY, 'OverlayLayer.tsx'))
+    expect(layer).toContain('<AudioLevelMeter')
+    expect(layer).toContain('<OccupancyBadge')
+    expect(layer).toContain('<StreamStatsOverlay')
   })
 
   it('the native tile subscribes ONLY where the indicator was placed', () => {
@@ -115,10 +119,12 @@ describe('what the cell menu offers, the TILE draws', () => {
     // subscriptions, N occupancy polls and N stats timers for chrome nobody
     // asked for.
     const tile = code(TILE)
-    expect(tile).toContain("overlay.audioMeter !== 'off'")
-    expect(tile).toContain("overlay.occupancy !== 'off'")
+    // The layer builds its stacks from the PLACED overlays only (`stackItems`
+    // skips `off`), and the tile gates every one on `live`.
     expect(tile).toContain("hasLayer(overlay, 'motion') && live")
-    expect(tile).toContain("overlay.stats !== 'off' && live")
+    expect(tile).toContain('audioMeter: live')
+    expect(tile).toContain('stats: live')
+    expect(code(join(CAMERA_OVERLAY, 'overlay-stack.ts'))).toContain("placed(config.audioMeter, 'audioMeter')")
   })
 
   it('the embed tile paints the same five, from the per-device config', () => {

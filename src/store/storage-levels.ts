@@ -39,7 +39,8 @@ export const STORAGE_KEY_LEVELS: readonly StorageKeyLevel[] = [
   { key: 'camstack.v2.reel-filter', match: 'per-hub', level: 'account', what: 'Recent reel filter (viewer.app)' },
   { key: 'camstack.v2.reel-highlight', match: 'per-hub', level: 'account', what: 'reel highlight (viewer.app)' },
   { key: 'camstack.v2.events-filter', match: 'per-hub', level: 'account', what: 'events parked rows (viewer.app)' },
-  { key: '@camstack/v2/camera-prefs', match: 'per-hub', level: 'account', what: 'camera names, order, overlays (viewer.cameras)' },
+  { key: '@camstack/v2/camera-prefs', match: 'per-hub', level: 'account', what: 'camera names, order, highlight, sources (viewer.cameras)' },
+  { key: 'camstack.v2.overlay-config', match: 'per-hub', level: 'account', what: 'the one global overlay document (viewer.app)' },
   // One list; every grid carries its hub (`Grid.serverId`).
   { key: '@camstack/v2/grids', match: 'exact', level: 'account', what: 'grid definitions (viewer.grids)' },
 

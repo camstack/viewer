@@ -3310,7 +3310,6 @@
       "reasonNms": "suppressed by NMS",
       "reasonClassFilter": "class filter",
       "reasonZoneGate": "zone rule",
-      "motionBadge": "Motion badge",
       "highlightBorder": "Highlight border",
       "occupancy": "Occupancy",
       "deviceInfo": "Device information",
@@ -3335,7 +3334,14 @@
         "bottom-left": "Bottom left",
         "bottom-center": "Bottom center",
         "bottom-right": "Bottom right"
-      }
+      },
+      "layoutSection": "Layout",
+      "cameraName": "Camera name",
+      "controlsLeft": "Left controls",
+      "controlsRight": "Right controls",
+      "fadeSection": "Hide with the controls",
+      "fadeHint": "These overlays disappear when the controls auto-hide.",
+      "fadeReadout": "Hide with the controls"
     },
     "clips": {
       "title": "Clips",

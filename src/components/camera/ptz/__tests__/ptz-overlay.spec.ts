@@ -10,6 +10,7 @@
  * - The pad IS `PtzControls`: a press reaches the same `ptz.*` cap call the
  *   timeline's panel makes, and reports itself so the auto-hide restarts.
  */
+import { OVERLAY_DEFAULTS } from '../../overlay/overlay-config.js'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import React from 'react'
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
@@ -23,6 +24,9 @@ import { hubCalls } from '../../../../testing/hub-stub.js'
 import { SPACING } from '../../../../theme/tokens.js'
 import { PTZ_OVERLAY_MAX_WIDTH, ptzOverlayLayout } from '../ptz-overlay-layout.js'
 
+vi.mock('../../../../connection/ConnectionProvider.js', async () =>
+  (await import('../../../../testing/connection-stub.js')).connectionStubModule(),
+)
 vi.mock('../../../../connection/ConnectionProvider.js', async () =>
   (await import('../../../../testing/connection-stub.js')).connectionStubModule(),
 )
@@ -40,6 +44,14 @@ function mountDiscs(ptzToggle?: { open: boolean; onToggle: () => void }) {
       ThemeProvider,
       null,
       React.createElement(StreamOverlayControls, {
+        frame: { fit: 'cover' as const },
+        layer: {
+          deviceId: 1,
+          config: OVERLAY_DEFAULTS,
+          gates: { audioMeter: false, occupancy: false, stats: false, viewers: false, readouts: false, doorbell: false },
+          deviceInfo: 'off' as const,
+          getStats: () => Promise.resolve(null),
+        },
         visible: true,
         onRequestHide: noop,
         paused: false,

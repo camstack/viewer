@@ -22,7 +22,6 @@ import { Eye } from '../../lib/icons.js'
 import { useTheme } from '../../theme/theme-provider.js'
 import { SPACING, RADIUS, TABULAR } from '../../theme/tokens.js'
 import { useLiveViewerCount } from '../../data/use-live-viewers.js'
-import { ANCHOR_PLACEMENT, type OverlayPosition } from './overlay/overlay-position.js'
 import { useScaledPx, useStyleScaler } from './overlay/OverlayFrame.js'
 
 /** The glyph size before the overlay size is applied. */
@@ -30,46 +29,37 @@ const GLYPH_PX = 13
 
 export interface LiveViewersBadgeProps {
   readonly deviceId: number
-  /** Where to draw it; `off` mounts nothing and polls nothing. */
-  readonly position: OverlayPosition
   /** Poll + draw only while true — the caller gates this to the live edge. */
   readonly enabled: boolean
 }
 
 export function LiveViewersBadge({
   deviceId,
-  position,
   enabled,
 }: LiveViewersBadgeProps): React.JSX.Element | null {
   const { t } = useTranslation()
   const { colors } = useTheme()
   const sx = useStyleScaler()
   const px = useScaledPx()
-  const placed = position !== 'off'
-  const viewers = useLiveViewerCount(deviceId, placed && enabled)
-  if (position === 'off' || !enabled || viewers === null || viewers < 1) return null
+  const viewers = useLiveViewerCount(deviceId, enabled)
+  if (!enabled || viewers === null || viewers < 1) return null
 
   return (
     <View
       pointerEvents="none"
-      style={[styles.anchor, ANCHOR_PLACEMENT[position]]}
+      accessible
+      accessibilityRole="text"
+      accessibilityLabel={t('v2.overlay.liveViewersCount', { count: viewers })}
+      style={[sx(styles.pill), { backgroundColor: `${colors.background}CC` }]}
       testID="live-viewers-badge"
     >
-      <View
-        accessible
-        accessibilityRole="text"
-        accessibilityLabel={t('v2.overlay.liveViewersCount', { count: viewers })}
-        style={[sx(styles.pill), { backgroundColor: `${colors.background}CC` }]}
-      >
-        <Eye size={px(GLYPH_PX)} color={colors.foregroundMuted} />
-        <Text style={[sx(styles.count), { color: colors.foreground }, TABULAR]}>{viewers}</Text>
-      </View>
+      <Eye size={px(GLYPH_PX)} color={colors.foregroundMuted} />
+      <Text style={[sx(styles.count), { color: colors.foreground }, TABULAR]}>{viewers}</Text>
     </View>
   )
 }
 
 const styles = StyleSheet.create({
-  anchor: { position: 'absolute' },
   pill: {
     flexDirection: 'row',
     alignItems: 'center',

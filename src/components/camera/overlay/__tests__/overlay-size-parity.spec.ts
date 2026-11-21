@@ -49,30 +49,30 @@ describe('the embed mirrors the app\'s overlay size', () => {
 })
 
 describe('every surface that draws read-outs sizes them', () => {
-  it('the single player mounts its read-outs in an OverlayFrame', () => {
+  it('the single player mounts its read-outs through ONE frame + layer', () => {
     const screen = read('src/screens/CameraDetailScreen.tsx')
-    const frame = screen.slice(screen.indexOf('<OverlayFrame'), screen.indexOf('</OverlayFrame>'))
+    const controls = read('src/components/camera/StreamOverlayControls.tsx')
+    const layer = read('src/components/camera/overlay/OverlayLayer.tsx')
+    expect(controls).toContain('<OverlayFrame')
+    expect(controls).toContain('<OverlayLayer')
     for (const overlay of [
       '<AudioLevelMeter',
       '<DeviceInfoOverlay',
       '<DoorbellBadge',
       '<OccupancyBadge',
-      '<OverlayReadouts',
       '<StreamStatsOverlay',
       '<LiveViewersBadge',
     ]) {
-      expect(frame, overlay).toContain(overlay)
+      expect(layer, overlay).toContain(overlay)
     }
     // …and the frame follows the player's own fit (letterboxed in fill / wide).
-    expect(screen).toContain("fit={fill || isWideDetail ? 'contain' : 'cover'}")
+    expect(screen).toContain("fit: fill || isWideDetail ? 'contain' : 'cover'")
   })
 
   it('the native wall tile mounts its indicators in an OverlayFrame', () => {
     const tile = read('src/components/grid/GridTile.tsx')
     const frame = tile.slice(tile.indexOf('<OverlayFrame'), tile.indexOf('</OverlayFrame>'))
-    for (const overlay of ['<AudioLevelMeter', '<OccupancyBadge', '<StreamStatsOverlay', '<LiveViewersBadge']) {
-      expect(frame, overlay).toContain(overlay)
-    }
+    expect(frame).toContain('<OverlayLayerView')
   })
 
   it('the wall\'s device-information pill is framed too', () => {

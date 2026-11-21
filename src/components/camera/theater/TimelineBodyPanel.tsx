@@ -20,7 +20,7 @@ import type { ActivityFilter, TimelineBarKind } from './mock-data.js'
 import type { PositionedCluster } from './event-cluster.js'
 import type { TimelinePanel } from './timeline-layout.js'
 import type { RecordingDaysStatus } from './recording-days-status.js'
-import type { CameraOverlayConfig } from '../overlay/overlay-config.js'
+import type { OverlayConfig } from '../overlay/overlay-config.js'
 import type { GridHighlightSettings } from '../../../store/grid-store.js'
 import type { StreamQuality } from '../../../store/settings-store.js'
 import type { CameraSelectionMode } from '../../../screens/camera-detail/camera-selection.js'
@@ -149,8 +149,8 @@ export interface TimelineViewOptionsBinding {
  *  also DRAWS from it — the view-options panel's inline overlay sections are
  *  only the editor). */
 export interface TimelineOverlayBinding {
-  readonly config: CameraOverlayConfig
-  readonly onChange: (next: CameraOverlayConfig) => void
+  readonly config: OverlayConfig
+  readonly onChange: (next: OverlayConfig) => void
 }
 
 /**
@@ -187,7 +187,7 @@ export interface TimelineManagementBinding {
  *    its own control bar already owns the per-grid tier (a second knob that
  *    disagrees with the first is worse than no knob);
  *  - the view-options / overlay documents are ONE camera's stored prefs
- *    (`CameraOverlayConfig`), and the wall draws a different one per cell;
+ *    (`OverlayConfig`), and the wall draws a different one per cell;
  *  - the ZONE is drawn on the player surface, and the grid page has no single
  *    picture to draw it on.
  *
