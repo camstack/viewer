@@ -31,6 +31,18 @@ export interface WhatsNewEntry {
 // i18n-ok: release notes carry their own `en` + `it` text per entry (typed, held by whats-new.spec.ts)
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.729',
+    date: '2026-11-21',
+    notes: {
+      en: [
+        'Tap a device row icon to switch it, open a cover or lock; it pulses while moving.',
+      ],
+      it: [
+        "Tocca l'icona di un dispositivo per accenderlo, aprire una tapparella o chiudere.",
+      ],
+    },
+  },
+  {
     version: '1.0.728',
     date: '2026-11-20',
     notes: {
