@@ -26,7 +26,7 @@ import { HeroSceneTile } from './HeroSceneTile.js'
 import { useRowArm } from './row-arm.js'
 import { useHeroCaller } from './use-hero.js'
 import {
-  TILE_PULSE_MAX_MS, coverPlan, coverState, lockPlan, lockState, switchPlan, switchState,
+  TILE_FAILED_MS, TILE_PULSE_MAX_MS, coverPlan, coverState, lockPlan, lockState, switchPlan, switchState,
   tilePulsing, tileQuickKind, tileTint, type TileDeviceState, type TilePlan,
 } from './tile-quick-action.js'
 
@@ -98,26 +98,55 @@ interface FrameProps extends QuickActionTileProps {
   /** What a tap does; `null` = nothing to offer right now (a lock mid-travel). */
   readonly plan: TilePlan | null
   readonly pending: boolean
-  readonly failed: boolean
+  /** The last send's error text, or null. */
+  readonly error: string | null
   readonly onPress: () => void
 }
 
-/** Pulsing is bounded: a report stuck on "moving" stops animating after `TILE_PULSE_MAX_MS`. */
-function usePulseExpired(active: boolean): boolean {
+/**
+ * Pulsing is bounded: a report stuck on "moving" stops animating after
+ * `TILE_PULSE_MAX_MS`. `epoch` names the current transition (a new send, or the
+ * state changing), and a new one re-arms the cap.
+ */
+function usePulseExpired(active: boolean, epoch: string): boolean {
   const [expired, setExpired] = useState(false)
+  const [armedFor, setArmedFor] = useState(epoch)
+  if (armedFor !== epoch) {
+    setArmedFor(epoch)
+    if (expired) setExpired(false)
+  }
   if (!active && expired) setExpired(false)
   useEffect(() => {
     if (!active) return undefined
     const timer = setTimeout(() => setExpired(true), TILE_PULSE_MAX_MS)
     return () => clearTimeout(timer)
-  }, [active])
+  }, [active, epoch])
   return expired
 }
 
-function TileFrame({ deviceId, name, online, icon, tone, muted = false, testID, onOpen, openLabel, state, plan, pending, failed, onPress }: FrameProps): React.JSX.Element {
+/** A failure tints the icon red until `TILE_FAILED_MS` passes or the device's state next changes; the next send starts clean. */
+function useFailedTint(error: string | null, state: string): boolean {
+  const [dismissed, setDismissed] = useState(false)
+  const [seenState, setSeenState] = useState(state)
+  if (error === null && dismissed) setDismissed(false)
+  if (seenState !== state) {
+    setSeenState(state)
+    if (error !== null && !dismissed) setDismissed(true)
+  }
+  useEffect(() => {
+    if (error === null || dismissed) return undefined
+    const timer = setTimeout(() => setDismissed(true), TILE_FAILED_MS)
+    return () => clearTimeout(timer)
+  }, [error, dismissed])
+  return error !== null && !dismissed
+}
+
+function TileFrame({ deviceId, name, online, icon, tone, muted = false, testID, onOpen, openLabel, state, plan, pending, error, onPress }: FrameProps): React.JSX.Element {
   const { t } = useTranslation()
   const busy = pending || state === 'transitional'
-  const expired = usePulseExpired(busy)
+  const [sends, setSends] = useState(0)
+  const expired = usePulseExpired(busy, `${sends}:${state}`)
+  const failed = useFailedTint(error, state)
   const pulsing = tilePulsing(state, pending, expired)
   const tint = tileTint({ online, state, failed, activeTone: tone, restingTone: tone })
   // Before the state is read the hub's own muting stands; afterwards the live state decides.
@@ -134,7 +163,7 @@ function TileFrame({ deviceId, name, online, icon, tone, muted = false, testID, 
   if (plan === null || !online) return <OpenWrap onOpen={onOpen} openLabel={openLabel}>{tile}</OpenWrap>
   return (
     <Pressable
-      onPress={onPress}
+      onPress={() => { setSends((n) => n + 1); onPress() }}
       disabled={pending}
       hitSlop={6}
       accessibilityRole="button"
@@ -153,6 +182,7 @@ function SwitchTile(props: QuickActionTileProps): React.JSX.Element {
   const on = status.data?.on ?? null
   const plan = switchPlan(on)
   const press = useCallback(async () => {
+    if (plan === null) return
     await mutator.run(plan.call.cap, plan.call.method, plan.call.args)
     void status.refetch()
   }, [mutator, plan, status])
@@ -162,7 +192,7 @@ function SwitchTile(props: QuickActionTileProps): React.JSX.Element {
       state={status.isLoading && !status.data ? 'loading' : switchState(on)}
       plan={plan}
       pending={mutator.pending}
-      failed={mutator.error !== null}
+      error={mutator.error}
       onPress={() => { hapticAction(); void press() }}
     />
   )
@@ -174,6 +204,7 @@ function CoverTile({ capKey, ...props }: QuickActionTileProps & { readonly capKe
   const reported = status.data?.state ?? null
   const plan = coverPlan(capKey, reported)
   const press = useCallback(async () => {
+    if (plan === null) return
     await mutator.run(plan.call.cap, plan.call.method, plan.call.args)
     void status.refetch()
   }, [mutator, plan, status])
@@ -183,7 +214,7 @@ function CoverTile({ capKey, ...props }: QuickActionTileProps & { readonly capKe
       state={status.isLoading && !status.data ? 'loading' : coverState(reported)}
       plan={plan}
       pending={mutator.pending}
-      failed={mutator.error !== null}
+      error={mutator.error}
       onPress={() => { hapticAction(); void press() }}
     />
   )
@@ -207,7 +238,7 @@ function LockTile(props: QuickActionTileProps): React.JSX.Element {
       state={status.isLoading && !status.data ? 'loading' : lockState(reported)}
       plan={plan}
       pending={mutator.pending}
-      failed={mutator.error !== null}
+      error={mutator.error}
       onPress={() => {
         if (plan === null) return
         hapticAction()
@@ -230,7 +261,7 @@ function HeroPowerTile({ power, ...props }: QuickActionTileProps & { readonly po
       state={state}
       plan={plan}
       pending={caller.pending}
-      failed={caller.error !== null}
+      error={caller.error}
       onPress={() => { hapticAction(); void caller.runAction(power.press) }}
     />
   )

@@ -27,6 +27,12 @@ describe('tileQuickKind', () => {
     expect(tileQuickKind('alarm', false, true)).toBe('none')
     expect(tileQuickKind('none', false, true)).toBe('none')
   })
+  it('a hub power toggle never promotes a kind that is not whitelisted', () => {
+    expect(tileQuickKind('sensor', true, true)).toBe('none')
+    expect(tileQuickKind('alarm', true, true)).toBe('none')
+    expect(tileQuickKind('vacuum', true, true)).toBe('none')
+    expect(tileQuickKind('none', true, true)).toBe('none')
+  })
   it('a read-only session gets no action for any type', () => {
     expect(tileQuickKind('switch', true, false)).toBe('none')
     expect(tileQuickKind('lock', true, false)).toBe('none')
@@ -36,18 +42,21 @@ describe('tileQuickKind', () => {
 
 describe('plans', () => {
   it('a switch flips; unknown asks for on', () => {
-    expect(switchPlan(true).call.args).toEqual({ on: false })
-    expect(switchPlan(true).label).toBe('powerOff')
-    expect(switchPlan(false).call.args).toEqual({ on: true })
-    expect(switchPlan(null).label).toBe('powerOn')
+    expect(switchPlan(true)?.call.args).toEqual({ on: false })
+    expect(switchPlan(true)?.label).toBe('powerOff')
+    expect(switchPlan(false)?.call.args).toEqual({ on: true })
+    expect(switchPlan(null)).toBeNull()
   })
   it('a cover stops while moving, closes when open, otherwise opens', () => {
-    expect(coverPlan('cover', 'opening').call.method).toBe('stop')
-    expect(coverPlan('cover', 'closing').call.method).toBe('stop')
-    expect(coverPlan('cover', 'open').call.method).toBe('close')
-    expect(coverPlan('cover', 'closed').call.method).toBe('open')
-    expect(coverPlan('valve', 'stopped').call).toMatchObject({ cap: 'valve', method: 'open' })
-    expect(coverPlan('cover', null).call.method).toBe('open')
+    expect(coverPlan('cover', 'opening')?.call.method).toBe('stop')
+    expect(coverPlan('cover', 'closing')?.call.method).toBe('stop')
+    expect(coverPlan('cover', 'open')?.call.method).toBe('close')
+    expect(coverPlan('cover', 'closed')?.call.method).toBe('open')
+    expect(coverPlan('valve', 'stopped')?.call).toMatchObject({ cap: 'valve', method: 'open' })
+  })
+  it('an unread or unrecognised cover state offers nothing', () => {
+    expect(coverPlan('cover', null)).toBeNull()
+    expect(coverPlan('cover', 'jammed')).toBeNull()
   })
   it('a lock locks at once and unlocks only armed; mid-travel or unread offers nothing', () => {
     expect(lockPlan('unlocked')?.call).toMatchObject({ method: 'lock', armId: null })

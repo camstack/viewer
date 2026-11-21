@@ -43,8 +43,12 @@ export function tileQuickKind(
       return 'cover'
     case 'lock':
       return 'lock'
-    default:
+    // Only the kinds whose hub row power toggle is the type's own on/off; any other kind stays plain.
+    case 'media-player':
+    case 'climate':
       return heroToggle ? 'hero-power' : 'none'
+    default:
+      return 'none'
   }
 }
 
@@ -64,17 +68,21 @@ export interface TilePlan {
   readonly label: TileActionLabel
 }
 
-/** The next power state asked of a switch. An unknown state asks for on. */
-export function switchPlan(on: boolean | null): TilePlan {
-  const next = on !== true
+/** The next power state asked of a switch. A state not read (loading, failed read) offers nothing: the tile opens the device. */
+export function switchPlan(on: boolean | null): TilePlan | null {
+  if (on === null) return null
+  const next = !on
   return {
     call: { cap: 'switch', method: 'setState', args: { on: next }, armId: null },
     label: next ? 'powerOn' : 'powerOff',
   }
 }
 
-/** A cover's tap by its reported state: stop while it moves, close when open, otherwise open. */
-export function coverPlan(capKey: 'cover' | 'valve', state: string | null): TilePlan {
+const COVER_STATES: readonly string[] = ['open', 'closed', 'opening', 'closing', 'stopped']
+
+/** A cover's tap by its reported state: stop while it moves, close when open, open when closed or stopped. An unread or unrecognised state offers nothing. */
+export function coverPlan(capKey: 'cover' | 'valve', state: string | null): TilePlan | null {
+  if (state === null || !COVER_STATES.includes(state)) return null
   if (state === 'opening' || state === 'closing') {
     return { call: { cap: capKey, method: 'stop', args: {}, armId: null }, label: 'stop' }
   }
@@ -150,6 +158,9 @@ export function tileTint(input: TileTintInput): TileTint {
       return { tone: 'muted', disabled: false }
   }
 }
+
+/** How long a failed send keeps the icon red before it returns to the state's own tint. */
+export const TILE_FAILED_MS = 5000
 
 /** True while the icon should pulse: a send is in flight or the device reports it is moving. */
 export function tilePulsing(state: TileDeviceState | 'loading', pending: boolean, expired: boolean): boolean {
