@@ -21,7 +21,7 @@
  * 5. **It must fit.** A corner shares its band with the other stacks of that
  *    band: two corners on one edge get half of its width each (a third stack
  *    in the middle takes 20%), and a corner with a stack on the opposite edge
- *    of its side gets half of the height. Content past a stack's budget is
+ *    of its side gets half of the height, and with a side-centre stack a quarter. Content past a stack's budget is
  *    clipped, never drawn over a neighbour. The budgets are fractions, so a
  *    portrait phone and a grid tile obey the same rule.
  *
@@ -201,6 +201,14 @@ export function cornerWidthShare(anchor: OverlayAnchor, occupied: ReadonlySet<Ov
   return 100
 }
 
+/** Height share of a corner when a side-centre stack shares its side. */
+export const MIDDLE_CORNER_SHARE = 25
+
+/** The side-centre stack's band: `MIDDLE_EDGE`% from the top and bottom, so it
+ *  is `100 - 2 * MIDDLE_EDGE`% tall. Chosen so a corner's inset plus
+ *  {@link MIDDLE_CORNER_SHARE} still ends above it down to an 80 px container. */
+export const MIDDLE_EDGE = 35
+
 /** Share of the height a corner stack may take, given who else is on its side. */
 export function cornerHeightShare(anchor: OverlayAnchor, occupied: ReadonlySet<OverlayAnchor>): number {
   const edge = edgeOf(anchor)
@@ -209,9 +217,11 @@ export function cornerHeightShare(anchor: OverlayAnchor, occupied: ReadonlySet<O
   const otherEdge = edge === 'top' ? 'bottom' : 'top'
   const opposite = has(occupied, anchorAt(otherEdge, band))
   const middle = has(occupied, anchorAt('middle', band))
-  if (opposite && middle) return 40
+  // The side-centre stack owns the band between 35% and 65% of the height; a
+  // corner above or below it stays within 25% (+ its inset), so the three can
+  // never meet, whichever of them is the one that grew.
+  if (middle) return MIDDLE_CORNER_SHARE
   if (opposite) return 50
-  if (middle) return 80
   return 100
 }
 
@@ -247,8 +257,8 @@ export function stackBox(
     case 'bottom-center':
       return { ...base, bottom: inset.bottom, left: inset.left, right: inset.right, alignItems: 'center', maxWidth: '100%', maxHeight: heightShare }
     case 'left-center':
-      return { ...base, top: '25%', bottom: '25%', left: inset.left, justifyContent: 'center', alignItems: 'flex-start', maxWidth: '50%', maxHeight: '50%' }
+      return { ...base, top: `${MIDDLE_EDGE}%`, bottom: `${MIDDLE_EDGE}%`, left: inset.left, justifyContent: 'center', alignItems: 'flex-start', maxWidth: '50%', maxHeight: `${100 - 2 * MIDDLE_EDGE}%` }
     case 'right-center':
-      return { ...base, top: '25%', bottom: '25%', right: inset.right, justifyContent: 'center', alignItems: 'flex-end', maxWidth: '50%', maxHeight: '50%' }
+      return { ...base, top: `${MIDDLE_EDGE}%`, bottom: `${MIDDLE_EDGE}%`, right: inset.right, justifyContent: 'center', alignItems: 'flex-end', maxWidth: '50%', maxHeight: `${100 - 2 * MIDDLE_EDGE}%` }
   }
 }

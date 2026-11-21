@@ -9,6 +9,7 @@ import {
   STACK_GAP,
   buildStacks,
   cornerHeightShare,
+  MIDDLE_EDGE,
   cornerWidthShare,
   orderStack,
   stackBox,
@@ -149,6 +150,20 @@ describe('fitting: a phone portrait and a grid tile obey the same fractions', ()
     const both = new Set<OverlayAnchor>(['top-left', 'bottom-left'])
     expect(cornerHeightShare('top-left', both)).toBe(50)
     expect(cornerHeightShare('bottom-left', both)).toBe(50)
+  })
+
+  it('a corner never reaches into the side-centre band on its side', () => {
+    const side = new Set<OverlayAnchor>(['top-left', 'left-center', 'bottom-left'])
+    const share = cornerHeightShare('top-left', side)
+    expect(share).toBeLessThanOrEqual(25)
+    for (const height of [90, 219, 430]) {
+      const cornerEnd = INSET.top + (share * height) / 100
+      const bandTop = (MIDDLE_EDGE * height) / 100
+      expect(cornerEnd).toBeLessThan(bandTop)
+    }
+    const box = stackBox('left-center', side, INSET)
+    expect(box.top).toBe(`${MIDDLE_EDGE}%`)
+    expect(box.bottom).toBe(`${MIDDLE_EDGE}%`)
   })
 
   it('the box clips instead of overflowing onto a neighbour', () => {

@@ -15,6 +15,7 @@ import {
   placeOverlay,
   readoutId,
   readoutsAt,
+  readoutsForCamera,
   removeReadout,
   setFade,
   type OverlayReadout,
@@ -308,5 +309,26 @@ describe('the doorbell badge is an opt-in overlay', () => {
   it('never draws on a camera without a doorbell, or while overlays are hidden', () => {
     expect(doorbellBadgeEnabled({ hasDoorbell: false, switchedOn: true, overlaysVisible: true })).toBe(false)
     expect(doorbellBadgeEnabled({ hasDoorbell: true, switchedOn: true, overlaysVisible: false })).toBe(false)
+  })
+})
+
+describe('readout scope', () => {
+  const field = (deviceId: number, scope?: number): OverlayReadout => {
+    const source = { kind: 'deviceField', deviceId, sectionId: 's', fieldKey: 'k' } as const
+    return { id: readoutId(source), source, label: 'T', corner: 'top-right', ...(scope === undefined ? {} : { scope }) }
+  }
+
+  it('a device field pinned on one camera shows only there; unscoped readouts show everywhere', () => {
+    const pinned = field(9, 1)
+    const audio = readout()
+    expect(readoutsForCamera([pinned, audio], 1)).toEqual([pinned, audio])
+    expect(readoutsForCamera([pinned, audio], 2)).toEqual([audio])
+  })
+
+  it('the scope survives a parse, and a cameraField never carries one', () => {
+    const parsed = parseOverlayConfig({ readouts: [field(9, 4)] })
+    expect(parsed.readouts[0]?.scope).toBe(4)
+    const cam = { id: 'c', source: { kind: 'cameraField', sectionId: 's', fieldKey: 'k' }, label: 'x', corner: 'top-left', scope: 4 }
+    expect(parseOverlayConfig({ readouts: [cam] }).readouts[0]?.scope).toBeUndefined()
   })
 })

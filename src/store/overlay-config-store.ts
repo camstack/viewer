@@ -11,8 +11,9 @@
  * stays in `device-settings-store.ts`.
  *
  * Absence is the defaults, and a document equal to the defaults is not stored.
- * The per-camera `overlay` this replaced is no longer read: a camera that
- * carried one draws the defaults until the operator sets this one.
+ * The per-camera `overlay` this replaced is no longer read, except once: a hub
+ * with no document yet adopts the most common non-default one
+ * (`seedFromLegacyCameraOverlays`).
  */
 import { create } from 'zustand'
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -23,6 +24,7 @@ import {
   type OverlayConfig,
 } from '../components/camera/overlay/overlay-config.js'
 import { onServerScopeChange, scopedStorageKey, whenServerScoped } from './server-scope.js'
+import { CAMERA_PREFS_STORAGE_KEY } from './camera-prefs-store.js'
 
 /** Base key; one cached copy per hub (`scopedStorageKey`). */
 export const OVERLAY_CONFIG_STORAGE_KEY = 'camstack.v2.overlay-config'
@@ -48,10 +50,43 @@ function persist(serverId: string | null, overlay: OverlayConfig): void {
   void write.catch(() => {})
 }
 
+/**
+ * TEMPORARY, remove once every install has opened this version: before the
+ * global document, each camera stored its own `overlay` in the camera-prefs
+ * document. When no global document exists yet, adopt the most common
+ * non-default one so a configured install does not silently lose its layout.
+ */
+async function seedFromLegacyCameraOverlays(serverId: string): Promise<OverlayConfig> {
+  try {
+    const raw = await AsyncStorage.getItem(scopedStorageKey(CAMERA_PREFS_STORAGE_KEY, serverId))
+    if (!raw) return OVERLAY_DEFAULTS
+    const byId: unknown = (JSON.parse(raw) as { byId?: unknown }).byId
+    if (typeof byId !== 'object' || byId === null) return OVERLAY_DEFAULTS
+    const counts = new Map<string, { config: OverlayConfig; n: number }>()
+    for (const pref of Object.values(byId)) {
+      const legacy: unknown = (pref as { overlay?: unknown } | null)?.overlay
+      if (legacy === undefined || legacy === null) continue
+      const config = parseOverlayConfig(legacy)
+      if (isDefaultOverlay(config)) continue
+      const key = JSON.stringify(config)
+      const seen = counts.get(key)
+      counts.set(key, { config, n: (seen?.n ?? 0) + 1 })
+    }
+    let best: { config: OverlayConfig; n: number } | null = null
+    for (const entry of counts.values()) if (best === null || entry.n > best.n) best = entry
+    return best === null ? OVERLAY_DEFAULTS : best.config
+  } catch {
+    return OVERLAY_DEFAULTS
+  }
+}
+
 async function readScoped(serverId: string): Promise<OverlayConfig> {
   try {
     const raw = await AsyncStorage.getItem(scopedStorageKey(OVERLAY_CONFIG_STORAGE_KEY, serverId))
-    return raw ? parseOverlayConfig(JSON.parse(raw)) : OVERLAY_DEFAULTS
+    if (raw) return parseOverlayConfig(JSON.parse(raw))
+    const seeded = await seedFromLegacyCameraOverlays(serverId)
+    persist(serverId, seeded)
+    return seeded
   } catch {
     return OVERLAY_DEFAULTS
   }
@@ -74,9 +109,15 @@ export const useOverlayConfigStore = create<OverlayConfigState>((set, get) => ({
     persist(get().serverId, overlay)
   },
   applyAccount: (raw) => {
+    // An account value can land before `hydrate` ran: mark the store hydrated
+    // (so the disk read cannot overwrite it later) and persist once the hub
+    // scope is known.
     const overlay = parseOverlayConfig(raw)
-    set({ overlay })
-    persist(get().serverId, overlay)
+    set({ overlay, hydrated: true })
+    void whenServerScoped().then((serverId) => {
+      set({ serverId })
+      persist(serverId, get().overlay)
+    })
   },
 }))
 

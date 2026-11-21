@@ -5,6 +5,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { OVERLAY_CONFIG_STORAGE_KEY, useOverlayConfigStore } from '../overlay-config-store.js'
+import { CAMERA_PREFS_STORAGE_KEY } from '../camera-prefs-store.js'
 import { scopedStorageKey, useServerScopeStore } from '../server-scope.js'
 import {
   OVERLAY_DEFAULTS,
@@ -63,5 +64,38 @@ describe('overlay config store', () => {
     await AsyncStorage.setItem(KEY, '{not json')
     await useOverlayConfigStore.getState().hydrate()
     expect(useOverlayConfigStore.getState().overlay).toEqual(OVERLAY_DEFAULTS)
+  })
+
+  it('an account value applied BEFORE hydrate is persisted and survives the later hydrate', async () => {
+    const next = placeOverlay(OVERLAY_DEFAULTS, 'stats', 'top-right')
+    useOverlayConfigStore.setState({ overlay: OVERLAY_DEFAULTS, hydrated: false, serverId: null })
+    useOverlayConfigStore.getState().applyAccount(next)
+    await useOverlayConfigStore.getState().hydrate()
+    await new Promise((r) => setTimeout(r, 0))
+    expect(useOverlayConfigStore.getState().overlay.stats).toBe('top-right')
+    expect(await AsyncStorage.getItem(KEY)).not.toBeNull()
+  })
+
+  it('a hub with no document adopts the most common legacy per-camera overlay, once', async () => {
+    const legacy = placeOverlay(OVERLAY_DEFAULTS, 'stats', 'top-right')
+    const other = placeOverlay(OVERLAY_DEFAULTS, 'viewers', 'bottom-left')
+    await AsyncStorage.setItem(
+      scopedStorageKey(CAMERA_PREFS_STORAGE_KEY, 'hub-a'),
+      JSON.stringify({ byId: { 1: { overlay: legacy }, 2: { overlay: legacy }, 3: { overlay: other } } }),
+    )
+    await useOverlayConfigStore.getState().hydrate()
+    expect(useOverlayConfigStore.getState().overlay.stats).toBe('top-right')
+    expect(await AsyncStorage.getItem(KEY)).not.toBeNull()
+  })
+
+  it('an existing global document is never replaced by a legacy one', async () => {
+    await AsyncStorage.setItem(
+      scopedStorageKey(CAMERA_PREFS_STORAGE_KEY, 'hub-a'),
+      JSON.stringify({ byId: { 1: { overlay: placeOverlay(OVERLAY_DEFAULTS, 'stats', 'top-right') } } }),
+    )
+    await AsyncStorage.setItem(KEY, JSON.stringify(placeOverlay(OVERLAY_DEFAULTS, 'viewers', 'bottom-left')))
+    await useOverlayConfigStore.getState().hydrate()
+    expect(useOverlayConfigStore.getState().overlay.viewers).toBe('bottom-left')
+    expect(useOverlayConfigStore.getState().overlay.stats).toBe(OVERLAY_DEFAULTS.stats)
   })
 })

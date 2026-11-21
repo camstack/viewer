@@ -94,6 +94,9 @@ export interface OverlayReadout {
   readonly corner: OverlayAnchor
   /** Hide with the auto-hiding controls. Absent = false. */
   readonly fade?: boolean
+  /** The camera a `deviceField` readout was pinned on: it shows only on that
+   *  camera's stream. Absent = every stream (audio level, `cameraField`). */
+  readonly scope?: number
 }
 
 /**
@@ -350,6 +353,15 @@ export function readoutId(source: OverlayReadoutSource): string {
 }
 
 /** The readouts assigned to one corner, in insertion order. */
+/** The readouts this camera's stream shows: the unscoped ones plus those
+ *  pinned on this very camera. */
+export function readoutsForCamera(
+  readouts: readonly OverlayReadout[],
+  cameraId: number,
+): readonly OverlayReadout[] {
+  return readouts.filter((r) => r.scope === undefined || r.scope === cameraId)
+}
+
 export function readoutsAt(
   config: OverlayConfig,
   corner: OverlayAnchor,
@@ -473,6 +485,7 @@ function normaliseReadout(raw: unknown): OverlayReadout | null {
     precision?: number
     corner: OverlayAnchor
     fade?: boolean
+    scope?: number
   } = {
     id: typeof raw.id === 'string' && raw.id.length > 0 ? raw.id : readoutId(source),
     source,
@@ -481,6 +494,9 @@ function normaliseReadout(raw: unknown): OverlayReadout | null {
   }
   if (typeof raw.unit === 'string' && raw.unit.length > 0) readout.unit = raw.unit
   if (raw.fade === true) readout.fade = true
+  if (source.kind === 'deviceField' && typeof raw.scope === 'number' && Number.isFinite(raw.scope)) {
+    readout.scope = raw.scope
+  }
   if (typeof raw.precision === 'number' && Number.isFinite(raw.precision)) {
     readout.precision = Math.max(0, Math.min(6, Math.trunc(raw.precision)))
   }

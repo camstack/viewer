@@ -31,6 +31,20 @@ export interface WhatsNewEntry {
 // i18n-ok: release notes carry their own `en` + `it` text per entry (typed, held by whats-new.spec.ts)
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.730',
+    date: '2026-11-22',
+    notes: {
+      en: [
+        "Overlays sit in the stream's corners, stack without overlap and apply to every camera.",
+        'Choose which overlays fade with the controls; only the camera name does by default.',
+      ],
+      it: [
+        'Overlay negli angoli dello stream, senza sovrapposizioni, uguali per ogni camera.',
+        'Scegli quali overlay sfumano con i comandi; di base solo il nome della camera.',
+      ],
+    },
+  },
+  {
     version: '1.0.729',
     date: '2026-11-21',
     notes: {

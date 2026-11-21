@@ -24,7 +24,12 @@ import {
   useDeviceLiveFields,
   type DeviceLiveField,
 } from '../../../data/use-device-live-fields.js'
-import { isOverlayShown, type OverlayConfig, type OverlayReadout } from './overlay-config.js'
+import {
+  isOverlayShown,
+  readoutsForCamera,
+  type OverlayConfig,
+  type OverlayReadout,
+} from './overlay-config.js'
 import { useStyleScaler } from './OverlayFrame.js'
 import type { OverlayStackEntry } from './OverlayStack.js'
 import { useTheme } from '../../../theme/theme-provider.js'
@@ -50,7 +55,7 @@ function sourceDeviceId(r: OverlayReadout, cameraDeviceId: number): number | nul
 /** The device ids the config's readouts read from, de-duplicated. */
 export function readoutDeviceIds(config: OverlayConfig, cameraDeviceId: number): readonly number[] {
   const ids = new Set<number>()
-  for (const r of config.readouts) {
+  for (const r of readoutsForCamera(config.readouts, cameraDeviceId)) {
     const id = sourceDeviceId(r, cameraDeviceId)
     if (id !== null) ids.add(id)
   }
@@ -134,7 +139,7 @@ export function useReadoutEntries({
 
   // The audio chip is the only source that is not a device field, and it is the
   // one the operator asked for by name ("il db/rms correnti").
-  const wantsAudio = config.readouts.some((r) => r.source.kind === 'audioDbfs')
+  const wantsAudio = readoutsForCamera(config.readouts, deviceId).some((r) => r.source.kind === 'audioDbfs')
   const dbfs = useAudioLevel(deviceId, enabled && wantsAudio)
 
   const valueFor = React.useCallback(
@@ -169,14 +174,14 @@ export function useReadoutEntries({
     () =>
       !enabled
         ? []
-        : config.readouts
+        : readoutsForCamera(config.readouts, deviceId)
             .filter((r) => isOverlayShown(config, `readout:${r.id}`, controlsVisible))
             .map((r) => ({
               id: `readout:${r.id}` as const,
               anchor: r.corner,
               node: <ReadoutChip label={r.label} value={valueFor(r)} />,
             })),
-    [enabled, config, controlsVisible, valueFor],
+    [enabled, config, deviceId, controlsVisible, valueFor],
   )
   const probes = enabled
     ? deviceIds.map((id) => (

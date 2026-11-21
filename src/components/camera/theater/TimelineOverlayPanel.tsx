@@ -215,13 +215,16 @@ export function OverlaySettingsSections({
         unit?: string
         precision?: number
         corner: OverlayAnchor
+        scope?: number
       } = { id: readoutId(source), source, label, corner: 'top-right' }
+      // A field of another device is pinned ON this camera: it shows here only.
+      if (source.kind === 'deviceField') readout.scope = deviceId
       if (unit !== undefined) readout.unit = unit
       if (precision !== undefined) readout.precision = precision
       onChange(addReadout(config, readout))
       setPickerOpen(false)
     },
-    [config, onChange],
+    [config, deviceId, onChange],
   )
 
   return (

@@ -243,8 +243,9 @@ export const GridTile = React.memo(function GridTile({
       {hasLayer(overlay, 'motion') && live ? (
         <MotionRegionsOverlay deviceId={camera.id} enabled />
       ) : null}
-      {/* The read-outs, laid over the picture's own rectangle (a spanned cell
-          letterboxes it) at the device's overlay size. */}
+      {/* The read-outs, anchored to the cell's corners (a spanned cell letterboxes
+          the picture, the indicators stay in the corners) at the overlay size
+          that follows the picture. */}
       <OverlayFrame fit="contain">
         {/* No audio picker and no controls on a tile: the meter is a read-out,
             and a picker over a 200pt cell would swallow the tap that reveals
