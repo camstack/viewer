@@ -563,9 +563,9 @@ export function useSnapshot(
    * every single render — so building the headers inside it handed expo-image a
    * new object each render and made it re-download the JPEG each render.
    *
-   * Whether a Bearer belongs here at all is `snapshot-image-auth.ts`: on a
-   * hub-served web viewer it does not, and omitting it is what puts the tile
-   * back on the browser's own `<img>` loader instead of a JS blob round trip.
+   * Whether a Bearer belongs here at all is `snapshot-image-auth.ts`: it is
+   * attached whenever a token is held (a token-signed-in web viewer has no
+   * cookie); only file:// paths and signed links go without.
    */
   const headers = useMemo<Record<string, string> | undefined>(() => {
     const attach =
@@ -574,7 +574,6 @@ export function useSnapshot(
         platform: Platform.OS,
         uri,
         token,
-        pageOrigin: snapshotPageOrigin(),
       })
     return attach && token !== null && uri !== null && !uri.startsWith('file:') && !isSignedSnapshotLink(uri)
       ? { Authorization: `Bearer ${token}` }

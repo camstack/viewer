@@ -55,12 +55,6 @@ export interface SnapshotImageAuthInput {
   readonly uri: string | null
   /** Hub session token; null before sign-in. */
   readonly token: string | null
-  /**
-   * `window.location.origin` of the page, or null off-browser. Supplied rather
-   * than read so the rule can be tested for both a hub-served viewer and a
-   * standalone one.
-   */
-  readonly pageOrigin: string | null
 }
 
 /**
@@ -91,18 +85,24 @@ function originOf(uri: string): string | null {
  * True when this surface must attach `Authorization: Bearer …` to the image.
  *
  * False for a `file://` path (ours, unauthenticated — handing a token to the
- * platform image loader for nothing), for a missing token, and for a web page
- * fetching a snapshot from its OWN origin, where the session cookie already
- * authenticates the request and the header would only cost the blob path.
+ * platform image loader for nothing), for a signed link (its HMAC is the
+ * authority) and for a missing token. Otherwise TRUE on every platform,
+ * including a web page on its own hub's origin.
+ *
+ * Same-origin web used to skip the header on the assumption that the
+ * `camstack_session` cookie authenticates the `<img>`. That holds only for a
+ * cookie-bootstrapped session; a viewer signed in with a viewer token (the
+ * Electron app loading the hub-served bundle) has no cookie and every
+ * thumbnail answered 401. The app does not record which mode a session is in,
+ * so the token it holds is the one credential we can vouch for; the cost is
+ * `expo-image`'s blob loader on web.
  */
 export function shouldAttachSnapshotBearer(input: SnapshotImageAuthInput): boolean {
-  const { platform, uri, token, pageOrigin } = input
+  const { uri, token } = input
   if (uri === null || token === null || token.length === 0) return false
   if (uri.startsWith('file:')) return false
   if (isSignedSnapshotLink(uri)) return false
-  if (platform !== 'web') return true
-  if (pageOrigin === null || pageOrigin.length === 0) return true
-  return originOf(uri) !== pageOrigin
+  return true
 }
 
 /**

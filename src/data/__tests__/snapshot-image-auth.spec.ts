@@ -21,7 +21,6 @@ describe('shouldAttachSnapshotBearer', () => {
         platform: 'ios',
         uri: URI,
         token: TOKEN,
-        pageOrigin: null,
       }),
     ).toBe(true)
   })
@@ -32,56 +31,29 @@ describe('shouldAttachSnapshotBearer', () => {
         platform: 'android',
         uri: 'file:///data/snapshots/101-1.jpg',
         token: TOKEN,
-        pageOrigin: null,
       }),
     ).toBe(false)
   })
 
-  it('does NOT attach on a hub-served web viewer — the session cookie authenticates it', () => {
-    // The regression this exists for: with a header, expo-image's web loader
-    // fetches the JPEG from JS into a blob and paints nothing until it lands.
-    expect(
-      shouldAttachSnapshotBearer({
-        platform: 'web',
-        uri: URI,
-        token: TOKEN,
-        pageOrigin: HUB,
-      }),
-    ).toBe(false)
+  it('attaches on a same-origin web viewer — a token login has no session cookie, a bare <img> is a 401', () => {
+    expect(shouldAttachSnapshotBearer({ platform: 'web', uri: URI, token: TOKEN })).toBe(true)
   })
 
-  it('still attaches on web when the hub is a DIFFERENT origin than the page', () => {
-    // No cookie for that origin — the slow blob path is the only one that works.
+  it('attaches on web when the hub is a different origin than the page', () => {
     expect(
-      shouldAttachSnapshotBearer({
-        platform: 'web',
-        uri: URI,
-        token: TOKEN,
-        pageOrigin: 'https://viewer.example.com',
-      }),
-    ).toBe(true)
-  })
-
-  it('attaches on web when the page origin is unknown', () => {
-    expect(
-      shouldAttachSnapshotBearer({
-        platform: 'web',
-        uri: URI,
-        token: TOKEN,
-        pageOrigin: null,
-      }),
+      shouldAttachSnapshotBearer({ platform: 'web', uri: `https://other.example.com/x.jpg`, token: TOKEN }),
     ).toBe(true)
   })
 
   it('attaches nothing without a uri or a token', () => {
     expect(
-      shouldAttachSnapshotBearer({ platform: 'ios', uri: null, token: TOKEN, pageOrigin: null }),
+      shouldAttachSnapshotBearer({ platform: 'ios', uri: null, token: TOKEN }),
     ).toBe(false)
     expect(
-      shouldAttachSnapshotBearer({ platform: 'ios', uri: URI, token: null, pageOrigin: null }),
+      shouldAttachSnapshotBearer({ platform: 'ios', uri: URI, token: null }),
     ).toBe(false)
     expect(
-      shouldAttachSnapshotBearer({ platform: 'ios', uri: URI, token: '', pageOrigin: null }),
+      shouldAttachSnapshotBearer({ platform: 'ios', uri: URI, token: '' }),
     ).toBe(false)
   })
 
@@ -91,7 +63,6 @@ describe('shouldAttachSnapshotBearer', () => {
         platform: 'web',
         uri: '/addon/snapshot/media/101.jpg',
         token: TOKEN,
-        pageOrigin: HUB,
       }),
     ).toBe(true)
   })
@@ -105,7 +76,6 @@ describe('useSnapshot honours the rule, and keeps the header object stable', () 
 
   it('asks the shared rule instead of re-deciding', () => {
     expect(hook).toContain('shouldAttachSnapshotBearer')
-    expect(hook).toContain('snapshotPageOrigin()')
   })
 
   it('memoises the headers OUTSIDE the source object', () => {
@@ -162,7 +132,7 @@ describe('shouldPaintSignedSnapshotLink', () => {
 
   it('never on native — links expire while iOS sleeps; the file cache paints from disk', () => {
     expect(shouldPaintSignedSnapshotLink(signed({ platform: 'ios' }))).toBe(false)
-    expect(shouldPaintSignedSnapshotLink(signed({ platform: 'android', pageOrigin: null }))).toBe(false)
+    expect(shouldPaintSignedSnapshotLink(signed({ platform: 'android' }))).toBe(false)
   })
 
   it('never same-origin — the session cookie already makes the media URL a plain <img>', () => {
@@ -190,7 +160,7 @@ describe('a signed link never carries a Bearer', () => {
 
   it('cross-origin web: no header on the link (that header IS the preflight)', () => {
     expect(
-      shouldAttachSnapshotBearer({ platform: 'web', uri: `${HUB}${LINK}`, token: TOKEN, pageOrigin: HOSTED }),
+      shouldAttachSnapshotBearer({ platform: 'web', uri: `${HUB}${LINK}`, token: TOKEN }),
     ).toBe(false)
   })
 

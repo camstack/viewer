@@ -6,14 +6,14 @@
  * A thumbnail is a plain GET and needs nothing from the socket, so the hub
  * address falls back to the saved server when the system is momentarily gone
  * (see `use-snapshot`). The bearer rule is the snapshot one
- * (`shouldAttachSnapshotBearer`): a web page on its OWN hub's origin is
- * authenticated by the session cookie and the header would only push
- * `expo-image` onto its slow blob path.
+ * (`shouldAttachSnapshotBearer`): the token is attached whenever one is held,
+ * including on a web page on its OWN hub's origin — a token-signed-in viewer
+ * has no session cookie, so a bare `<img>` there is a 401.
  */
 import { Platform } from 'react-native'
 import { useServer } from '../app/ServerProvider.js'
 import { useConnection } from '../connection/ConnectionProvider.js'
-import { shouldAttachSnapshotBearer, snapshotPageOrigin } from './snapshot-image-auth.js'
+import { shouldAttachSnapshotBearer } from './snapshot-image-auth.js'
 
 export interface ThumbAuth {
   readonly serverUrl: string | null
@@ -30,7 +30,6 @@ export function useThumbAuth(): ThumbAuth {
       platform: Platform.OS,
       uri: serverUrl,
       token,
-      pageOrigin: snapshotPageOrigin(),
     })
       ? token
       : null
