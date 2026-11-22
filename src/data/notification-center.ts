@@ -250,6 +250,8 @@ export const NcSystemEventConditionSchema = z.object({
    * Unmirrored, a phone save strips them.
    */
   faultCodes: z.array(z.string().min(1)).optional(),
+  /** `device-attention-*` only: the fault tiers this rule speaks about. Absent or empty = every tier. */
+  faultSeverities: z.array(z.enum(['warning', 'error'])).optional(),
   /** `device-command` only: how the command settled. */
   commandOutcomes: z.array(z.enum(NC_COMMAND_OUTCOMES)).min(1).optional(),
   /** `device-command` only: who asked. */
