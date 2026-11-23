@@ -18,7 +18,7 @@ import { useConnection } from '../connection/ConnectionProvider.js'
 import { isLocalRouteChannel } from '../connection/route-channel.js'
 import { useLiveHubUrl } from '../connection/use-live-hub-url.js'
 import { useRouteChannel } from '../connection/use-route-channel.js'
-import { capMutateOrThrow, capQuery } from '../data/cap-query.js'
+import { capMutateOrThrow, isCapClient, capQuery } from '../data/cap-query.js'
 import { useTheme } from '../theme/theme-provider.js'
 import { adminRootUrl } from './admin-frame.js'
 import { AppFrame } from './AppFrame.js'
@@ -90,7 +90,8 @@ export function NodeApp({ nodeId, nodeName }: NodeAppProps): React.JSX.Element {
     try {
       const system = controller.getSystem()
       if (system === null) throw new Error('not connected')
-      const client = system.trpcClient as unknown as Record<string, unknown>
+      const client: unknown = system.trpcClient
+      if (!isCapClient(client)) throw new Error('not connected')
       const topology = topologyNodes(
         await capQuery(client, 'nodes', 'topology', undefined, { rethrow: true, deadlineMs: TOPOLOGY_DEADLINE_MS }),
       )

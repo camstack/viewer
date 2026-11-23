@@ -18,7 +18,7 @@ import { useConnection } from '../connection/ConnectionProvider.js'
 import { isLocalRouteChannel } from '../connection/route-channel.js'
 import { useLiveHubUrl } from '../connection/use-live-hub-url.js'
 import { useRouteChannel } from '../connection/use-route-channel.js'
-import { capMutateOrThrow } from '../data/cap-query.js'
+import { capMutateOrThrow, isCapClient } from '../data/cap-query.js'
 import { useTheme } from '../theme/theme-provider.js'
 import { SPACING } from '../theme/tokens.js'
 import {
@@ -68,9 +68,9 @@ export function AdminApp(): React.JSX.Element {
       try {
         const system = controller.getSystem()
         if (system === null) throw new Error('not connected')
-        const raw = await capMutateOrThrow(system.trpcClient as unknown as Record<string, unknown>, 'auth', 'createBrowserHandoff', {
-          destination: 'admin',
-        })
+        const client: unknown = system.trpcClient
+        if (!isCapClient(client)) throw new Error('not connected')
+        const raw = await capMutateOrThrow(client, 'auth', 'createBrowserHandoff', { destination: 'admin' })
         const path = parseHandoffPath(raw)
         if (path === null) throw new Error('no handoff path')
         if (mine === generation.current) setLoaded({ status: 'ready', uri: handoffUrl(base, path), base, local })

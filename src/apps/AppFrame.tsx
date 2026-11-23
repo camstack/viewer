@@ -4,22 +4,25 @@
  *
  *  - the Android back button walks the page's own history first, and only then
  *    leaves the frame (the screen's back handling);
- *  - a link that is not http(s), and an iOS file download, are handed to the
- *    system (`Linking`) — the page cannot be told to save a file here;
+ *  - only the frame's own origin loads here; any other http(s) link, and an iOS
+ *    file download, are handed to the system (`Linking`), and `javascript:` /
+ *    `data:` are dropped; the injected script also checks the origin itself — the page cannot be told to save a file here;
  *  - a page-load failure is shown by the caller's reload control, not swallowed.
  */
-import React, { useCallback, useEffect, useRef } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef } from 'react'
 import { BackHandler, Linking, Platform, StyleSheet, View } from 'react-native'
 import { WebView, type WebViewNavigation } from 'react-native-webview'
 
 import { log } from '../lib/logger.js'
 import { useTheme } from '../theme/theme-provider.js'
-import { staysInFrame, type AppFrameProps } from './app-frame-types.js'
+import { frameOriginOf, navigationDecision, originGuardedScript, type AppFrameProps } from './app-frame-types.js'
 
 export function AppFrame({ uri, injectedBefore, reloadKey, testID, onUnhandled }: AppFrameProps): React.JSX.Element {
   const { colors } = useTheme()
   const ref = useRef<WebView>(null)
   const canGoBack = useRef(false)
+  const frameOrigin = useMemo(() => frameOriginOf(uri), [uri])
+  const guardedInjection = useMemo(() => originGuardedScript(injectedBefore, frameOrigin), [injectedBefore, frameOrigin])
 
   useEffect(() => {
     if (Platform.OS !== 'android') return undefined
@@ -48,8 +51,9 @@ export function AppFrame({ uri, injectedBefore, reloadKey, testID, onUnhandled }
         ref={ref}
         source={{ uri }}
         style={[styles.fill, { backgroundColor: colors.background }]}
-        originWhitelist={['*']}
-        injectedJavaScriptBeforeContentLoaded={injectedBefore}
+        originWhitelist={frameOrigin === null ? [] : [frameOrigin]}
+        injectedJavaScriptBeforeContentLoaded={guardedInjection}
+        injectedJavaScriptBeforeContentLoadedForMainFrameOnly
         javaScriptEnabled
         domStorageEnabled
         sharedCookiesEnabled
@@ -58,8 +62,9 @@ export function AppFrame({ uri, injectedBefore, reloadKey, testID, onUnhandled }
           canGoBack.current = nav.canGoBack
         }}
         onShouldStartLoadWithRequest={(request) => {
-          if (staysInFrame(request.url)) return true
-          external(request.url, 'external')
+          const decision = navigationDecision(request.url, frameOrigin)
+          if (decision === 'stay') return true
+          if (decision === 'external') external(request.url, 'external')
           return false
         }}
         onFileDownload={({ nativeEvent }) => external(nativeEvent.downloadUrl, 'download')}

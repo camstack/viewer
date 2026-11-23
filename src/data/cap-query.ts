@@ -94,6 +94,11 @@ export function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null
 }
 
+/** The tRPC client as the cap helpers read it: an object OR a callable proxy (see the header), narrowed. */
+export function isCapClient(v: unknown): v is Record<string, unknown> {
+  return (typeof v === 'object' || typeof v === 'function') && v !== null
+}
+
 /** The `deviceId` a cap input carries, when it carries one — the tag every log
  *  line about a device is required to have. */
 function inputDeviceId(input: CapQueryInput | undefined): unknown {
