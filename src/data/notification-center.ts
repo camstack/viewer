@@ -210,7 +210,7 @@ export const NcSystemEventKindSchema = z.enum([
 export type NcSystemEventKind = z.infer<typeof NcSystemEventKindSchema>
 
 /** How a settled command can be filtered (D1022). Mirrors `NC_COMMAND_OUTCOMES`. */
-export const NC_COMMAND_OUTCOMES = ['confirmed', 'already', 'unconfirmed', 'failed'] as const
+export const NC_COMMAND_OUTCOMES = ['ok', 'failed'] as const
 /** Who gave a command, as the transition audit names the actor (D1022). */
 export const NC_COMMAND_ACTOR_KINDS = ['user', 'addon', 'action', 'scheduler', 'composition', 'node'] as const
 
