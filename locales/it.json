@@ -4196,7 +4196,6 @@
       "apps": "App",
       "viewer": "Viewer",
       "admin": "Admin",
-      "nodes": "Nodi",
       "openMenu": "Apri il menu",
       "closeMenu": "Chiudi il menu",
       "routeLocal": "LOCALE",
@@ -4208,11 +4207,6 @@
         "viewer": "Viewer",
         "admin": "Admin"
       },
-      "nodesLoading": "Caricamento nodi…",
-      "nodesCouldNotRead": "Impossibile leggere l'elenco dei nodi",
-      "nodesIncomplete": "L'elenco potrebbe essere incompleto",
-      "nodeOnline": "Online",
-      "nodeOffline": "Offline",
       "switchLocal": "È disponibile una connessione locale più veloce.",
       "switchLocalAction": "Passa al locale",
       "adminOpening": "Apertura di Admin…",
@@ -4221,15 +4215,7 @@
       "adminNewTabBody": "Questa pagina non è servita dal tuo hub, quindi Admin non può essere mostrato al suo interno.",
       "openInBrowser": "Apri nel browser",
       "downloadInBrowser": "I download si aprono nel browser.",
-      "openedInBrowser": "Quel link è stato aperto nel browser.",
-      "nodeOpening": "Apertura del nodo…",
-      "nodeTabOpened": "Il nodo si è aperto in una nuova scheda",
-      "nodeLocalOnly": "Solo rete locale",
-      "nodeLocalOnlyBody": "L'interfaccia di un nodo è raggiungibile solo dalla stessa rete. La pagina Nodi di Admin funziona da ovunque.",
-      "nodeNoAddress": "Nessun indirizzo per questo nodo",
-      "nodeNoAddressBody": "L'hub non conosce ancora un indirizzo locale per questo nodo.",
-      "nodeFailed": "Impossibile aprire questo nodo",
-      "openAdminNodes": "Apri la pagina Nodi di Admin"
+      "openedInBrowser": "Quel link è stato aperto nel browser."
     },
     "recordMenu": {
       "open": "Azioni di registrazione",

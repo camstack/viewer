@@ -1,5 +1,5 @@
 /**
- * AppTopStrip — the one thin strip over a framed app (Admin, a node's UI):
+ * AppTopStrip — the one thin strip over a framed app (Admin):
  * [menu] title, where the route is (LOCAL / REMOTE) and a reload. The viewer's
  * own navigation is not drawn here; the drawer is how you leave.
  */

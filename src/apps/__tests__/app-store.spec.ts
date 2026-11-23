@@ -48,12 +48,10 @@ describe('the app switcher store', () => {
     expect(await stored()).toEqual({ lastApp: 'admin', launchPreference: 'last' })
   })
 
-  it('a node UI is shown but never remembered', async () => {
-    useAppStore.getState().open({ kind: 'admin' })
-    useAppStore.getState().open({ kind: 'node', nodeId: 'n1', nodeName: 'Agent' })
-    expect(useAppStore.getState().active).toEqual({ kind: 'node', nodeId: 'n1', nodeName: 'Agent' })
-    expect(useAppStore.getState().lastApp).toBe('admin')
-    expect(await stored()).toEqual({ lastApp: 'admin', launchPreference: 'last' })
+  it('a remembered "nodes" app falls back to the Viewer', async () => {
+    await AsyncStorage.setItem(APP_SWITCHER_STORAGE_KEY, JSON.stringify({ lastApp: 'nodes', launchPreference: 'nodes' }))
+    await useAppStore.getState().hydrate()
+    expect(useAppStore.getState()).toMatchObject({ lastApp: 'viewer', launchPreference: 'last', hydrated: true })
   })
 
   it('the launch choice is stored beside the last app', async () => {
@@ -68,7 +66,7 @@ describe('the app switcher store', () => {
     expect(useAppStore.getState()).toMatchObject({ active: { kind: 'admin' }, launchSettled: true, lastApp: 'viewer' })
   })
 
-  it('sign-out / server switch leaves Admin and node UIs, keeps the device choices, re-arms the launch', () => {
+  it('sign-out / server switch leaves Admin, keeps the device choices, re-arms the launch', () => {
     useAppStore.getState().setLaunchPreference('admin')
     useAppStore.getState().open({ kind: 'admin' })
     useAppStore.getState().settleLaunch('admin')

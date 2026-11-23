@@ -31,6 +31,22 @@ export interface WhatsNewEntry {
 // i18n-ok: release notes carry their own `en` + `it` text per entry (typed, held by whats-new.spec.ts)
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.733',
+    date: '2026-11-23',
+    notes: {
+      en: [
+        'Settings in the app menu opens again.',
+        'Settings show only in the Viewer; Admin has its own.',
+        'Nodes are no longer listed in the app menu.',
+      ],
+      it: [
+        'Impostazioni nel menu app si apre di nuovo.',
+        'Le impostazioni compaiono solo nel Viewer; Admin ha le sue.',
+        'I nodi non sono più elencati nel menu app.',
+      ],
+    },
+  },
+  {
     version: '1.0.732',
     date: '2026-11-23',
     notes: {

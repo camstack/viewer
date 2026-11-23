@@ -1,5 +1,5 @@
 /**
- * AppHost — mounts the app drawer and the framed apps (Admin, a node's UI) over
+ * AppHost — mounts the app drawer and the framed apps (Admin) over
  * the viewer, and settles which app opens at launch.
  *
  * The viewer stays mounted underneath: its navigation, and the bottom bar or
@@ -17,7 +17,6 @@ import { adminSurfacesOffered, launchResolvable, resolveLaunchApp } from './app-
 import { useAppStore } from './app-store.js'
 import { AdminApp } from './AdminApp.js'
 import { AppDrawer } from './AppDrawer.js'
-import { NodeApp } from './NodeApp.js'
 
 export function AppHost(): React.JSX.Element {
   const { colors } = useTheme()
@@ -33,7 +32,7 @@ export function AppHost(): React.JSX.Element {
     void useAppStore.getState().hydrate()
   }, [])
 
-  // Another server is another session: leave Admin and node UIs, resolve afresh.
+  // Another server is another session: leave Admin, resolve afresh.
   const serverId = server?.id ?? null
   const previous = useRef(serverId)
   useEffect(() => {
@@ -51,18 +50,18 @@ export function AppHost(): React.JSX.Element {
 
   // Admin was lost (the session is no longer an admin one): fall back to the viewer.
   useEffect(() => {
-    if ((active.kind === 'admin' || active.kind === 'node') && verdict === 'not-admin') {
+    if (active.kind === 'admin' && verdict === 'not-admin') {
       useAppStore.getState().open({ kind: 'viewer' })
     }
   }, [active.kind, verdict])
 
-  const framed = (active.kind === 'admin' || active.kind === 'node') && adminSurfacesOffered(verdict)
+  const framed = active.kind === 'admin' && adminSurfacesOffered(verdict)
 
   return (
     <>
       {framed ? (
         <View style={[styles.overlay, { backgroundColor: colors.background }]} testID="app-host-frame">
-          {active.kind === 'admin' ? <AdminApp /> : active.kind === 'node' ? <NodeApp key={active.nodeId} nodeId={active.nodeId} nodeName={active.nodeName} /> : null}
+          <AdminApp />
         </View>
       ) : null}
       <AppDrawer />

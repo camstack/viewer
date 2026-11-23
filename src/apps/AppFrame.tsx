@@ -1,6 +1,6 @@
 /**
- * AppFrame (native) — one page in a react-native-webview: the Admin UI or a
- * node's UI inside the viewer.
+ * AppFrame (native) — one page in a react-native-webview: the Admin UI inside
+ * the viewer.
  *
  *  - the Android back button walks the page's own history first, and only then
  *    leaves the frame (the screen's back handling);

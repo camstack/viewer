@@ -4,8 +4,7 @@
  *
  * The last app and the launch preference are DEVICE settings (they describe
  * this install's habits, not the account), written under one key. What is on
- * screen right now — including a node's UI — lives in memory only: a node is
- * never remembered, never a launch target.
+ * screen right now lives in memory only.
  */
 import { create } from 'zustand'
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -21,11 +20,10 @@ import {
 
 export const APP_SWITCHER_STORAGE_KEY = '@camstack/v2/app-switcher'
 
-/** What fills the screen: an app, or one node's agent UI. */
-export type ActiveApp =
-  | { readonly kind: 'viewer' }
-  | { readonly kind: 'admin' }
-  | { readonly kind: 'node'; readonly nodeId: string; readonly nodeName: string }
+/** What fills the screen: one app. */
+export interface ActiveApp {
+  readonly kind: AppId
+}
 
 export interface PersistedAppSwitcher {
   readonly lastApp: AppId
@@ -66,14 +64,14 @@ interface AppSwitcherState extends PersistedAppSwitcher {
   readonly launchSettled: boolean
   readonly drawerOpen: boolean
   hydrate: () => Promise<void>
-  /** Show an app; an app (not a node) becomes the one remembered. */
+  /** Show an app; it becomes the one remembered. */
   open: (app: ActiveApp) => void
   /** Spend the launch resolution once (does not touch the remembered app). */
   settleLaunch: (app: AppId) => void
   setLaunchPreference: (preference: LaunchPreference) => void
   setDrawerOpen: (open: boolean) => void
   /**
-   * Sign-out / server switch: leave Admin and node UIs, close the drawer and
+   * Sign-out / server switch: leave Admin, close the drawer and
    * let the next session resolve its own launch app. The remembered app and the
    * launch preference are this device's and stay.
    */
@@ -97,10 +95,6 @@ export const useAppStore = create<AppSwitcherState>((set, get) => ({
     set({ ...parseAppSwitcher(raw), hydrated: true })
   },
   open: (app) => {
-    if (app.kind === 'node') {
-      set({ active: app, drawerOpen: false })
-      return
-    }
     set({ active: app, lastApp: app.kind, drawerOpen: false })
     persist({ lastApp: app.kind, launchPreference: get().launchPreference })
   },

@@ -94,6 +94,22 @@ export function navPressAction(pathname: string, segment: string): 'noop' | 'nav
   return isItemActive(pathname, segment) ? 'noop' : 'navigate'
 }
 
+/**
+ * How the app drawer reaches Settings from where we are. The drawer sits OUTSIDE
+ * the headless `<Tabs>`, so it has no `TabTrigger`.
+ *
+ *   - already on Settings → nothing to do;
+ *   - on a tab route (`/cameras`, `/events`…) → `replace`: the headless tab router
+ *     turns it into a tab jump. `dismissTo` there is a `POP_TO` the tab router does
+ *     not handle, so it does nothing at all;
+ *   - on a route stacked over the tabs (a camera, `/settings/cameras`) →
+ *     `dismissTo`: it pops back to the mounted `(tabs)` route.
+ */
+export function settingsNavigation(pathname: string): 'noop' | 'replace' | 'dismiss' {
+  if (isItemActive(pathname, settingsTab.segment)) return pathname === settingsTab.segment ? 'noop' : 'dismiss'
+  return registeredTabs.some((tab) => pathname === tab.segment) ? 'replace' : 'dismiss'
+}
+
 /** Which rail entry a pathname lights up — tab segment, or its detail parent. */
 export function activeNavSegment(pathname: string): string | null {
   for (const item of navItems) {

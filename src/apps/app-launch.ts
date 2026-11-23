@@ -2,14 +2,14 @@
  * app-launch — which app the drawer offers and which one the viewer opens at
  * launch, as pure rules.
  *
- * Admin (and the Nodes list) are offered ONLY once the hub has ANSWERED that
+ * Admin is offered ONLY once the hub has ANSWERED that
  * the session is an admin. A pending or failed `auth.me` is "not known yet",
  * never "not an admin" — and never "an admin" either (D315): the surfaces stay
  * out of the drawer until the answer is `admin`.
  */
 import type { AdminVerdict } from '../data/use-me.js'
 
-/** The apps the operator can pick as a destination. A node's UI is not one. */
+/** The apps the operator can pick as a destination. */
 export type AppId = 'viewer' | 'admin'
 
 /** "Open at launch": a fixed app, or whichever was used last. */
@@ -28,7 +28,7 @@ export function parseLaunchPreference(raw: unknown): LaunchPreference {
   return raw === 'viewer' || raw === 'admin' || raw === 'last' ? raw : DEFAULT_LAUNCH_PREFERENCE
 }
 
-/** Admin and Nodes exist for this session only when the hub said "admin". */
+/** Admin exists for this session only when the hub said "admin". */
 export function adminSurfacesOffered(verdict: AdminVerdict): boolean {
   return verdict === 'admin'
 }

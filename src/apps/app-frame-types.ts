@@ -25,9 +25,9 @@ export function frameOriginOf(uri: string): string | null {
 }
 
 /**
- * Where a navigation goes. ONLY the frame's own origin stays inside: a node UI or
- * a hub page must not be able to carry the frame (and the session injected into
- * it) to a foreign page. Another http(s) origin, scheme or port leaves through the
+ * Where a navigation goes. ONLY the frame's own origin stays inside: a hub
+ * page must not be able to carry the frame (and the session injected into it)
+ * to a foreign page. Another http(s) origin, scheme or port leaves through the
  * system browser; `javascript:`, `data:` and anything else unknown is dropped.
  */
 export function navigationDecision(url: string, frameOrigin: string | null): NavigationDecision {

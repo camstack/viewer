@@ -1,15 +1,16 @@
 /**
  * AppDrawer — the pull-out drawer that replaces the account popover: who is
  * signed in and on which server (with where the route runs), the apps, the
- * nodes, the saved servers, Settings and sign-out.
+ * saved servers, Settings (the Viewer's, so only while the Viewer is on screen)
+ * and sign-out.
  *
  * Drawn as an absolute overlay over the whole app (not a Modal), so the viewer
- * underneath keeps running. Admin and Nodes are offered only once `auth.me`
- * ANSWERED that the session is an admin (`drawerBlocks`).
+ * underneath keeps running. Admin is offered only once `auth.me` ANSWERED that
+ * the session is an admin (`drawerBlocks`).
  */
 import React, { useState } from 'react'
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native'
-import { useRouter } from 'expo-router'
+import { usePathname, useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
@@ -21,17 +22,16 @@ import { serverDisplayName } from '../connection/hub-origin.js'
 import { isLocalRouteChannel } from '../connection/route-channel.js'
 import { serverLabelOf } from '../connection/server-name.js'
 import { useRouteChannel } from '../connection/use-route-channel.js'
-import { useNodeDirectory } from '../data/use-node-directory.js'
 import { useAdminVerdict, useMe } from '../data/use-me.js'
 import { hapticTap } from '../lib/haptics.js'
-import { Check, ChevronRight, Cpu, LogOut, Monitor, Server, Settings, Video, X } from '../lib/icons.js'
+import { Check, ChevronRight, LogOut, Monitor, Server, Settings, Video, X } from '../lib/icons.js'
+import { settingsNavigation, settingsTab } from '../navigation/nav-items.js'
 import { orderServers } from '../navigation/user-menu.js'
 import { useTheme } from '../theme/theme-provider.js'
 import { BACKDROP_ALPHA, SPACING, withAlpha } from '../theme/tokens.js'
 import { offeredLaunchPreferences } from './app-launch.js'
 import { useAppStore } from './app-store.js'
 import { drawerBlocks, isAppSelected, launchLabelKey } from './drawer-model.js'
-import { nodeHasOwnUi, nodeListState } from './node-agent.js'
 
 const PANEL_MAX_WIDTH = 320
 const PANEL_FRACTION = 0.85
@@ -41,6 +41,7 @@ export function AppDrawer(): React.JSX.Element | null {
   const { t } = useTranslation()
   const { colors } = useTheme()
   const router = useRouter()
+  const pathname = usePathname()
   const insets = useSafeAreaInsets()
   const { width } = useWindowDimensions()
   const { servers, server, signOut, switchServer } = useServer()
@@ -55,9 +56,7 @@ export function AppDrawer(): React.JSX.Element | null {
   const setPreference = useAppStore((s) => s.setLaunchPreference)
   const [picking, setPicking] = useState(false)
 
-  const blocks = drawerBlocks(verdict, servers.length)
-  const directory = useNodeDirectory(open && blocks.nodes)
-  const nodes = nodeListState({ isPending: directory.isPending, isError: directory.isError, data: directory.data })
+  const blocks = drawerBlocks(verdict, servers.length, active)
 
   if (!open) return null
 
@@ -68,6 +67,12 @@ export function AppDrawer(): React.JSX.Element | null {
   const close = (): void => setDrawerOpen(false)
   const goViewer = (): void => {
     openApp({ kind: 'viewer' })
+  }
+  const goSettings = (): void => {
+    close()
+    const how = settingsNavigation(pathname)
+    if (how === 'replace') router.replace(settingsTab.href)
+    else if (how === 'dismiss') router.dismissTo(settingsTab.href)
   }
 
   const switchTo = (id: string, serverUrl: string): void => {
@@ -159,45 +164,6 @@ export function AppDrawer(): React.JSX.Element | null {
             }
           />
 
-          {blocks.nodes ? (
-            <View testID="drawer-nodes">
-              <Text style={[styles.section, { color: colors.foregroundSubtle }]}>{t('v2.apps.nodes')}</Text>
-              {nodes.kind === 'loading' ? (
-                <Text style={[styles.note, { color: colors.foregroundMuted }]}>{t('v2.apps.nodesLoading')}</Text>
-              ) : nodes.kind === 'could-not-read' ? (
-                <Text style={[styles.note, { color: colors.danger }]}>{t('v2.apps.nodesCouldNotRead')}</Text>
-              ) : (
-                <>
-                  {nodes.nodes.map((node) => {
-                    const own = nodeHasOwnUi(node)
-                    const selected = active.kind === 'node' && active.nodeId === node.id
-                    return (
-                      <MenuRow
-                        key={node.id}
-                        testID={`drawer-node-${node.id}`}
-                        icon={Cpu}
-                        label={node.name}
-                        selected={selected}
-                        disabled={!own}
-                        onPress={() => openApp({ kind: 'node', nodeId: node.id, nodeName: node.name })}
-                        trailing={
-                          <Badge
-                            size="sm"
-                            tone={node.isOnline ? 'success' : 'neutral'}
-                            label={t(node.isOnline ? 'v2.apps.nodeOnline' : 'v2.apps.nodeOffline')}
-                          />
-                        }
-                      />
-                    )
-                  })}
-                  {nodes.complete ? null : (
-                    <Text style={[styles.note, { color: colors.foregroundMuted }]}>{t('v2.apps.nodesIncomplete')}</Text>
-                  )}
-                </>
-              )}
-            </View>
-          ) : null}
-
           {blocks.servers ? (
             <View>
               <Text style={[styles.section, { color: colors.foregroundSubtle }]}>{t('v2.userMenu.servers')}</Text>
@@ -219,15 +185,9 @@ export function AppDrawer(): React.JSX.Element | null {
         </ScrollView>
 
         <View style={[styles.footer, { borderTopColor: colors.borderSubtle }]}>
-          <MenuRow
-            testID="drawer-settings"
-            icon={Settings}
-            label={t('v2.userMenu.settings')}
-            onPress={() => {
-              openApp({ kind: 'viewer' })
-              router.dismissTo('/settings')
-            }}
-          />
+          {blocks.settings ? (
+            <MenuRow testID="drawer-settings" icon={Settings} label={t('v2.userMenu.settings')} onPress={goSettings} />
+          ) : null}
           <MenuRow
             testID="drawer-sign-out"
             icon={LogOut}
@@ -289,7 +249,6 @@ const styles = StyleSheet.create({
   sub: { fontSize: 12 },
   body: { paddingVertical: SPACING.sm },
   section: { fontSize: 11, fontWeight: '600', paddingHorizontal: SPACING.xl, paddingVertical: SPACING.sm },
-  note: { fontSize: 12, paddingHorizontal: SPACING.xl, paddingVertical: SPACING.sm },
   valueRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.xs },
   value: { fontSize: 13 },
   footer: { borderTopWidth: StyleSheet.hairlineWidth, paddingVertical: SPACING.sm },

@@ -15,22 +15,38 @@ import {
 import { drawerBlocks } from '../drawer-model.js'
 
 const VERDICTS: readonly AdminVerdict[] = ['pending', 'admin', 'not-admin', 'unknown']
+const VIEWER = { kind: 'viewer' } as const
+const ADMIN = { kind: 'admin' } as const
 
-describe('Admin and Nodes are offered only on an ANSWERED admin (D315)', () => {
+describe('Admin is offered only on an ANSWERED admin (D315)', () => {
   it.each(VERDICTS)('verdict %s', (verdict) => {
     const offered = verdict === 'admin'
     expect(adminSurfacesOffered(verdict)).toBe(offered)
     expect(offeredApps(verdict)).toEqual(offered ? ['viewer', 'admin'] : ['viewer'])
-    expect(drawerBlocks(verdict, 1)).toEqual({ adminApp: offered, nodes: offered, servers: false })
+    expect(drawerBlocks(verdict, 1, VIEWER)).toEqual({ adminApp: offered, servers: false, settings: true })
   })
 
   it('the saved-servers block needs at least two servers', () => {
-    expect(drawerBlocks('admin', 2).servers).toBe(true)
+    expect(drawerBlocks('admin', 2, VIEWER).servers).toBe(true)
+  })
+})
+
+describe('Settings are per app: the Viewer has them, Admin does not', () => {
+  it('the Settings row shows only while the Viewer is the active app', () => {
+    expect(drawerBlocks('admin', 1, VIEWER).settings).toBe(true)
+    expect(drawerBlocks('admin', 1, ADMIN).settings).toBe(false)
+  })
+})
+
+describe('a remembered app that no longer exists', () => {
+  it('a remembered "nodes" falls back to the Viewer, as launch app and as preference', () => {
+    expect(parseAppId('nodes')).toBe('viewer')
+    expect(parseLaunchPreference('nodes')).toBe('last')
   })
 })
 
 describe('the open-at-launch picker', () => {
-  it('offers Admin only to a confirmed admin; Node UIs are never an option', () => {
+  it('offers Admin only to a confirmed admin', () => {
     expect(offeredLaunchPreferences('admin')).toEqual(['last', 'viewer', 'admin'])
     for (const verdict of ['pending', 'not-admin', 'unknown'] as const) {
       expect(offeredLaunchPreferences(verdict)).toEqual(['last', 'viewer'])

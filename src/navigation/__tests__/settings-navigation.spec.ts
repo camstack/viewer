@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { registeredTabs, settingsTab } from '../nav-items.js'
+import { registeredTabs, settingsNavigation, settingsTab } from '../nav-items.js'
 
 const SRC = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..')
 const read = (relative: string): string => readFileSync(path.join(SRC, relative), 'utf8')
@@ -14,10 +14,26 @@ describe('reaching Settings from the app drawer', () => {
     expect(settingsTab.name).toBe('settings')
   })
 
-  it('the drawer sits outside <Tabs>, so it goes through the router, not a TabTrigger', () => {
+  it('from a tab route the drawer jumps tabs with replace: dismissTo is a POP_TO the tab router ignores', () => {
+    for (const tab of registeredTabs.filter((t) => t !== settingsTab)) {
+      expect(settingsNavigation(tab.segment)).toBe('replace')
+    }
+  })
+
+  it('from a route stacked over the tabs it pops back to them', () => {
+    expect(settingsNavigation('/camera/102')).toBe('dismiss')
+    expect(settingsNavigation('/settings/cameras')).toBe('dismiss')
+  })
+
+  it('on Settings itself it does nothing', () => {
+    expect(settingsNavigation('/settings')).toBe('noop')
+  })
+
+  it('the drawer sits outside <Tabs>: it asks settingsNavigation, never a TabTrigger or a blind dismissTo', () => {
     const drawer = read('apps/AppDrawer.tsx')
-    expect(drawer).toContain("router.dismissTo('/settings')")
+    expect(drawer).toContain('settingsNavigation(pathname)')
     expect(drawer).not.toContain('TabTrigger')
+    expect(drawer).not.toContain("router.dismissTo('/settings')")
   })
 
   it('the avatar opens the drawer; the popover and its TabTrigger plumbing are gone', () => {
