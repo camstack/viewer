@@ -213,6 +213,8 @@ export function familyFilterVisibility(
     commandActorKinds:
       allowed.includes('commandActorKinds') && systemEventFilterAppliesToAnyKind(kinds, 'commandActorKinds'),
     faultCodes: allowed.includes('faultCodes') && systemEventFilterAppliesToAnyKind(kinds, 'faultCodes'),
+    faultSeverities:
+      allowed.includes('faultSeverities') && systemEventFilterAppliesToAnyKind(kinds, 'faultSeverities'),
   }
 }
 
@@ -244,6 +246,7 @@ export function pruneSystemEventForFamily(
   const commandOutcomes = keep(visible.commandOutcomes, value.commandOutcomes)
   const commandActorKinds = keep(visible.commandActorKinds, value.commandActorKinds)
   const faultCodes = keep(visible.faultCodes, value.faultCodes)
+  const faultSeverities = keep(visible.faultSeverities, value.faultSeverities)
   // A threshold is a number, not a list: kept only while its box shows.
   const consumableLowPercent = visible.consumableThreshold ? value.consumableLowPercent : undefined
   return {
@@ -257,6 +260,7 @@ export function pruneSystemEventForFamily(
     ...(commandOutcomes !== undefined ? { commandOutcomes } : {}),
     ...(commandActorKinds !== undefined ? { commandActorKinds } : {}),
     ...(faultCodes !== undefined ? { faultCodes } : {}),
+    ...(faultSeverities !== undefined ? { faultSeverities } : {}),
     ...(consumableLowPercent !== undefined ? { consumableLowPercent } : {}),
   }
 }

@@ -277,6 +277,7 @@ export function SystemEventField({
     const commandOutcomes = carried(next, value, 'commandOutcomes')
     const commandActorKinds = carried(next, value, 'commandActorKinds')
     const faultCodes = carried(next, value, 'faultCodes')
+    const faultSeverities = carried(next, value, 'faultSeverities')
     const consumableLowPercent = carried(next, value, 'consumableLowPercent')
     onChange({
       kinds: nextKinds,
@@ -289,6 +290,7 @@ export function SystemEventField({
       ...(commandOutcomes !== undefined ? { commandOutcomes } : {}),
       ...(commandActorKinds !== undefined ? { commandActorKinds } : {}),
       ...(faultCodes !== undefined ? { faultCodes } : {}),
+      ...(faultSeverities !== undefined ? { faultSeverities } : {}),
       ...(consumableLowPercent !== undefined ? { consumableLowPercent } : {}),
     })
   }

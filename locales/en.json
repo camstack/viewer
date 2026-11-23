@@ -2231,7 +2231,8 @@
         "offendingIds": "Deleted devices or destinations",
         "faultCode": "Fault code",
         "faultLabel": "Fault name",
-        "faults": "Faults"
+        "faults": "Faults",
+        "faultsDetail": "All active faults with codes"
       },
       "templateField": {
         "groups": {
@@ -2291,7 +2292,8 @@
         "heat-pump": "Heat pump",
         "energy-system": "Energy system",
         "weather-station": "Weather station",
-        "workload": "Workload"
+        "workload": "Workload",
+        "vehicle": "Vehicle"
       },
       "prune": {
         "device": "Disabled on {{date}}: its last device (#{{id}}) was deleted.",

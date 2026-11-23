@@ -758,6 +758,7 @@ describe('helpers', () => {
     commandOutcomes: 'commandOutcomes',
     commandActorKinds: 'commandActorKinds',
     faultCodes: 'faultCodes',
+    faultSeverities: 'faultSeverities',
   }
 
   it('shows exactly the filters the shared predicate scopes to each kind', () => {

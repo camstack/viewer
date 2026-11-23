@@ -2231,7 +2231,8 @@
         "offendingIds": "Dispositivi o destinazioni eliminati",
         "faultCode": "Codice guasto",
         "faultLabel": "Nome del guasto",
-        "faults": "Guasti"
+        "faults": "Guasti",
+        "faultsDetail": "Tutti i guasti attivi con codice"
       },
       "templateField": {
         "groups": {
@@ -2291,7 +2292,8 @@
         "heat-pump": "Pompa di calore",
         "energy-system": "Impianto energetico",
         "weather-station": "Stazione meteo",
-        "workload": "Carico di lavoro"
+        "workload": "Carico di lavoro",
+        "vehicle": "Veicolo"
       },
       "prune": {
         "device": "Disattivata il {{date}}: il suo ultimo dispositivo (#{{id}}) è stato eliminato.",

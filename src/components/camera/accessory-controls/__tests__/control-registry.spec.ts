@@ -115,6 +115,8 @@ describe('DeviceType parity', () => {
     'automation', 'gateway',
     // A heat pump is a container: its circuits and hot water are the controls.
     'heat-pump',
+    // A vehicle too: its lock and cabin climate are the children that operate.
+    'vehicle',
   ]
   // Controllable, but the viewer has no row for it yet (its page is the hub's).
   const NO_VIEWER_CONTROL_YET: readonly string[] = ['dishwasher', 'washer', 'dryer', 'pet-fountain', 'energy-system', 'weather-station']

@@ -76,17 +76,17 @@ describe('viewer system-event families (D637)', () => {
   it('each family shows only the filters it may carry', () => {
     expect(familyFilterVisibility('device-events', ['device-offline'])).toEqual({
       devices: true, excludeDevices: true, deviceTypes: true, nodes: false, packages: false, consumableThreshold: false,
-      commandActions: false, commandOutcomes: false, commandActorKinds: false, faultCodes: false,
+      commandActions: false, commandOutcomes: false, commandActorKinds: false, faultCodes: false, faultSeverities: false,
     })
     expect(familyFilterVisibility('alarm', ['alarm-triggered']).excludeDevices).toBe(false)
     expect(familyFilterVisibility('system', ['addon-update-available'])).toEqual({
       devices: false, excludeDevices: false, deviceTypes: false, nodes: true, packages: true, consumableThreshold: false,
-      commandActions: false, commandOutcomes: false, commandActorKinds: false, faultCodes: false,
+      commandActions: false, commandOutcomes: false, commandActorKinds: false, faultCodes: false, faultSeverities: false,
     })
     // `export-completed` names no device, node or package.
     expect(familyFilterVisibility('system', ['export-completed'])).toEqual({
       devices: false, excludeDevices: false, deviceTypes: false, nodes: false, packages: false, consumableThreshold: false,
-      commandActions: false, commandOutcomes: false, commandActorKinds: false, faultCodes: false,
+      commandActions: false, commandOutcomes: false, commandActorKinds: false, faultCodes: false, faultSeverities: false,
     })
   })
   it('fault codes are carried only for the attention kinds', () => {
@@ -99,7 +99,7 @@ describe('viewer system-event families (D637)', () => {
     // the family's visibility never offers it whatever kinds it is handed.
     expect(familyFilterVisibility('system', ['node-offline', 'device-offline'])).toEqual({
       devices: false, excludeDevices: false, deviceTypes: false, nodes: true, packages: false, consumableThreshold: false,
-      commandActions: false, commandOutcomes: false, commandActorKinds: false, faultCodes: false,
+      commandActions: false, commandOutcomes: false, commandActorKinds: false, faultCodes: false, faultSeverities: false,
     })
     expect(familyFilterVisibility('alarm', ['alarm-triggered', 'device-offline']).excludeDevices).toBe(false)
     expect(familyFilterVisibility('alarm', ['alarm-triggered', 'device-offline']).deviceTypes).toBe(false)
