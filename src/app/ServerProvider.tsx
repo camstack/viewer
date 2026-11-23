@@ -22,6 +22,7 @@ import { markBoot } from '../connection/boot-timeline.js'
 import { asyncKvStore } from './kv-async-storage.js'
 import { isJwtExpired } from '../auth/session-token.js'
 import { freshenStoredSession, planStoredSession } from '../auth/freshen-session.js'
+import { useAppStore } from '../apps/app-store.js'
 import { logoutFromHub, type LogoutOutcome } from '../auth/hub-logout.js'
 import type { RenewOutcome } from '../auth/refresh-session.js'
 import { createSessionRenewer, type SessionRenewer } from '../auth/session-renewer.js'
@@ -383,6 +384,9 @@ export function ServerProvider({ children }: { children: React.ReactNode }) {
     }
     setToken(null)
     setSessionToken(null)
+    // The Admin and node UIs this session opened are over (the hub ended the
+    // Admin sessions with this one); the next session starts from its own launch app.
+    useAppStore.getState().resetSession()
     await refreshServers()
     return ended
   }, [store, renewer, server, refreshServers])

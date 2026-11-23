@@ -27,6 +27,7 @@ import {
 } from '../../src/navigation/LastCameraBridge';
 import { OnDemandPlayerHost } from '../../src/components/camera/OnDemandPlayerHost';
 import { DeviceCardSheetHost } from '../../src/device-embed/DeviceCardSheetHost';
+import { AppHost } from '../../src/apps/AppHost';
 import { DeviceEnrollmentProvider } from '../../src/device-cert/DeviceEnrollmentProvider';
 import { useActivityHost } from '../../src/activity/use-activity-host';
 
@@ -197,6 +198,9 @@ export default function AppLayout() {
               Paint order puts it over routes; the connection note stays
               above this so a dead hub is still the top layer. */}
           <DeviceCardSheetHost />
+          {/* The app switcher: Admin and node UIs framed over the viewer, and
+              the drawer that replaces the account popover. */}
+          <AppHost />
           {/* THE hub-connection status, once for the whole app and over
               every route (after the player host in paint order). Screens
               keep their content and never render a connection state of their

@@ -11,23 +11,6 @@ export function userMenuEntries(): readonly UserMenuEntry[] {
   return ['settings', 'signOut']
 }
 
-/**
- * How the Settings entry navigates.
- *
- * Inside `<Tabs>` Settings is a TAB, and a tab is switched the way the four bar
- * entries switch: through a `TabTrigger`. `router.dismissTo('/settings')` from
- * there is a POP_TO aimed at the root stack with nested params for the headless
- * tab navigator — the account menu's only way to Settings, and the one that
- * stopped answering once the bar became a floating capsule. Off the tab tree
- * (camera detail, a stacked modal) there is no trigger, and `dismissTo` is the
- * right call because it pops back to the mounted `(tabs)` route.
- */
-export type SettingsRoute = 'tab-trigger' | 'router'
-
-export function settingsRoute(hasTabTrigger: boolean): SettingsRoute {
-  return hasTabTrigger ? 'tab-trigger' : 'router'
-}
-
 /** Whether the inline server list is drawn. */
 export function showServerList(serverCount: number): boolean {
   return serverCount >= 2

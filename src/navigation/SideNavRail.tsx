@@ -167,7 +167,7 @@ export function SideNavRail({
           )
         })}
       </View>
-      <NavAccountCluster orientation="column" wrapSettings={wrapperNavigates ? Wrapper : undefined} />
+      <NavAccountCluster orientation="column" />
     </BlurView>
   )
 }

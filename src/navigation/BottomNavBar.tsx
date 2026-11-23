@@ -187,7 +187,7 @@ export function BottomNavBar({
       </View>
       {/* The two fixed items at the right: the account menu and the Activity
           centre. They are not destinations — no highlight, no TabTrigger. */}
-      <NavAccountCluster orientation="row" wrapSettings={wrapperNavigates ? Wrapper : undefined} />
+      <NavAccountCluster orientation="row" />
       </GlassSurface>
       </GlassGroup>
     </View>
