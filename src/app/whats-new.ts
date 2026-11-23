@@ -31,6 +31,22 @@ export interface WhatsNewEntry {
 // i18n-ok: release notes carry their own `en` + `it` text per entry (typed, held by whats-new.spec.ts)
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.732',
+    date: '2026-11-23',
+    notes: {
+      en: [
+        'New app menu: switch between Viewer, Admin and your nodes without leaving the app.',
+        'Choose which app opens at launch.',
+        'Signing out of the viewer also signs you out of Admin.',
+      ],
+      it: [
+        'Nuovo menu app: passa da Viewer ad Admin e ai tuoi nodi senza uscire dall’app.',
+        'Scegli quale app aprire all’avvio.',
+        'Uscendo dal viewer esci anche da Admin.',
+      ],
+    },
+  },
+  {
     version: '1.0.731',
     date: '2026-11-23',
     notes: {
