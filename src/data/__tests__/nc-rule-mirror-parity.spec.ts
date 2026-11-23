@@ -107,7 +107,8 @@ function lines(schema: unknown): string[] {
  * be ABSENT from the published types: the day the release lands, this list
  * fails the suite until the entry is removed, so it cannot outlive its reason.
  */
-const AHEAD_OF_PUBLISHED: readonly string[] = []
+/** `tagIds` (D1089): the ids of a rule's tags, so a tag rename no longer detaches the rule. */
+const AHEAD_OF_PUBLISHED: readonly string[] = ['$.tagIds?[]: string']
 
 /** Published lines an AHEAD entry REPLACES. Action ids (planning #473) replace sequence bindings and inline steps. */
 const SUPERSEDED_BY_AHEAD: readonly string[] = []
@@ -157,6 +158,7 @@ describe('rule mirrors — every published field, member for member', () => {
     }
     const hub = topKeys(PublishedRulePatch).filter((key) => key !== 'disabledTargetIds')
     expect(hub.length).toBeGreaterThan(10)
-    expect(topKeys(NcRulePatchSchema)).toEqual(hub)
+    const aheadKeys = new Set(AHEAD_OF_PUBLISHED.map((line) => /^\$\.(\w+)/.exec(line)?.[1]).filter((key) => key !== undefined))
+    expect(topKeys(NcRulePatchSchema).filter((key) => !aheadKeys.has(key) || hub.includes(key))).toEqual(hub)
   })
 })

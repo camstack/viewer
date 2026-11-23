@@ -841,6 +841,8 @@ export type NcTargetOverrides = z.infer<typeof NcTargetOverridesSchema>
  * `/client` entry: 1–40 characters each, at most 20 per rule.
  */
 const NcRuleTagsSchema = z.array(z.string().trim().min(1).max(40)).max(20)
+/** Mirror of the hub's `TagIdsFieldSchema` (`tags/tag.ts`): the ids of `tags`, at most 20. */
+const NcRuleTagIdsSchema = z.array(z.string().min(1)).max(20)
 
 export const NcRuleInputSchema = z.object({
   name: z.string().min(1).max(200),
@@ -932,6 +934,8 @@ export const NcRuleInputSchema = z.object({
   offerAlertAction: z.boolean().optional(),
   /** Mirror of the hub's operator `tags` (D1054). Unmirrored, a phone save would drop them. */
   tags: NcRuleTagsSchema.optional(),
+  /** Mirror of the hub's `tagIds` (D1089), index-aligned with `tags`. Unmirrored, a phone save would drop them. */
+  tagIds: NcRuleTagIdsSchema.optional(),
 })
 export type NcRuleInput = z.infer<typeof NcRuleInputSchema>
 
@@ -985,6 +989,8 @@ export const NcRulePatchSchema = z.object({
   offerAlertAction: z.boolean().optional(),
   /** Mirror of the hub's operator `tags` (D1054). Unmirrored, a phone save would drop them. */
   tags: NcRuleTagsSchema.optional(),
+  /** Mirror of the hub's `tagIds` (D1089), index-aligned with `tags`. Unmirrored, a phone save would drop them. */
+  tagIds: NcRuleTagIdsSchema.optional(),
 })
 export type NcRulePatch = z.infer<typeof NcRulePatchSchema>
 
