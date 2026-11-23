@@ -31,6 +31,22 @@ export interface WhatsNewEntry {
 // i18n-ok: release notes carry their own `en` + `it` text per entry (typed, held by whats-new.spec.ts)
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.731',
+    date: '2026-11-23',
+    notes: {
+      en: [
+        'Web thumbnails and snapshots load again on hubs that require sign-in.',
+        'Notification rules can be limited to warning or error device faults.',
+        'Connected cars get their own device type label.',
+      ],
+      it: [
+        'Miniature e snapshot web tornano a caricarsi sugli hub che richiedono il login.',
+        'Le regole di notifica possono limitarsi ai guasti di tipo avviso o errore.',
+        'Le auto connesse hanno la loro etichetta di tipo dispositivo.',
+      ],
+    },
+  },
+  {
     version: '1.0.730',
     date: '2026-11-22',
     notes: {
