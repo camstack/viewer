@@ -1142,10 +1142,14 @@ go();})(); true;`
       ref={containerRef}
       style={[styles.container, { backgroundColor: colors.mediaBlack, borderColor: colors.border }]}
       onLayout={handleLayout}
-      onTouchStartCapture={() => {
-        if (touchLoggedRef.current) return
-        touchLoggedRef.current = true
-        log.info('live:pip', 'touch-reached-js', { tags: { deviceId } })
+      // Probe only: observes the first touch after a foreground return without
+      // ever claiming the responder (returns false).
+      onStartShouldSetResponderCapture={() => {
+        if (!touchLoggedRef.current) {
+          touchLoggedRef.current = true
+          log.info('live:pip', 'touch-reached-js', { tags: { deviceId } })
+        }
+        return false
       }}
     >
       <WebView
