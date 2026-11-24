@@ -25,6 +25,15 @@ export interface AdminFrameInput {
   readonly baseUrl: string
   /** `window.location.origin` on the web; `null` elsewhere. */
   readonly pageOrigin: string | null
+  /** The hub-relative path the app is served at (its entry's `path`). Defaults to the hub root. */
+  readonly path?: string
+  /** How the app signs in: a one-time handoff (native) or the browser's own session cookie. Defaults to `handoff`. */
+  readonly auth?: 'handoff' | 'session-cookie'
+}
+
+/** The URL of an embedded app: the base the race won plus the app's own path. */
+export function appUrl(baseUrl: string, path: string): string {
+  return `${trimBase(baseUrl)}${path.startsWith('/') ? path : `/${path}`}`
 }
 
 export function trimBase(baseUrl: string): string {
@@ -36,13 +45,23 @@ export function adminRootUrl(baseUrl: string): string {
 }
 
 export function planAdminFrame(input: AdminFrameInput): AdminFramePlan {
-  if (input.os !== 'web') return { kind: 'webview-handoff' }
-  const href = adminRootUrl(input.baseUrl)
+  const href = appUrl(input.baseUrl, input.path ?? '/')
+  if (input.os !== 'web') {
+    // A webview carries no browser session: only a handoff can sign it in.
+    return input.auth === 'session-cookie' ? { kind: 'new-tab', href } : { kind: 'webview-handoff' }
+  }
   if (input.pageOrigin !== null && sameHubOrigin(input.baseUrl, input.pageOrigin)) {
     return { kind: 'iframe', src: href }
   }
   return { kind: 'new-tab', href }
 }
+
+/**
+ * The `auth.createBrowserHandoff` destination an embedded app signs in through:
+ * the one the hub defines for its web apps. It names a landing page of the hub's
+ * session, not an app of the shell.
+ */
+export const HANDOFF_DESTINATION = 'admin'
 
 /** The hub path a handoff mint must answer with; anything else is not trusted. */
 export const HANDOFF_PATH_PREFIX = '/api/auth/browser-handoff?'
@@ -69,7 +88,8 @@ export function shouldOfferLocalSwitch(loadedLocal: boolean, nowLocal: boolean, 
 }
 
 /**
- * The script a native frame runs before its page loads, telling the Admin UI the
- * viewer is hosting it (it hides its own entry to the viewer). Idempotent.
+ * The script a native frame runs before its page loads, telling the app the
+ * viewer is hosting it (the older signal; the `hello` bridge message is the one
+ * an app goes chromeless on). Idempotent.
  */
 export const EMBEDDED_BY_VIEWER_SCRIPT = 'window.__CAMSTACK_VIEWER_EMBED__ = true; true;'

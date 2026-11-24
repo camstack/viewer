@@ -48,6 +48,7 @@ import {
   bottomNavFootprint,
   bottomNavPaddingBottom,
 } from './bottom-nav-metrics.js'
+import { DrawerMenuButton } from './DrawerMenuButton.js'
 import { NavAccountCluster } from './NavAccountCluster.js'
 
 /** Marker for the bar's root. `testID` reaches the web as `data-testid` and is
@@ -131,6 +132,8 @@ export function BottomNavBar({
     >
       <GlassGroup>
       <GlassSurface variant="bar" style={styles.capsule} contentStyle={styles.capsuleRow}>
+      {/* The hamburger at the left: the one app drawer. */}
+      <DrawerMenuButton orientation="row" />
       <View style={styles.itemsRow} onLayout={onRowLayout}>
       {rowWidth > 0 ? <SlidingGlassPill target={pill} testID="bottom-nav-pill" /> : null}
       {navItems.map((item) => {

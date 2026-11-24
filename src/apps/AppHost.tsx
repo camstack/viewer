@@ -1,27 +1,33 @@
 /**
- * AppHost — mounts the app drawer and the framed apps (Admin) over
- * the viewer, and settles which app opens at launch.
+ * AppHost — mounts the drawer, the account sheet and the framed app over the
+ * viewer, and settles which app opens at launch.
  *
  * The viewer stays mounted underneath: its navigation, and the bottom bar or
- * side rail that belongs to it, are simply covered while Admin is on screen.
- * The launch resolution runs once per session, after the device settings are
- * read and — when the wanted app is Admin — after `auth.me` has answered.
+ * side rail that belongs to it, are simply covered while an embedded app is on
+ * screen. Which apps exist is the hub's answer (`apps.listApps`); nothing here
+ * names one. The launch resolution runs once per session, after the device
+ * settings are read and — when the wanted app is an embedded one — after the
+ * list has answered.
  */
 import React, { useEffect, useRef } from 'react'
 import { StyleSheet, View } from 'react-native'
+import { useTranslation } from 'react-i18next'
 
 import { useServer } from '../app/ServerProvider.js'
-import { useAdminVerdict } from '../data/use-me.js'
+import { useAppCatalog } from '../data/use-apps.js'
 import { useTheme } from '../theme/theme-provider.js'
-import { adminSurfacesOffered, launchResolvable, resolveLaunchApp } from './app-launch.js'
+import { findApp, isHostedEntry } from './app-catalog.js'
+import { launchResolvable, resolveLaunchApp } from './app-launch.js'
 import { useAppStore } from './app-store.js'
-import { AdminApp } from './AdminApp.js'
+import { AccountSheet } from './AccountSheet.js'
 import { AppDrawer } from './AppDrawer.js'
+import { EmbeddedApp } from './EmbeddedApp.js'
 
 export function AppHost(): React.JSX.Element {
   const { colors } = useTheme()
+  const { t } = useTranslation()
   const { server } = useServer()
-  const verdict = useAdminVerdict()
+  const { catalog } = useAppCatalog()
   const hydrated = useAppStore((s) => s.hydrated)
   const settled = useAppStore((s) => s.launchSettled)
   const preference = useAppStore((s) => s.launchPreference)
@@ -32,7 +38,7 @@ export function AppHost(): React.JSX.Element {
     void useAppStore.getState().hydrate()
   }, [])
 
-  // Another server is another session: leave Admin, resolve afresh.
+  // Another server is another session: leave the embedded app, resolve afresh.
   const serverId = server?.id ?? null
   const previous = useRef(serverId)
   useEffect(() => {
@@ -44,27 +50,30 @@ export function AppHost(): React.JSX.Element {
 
   // Launch resolution: once, when it can be decided.
   useEffect(() => {
-    if (!hydrated || settled || !launchResolvable(preference, lastApp, verdict)) return
-    useAppStore.getState().settleLaunch(resolveLaunchApp(preference, lastApp, verdict))
-  }, [hydrated, settled, preference, lastApp, verdict])
+    if (!hydrated || settled || !launchResolvable(preference, lastApp, catalog)) return
+    useAppStore.getState().settleLaunch(resolveLaunchApp(preference, lastApp, catalog))
+  }, [hydrated, settled, preference, lastApp, catalog])
 
-  // Admin was lost (the session is no longer an admin one): fall back to the viewer.
+  // The app on screen is gone from an ANSWERED list (the session lost it): back to the shell.
+  const activeId = active.appId
   useEffect(() => {
-    if (active.kind === 'admin' && verdict === 'not-admin') {
-      useAppStore.getState().open({ kind: 'viewer' })
+    if (activeId !== null && catalog.status === 'answered' && findApp(catalog, activeId) === null) {
+      useAppStore.getState().open({ appId: null })
     }
-  }, [active.kind, verdict])
+  }, [activeId, catalog])
 
-  const framed = active.kind === 'admin' && adminSurfacesOffered(verdict)
+  const info = activeId === null ? null : findApp(catalog, activeId)
+  const framed = info !== null && !isHostedEntry(info.app.entry)
 
   return (
     <>
       {framed ? (
         <View style={[styles.overlay, { backgroundColor: colors.background }]} testID="app-host-frame">
-          <AdminApp />
+          <EmbeddedApp key={info.app.id} info={info} title={t(info.app.label.key, { defaultValue: info.app.label.fallback })} />
         </View>
       ) : null}
       <AppDrawer />
+      <AccountSheet />
     </>
   )
 }

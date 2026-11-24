@@ -7,6 +7,7 @@
  *  - only the frame's own origin loads here; any other http(s) link, and an iOS
  *    file download, are handed to the system (`Linking`), and `javascript:` /
  *    `data:` are dropped; the injected script also checks the origin itself — the page cannot be told to save a file here;
+ *  - the page talks to the shell over the `app-bridge` envelope (`bridge-host.ts`); this frame only carries the messages;
  *  - a page-load failure is shown by the caller's reload control, not swallowed.
  */
 import React, { useCallback, useEffect, useMemo, useRef } from 'react'
@@ -15,9 +16,10 @@ import { WebView, type WebViewNavigation } from 'react-native-webview'
 
 import { log } from '../lib/logger.js'
 import { useTheme } from '../theme/theme-provider.js'
-import { frameOriginOf, navigationDecision, originGuardedScript, type AppFrameProps } from './app-frame-types.js'
+import { deliverToPageScript, frameOriginOf, navigationDecision, originGuardedScript, type AppFrameProps } from './app-frame-types.js'
+import { bridgeChannel } from './bridge-channel.js'
 
-export function AppFrame({ uri, injectedBefore, reloadKey, testID, onUnhandled }: AppFrameProps): React.JSX.Element {
+export function AppFrame({ uri, injectedBefore, reloadKey, testID, onUnhandled, onAppMessage, onFrameLoad }: AppFrameProps): React.JSX.Element {
   const { colors } = useTheme()
   const ref = useRef<WebView>(null)
   const canGoBack = useRef(false)
@@ -33,6 +35,12 @@ export function AppFrame({ uri, injectedBefore, reloadKey, testID, onUnhandled }
     })
     return () => sub.remove()
   }, [])
+
+  // The drawer reaches the page through the channel while this frame is mounted.
+  useEffect(
+    () => bridgeChannel.attach((message) => ref.current?.injectJavaScript(deliverToPageScript(message))),
+    [],
+  )
 
   const external = useCallback(
     (url: string, what: 'download' | 'external'): void => {
@@ -67,6 +75,8 @@ export function AppFrame({ uri, injectedBefore, reloadKey, testID, onUnhandled }
           if (decision === 'external') external(request.url, 'external')
           return false
         }}
+        onMessage={(e) => onAppMessage?.(e.nativeEvent.data)}
+        onLoadEnd={() => onFrameLoad?.()}
         onFileDownload={({ nativeEvent }) => external(nativeEvent.downloadUrl, 'download')}
         onError={(e) => log.warn('apps', 'app frame failed to load', { description: e.nativeEvent.description })}
       />

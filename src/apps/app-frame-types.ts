@@ -9,6 +9,10 @@ export interface AppFrameProps {
   readonly testID?: string
   /** The page asked for something a frame cannot do (a download, an upload): the caller says so. */
   readonly onUnhandled?: (what: 'download' | 'external') => void
+  /** The page posted a message to the shell (JSON text on a native webview, an object on the web). The caller filters it (`interpretAppMessage`). */
+  readonly onAppMessage?: (data: unknown) => void
+  /** The page finished loading: the moment to say `hello`. */
+  readonly onFrameLoad?: () => void
 }
 
 /** What the frame does with a navigation request. */
@@ -54,4 +58,17 @@ export function staysInFrame(url: string, frameOrigin: string | null): boolean {
 export function originGuardedScript(script: string | undefined, frameOrigin: string | null): string | undefined {
   if (script === undefined || frameOrigin === null) return undefined
   return `if (window.location.origin === ${JSON.stringify(frameOrigin)}) { ${script.replace(/\s*true;\s*$/, '')} } true;`
+}
+
+/**
+ * The script that carries the page's own `postMessage` to the shell on a native
+ * webview (`window.parent` is the window itself there): only the bridge envelope
+ * is forwarded, and the shell ignores anything that is not an app-to-shell message.
+ */
+export const BRIDGE_FORWARDER_SCRIPT =
+  "window.addEventListener('message', function (e) { var d = e.data; if (d && d.camstack === 'app-bridge' && window.ReactNativeWebView) { window.ReactNativeWebView.postMessage(JSON.stringify(d)); } }); true;"
+
+/** The script a native frame runs to hand one shell message to the page. */
+export function deliverToPageScript(message: unknown): string {
+  return `window.dispatchEvent(new MessageEvent('message', { data: ${JSON.stringify(message)} })); true;`
 }

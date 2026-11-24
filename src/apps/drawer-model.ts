@@ -1,38 +1,111 @@
 /**
- * drawer-model — which blocks the app drawer draws, as pure rules.
+ * drawer-model — what the one app drawer draws, as pure rules (D1096).
  *
- * APPS lists Viewer and — only once the hub answered that the session is an
- * admin — Admin. A block never shows on an unanswered `auth.me`: pending is not
- * "not admin", and it is not "admin" either (D315). Settings are per app, and
- * only the Viewer has any, so that row shows only while the Viewer is on screen.
+ * Everything comes from the apps the hub listed: the APPS rows, the active app's
+ * NAV and its Settings. No app id is spelled here. The Viewer's own tabs stay in
+ * its bar or rail, so the hosted app publishes an empty nav. A claim of absence
+ * is made only from a list that answered (D315): pending and a failed read draw
+ * no app rows at all rather than a wrong one.
  */
-import type { AdminVerdict } from '../data/use-me.js'
-import { adminSurfacesOffered, type AppId } from './app-launch.js'
+import type { AppInfo, AppLabel } from '@camstack/types'
+
 import { showServerList } from '../navigation/user-menu.js'
+import { hostedAppOf, orderApps, type AppCatalog } from './app-catalog.js'
+import type { AppId } from './app-launch.js'
 
-export interface DrawerBlocks {
-  /** The Admin row of APPS. Viewer is always listed. */
-  readonly adminApp: boolean
-  /** The saved-servers list: at least two. */
+export type Translate = (label: AppLabel) => string
+
+export interface DrawerApp {
+  readonly id: string
+  readonly label: string
+  readonly icon: string
+  readonly selected: boolean
+}
+
+export interface DrawerNavItem {
+  readonly id: string
+  readonly label: string
+  readonly icon: string
+  readonly path: string
+}
+
+export interface DrawerNavSection {
+  readonly id: string
+  readonly label: string | null
+  readonly items: readonly DrawerNavItem[]
+}
+
+export interface DrawerSettings {
+  readonly label: string
+  readonly path: string
+}
+
+export interface DrawerModel {
+  readonly appsState: AppCatalog['status']
+  readonly apps: readonly DrawerApp[]
+  /** The active app's id once the list answered; `null` while it is not known. */
+  readonly activeId: string | null
+  readonly nav: readonly DrawerNavSection[]
+  readonly settings: DrawerSettings | null
   readonly servers: boolean
-  /** The Settings row: the Viewer's settings, so only while the Viewer is the active app. */
-  readonly settings: boolean
 }
 
-export function drawerBlocks(verdict: AdminVerdict, serverCount: number, active: { readonly kind: string }): DrawerBlocks {
-  return {
-    adminApp: adminSurfacesOffered(verdict),
-    servers: showServerList(serverCount),
-    settings: active.kind === 'viewer',
+export interface DrawerInput {
+  readonly catalog: AppCatalog
+  /** The app on screen; `null` is the app the shell hosts itself. */
+  readonly activeAppId: AppId
+  readonly translate: Translate
+  readonly serverCount: number
+}
+
+/** The label of the shell's own Settings when the hub did not send one. */
+export const SETTINGS_LABEL: AppLabel = { key: 'v2.userMenu.settings', fallback: 'Settings' }
+
+function activeOf(catalog: AppCatalog, activeAppId: AppId): AppInfo | null {
+  if (catalog.status !== 'answered') return null
+  if (activeAppId !== null) {
+    const found = catalog.apps.find((info) => info.app.id === activeAppId)
+    if (found !== undefined) return found
   }
+  return hostedAppOf(catalog)
 }
 
-/** The label key of the app on screen, for the highlighted drawer row. */
-export function isAppSelected(active: { readonly kind: string }, app: AppId): boolean {
-  return active.kind === app
-}
+export function buildDrawerModel({ catalog, activeAppId, translate, serverCount }: DrawerInput): DrawerModel {
+  const active = activeOf(catalog, activeAppId)
+  const activeId = active?.app.id ?? null
+  const apps: readonly DrawerApp[] =
+    catalog.status === 'answered'
+      ? orderApps(catalog.apps).map((info) => ({
+          id: info.app.id,
+          label: translate(info.app.label),
+          icon: info.app.icon,
+          selected: info.app.id === activeId,
+        }))
+      : []
 
-/** The i18n key of a launch preference's label. */
-export function launchLabelKey(preference: 'last' | AppId): string {
-  return `v2.apps.launch.${preference}`
+  const hostedIsActive = active === null ? activeAppId === null : hostedAppOf(catalog)?.app.id === active.app.id
+  const nav: readonly DrawerNavSection[] =
+    active === null || hostedIsActive
+      ? []
+      : active.app.nav
+          .map((section) => ({
+            id: section.id,
+            label: section.label === null ? null : translate(section.label),
+            items: section.items.map((item) => ({ id: item.id, label: translate(item.label), icon: item.icon, path: item.path })),
+          }))
+          .filter((section) => section.items.length > 0)
+
+  // Settings belong to the active app and only when it declares them. While the
+  // list has not answered the shell is still its own host: its Settings stay
+  // reachable (an older hub has no `apps` cap at all).
+  let settings: DrawerSettings | null = null
+  if (active !== null) {
+    if (active.app.settings !== null) {
+      settings = { label: translate(active.app.settings.label ?? SETTINGS_LABEL), path: active.app.settings.path }
+    }
+  } else if (activeAppId === null) {
+    settings = { label: translate(SETTINGS_LABEL), path: '/settings' }
+  }
+
+  return { appsState: catalog.status, apps, activeId, nav, settings, servers: showServerList(serverCount) }
 }

@@ -20,9 +20,9 @@ import {
 
 export const APP_SWITCHER_STORAGE_KEY = '@camstack/v2/app-switcher'
 
-/** What fills the screen: one app. */
+/** What fills the screen: one app (`null` = the app the shell hosts itself). */
 export interface ActiveApp {
-  readonly kind: AppId
+  readonly appId: AppId
 }
 
 export interface PersistedAppSwitcher {
@@ -58,20 +58,30 @@ function persist(doc: PersistedAppSwitcher): void {
 
 interface AppSwitcherState extends PersistedAppSwitcher {
   readonly hydrated: boolean
-  /** The app on screen. Viewer until the launch resolution is spent. */
+  /** The app on screen. The hosted one until the launch resolution is spent. */
   readonly active: ActiveApp
+  /** A path the next embedded app should open on (a search result), spent once it says `ready`. */
+  readonly entryPath: string | null
   /** True once the launch resolution decided what opens first. */
   readonly launchSettled: boolean
   readonly drawerOpen: boolean
+  /** The account sheet (avatar): account, saved servers, "open at launch". */
+  readonly accountOpen: boolean
+  /** The path the embedded app last reported, to tick its nav item. */
+  readonly framePath: string | null
   hydrate: () => Promise<void>
   /** Show an app; it becomes the one remembered. */
-  open: (app: ActiveApp) => void
+  open: (app: ActiveApp, entryPath?: string) => void
   /** Spend the launch resolution once (does not touch the remembered app). */
   settleLaunch: (app: AppId) => void
   setLaunchPreference: (preference: LaunchPreference) => void
   setDrawerOpen: (open: boolean) => void
+  setAccountOpen: (open: boolean) => void
+  setFramePath: (path: string | null) => void
+  /** The embedded app took the path it was asked to open on. */
+  clearEntryPath: () => void
   /**
-   * Sign-out / server switch: leave Admin, close the drawer and
+   * Sign-out / server switch: leave the embedded app, close the drawer and
    * let the next session resolve its own launch app. The remembered app and the
    * launch preference are this device's and stay.
    */
@@ -81,9 +91,12 @@ interface AppSwitcherState extends PersistedAppSwitcher {
 export const useAppStore = create<AppSwitcherState>((set, get) => ({
   ...APP_SWITCHER_DEFAULTS,
   hydrated: false,
-  active: { kind: 'viewer' },
+  active: { appId: DEFAULT_APP },
+  entryPath: null,
   launchSettled: false,
   drawerOpen: false,
+  accountOpen: false,
+  framePath: null,
   hydrate: async () => {
     if (get().hydrated) return
     let raw: string | null = null
@@ -94,18 +107,22 @@ export const useAppStore = create<AppSwitcherState>((set, get) => ({
     }
     set({ ...parseAppSwitcher(raw), hydrated: true })
   },
-  open: (app) => {
-    set({ active: app, lastApp: app.kind, drawerOpen: false })
-    persist({ lastApp: app.kind, launchPreference: get().launchPreference })
+  open: (app, entryPath) => {
+    set({ active: app, lastApp: app.appId, drawerOpen: false, entryPath: entryPath ?? null, framePath: null })
+    persist({ lastApp: app.appId, launchPreference: get().launchPreference })
   },
   settleLaunch: (app) => {
     if (get().launchSettled) return
-    set({ active: { kind: app }, launchSettled: true })
+    set({ active: { appId: app }, launchSettled: true })
   },
   setLaunchPreference: (launchPreference) => {
     set({ launchPreference })
     persist({ lastApp: get().lastApp, launchPreference })
   },
   setDrawerOpen: (drawerOpen) => set({ drawerOpen }),
-  resetSession: () => set({ active: { kind: 'viewer' }, launchSettled: false, drawerOpen: false }),
+  setAccountOpen: (accountOpen) => set({ accountOpen }),
+  setFramePath: (framePath) => set({ framePath }),
+  clearEntryPath: () => set({ entryPath: null }),
+  resetSession: () =>
+    set({ active: { appId: DEFAULT_APP }, entryPath: null, framePath: null, launchSettled: false, drawerOpen: false, accountOpen: false }),
 }))

@@ -108,7 +108,7 @@ function lines(schema: unknown): string[] {
  * fails the suite until the entry is removed, so it cannot outlive its reason.
  */
 /** `tagIds` (D1089): the ids of a rule's tags, so a tag rename no longer detaches the rule. */
-const AHEAD_OF_PUBLISHED: readonly string[] = ['$.tagIds?[]: string']
+const AHEAD_OF_PUBLISHED: readonly string[] = []
 
 /** Published lines an AHEAD entry REPLACES. Action ids (planning #473) replace sequence bindings and inline steps. */
 const SUPERSEDED_BY_AHEAD: readonly string[] = []

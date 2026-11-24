@@ -29,6 +29,22 @@ describe('how the Admin is framed', () => {
   })
 })
 
+describe('an app served at its own path', () => {
+  it('the iframe loads the app\u2019s path, not the hub root', () => {
+    expect(planAdminFrame({ os: 'web', baseUrl: 'https://hub.example/', pageOrigin: 'https://hub.example', path: '/tools/' })).toEqual({
+      kind: 'iframe',
+      src: 'https://hub.example/tools/',
+    })
+  })
+
+  it('native: a session-cookie app cannot sign a webview in, so it opens in the browser', () => {
+    expect(planAdminFrame({ os: 'ios', baseUrl: 'https://hub.example', pageOrigin: null, path: '/tools', auth: 'session-cookie' })).toEqual({
+      kind: 'new-tab',
+      href: 'https://hub.example/tools',
+    })
+  })
+})
+
 describe('the browser handoff', () => {
   it('trusts only a hub handoff path, which carries a code and never a token', () => {
     expect(parseHandoffPath({ path: '/api/auth/browser-handoff?code=abc&destination=admin' })).toBe(

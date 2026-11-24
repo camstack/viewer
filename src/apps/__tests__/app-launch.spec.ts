@@ -1,93 +1,80 @@
 import { describe, expect, it } from 'vitest'
 
-import type { AdminVerdict } from '../../data/use-me.js'
-import {
-  adminSurfacesOffered,
-  launchResolvable,
-  offeredApps,
-  offeredLaunchPreferences,
-  parseAppId,
-  parseLaunchPreference,
-  resolveLaunchApp,
-  type AppId,
-  type LaunchPreference,
-} from '../app-launch.js'
-import { drawerBlocks } from '../drawer-model.js'
+import { parseAppInfos, type AppCatalog } from '../app-catalog.js'
+import { launchResolvable, offeredLaunchPreferences, parseAppId, parseLaunchPreference, resolveApp, resolveLaunchApp } from '../app-launch.js'
 
-const VERDICTS: readonly AdminVerdict[] = ['pending', 'admin', 'not-admin', 'unknown']
-const VIEWER = { kind: 'viewer' } as const
-const ADMIN = { kind: 'admin' } as const
+function app(id: string, entry: Record<string, unknown>, order: number): Record<string, unknown> {
+  return {
+    addonId: `addon-${id}`,
+    app: {
+      id,
+      label: { key: `apps.${id}`, fallback: id },
+      icon: 'monitor',
+      order,
+      entry,
+      reach: { kind: 'hub' },
+      adminOnly: false,
+      nav: [],
+      takesSharedSearch: false,
+      settings: null,
+    },
+  }
+}
 
-describe('Admin is offered only on an ANSWERED admin (D315)', () => {
-  it.each(VERDICTS)('verdict %s', (verdict) => {
-    const offered = verdict === 'admin'
-    expect(adminSurfacesOffered(verdict)).toBe(offered)
-    expect(offeredApps(verdict)).toEqual(offered ? ['viewer', 'admin'] : ['viewer'])
-    expect(drawerBlocks(verdict, 1, VIEWER)).toEqual({ adminApp: offered, servers: false, settings: true })
-  })
+const answered: AppCatalog = {
+  status: 'answered',
+  apps: parseAppInfos([
+    app('shell', { kind: 'native', route: '/cameras' }, 10),
+    app('other', { kind: 'web', path: '/', auth: 'handoff' }, 20),
+  ]) ?? [],
+}
+const PENDING: AppCatalog = { status: 'pending' }
+const UNKNOWN: AppCatalog = { status: 'unknown' }
 
-  it('the saved-servers block needs at least two servers', () => {
-    expect(drawerBlocks('admin', 2, VIEWER).servers).toBe(true)
-  })
-})
-
-describe('Settings are per app: the Viewer has them, Admin does not', () => {
-  it('the Settings row shows only while the Viewer is the active app', () => {
-    expect(drawerBlocks('admin', 1, VIEWER).settings).toBe(true)
-    expect(drawerBlocks('admin', 1, ADMIN).settings).toBe(false)
-  })
-})
-
-describe('a remembered app that no longer exists', () => {
-  it('a remembered "nodes" falls back to the Viewer, as launch app and as preference', () => {
-    expect(parseAppId('nodes')).toBe('viewer')
-    expect(parseLaunchPreference('nodes')).toBe('last')
+describe('parsing what the device remembered', () => {
+  it('an app id is any non-empty string; anything else is the shell itself', () => {
+    expect(parseAppId('x')).toBe('x')
+    expect(parseAppId('')).toBeNull()
+    expect(parseAppId(3)).toBeNull()
+    expect(parseLaunchPreference('x')).toBe('x')
+    expect(parseLaunchPreference(3)).toBe('last')
   })
 })
 
-describe('the open-at-launch picker', () => {
-  it('offers Admin only to a confirmed admin', () => {
-    expect(offeredLaunchPreferences('admin')).toEqual(['last', 'viewer', 'admin'])
-    for (const verdict of ['pending', 'not-admin', 'unknown'] as const) {
-      expect(offeredLaunchPreferences(verdict)).toEqual(['last', 'viewer'])
-    }
+describe('an app is offered only from an ANSWERED list (D315)', () => {
+  it('lists last-used plus every app the hub offered', () => {
+    expect(offeredLaunchPreferences(answered)).toEqual(['last', 'shell', 'other'])
+  })
+  it.each([PENDING, UNKNOWN])('offers only "last used" while the list is %j', (catalog) => {
+    expect(offeredLaunchPreferences(catalog)).toEqual(['last'])
   })
 })
 
-describe('the app that opens at launch', () => {
-  const cases: ReadonlyArray<readonly [LaunchPreference, AppId, AdminVerdict, AppId, boolean]> = [
-    // preference, last app, verdict, resolves to, may settle now
-    ['last', 'viewer', 'admin', 'viewer', true],
-    ['last', 'viewer', 'pending', 'viewer', true],
-    ['last', 'viewer', 'not-admin', 'viewer', true],
-    ['last', 'viewer', 'unknown', 'viewer', true],
-    ['last', 'admin', 'admin', 'admin', true],
-    ['last', 'admin', 'pending', 'viewer', false],
-    ['last', 'admin', 'not-admin', 'viewer', true],
-    ['last', 'admin', 'unknown', 'viewer', true],
-    ['viewer', 'admin', 'admin', 'viewer', true],
-    ['viewer', 'admin', 'pending', 'viewer', true],
-    ['viewer', 'admin', 'not-admin', 'viewer', true],
-    ['viewer', 'admin', 'unknown', 'viewer', true],
-    ['admin', 'viewer', 'admin', 'admin', true],
-    ['admin', 'viewer', 'pending', 'viewer', false],
-    ['admin', 'viewer', 'not-admin', 'viewer', true],
-    ['admin', 'viewer', 'unknown', 'viewer', true],
-  ]
-
-  it.each(cases)('preference %s, last %s, verdict %s -> %s (settles now: %s)', (preference, last, verdict, app, now) => {
-    expect(resolveLaunchApp(preference, last, verdict)).toBe(app)
-    expect(launchResolvable(preference, last, verdict)).toBe(now)
+describe('resolving the app to show', () => {
+  it('an embedded app that the list holds opens', () => {
+    expect(resolveApp('other', answered)).toBe('other')
+  })
+  it('the hosted app, an app not listed, and any wish before an answer resolve to the shell', () => {
+    expect(resolveApp('shell', answered)).toBeNull()
+    expect(resolveApp('gone', answered)).toBeNull()
+    expect(resolveApp('other', PENDING)).toBeNull()
+    expect(resolveApp('other', UNKNOWN)).toBeNull()
+    expect(resolveApp(null, answered)).toBeNull()
+  })
+  it('"last used" reopens the last app; a fixed choice wins over it', () => {
+    expect(resolveLaunchApp('last', 'other', answered)).toBe('other')
+    expect(resolveLaunchApp('shell', 'other', answered)).toBeNull()
   })
 })
 
-describe('parsing the persisted values', () => {
-  it('falls back to the defaults on anything unknown', () => {
-    expect(parseAppId('node')).toBe('viewer')
-    expect(parseAppId(undefined)).toBe('viewer')
-    expect(parseAppId('admin')).toBe('admin')
-    expect(parseLaunchPreference('node')).toBe('last')
-    expect(parseLaunchPreference(7)).toBe('last')
-    expect(parseLaunchPreference('admin')).toBe('admin')
+describe('the launch resolution waits for the list only when it matters', () => {
+  it('a wish for the shell never waits', () => {
+    expect(launchResolvable('last', null, PENDING)).toBe(true)
+  })
+  it('a wish for an embedded app waits while the list is pending, then settles (even on a failed read)', () => {
+    expect(launchResolvable('other', null, PENDING)).toBe(false)
+    expect(launchResolvable('last', 'other', PENDING)).toBe(false)
+    expect(launchResolvable('other', null, answered)).toBe(true)
+    expect(launchResolvable('other', null, UNKNOWN)).toBe(true)
   })
 })

@@ -1,72 +1,64 @@
 /**
  * app-launch — which app the drawer offers and which one the viewer opens at
- * launch, as pure rules.
+ * launch, as pure rules over the apps the hub listed (D1096).
  *
- * Admin is offered ONLY once the hub has ANSWERED that
- * the session is an admin. A pending or failed `auth.me` is "not known yet",
- * never "not an admin" — and never "an admin" either (D315): the surfaces stay
- * out of the drawer until the answer is `admin`.
+ * `null` is the app the shell draws itself (the native Viewer): it needs no
+ * list to exist. Any other app id is data from `apps.listApps`. A wanted app is
+ * opened only once the list ANSWERED and holds it: pending or a failed read is
+ * "not known yet", never "not offered" (D315).
  */
-import type { AdminVerdict } from '../data/use-me.js'
+import { hostedAppOf, orderApps, type AppCatalog } from './app-catalog.js'
 
-/** The apps the operator can pick as a destination. */
-export type AppId = 'viewer' | 'admin'
+/** An app id from the `apps` cap, or `null` for the app the shell hosts itself. */
+export type AppId = string | null
 
-/** "Open at launch": a fixed app, or whichever was used last. */
-export type LaunchPreference = 'last' | AppId
+/** "Open at launch": whichever was used last, or one app by id. */
+export type LaunchPreference = 'last' | string
 
 export const DEFAULT_LAUNCH_PREFERENCE: LaunchPreference = 'last'
-export const DEFAULT_APP: AppId = 'viewer'
-
-export const LAUNCH_PREFERENCES: readonly LaunchPreference[] = ['last', 'viewer', 'admin']
+export const DEFAULT_APP: AppId = null
 
 export function parseAppId(raw: unknown): AppId {
-  return raw === 'admin' ? 'admin' : 'viewer'
+  return typeof raw === 'string' && raw !== '' ? raw : DEFAULT_APP
 }
 
 export function parseLaunchPreference(raw: unknown): LaunchPreference {
-  return raw === 'viewer' || raw === 'admin' || raw === 'last' ? raw : DEFAULT_LAUNCH_PREFERENCE
-}
-
-/** Admin exists for this session only when the hub said "admin". */
-export function adminSurfacesOffered(verdict: AdminVerdict): boolean {
-  return verdict === 'admin'
-}
-
-/** The apps the drawer lists. */
-export function offeredApps(verdict: AdminVerdict): readonly AppId[] {
-  return adminSurfacesOffered(verdict) ? ['viewer', 'admin'] : ['viewer']
-}
-
-/** The launch preferences the picker lists: Admin only for a confirmed admin. */
-export function offeredLaunchPreferences(verdict: AdminVerdict): readonly LaunchPreference[] {
-  return adminSurfacesOffered(verdict) ? LAUNCH_PREFERENCES : ['last', 'viewer']
+  return typeof raw === 'string' && raw !== '' ? raw : DEFAULT_LAUNCH_PREFERENCE
 }
 
 /**
- * The app to open at launch. `last` reopens the last app used; a fixed choice
- * opens that app. Admin always falls back to Viewer while the verdict is not
- * `admin` (pending, unknown, not-admin).
+ * The app to show for a wanted one. A hosted app, an app the list does not
+ * hold, and any wish while the list has not answered all resolve to the shell
+ * itself.
  */
-export function resolveLaunchApp(
-  preference: LaunchPreference,
-  lastApp: AppId,
-  verdict: AdminVerdict,
-): AppId {
-  const wanted: AppId = preference === 'last' ? lastApp : preference
-  return wanted === 'admin' && !adminSurfacesOffered(verdict) ? DEFAULT_APP : wanted
+export function resolveApp(wanted: AppId, catalog: AppCatalog): AppId {
+  if (wanted === null || catalog.status !== 'answered') return DEFAULT_APP
+  const hosted = hostedAppOf(catalog)
+  if (hosted !== null && hosted.app.id === wanted) return DEFAULT_APP
+  return catalog.apps.some((info) => info.app.id === wanted) ? wanted : DEFAULT_APP
+}
+
+function wantedOf(preference: LaunchPreference, lastApp: AppId): AppId {
+  return preference === 'last' ? lastApp : preference
+}
+
+/** The launch preferences the picker lists: last used, then every app the hub offered. */
+export function offeredLaunchPreferences(catalog: AppCatalog): readonly LaunchPreference[] {
+  if (catalog.status !== 'answered') return ['last']
+  return ['last', ...orderApps(catalog.apps).map((info) => info.app.id)]
+}
+
+/** The app to open at launch. */
+export function resolveLaunchApp(preference: LaunchPreference, lastApp: AppId, catalog: AppCatalog): AppId {
+  return resolveApp(wantedOf(preference, lastApp), catalog)
 }
 
 /**
- * Whether the launch resolution may be spent now. While the verdict is still
- * `pending` a wanted Admin must wait for the answer — otherwise the app would
- * open in Viewer and never get to Admin. Any other verdict settles it.
+ * Whether the launch resolution may be spent now. While the list is still
+ * pending a wanted embedded app must wait for the answer — otherwise the app
+ * would open in the Viewer and never get to it. A failed read settles it.
  */
-export function launchResolvable(
-  preference: LaunchPreference,
-  lastApp: AppId,
-  verdict: AdminVerdict,
-): boolean {
-  const wanted: AppId = preference === 'last' ? lastApp : preference
-  return wanted === 'viewer' || verdict !== 'pending'
+export function launchResolvable(preference: LaunchPreference, lastApp: AppId, catalog: AppCatalog): boolean {
+  const wanted = wantedOf(preference, lastApp)
+  return wanted === null || catalog.status !== 'pending'
 }

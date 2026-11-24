@@ -434,13 +434,13 @@ describe('ArtifactsScreen is embeddable', () => {
 // dentro il componente — in `lib/nav-items.ts`, perche' sidebar e indice di
 // ricerca chiamassero lo stesso builder invece di due liste destinate a
 // divergere. La parola pinnata non e' cambiata; e' cambiato dove vive.
-const ADMIN_NAV_ITEMS = '../packages/addon-admin-ui/src/lib/nav-items.ts'
+const ADMIN_NAV_ITEMS = '../packages/addon-admin-ui/src/lib/nav-data.ts'
 const ADMIN_UI_PRESENT = existsSync(join(process.cwd(), '..', ...ADMIN_NAV_ITEMS.split('/').slice(1)))
 
 describe.skipIf(!ADMIN_UI_PRESENT)('the admin sidebar uses the same word', () => {
   it('labels the admin Library page Library', () => {
     const src = read(ADMIN_NAV_ITEMS)
-    expect(src).toContain("t('nav.library', 'Library')")
+    expect(src).toContain("labelKey: 'nav.library',\n        fallback: 'Library'")
   })
 
   it('translates it in both admin locales', () => {
