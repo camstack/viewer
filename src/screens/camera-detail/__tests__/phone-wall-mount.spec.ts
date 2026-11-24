@@ -361,6 +361,20 @@ describe('a phone in PORTRAIT: the confirm BUILDS the view in place (#700)', () 
     await waitFor(() => expect(confirm(root).textContent).toContain('2'))
   })
 
+  it('a cell removed from the wall keeps a tick the operator added and has not confirmed', async () => {
+    const root = await openTheater(IPHONE_PORTRAIT, { members: [5, 9], primaryId: 5 })
+    click(root, `[aria-label="${SWITCH_CAMERA_LABEL}"]`)
+    await act(async () => undefined)
+    // Tick one more camera but do NOT confirm: 3 on the wall + 1 pending = 4.
+    click(root, '[aria-label="Select Retro"]')
+    expect(confirm(root).textContent).toContain('4')
+    act(() => {
+      useWorkspaceStore.getState().remove(9)
+    })
+    // Camera 9 left the view and loses its tick; the pending one survives.
+    await waitFor(() => expect(confirm(root).textContent).toContain('3'))
+  })
+
   it('unticking everything but the picture collapses the wall — it is not a navigation', async () => {
     const root = await openTheater(IPHONE_PORTRAIT, { members: [5], primaryId: 5 })
     click(root, `[aria-label="${SWITCH_CAMERA_LABEL}"]`)

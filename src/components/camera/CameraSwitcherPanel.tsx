@@ -100,10 +100,16 @@ export function CameraSwitcherPanel({
   // The view changed under the panel (a cell removed from the wall, a camera
   // added): the ticks follow, they do not keep describing the old view. Keyed on
   // the joined ids so a fresh array of the same cameras is not a change.
-  const [seenSeedKey, setSeenSeedKey] = useState(seedKey)
-  if (seenSeedKey !== seedKey) {
-    setSeenSeedKey(seedKey)
-    setSelected(new Set(seedIds ?? []))
+  // A MERGE, not a reset: a tick the operator added and has not confirmed yet
+  // survives a cell being removed; only the cameras that left the view lose
+  // their tick, and only the ones that joined it gain one.
+  const [seenSeed, setSeenSeed] = useState<readonly number[]>(seedIds ?? [])
+  if (seenSeed.join(',') !== seedKey) {
+    const next = seedIds ?? []
+    const left = new Set(seenSeed.filter((id) => !next.includes(id)))
+    const joined = next.filter((id) => !seenSeed.includes(id))
+    setSeenSeed(next)
+    setSelected(new Set([...[...selected].filter((id) => !left.has(id)), ...joined]))
   }
   // In scope mode the ticks belong to the surface; otherwise to this panel.
   const checked = scope ? scope.selectedIds : selected

@@ -64,6 +64,13 @@ describe('the live box grows under the fingers, the player never changes frame',
     expect(SCREEN).not.toContain('[styles.videoWrapFull, boxAnimStyle')
   })
 
+  it('in fill the cover is 100% of the box whose `right` the drawer animates — it never steps (#700)', () => {
+    const body = block(SCREEN, 'const coverLayoutStyle = useMemo<ViewStyle>(', '\n  }, [')
+    expect(body).toContain("width: '100%'")
+    expect(body).not.toContain('sideReserve')
+    expect(body).not.toContain('timelineBeside')
+  })
+
   it('ONE height rule feeds the box, the clamp and the folded transform', () => {
     expect(SCREEN).toMatch(/heightFor: zoomBoxHeightFor/)
     expect(block(SCREEN, 'const liveBoxHeight = useDerivedValue(', '\n  }, [')).toContain('zoomBoxHeightFor(')

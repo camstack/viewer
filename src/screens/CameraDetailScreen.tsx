@@ -2208,7 +2208,7 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
   // Pinch + pan zoom. The screen owns tap/double-tap/one-finger-fling and
   // composes them simultaneously with the hook's gesture. The wrapper's fit
   // decides the pan bounds. Fill / wide put the video in an absolute-fill where
-  // it letterboxes (`contain`); the mobile stacked box uses `videoCoverStyle`,
+  // it letterboxes (`contain`); the mobile stacked box uses `coverLayoutStyle`,
   // where it overflows and is cropped (`cover`). Passing the wrong one shrank
   // the reachable travel to a quarter in portrait. The viewport is the box
   // above, never a measurement: the hook's own `onLayout` did not fire when
@@ -2512,7 +2512,7 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
   const sideReserve = sideTimelineWidth(winWidth)
   // ALWAYS applied, same property: `right` is a no-op on the in-flow boxes of
   // the other layouts (relative offset 0), and a vanished animated property
-  // would stay stuck (see `videoCoverStyle`).
+  // would stay stuck (see `coverLayoutStyle`).
   const boxSideStyle = useAnimatedStyle(() => ({
     right: fill ? sideProgress.get() * sideReserve : 0,
   }), [fill, sideReserve])
@@ -2538,7 +2538,9 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
         position: 'absolute',
         top: 0,
         left: 0,
-        width: winWidth - (timelineBeside ? sideReserve : 0),
+        // 100% of the outer box, whose `right` the side drawer animates: the
+        // cover follows the drawer frame by frame instead of stepping.
+        width: '100%',
         height: winHeight,
       }
     }
@@ -2546,7 +2548,7 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
       return { position: 'absolute', top: 0, left: 0, width: wideStreamW, height: wideStreamH }
     }
     return { position: 'absolute', top: 0, left: 0, width: winWidth, height: defaultHeight }
-  }, [winWidth, winHeight, fill, isWideDetail, wideStreamW, wideStreamH, defaultHeight, sideReserve, timelineBeside])
+  }, [winWidth, winHeight, fill, isWideDetail, wideStreamW, wideStreamH, defaultHeight])
 
   // No `panelTopOffset` any more. Every panel this screen used to anchor is a
   // panel of the TIMELINE, laid out by its column — so nothing derives a

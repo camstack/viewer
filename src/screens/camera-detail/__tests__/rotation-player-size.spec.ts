@@ -37,10 +37,10 @@ afterEach(() => {
 })
 
 /** The elements whose inline style is exactly this absolute box at the origin. */
-function boxes(root: HTMLElement, w: number, h: number): readonly Element[] {
+function boxes(root: HTMLElement, w: number | '100%', h: number): readonly Element[] {
   return [...root.querySelectorAll('div')].filter((el) => {
     const s = (el as HTMLElement).style
-    return s.position === 'absolute' && s.width === `${w}px` && s.height === `${h}px` && s.top === '0px'
+    return s.position === 'absolute' && s.width === (typeof w === 'number' ? `${w}px` : w) && s.height === `${h}px` && s.top === '0px'
   })
 }
 
@@ -58,6 +58,6 @@ describe('the player wrapper follows the window on rotation', () => {
       setTestViewport(IPHONE_LANDSCAPE)
     })
 
-    expect(boxes(container, 932, 430).length).toBeGreaterThan(0)
+    expect(boxes(container, '100%', 430).length).toBeGreaterThan(0)
   })
 })

@@ -36,6 +36,21 @@ export function createLeave(actions: LeaveActions): () => void {
 }
 
 /**
+ * Should this keydown be read as "back"? Escape only, and never while the
+ * operator is typing (an input, a textarea, a contenteditable) or a dialog /
+ * sheet is open: those own Escape for themselves.
+ */
+export function isWallEscape(e: Pick<KeyboardEvent, 'key' | 'target' | 'defaultPrevented'>): boolean {
+  if (e.key !== 'Escape' || e.defaultPrevented) return false
+  const t = e.target
+  if (t instanceof Element) {
+    if (t.closest('input, textarea, select, [contenteditable=""], [contenteditable="true"]')) return false
+  }
+  if (typeof document !== 'undefined' && document.querySelector('[role="dialog"], [aria-modal="true"]')) return false
+  return true
+}
+
+/**
  * Register the platform sources of "back" that bypass the screen's buttons,
  * ONLY while a wall is up — with none, the system's own back runs untouched.
  * Android's hardware back is consumed (`true`); on the web Escape does the same
@@ -46,7 +61,7 @@ export function useCollapseWallOnBack(wallShowing: boolean, collapse: () => void
     if (!wallShowing) return undefined
     if (Platform.OS === 'web') {
       const onKey = (e: KeyboardEvent): void => {
-        if (e.key === 'Escape') collapse()
+        if (isWallEscape(e)) collapse()
       }
       window.addEventListener('keydown', onKey)
       return () => window.removeEventListener('keydown', onKey)
