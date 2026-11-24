@@ -32,6 +32,8 @@ export interface PickerSheetSearch {
   readonly value: string
   readonly onChange: (next: string) => void
   readonly placeholder: string
+  /** Take focus when the row mounts (a search the operator just asked for). */
+  readonly autoFocus?: boolean
 }
 
 export interface PickerSheetProps {
@@ -140,6 +142,7 @@ export function PickerSearchRow({
         value={search.value}
         onChangeText={search.onChange}
         autoCorrect={false}
+        autoFocus={search.autoFocus}
         placeholder={search.placeholder}
         placeholderTextColor={colors.foregroundSubtle}
         accessibilityLabel={search.placeholder}

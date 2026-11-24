@@ -78,4 +78,13 @@ describe('the app switcher store', () => {
       launchPreference: 'x',
     })
   })
+
+  it('the top bar search opens the drawer with its search focused; any other open does not', () => {
+    useAppStore.getState().openDrawerSearch()
+    expect(useAppStore.getState().drawerOpen).toBe(true)
+    expect(useAppStore.getState().drawerSearchFocus).toBe(true)
+    useAppStore.getState().setDrawerOpen(false)
+    useAppStore.getState().setDrawerOpen(true)
+    expect(useAppStore.getState().drawerSearchFocus).toBe(false)
+  })
 })

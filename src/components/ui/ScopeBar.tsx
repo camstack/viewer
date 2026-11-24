@@ -10,7 +10,7 @@
  */
 import React from 'react'
 import { StyleSheet, View } from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useScreenTopInset } from '../../navigation/shell-top-inset.js'
 import { useTheme } from '../../theme/theme-provider.js'
 import { SCREEN_GUTTER, SPACING } from '../../theme/tokens.js'
 import { SegmentedControl, type SegmentOption } from './SegmentedControl.js'
@@ -30,10 +30,10 @@ export interface ScopeBarProps<T extends string> {
 
 export function ScopeBar<T extends string>({ options, value, onChange, safeArea = true }: ScopeBarProps<T>) {
   const { colors } = useTheme()
-  const insets = useSafeAreaInsets()
+  const topInset = useScreenTopInset()
   return (
     <View
-      style={[styles.bar, { paddingTop: (safeArea ? insets.top : 0) + SPACING.sm, borderBottomColor: colors.border }]}
+      style={[styles.bar, { paddingTop: (safeArea ? topInset : 0) + SPACING.sm, borderBottomColor: colors.border }]}
     >
       <SegmentedControl options={options} value={value} onChange={onChange} variant="glass" />
     </View>

@@ -65,6 +65,8 @@ interface AppSwitcherState extends PersistedAppSwitcher {
   /** True once the launch resolution decided what opens first. */
   readonly launchSettled: boolean
   readonly drawerOpen: boolean
+  /** The drawer was opened from the top bar's search field: its search takes focus. */
+  readonly drawerSearchFocus: boolean
   /** The account sheet (avatar): account, saved servers, "open at launch". */
   readonly accountOpen: boolean
   /** The path the embedded app last reported, to tick its nav item. */
@@ -76,6 +78,8 @@ interface AppSwitcherState extends PersistedAppSwitcher {
   settleLaunch: (app: AppId) => void
   setLaunchPreference: (preference: LaunchPreference) => void
   setDrawerOpen: (open: boolean) => void
+  /** Open the drawer with its search focused (the wide top bar's search field). */
+  openDrawerSearch: () => void
   setAccountOpen: (open: boolean) => void
   setFramePath: (path: string | null) => void
   /** The embedded app took the path it was asked to open on. */
@@ -95,6 +99,7 @@ export const useAppStore = create<AppSwitcherState>((set, get) => ({
   entryPath: null,
   launchSettled: false,
   drawerOpen: false,
+  drawerSearchFocus: false,
   accountOpen: false,
   framePath: null,
   hydrate: async () => {
@@ -119,10 +124,11 @@ export const useAppStore = create<AppSwitcherState>((set, get) => ({
     set({ launchPreference })
     persist({ lastApp: get().lastApp, launchPreference })
   },
-  setDrawerOpen: (drawerOpen) => set({ drawerOpen }),
+  setDrawerOpen: (drawerOpen) => set({ drawerOpen, drawerSearchFocus: false }),
+  openDrawerSearch: () => set({ drawerOpen: true, drawerSearchFocus: true }),
   setAccountOpen: (accountOpen) => set({ accountOpen }),
   setFramePath: (framePath) => set({ framePath }),
   clearEntryPath: () => set({ entryPath: null }),
   resetSession: () =>
-    set({ active: { appId: DEFAULT_APP }, entryPath: null, framePath: null, launchSettled: false, drawerOpen: false, accountOpen: false }),
+    set({ active: { appId: DEFAULT_APP }, entryPath: null, framePath: null, launchSettled: false, drawerOpen: false, drawerSearchFocus: false, accountOpen: false }),
 }))

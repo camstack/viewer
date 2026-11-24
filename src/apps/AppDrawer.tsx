@@ -61,6 +61,7 @@ export function AppDrawer(): React.JSX.Element | null {
   const open = useAppStore((s) => s.drawerOpen)
   const active = useAppStore((s) => s.active)
   const framePath = useAppStore((s) => s.framePath)
+  const searchFocus = useAppStore((s) => s.drawerSearchFocus)
   const setDrawerOpen = useAppStore((s) => s.setDrawerOpen)
   const openApp = useAppStore((s) => s.open)
   const [query, setQuery] = useState('')
@@ -181,7 +182,7 @@ export function AppDrawer(): React.JSX.Element | null {
           </Pressable>
         </View>
 
-        <PickerSearchRow testID="drawer-search" search={{ value: query, onChange: setQuery, placeholder: t('v2.apps.searchPlaceholder') }} />
+        <PickerSearchRow testID="drawer-search" search={{ value: query, onChange: setQuery, placeholder: t('v2.apps.searchPlaceholder'), autoFocus: searchFocus }} />
 
         <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
           {searching ? (

@@ -83,6 +83,12 @@ export interface BottomNavBarProps {
    * so the bar must not also push. Defaults to false.
    */
   readonly wrapperNavigates?: boolean
+  /**
+   * `full` (default): the ☰ at the left and the account cluster at the right —
+   * the camera detail has no top bar. `nav`: the home bar above owns both, so
+   * the capsule is the tabs alone.
+   */
+  readonly chrome?: 'full' | 'nav'
 }
 
 /**
@@ -101,6 +107,7 @@ export function BottomNavBar({
   insetBottom,
   wrapItem,
   wrapperNavigates = false,
+  chrome = 'full',
 }: BottomNavBarProps): React.JSX.Element {
   const { colors } = useTheme()
   const styles = useMemo(() => createStyles(colors), [colors])
@@ -133,7 +140,7 @@ export function BottomNavBar({
       <GlassGroup>
       <GlassSurface variant="bar" style={styles.capsule} contentStyle={styles.capsuleRow}>
       {/* The hamburger at the left: the one app drawer. */}
-      <DrawerMenuButton orientation="row" />
+      {chrome === 'full' ? <DrawerMenuButton orientation="row" /> : null}
       <View style={styles.itemsRow} onLayout={onRowLayout}>
       {rowWidth > 0 ? <SlidingGlassPill target={pill} testID="bottom-nav-pill" /> : null}
       {navItems.map((item) => {
@@ -190,7 +197,7 @@ export function BottomNavBar({
       </View>
       {/* The two fixed items at the right: the account menu and the Activity
           centre. They are not destinations — no highlight, no TabTrigger. */}
-      <NavAccountCluster orientation="row" />
+      {chrome === 'full' ? <NavAccountCluster orientation="row" /> : null}
       </GlassSurface>
       </GlassGroup>
     </View>

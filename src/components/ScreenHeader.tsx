@@ -1,13 +1,16 @@
 import React from 'react'
 import { View, Text, StyleSheet } from 'react-native'
 import { BlurView } from 'expo-blur'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { usePathname } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import { useTheme } from '../theme/theme-provider.js'
 import { SPACING, TYPOGRAPHY } from '../theme/tokens.js'
 import { ChevronLeft, type LucideIcon } from '../lib/icons.js'
 import { GlassButton } from './ui/GlassButton.js'
 import { GlassGroup } from './ui/GlassSurface.js'
+import { barKindForPath } from '../navigation/bar-kind.js'
+import { HeaderMenuButton } from '../navigation/HeaderMenuButton.js'
+import { useScreenTopInset } from '../navigation/shell-top-inset.js'
 import {
   HEADER_ACTION_GAP,
   HEADER_BUTTON_SIZE,
@@ -62,6 +65,12 @@ interface ScreenHeaderProps {
    * cleared once, not twice.
    */
   readonly inset?: boolean
+  /**
+   * The ☰ that opens the app drawer, at the far right. Default: shown on an
+   * inner screen (a header with a back button on a detail route, see
+   * `navigation/bar-kind.ts`), never on a picture or a list page.
+   */
+  readonly menu?: boolean
 }
 
 const pillStyles = StyleSheet.create({
@@ -133,8 +142,10 @@ export function HeaderBackButton({ onPress, testID }: { readonly onPress: () => 
  *  with a glass back button, one title style and glass action buttons, all
  *  sized by `screen-header-metrics.ts`. Screens compose this instead of reading
  *  insets or drawing their own back/action buttons. */
-export function ScreenHeader({ title, subtitle, left, actions, right, onBack, bordered = false, inset = true }: ScreenHeaderProps) {
-  const insets = useSafeAreaInsets()
+export function ScreenHeader({ title, subtitle, left, actions, right, onBack, bordered = false, inset = true, menu }: ScreenHeaderProps) {
+  const topInset = useScreenTopInset()
+  const pathname = usePathname()
+  const showMenu = menu ?? (onBack !== undefined && barKindForPath(pathname) === 'inner')
   const { colors, mode } = useTheme()
   const { t } = useTranslation()
   const leftSlot = onBack ? (
@@ -158,7 +169,7 @@ export function ScreenHeader({ title, subtitle, left, actions, right, onBack, bo
           alignItems: 'center',
           gap: HEADER_SLOT_GAP,
           paddingHorizontal: HEADER_PADDING_X,
-          paddingTop: (inset ? insets.top : 0) + HEADER_PADDING_TOP,
+          paddingTop: (inset ? topInset : 0) + HEADER_PADDING_TOP,
           paddingBottom: HEADER_PADDING_BOTTOM,
           // Translucent tint over the blur — frosted look, legible everywhere
           // (incl. web/Android where the blur may render faint).
@@ -185,6 +196,7 @@ export function ScreenHeader({ title, subtitle, left, actions, right, onBack, bo
         )}
         {actions && actions.length > 0 ? <HeaderActionCluster actions={actions} /> : null}
         {right}
+        {showMenu ? <HeaderMenuButton /> : null}
       </View>
     </BlurView>
   )

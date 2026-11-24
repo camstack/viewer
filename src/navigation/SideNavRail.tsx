@@ -27,7 +27,7 @@ import { useTranslation } from 'react-i18next'
 import { hapticTap } from '../lib/haptics.js'
 import { useTheme } from '../theme/theme-provider.js'
 import type { ColorTokens } from '../theme/tokens.js'
-import { activeNavSegment, navItems, navPressAction, type NavItem } from './nav-items.js'
+import { activeNavSegment, isItemActive, navItems, navPressAction, settingsTab, type NavItem } from './nav-items.js'
 import { CAMERAS_TAB_HREF } from './back-to-cameras.js'
 import { resolveCamerasPress } from './cameras-press.js'
 import { useLastCameraStore } from '../store/last-camera-store.js'
@@ -63,6 +63,12 @@ export interface SideNavRailProps {
    * so the rail must not also push. Defaults to false.
    */
   readonly wrapperNavigates?: boolean
+  /**
+   * `full` (default): the rail also carries the ☰ and the account cluster — the
+   * camera detail has no top bar. `nav`: a top bar owns those (the wide home
+   * bar), so the rail is the active app's navigation alone, Settings included.
+   */
+  readonly chrome?: 'full' | 'nav'
 }
 
 /**
@@ -82,6 +88,7 @@ export function SideNavRail({
   compact,
   wrapItem,
   wrapperNavigates = false,
+  chrome = 'full',
 }: SideNavRailProps): React.JSX.Element {
   const { colors, mode } = useTheme()
   const styles = useMemo(() => createStyles(colors), [colors])
@@ -99,6 +106,8 @@ export function SideNavRail({
   // width is how one surface ends up laying out against the other's idea of it.
   const railWidth = SIDE_NAV_WIDTH
   const active = activeNavSegment(pathname)
+  const navOnly = chrome === 'nav'
+  const items = navOnly ? [...navItems, settingsTab] : navItems
   const rememberedCamera = useLastCameraStore((st) => st.current)
   const forgetLastCamera = useLastCameraStore((st) => st.forget)
 
@@ -119,11 +128,11 @@ export function SideNavRail({
       ]}
     >
       {/* The hamburger at the top (the start of the rail): the one app drawer. */}
-      <DrawerMenuButton orientation="column" />
+      {navOnly ? null : <DrawerMenuButton orientation="column" />}
       <View style={styles.sidebarInner}>
-        {navItems.map((item) => {
+        {items.map((item) => {
           const { key, segment, icon: Icon } = item
-          const isActive = active === segment
+          const isActive = active === segment || (item === settingsTab && isItemActive(pathname, segment))
           return (
             <Wrapper key={key} item={item}>
               <TouchableOpacity
@@ -170,7 +179,7 @@ export function SideNavRail({
           )
         })}
       </View>
-      <NavAccountCluster orientation="column" />
+      {navOnly ? null : <NavAccountCluster orientation="column" />}
     </BlurView>
   )
 }

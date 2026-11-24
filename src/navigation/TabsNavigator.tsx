@@ -18,6 +18,9 @@ import { SideNavRail, type NavItemWrapperProps } from './SideNavRail.js'
 import { BottomNavBar } from './BottomNavBar.js'
 import { BottomNavInsetProvider } from './bottom-nav-inset.js'
 import { bottomNavFootprint } from './bottom-nav-metrics.js'
+import { barKindForPath, homeBarVariant } from './bar-kind.js'
+import { HomeBar } from './HomeBar.js'
+import { TopInsetSpentContext } from './shell-top-inset.js'
 
 export function TabsNavigator() {
   const { colors } = useTheme()
@@ -30,6 +33,10 @@ export function TabsNavigator() {
   // Side nav for tablets (full, labelled), phone-landscape (compact, icon-only),
   // AND wide web windows. Bottom bar only for phone-portrait / narrow web.
   const showBottomNav = !showSideNav
+  // The list pages wear the home bar (`bar-kind.ts`); it carries the ☰, the bell
+  // and the account that used to sit in the rail and the bottom capsule.
+  const showHomeBar = barKindForPath(pathname) === 'home'
+  const barVariant = homeBarVariant({ showSidebar: showSideNav, compact })
 
   return (
     <Tabs style={[styles.container, { backgroundColor: colors.background }]}>
@@ -51,6 +58,7 @@ export function TabsNavigator() {
             pathname={pathname}
             compact={compact}
             wrapperNavigates
+            chrome={showHomeBar ? 'nav' : 'full'}
             wrapItem={({ item, children }: NavItemWrapperProps) => (
               <TabTrigger name={item.name} asChild>
                 {children}
@@ -62,7 +70,22 @@ export function TabsNavigator() {
         <BottomNavInsetProvider
           inset={bottomNavFootprint({ visible: showBottomNav, insetBottom: insets.bottom })}
         >
-          <TabSlot style={styles.content} />
+          <View style={styles.column}>
+            {showHomeBar ? (
+              <HomeBar
+                variant={barVariant}
+                pathname={pathname}
+                wrapBell={(children) => (
+                  <TabTrigger name="notifications" asChild>
+                    {children}
+                  </TabTrigger>
+                )}
+              />
+            ) : null}
+            <TopInsetSpentContext.Provider value={showHomeBar}>
+              <TabSlot style={styles.content} />
+            </TopInsetSpentContext.Provider>
+          </View>
         </BottomNavInsetProvider>
       </View>
 
@@ -81,6 +104,7 @@ export function TabsNavigator() {
             pathname={pathname}
             insetBottom={insets.bottom}
             wrapperNavigates
+            chrome={showHomeBar ? 'nav' : 'full'}
             wrapItem={({ item, children }: NavItemWrapperProps) => (
               <TabTrigger name={item.name} asChild>
                 {children}
@@ -112,6 +136,11 @@ const createStyles = (_colors: ColorTokens) =>
       left: 0,
       right: 0,
       bottom: 0,
+    },
+    column: {
+      flex: 1,
+      minWidth: 0,
+      minHeight: 0,
     },
     content: {
       flex: 1,
