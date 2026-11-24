@@ -31,6 +31,30 @@ export interface WhatsNewEntry {
 // i18n-ok: release notes carry their own `en` + `it` text per entry (typed, held by whats-new.spec.ts)
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.734',
+    date: '2026-11-24',
+    notes: {
+      en: [
+        'New top bar: menu, notifications and account on every list page.',
+        'Detail pages get a back button and the menu on the right.',
+        'Live, walls and playback use the full screen height.',
+        'Quick grid builds the wall right inside the camera screen.',
+        'Back or Escape closes the quick wall and keeps you on the camera.',
+        'Live view no longer freezes when you return to the app with PiP open.',
+        'The apps menu lists every app your hub offers.',
+      ],
+      it: [
+        'Nuova barra in alto: menu, notifiche e account in ogni pagina elenco.',
+        'Le pagine di dettaglio hanno il tasto indietro e il menu a destra.',
+        'Live, muri e riproduzione usano tutta l’altezza dello schermo.',
+        'La griglia rapida crea il muro direttamente nella schermata camera.',
+        'Indietro o Esc chiude il muro rapido e resti sulla camera.',
+        'Il live non si blocca più tornando nell’app con il PiP aperto.',
+        'Il menu app elenca tutte le app offerte dall’hub.',
+      ],
+    },
+  },
+  {
     version: '1.0.733',
     date: '2026-11-23',
     notes: {
