@@ -123,8 +123,8 @@ describe('on a tablet the panel is no longer reachable at all', () => {
   })
 })
 
-describe('on a phone nothing about this changed', () => {
-  it('two selected still push the on-the-fly grid route, and write no view', async () => {
+describe('on a phone in portrait the confirm builds the view in place (#700)', () => {
+  it('two selected write the view and push no route', async () => {
     setTestViewport(IPHONE_PORTRAIT)
     const root = await openScreen()
     await selectCameras(root, ['Garden', 'Garage'])
@@ -133,11 +133,11 @@ describe('on a phone nothing about this changed', () => {
       fireEvent.click(confirm(root))
     })
 
-    expect(routerCalls()).toEqual([{ kind: 'push', target: '/grid/adhoc?devices=5,9' }])
-    expect(members()).toEqual([])
+    expect(routerCalls()).toEqual([])
+    expect(members()).toEqual([5, 9])
   })
 
-  it('one selected does nothing at all — the confirm is refused below two', async () => {
+  it('one selected is a goTo — the same replace a row tap performs, no view written', async () => {
     setTestViewport(IPHONE_PORTRAIT)
     const root = await openScreen()
     await selectCameras(root, ['Garden'])
@@ -146,7 +146,7 @@ describe('on a phone nothing about this changed', () => {
       fireEvent.click(confirm(root))
     })
 
-    expect(routerCalls()).toEqual([])
+    expect(routerCalls()).toEqual([{ kind: 'replace', target: '/camera/5' }])
     expect(members()).toEqual([])
   })
 })

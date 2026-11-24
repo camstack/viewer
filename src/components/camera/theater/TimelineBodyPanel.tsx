@@ -94,6 +94,13 @@ export interface TimelineCameraJumpBinding {
    *  callback, in the one binding, so the button's wording and the screen's
    *  action can never come from two different answers. */
   readonly cameraSelection: CameraSelectionMode
+  /** Leave the panel open on confirm (portrait, #700): it is the surface under
+   *  the operator's finger, and the next gesture is another add or drop. */
+  readonly keepPanelOpen: boolean
+  /** The cameras the view holds right now, picture first — seeds the panel's
+   *  ticks so the same panel adds, drops and shows what is on the wall. Empty
+   *  when no wall is up (the ticks start empty, as they always did). */
+  readonly viewIds: readonly number[]
 }
 
 /**
@@ -340,6 +347,7 @@ export function TimelineBodyPanel({
           onSwitch={deviceBinding.cameraJump.onSwitchCamera}
           onOpenGrid={deviceBinding.cameraJump.onOpenAdhocGrid}
           selectionMode={deviceBinding.cameraJump.cameraSelection}
+          seedIds={deviceBinding.cameraJump.viewIds}
           onClose={onClose}
         />
       )

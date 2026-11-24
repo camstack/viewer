@@ -14,8 +14,7 @@
  * (`WorkspaceStage`, in the timeline's stream slot — it stopped being a second
  * surface under the picture on 2026-09-02), and the operator stays exactly
  * where they were. `/grid/adhoc` is untouched and still reachable: it is the
- * sharing format, the deep link (`grid/adhoc-devices.ts`), and still what this
- * button does in portrait.
+ * sharing format and the deep link (`grid/adhoc-devices.ts`).
  *
  * ## Which surfaces BUILD a view — the third of three questions
  *
@@ -27,28 +26,26 @@
  * Each has its own name: `shouldShowCameraShelf`, `canHostWorkspaceWall`, and
  * {@link canBuildViewFromSelection} here.
  *
- * ## Why `stack` still routes to `/grid/adhoc` — a STRUCTURAL reason
- *
- * The reason is not the space. `stack` has room for a wall and renders one
- * happily. It is WHERE THIS CONTROL LIVES: the selector is hosted inside the
- * TIMELINE BODY (`TimelineCameraPanel`), and in portrait the timeline body is
- * the bottom two-thirds of the screen the operator is touching. Building a view
- * from it would replace the picture above while the surface under their finger
- * closed — the panel closes on confirm — and the operator would be left holding
- * a screen that reorganised itself around them. `/grid/adhoc` is already "only
- * the grid, with a way to close it", and it is a route, so Back is the way out.
- *
- * `fill` has the opposite geometry and therefore the opposite answer: the
- * selector rides in the compact right-edge drawer, which floats OVER the
- * picture and is dismissed by the same toggle that opened it. The wall goes up
- * behind the drawer, the drawer stays exactly where it was, and nothing the
- * operator is touching moves. So `fill` builds, and does not navigate.
- *
- * That asymmetry is the whole reason this is a per-SHAPE table rather than a
- * per-device one. A tablet in portrait is `stack` too, and it gets the same
- * answer for the same reason.
- *
- * ## The two decisions this file settles
+ * ## `stack` builds too, and the panel stays under the finger (#700)
+
+`stack` used to route to `/grid/adhoc`, for a structural reason: the selector is
+hosted inside the TIMELINE BODY, the bottom two-thirds of the screen the operator
+is touching, and the panel closes on confirm — so building a view would replace
+the picture above while the surface under the finger vanished. The route was the
+escape from that, and it cost more than it saved: a push that iOS places UNDER
+the camera's modal, so the grid's own controls were unreachable and the camera
+stayed live beneath it.
+
+The objection is answered by the panel, not by the route. In `stack` a confirm
+APPLIES the view and leaves the panel open (`keepsPanelOpen`), and the ticks are
+SEEDED from the cameras on screen, so the same panel adds a camera, drops one,
+and shows what the wall holds. The picture reorganises above while the list the
+operator is touching stays exactly where it was. `fill` still closes (its panel
+is the edge drawer that floats over the picture); `wide` is unchanged.
+
+`/grid/adhoc` remains the sharing format and the deep link, nothing more.
+
+## The two decisions this file settles
  *
  * **One camera selected is a `goTo`.** The design's D5 reads it as "replace the
  * primary", and on this screen the primary IS the picture: `app/(app)/camera/
@@ -104,9 +101,18 @@ const BUILDS_VIEW: Readonly<Record<DetailLayoutMode, boolean>> = {
   /** A phone in landscape. The selector is in the edge drawer, which floats
    *  over the picture — the wall replaces what is BEHIND the drawer. */
   fill: true,
-  /** Portrait. The selector is inside the timeline body, so building a view
-   *  would make the surface being used disappear. `/grid/adhoc` instead. */
-  stack: false,
+  /** Portrait. The wall takes the picture's box; the selector panel stays
+   *  open under the finger (`keepsPanelOpen`) and is seeded with the view. */
+  stack: true,
+}
+
+/**
+ * Does a confirmed selection leave the camera panel OPEN? Only `stack`: there
+ * the panel is the surface under the operator's finger, and the next thing they
+ * do with it is add or drop another camera. See the module docblock.
+ */
+export function keepsPanelOpen(mode: DetailLayoutMode): boolean {
+  return mode === 'stack'
 }
 
 /** Does confirming a selection BUILD the view here, or route to one?

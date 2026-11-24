@@ -65,7 +65,9 @@ describe('the grid view switches live in the grid, not in the screen', () => {
   // returning to the mounted one, so the list behind the wall reopens scrolled
   // to the top. See `src/navigation/back-to-cameras.ts`.
   it('back always lands on the cameras tab, never router.back()', () => {
-    expect(screen).toContain('const goBack = (): void => backToCameras(router)')
+    // A saved grid backs out to the cameras tab; the ad-hoc one returns to the
+    // camera it came from (`adhoc-back.ts`), and falls back to the same tab.
+    expect(screen).toContain('isAdhoc ? backFromAdhocGrid(router, originDeviceId) : backToCameras(router)')
     expect(screen).not.toContain('router.back()')
     expect(screen).not.toContain("router.replace('/cameras')")
   })

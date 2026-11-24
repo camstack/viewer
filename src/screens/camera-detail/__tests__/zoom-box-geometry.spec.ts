@@ -48,9 +48,20 @@ describe('the live box grows under the fingers, the player never changes frame',
   })
 
   it('the wrapper is a constant per mode: it never reads the animated box height', () => {
-    const body = block(SCREEN, 'const videoCoverStyle = useAnimatedStyle(', '\n  }, [')
+    const body = block(SCREEN, 'const coverLayoutStyle = useMemo<ViewStyle>(', '\n  }, [')
     expect(body).not.toContain('liveBoxHeight')
     expect(body).not.toContain('zoom.')
+  })
+
+  it('the wrapper SIZE comes from React on a plain View; the Animated.View carries only the zoom (#700)', () => {
+    // A worklet capturing winWidth/winHeight wrote its size after the commit and
+    // a rotation left the player at the old size until a touch flushed it.
+    expect(SCREEN).not.toContain('videoCoverStyle = useAnimatedStyle')
+    expect(SCREEN).toContain('<View style={coverLayoutStyle}>')
+    expect(SCREEN).toContain('<Animated.View style={[styles.coverZoom, zoom.videoStyle]}>')
+    // Fill's height is React's too — no animated `height` on the fill box.
+    expect(SCREEN).toContain('[styles.videoWrapFull, { height: winHeight }, boxSideStyle]')
+    expect(SCREEN).not.toContain('[styles.videoWrapFull, boxAnimStyle')
   })
 
   it('ONE height rule feeds the box, the clamp and the folded transform', () => {

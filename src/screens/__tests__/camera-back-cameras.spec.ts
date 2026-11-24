@@ -32,7 +32,10 @@ describe('camera back always goes to cameras', () => {
     // cheap fix is to describe the call without spelling it.
     expect(src).not.toContain('swipeBackThroughPip')
     expect(src).not.toContain('navigateBack')
-    expect(src).toContain('onBack={() => backToCameras(router, forgetLastCamera)}')
+    // Back goes through the ONE leave (`wall-back.ts`): it collapses a wall
+    // first and otherwise leaves through `backToCameras`.
+    expect(src).toContain('onBack={onLeave}')
+    expect(src).toContain('leaveCamera: () => backToCameras(router, forgetLastCamera)')
     expect(src).not.toContain('router.back()')
     // The regression: a bare replace remounts the tab navigator.
     expect(src).not.toContain("router.replace('/cameras')")

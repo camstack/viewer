@@ -73,6 +73,10 @@ export interface CameraSwitcherPanelProps {
   /** When set, the panel is a controlled multi-select over the surface's scope
    *  (see the header) and `onSwitch` / `onOpenGrid` are never called. */
   readonly scope?: CameraScopeBinding
+  /** Cameras the ticks START as, and follow when the view changes elsewhere (a
+   *  cell's own remove). The view on screen, so this panel can add, drop and
+   *  show what is on the wall. Empty/absent: the ticks start empty. */
+  readonly seedIds?: readonly number[]
 }
 
 export function CameraSwitcherPanel({
@@ -81,6 +85,7 @@ export function CameraSwitcherPanel({
   onOpenGrid,
   selectionMode = 'openGrid',
   scope,
+  seedIds,
 }: CameraSwitcherPanelProps) {
   const { t } = useTranslation()
   const { colors } = useTheme()
@@ -90,7 +95,16 @@ export function CameraSwitcherPanel({
   const ui = useTimelineScale()
   const { data: cameras = [], isLoading } = useCameras()
 
-  const [selected, setSelected] = useState<ReadonlySet<number>>(new Set())
+  const seedKey = seedIds?.join(',') ?? ''
+  const [selected, setSelected] = useState<ReadonlySet<number>>(() => new Set(seedIds ?? []))
+  // The view changed under the panel (a cell removed from the wall, a camera
+  // added): the ticks follow, they do not keep describing the old view. Keyed on
+  // the joined ids so a fresh array of the same cameras is not a change.
+  const [seenSeedKey, setSeenSeedKey] = useState(seedKey)
+  if (seenSeedKey !== seedKey) {
+    setSeenSeedKey(seedKey)
+    setSelected(new Set(seedIds ?? []))
+  }
   // In scope mode the ticks belong to the surface; otherwise to this panel.
   const checked = scope ? scope.selectedIds : selected
   // A scope is always "active": a tap on a row is a tick, never a switch.

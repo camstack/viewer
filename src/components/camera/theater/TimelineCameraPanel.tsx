@@ -31,6 +31,8 @@ export interface TimelineCameraPanelProps {
   /** The surface reads a SET of cameras: the panel is its multi-select and
    *  `onSwitch` / `onOpenGrid` are not used (see `CameraSwitcherPanel`). */
   readonly scope?: CameraScopeBinding
+  /** Cameras to start ticked (the view on screen). */
+  readonly seedIds?: readonly number[]
   readonly onClose: () => void
 }
 
@@ -40,6 +42,7 @@ export function TimelineCameraPanel({
   onOpenGrid,
   selectionMode,
   scope,
+  seedIds,
   onClose,
 }: TimelineCameraPanelProps): React.JSX.Element {
   const { t } = useTranslation()
@@ -52,6 +55,7 @@ export function TimelineCameraPanel({
         onOpenGrid={onOpenGrid}
         selectionMode={selectionMode}
         scope={scope}
+        seedIds={seedIds}
       />
     </TimelinePanelHost>
   )

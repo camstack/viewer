@@ -113,6 +113,7 @@ import { useWallGateCameras } from '../live/use-wall-gate-cameras.js'
 import { useSettings } from '../data/use-settings.js'
 import { useScreenActive } from '../hooks/use-screen-active.js'
 import { backToCameras } from '../navigation/back-to-cameras.js'
+import { backFromAdhocGrid } from '../navigation/adhoc-back.js'
 import { HeaderBackButton } from '../components/ScreenHeader.js'
 
 interface GridViewScreenProps {
@@ -120,6 +121,8 @@ interface GridViewScreenProps {
   readonly gridId: string | null
   /** Camera ids for the ad-hoc grid (only read when `gridId` is null). */
   readonly adhocCameraIds?: readonly number[]
+  /** Ad-hoc only: the camera the link came from — Back returns to it. */
+  readonly originDeviceId?: number | null
 }
 
 /** Local id stamped on the transient ad-hoc grid object (never persisted). */
@@ -129,7 +132,7 @@ const ADHOC_GRID_ID = 'adhoc'
  *  Android keeps the native per-tile wall (`react-native-webrtc` has no HEVC). */
 const USE_EMBED = Platform.OS === 'ios' || Platform.OS === 'web'
 
-export function GridViewScreen({ gridId, adhocCameraIds }: GridViewScreenProps) {
+export function GridViewScreen({ gridId, adhocCameraIds, originDeviceId = null }: GridViewScreenProps) {
   const { t } = useTranslation()
   const { colors } = useTheme()
   const router = useRouter()
@@ -526,7 +529,8 @@ export function GridViewScreen({ gridId, adhocCameraIds }: GridViewScreenProps) 
 
   // Ad-hoc grids have no builder to edit — the action is hidden entirely.
   const goEdit = gridId !== null ? (): void => router.push(`/grid/${gridId}/edit`) : undefined
-  const goBack = (): void => backToCameras(router)
+  const goBack = (): void =>
+    isAdhoc ? backFromAdhocGrid(router, originDeviceId) : backToCameras(router)
   const [touches] = useState(createWallTouchRelay)
   const title = isAdhoc
     ? t('v2.gridView.adhocTitle')

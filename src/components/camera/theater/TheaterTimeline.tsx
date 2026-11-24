@@ -2399,6 +2399,8 @@ export const TheaterTimeline = memo(function TheaterTimeline(props: TheaterTimel
   const switchCamera = cameraJump?.onSwitchCamera
   const openAdhocGrid = cameraJump?.onOpenAdhocGrid
   const cameraSelection = cameraJump?.cameraSelection
+  const keepPanelOpen = cameraJump?.keepPanelOpen ?? false
+  const viewIds = cameraJump?.viewIds
   const onSwitchCamera = useCallback(
     (id: number): void => {
       closePanel()
@@ -2408,17 +2410,17 @@ export const TheaterTimeline = memo(function TheaterTimeline(props: TheaterTimel
   )
   const onOpenAdhocGrid = useCallback(
     (ids: readonly number[]): void => {
-      closePanel()
+      if (!keepPanelOpen) closePanel()
       openAdhocGrid?.(ids)
     },
-    [closePanel, openAdhocGrid],
+    [closePanel, openAdhocGrid, keepPanelOpen],
   )
   const cameraJumpBinding = useMemo(
     () =>
-      cameraSelection === undefined
+      cameraSelection === undefined || viewIds === undefined
         ? undefined
-        : { onSwitchCamera, onOpenAdhocGrid, cameraSelection },
-    [onSwitchCamera, onOpenAdhocGrid, cameraSelection],
+        : { onSwitchCamera, onOpenAdhocGrid, cameraSelection, keepPanelOpen, viewIds },
+    [onSwitchCamera, onOpenAdhocGrid, cameraSelection, keepPanelOpen, viewIds],
   )
 
   // ZERO-COST availability: reuse the day-window coverage this surface already

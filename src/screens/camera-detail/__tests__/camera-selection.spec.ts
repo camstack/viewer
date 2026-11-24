@@ -6,13 +6,10 @@
  * longer by the reel's predicate, which answers a different question since the
  * phone got a wall.
  *
- * The asymmetry asserted here is the whole point and it is worth stating: the
- * SAME phone builds a view in landscape and routes to `/grid/adhoc` in
- * portrait. It is not about space — portrait draws a wall perfectly well — it
- * is about where this control is HOSTED. In `fill` the selector is in the edge
- * drawer, floating over the picture; in `stack` it is inside the timeline body,
- * so building a view would make the surface under the operator's finger
- * disappear. See the module docblock.
+ * Every shape builds a view in place (#700: portrait stopped routing to
+ * `/grid/adhoc`). What still differs is where the selector is HOSTED, and so
+ * whether it closes on confirm: `fill` closes its edge drawer, `stack` keeps
+ * the panel open under the finger (`keepsPanelOpen`). See the module docblock.
  */
 import { describe, expect, it } from 'vitest'
 
@@ -20,6 +17,7 @@ import {
   MIN_SELECTION,
   cameraSelectionModeFor,
   canBuildViewFromSelection,
+  keepsPanelOpen,
   resolveCameraSelection,
 } from '../camera-selection.js'
 import { shouldShowCameraShelf } from '../camera-shelf.js'
@@ -33,8 +31,14 @@ describe('which meaning the confirm has', () => {
     expect(cameraSelectionModeFor('fill')).toBe('buildView')
   })
 
-  it('PORTRAIT keeps the route — the selector is inside the surface it would replace', () => {
-    expect(cameraSelectionModeFor('stack')).toBe('openGrid')
+  it('PORTRAIT builds it too — the wall takes the picture box, no route', () => {
+    expect(cameraSelectionModeFor('stack')).toBe('buildView')
+  })
+
+  it('only portrait keeps the panel open on confirm — it is the surface under the finger', () => {
+    expect(keepsPanelOpen('stack')).toBe(true)
+    expect(keepsPanelOpen('fill')).toBe(false)
+    expect(keepsPanelOpen('wide')).toBe(false)
   })
 
   it('the predicate says it in its own name, and every shape answers', () => {
@@ -43,7 +47,7 @@ describe('which meaning the confirm has', () => {
     // change to one cannot be made by editing a comparison.
     expect(canBuildViewFromSelection('wide')).toBe(true)
     expect(canBuildViewFromSelection('fill')).toBe(true)
-    expect(canBuildViewFromSelection('stack')).toBe(false)
+    expect(canBuildViewFromSelection('stack')).toBe(true)
   })
 
   it('and it is NOT the reel\'s predicate — those two disagree on a phone now', () => {

@@ -114,7 +114,7 @@ import { useViewportReadout } from '../hooks/use-viewport-size.js'
 import { SkeletonBox } from '../components/ui/SkeletonBox.js'
 import { GlassSurface } from '../components/ui/GlassSurface.js'
 import { useConfirm, useNotice } from '../components/ui/confirm.js'
-import type { LayoutChangeEvent } from 'react-native'
+import type { LayoutChangeEvent, ViewStyle } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { usePathname, useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -223,9 +223,11 @@ import {
   workspaceOnScreenCameras,
 } from './camera-detail/workspace-grid.js'
 import { fanOutPlaybackToWall } from './camera-detail/workspace-playback.js'
+import { createLeave, useCollapseWallOnBack } from './camera-detail/wall-back.js'
 import { gridPlaybackBus } from '../live/playback-bus.js'
 import {
   cameraSelectionModeFor,
+  keepsPanelOpen,
   resolveCameraSelection,
 } from './camera-detail/camera-selection.js'
 import { useWorkspaceStore } from '../store/workspace-store.js'
@@ -304,6 +306,9 @@ interface CameraDetailScreenProps {
  * ref. The timeline keeps reducing the RECORDINGS and EVENTS faults, which are
  * about the scope and not about the picture.
  */
+/** No view on screen: the camera panel's ticks start empty. */
+const NO_VIEW_IDS: readonly number[] = []
+
 const NO_PICTURE_FAULT: TimelineStreamFaultBinding = {
   failed: false,
   fetching: false,
@@ -1783,6 +1788,7 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
   // selector runs and nothing renders. That separation is the whole reason
   // `BelowStreamArea` exists as its own component.
   const setWorkspaceMembers = useWorkspaceStore((s) => s.setMembers)
+  const clearWorkspace = useWorkspaceStore((s) => s.clear)
 
   // The ONE piece of workspace STATE this screen reads, and the exception the
   // paragraph above allows for: the timeline aggregates the view, so the view's
@@ -1818,6 +1824,13 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
   // below it becomes. `BelowStreamArea` is handed the answer rather than
   // recomputing it.
   const wallShowing = shouldShowWorkspaceGrid(layoutMode, workspaceMembers, deviceId)
+  // The ONE "back" (`wall-back.ts`): the wall collapses first, the camera is
+  // left on the next press. Read through a ref so the callbacks that hold it
+  // (gesture tree, toolbar) keep one identity while the wall comes and goes.
+  const wallShowingRef = useRef(wallShowing)
+  useLayoutEffect(() => {
+    wallShowingRef.current = wallShowing
+  }, [wallShowing])
 
 
   // A live capture cannot survive the transition: the wall replaces the
@@ -1843,18 +1856,25 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
           setWorkspaceMembers(outcome.members)
           return
         case 'goTo':
+          // The panel is seeded with the view, so unticking everything else
+          // leaves the picture's own camera: that is "collapse the wall", not
+          // a navigation to where the operator already is.
+          if (outcome.deviceId === deviceId) {
+            clearWorkspace()
+            return
+          }
           // Deliberately the SAME callback a row tap uses, not a second
           // `router.replace` — one camera means one verb, in one place.
           onSwitchCamera(outcome.deviceId)
           return
         case 'openGrid':
-          router.push(`/grid/adhoc?devices=${serializeAdhocDeviceIds(outcome.deviceIds)}`)
+          router.push(`/grid/adhoc?devices=${serializeAdhocDeviceIds(outcome.deviceIds)}&from=${deviceId}`)
           return
         case 'none':
           return
       }
     },
-    [cameraSelection, onSwitchCamera, router, setWorkspaceMembers],
+    [cameraSelection, onSwitchCamera, router, setWorkspaceMembers, clearWorkspace, deviceId],
   )
   const isLandscape = winWidth > winHeight
   const fill = layoutMode === 'fill'
@@ -2305,10 +2325,21 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
   // the system. Whether the MediaStream keeps rendering in PiP once the app is
   // backgrounded is the open question for the device: read `live:pip`
   // (presentation mode changes) against `live:lifecycle` (player torn down).
-  /** One-finger fling: just leave, through the one destination back always has. */
+  const onLeave = useMemo(
+    () =>
+      createLeave({
+        wallShowing: () => wallShowingRef.current,
+        collapseWall: clearWorkspace,
+        leaveCamera: () => backToCameras(router, forgetLastCamera),
+      }),
+    [clearWorkspace, router, forgetLastCamera],
+  )
+  useCollapseWallOnBack(wallShowing, onLeave)
+
+  /** One-finger fling: back — collapses the wall first, else leaves the camera. */
   const onSwipeBack = useCallback((): void => {
-    backToCameras(router, forgetLastCamera)
-  }, [router, forgetLastCamera])
+    onLeave()
+  }, [onLeave])
 
   /**
    * Two-finger fling: hand THIS camera to the on-demand overlay at the instant
@@ -2487,37 +2518,27 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
   }), [fill, sideReserve])
 
   // The player's WRAPPER: a constant per layout mode, never the animated box.
-  // Fill takes the window, wide the rail box, the stacked box the 16:9 box at
-  // rest (`defaultHeight`) whether or not the pinch may grow the box — the
-  // growth is folded into `zoom.videoStyle` (see `zoomBoxHeightFor`), so the
-  // WKWebView underneath keeps one frame for the life of the layout mode.
-  // A stream that is not 16:9 is letterboxed inside it by the player, so the
-  // box overlays map onto the picture, not the wrapper (`picture-box.ts`).
+  // Fill takes the window (less the side drawer's share), wide the rail box, the
+  // stacked box the 16:9 box at rest (`defaultHeight`) whether or not the pinch
+  // may grow the box — the growth is folded into `zoom.videoStyle` (see
+  // `zoomBoxHeightFor`), so the WKWebView underneath keeps one frame for the
+  // life of the layout mode. A stream that is not 16:9 is letterboxed inside it
+  // by the player, so the box overlays map onto the picture, not the wrapper
+  // (`picture-box.ts`).
   //
-  // ALWAYS applied, and always returns the SAME property set — the third time
-  // this exact trap has been paid for in this file, and the first two comments
-  // about it are a few lines up.
-  //
-  // Reanimated writes these properties straight onto the native view and does
-  // NOT clear one that merely disappears between renders. Swapping this style
-  // for a static `StyleSheet.absoluteFill` in fill mode therefore left the
-  // portrait values STUCK: measured on 2026-07-31, after rotating into a
-  // 932x430 landscape with `fill: true`, the player's container still measured
-  // 574x323 — the portrait cover box — so the embed kept sizing its video to it
-  // and the picture turned without expanding.
-  //
-  // So fill and wide are expressed HERE, in the same properties, instead of by
-  // withholding the style.
-  const videoCoverStyle = useAnimatedStyle(() => {
-    // ALWAYS the same properties. Reanimated leaves a vanished one stuck — a
-    // branch that returned `right`/`bottom` instead would pin the portrait
-    // cover box after restore, the same trap fill mode already paid for.
+  // The SIZE comes from React, on a PLAIN `View` (`coverLayoutStyle`). It used
+  // to come from a Reanimated worklet capturing winWidth/winHeight; after a
+  // rotation React had the new window and the worklet's write sat deferred
+  // until a touch flushed it, so the player kept the old size ("half black
+  // until tapped", #700). The `Animated.View` inside carries ONLY the zoom
+  // transform — a property that never has to agree with the layout.
+  const coverLayoutStyle = useMemo<ViewStyle>(() => {
     if (fill) {
       return {
         position: 'absolute',
         top: 0,
         left: 0,
-        width: winWidth - sideProgress.get() * sideReserve,
+        width: winWidth - (timelineBeside ? sideReserve : 0),
         height: winHeight,
       }
     }
@@ -2525,7 +2546,7 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
       return { position: 'absolute', top: 0, left: 0, width: wideStreamW, height: wideStreamH }
     }
     return { position: 'absolute', top: 0, left: 0, width: winWidth, height: defaultHeight }
-  }, [winWidth, winHeight, fill, isWideDetail, wideStreamW, wideStreamH, defaultHeight, sideReserve])
+  }, [winWidth, winHeight, fill, isWideDetail, wideStreamW, wideStreamH, defaultHeight, sideReserve, timelineBeside])
 
   // No `panelTopOffset` any more. Every panel this screen used to anchor is a
   // panel of the TIMELINE, laid out by its column — so nothing derives a
@@ -2778,7 +2799,7 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
       <Animated.View
         style={
           fill
-            ? [styles.videoWrapFull, boxAnimStyle, boxSideStyle]
+            ? [styles.videoWrapFull, { height: winHeight }, boxSideStyle]
             : isWideDetail
               ? [styles.videoWrap, { width: wideSizes.streamWidth, height: wideSizes.streamHeight }]
               : pinchExpandsHeight
@@ -2794,12 +2815,13 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
               Transforming the surrounding Animated.View keeps the frame intact.
               The detection-box overlay rides inside the wrapper so boxes scale
               and pan in lockstep with the video.
-              `videoCoverStyle` sizes it in EVERY mode — 16:9 cover when the
+              `coverLayoutStyle` sizes it in EVERY mode — 16:9 cover when the
               box is pinch-grown, the window in fill, the rail box when wide.
               It must never be swapped for a static style: reanimated leaves the
               properties it last wrote stuck on the view, which pinned the
               player to the portrait box across a rotation. */}
-          <Animated.View style={[videoCoverStyle, zoom.videoStyle]}>
+          <View style={coverLayoutStyle}>
+          <Animated.View style={[styles.coverZoom, zoom.videoStyle]}>
             {/* The snapshot poster is a LIVE-pause affordance ONLY. In recorded
                 mode pause is a server rate-0 hold on the SAME session — the
                 player keeps showing the exact held frame, never a snapshot
@@ -2875,6 +2897,7 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
               <DiscardedBoxesOverlay deviceId={deviceId} enabled={discardedBoxesOn} />
             ) : null}
           </Animated.View>
+          </View>
 
           {/* Transparent gesture-catcher ON TOP of the video. A native video view
               (RTCPIPView) swallows touches, so the detector must wrap a plain
@@ -3074,7 +3097,7 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
       icon: ArrowLeft,
       label: t('v2.common.back'),
       active: false,
-      onPress: () => backToCameras(router, forgetLastCamera),
+      onPress: onLeave,
       cluster: 'left',
     },
     timelineDockDisc({ dock: timelineDock, onSet: setTimelineDock, cluster: 'left', t }),
@@ -3262,7 +3285,7 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
       drawerExpanded={landscapeDrawerOpen}
       drawerBeside={timelineBeside}
       name={name}
-      onBack={() => backToCameras(router, forgetLastCamera)}
+      onBack={onLeave}
       deviceBinding={{
         cameraName: name,
         hasPtz,
@@ -3277,6 +3300,8 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
           onSwitchCamera,
           onOpenAdhocGrid: onCameraSelection,
           cameraSelection,
+          keepPanelOpen: keepsPanelOpen(layoutMode),
+          viewIds: wallShowing ? onScreenIds : NO_VIEW_IDS,
         },
       }}
       // The controls that act on THIS camera, in one group — the grid page
@@ -3550,6 +3575,8 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFill,
     backgroundColor: '#000', // ui-check-ok: video stage — a camera picture sits on black in both themes
   },
+  /** Fills the plain layout `View` (`coverLayoutStyle`); carries only the zoom transform. */
+  coverZoom: { flex: 1 },
   videoContent: {
     flex: 1,
     overflow: 'hidden',

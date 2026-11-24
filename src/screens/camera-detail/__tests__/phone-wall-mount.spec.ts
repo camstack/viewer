@@ -277,21 +277,150 @@ describe('a phone in LANDSCAPE: confirming a selection BUILDS the view', () => {
   })
 })
 
-describe('a phone in PORTRAIT: the same confirm still ROUTES', () => {
-  it('pushes /grid/adhoc, writes no view, and puts up no wall', async () => {
+describe('a phone in PORTRAIT: the confirm BUILDS the view in place (#700)', () => {
+  it('writes the view, asks the router for nothing, and the wall takes the picture box', async () => {
     const root = await openTheater(IPHONE_PORTRAIT)
     expect(shape(root)).toBe('stack')
+    await selectCameras(root, ['Garden', 'Garage'])
+    resetRouterStub()
+
+    act(() => {
+      fireEvent.click(confirm(root))
+    })
+
+    expect(members()).toEqual([5, 9])
+    expect(routerCalls()).toEqual([])
+    expect(grid(root)).not.toBeNull()
+  })
+
+  it('no second live player: the wall is the ONLY surface, the picture is its cell', async () => {
+    const root = await openTheater(IPHONE_PORTRAIT)
+    await waitFor(() => expect(webViews(root)).toHaveLength(1))
     await selectCameras(root, ['Garden', 'Garage'])
 
     act(() => {
       fireEvent.click(confirm(root))
     })
 
-    expect(routerCalls()).toEqual([{ kind: 'push', target: '/grid/adhoc?devices=5,9' }])
+    await waitFor(() => expect(wallSurface(root)).not.toBeNull())
+    expect(webViews(root)).toHaveLength(1)
+    expect(webViews(root)[0]).toBe(wallSurface(root))
+  })
+
+  it('the panel stays OPEN under the finger, ticked with what the wall holds', async () => {
+    const root = await openTheater(IPHONE_PORTRAIT)
+    await selectCameras(root, ['Garden', 'Garage'])
+
+    act(() => {
+      fireEvent.click(confirm(root))
+    })
+
+    // Still there: confirming did not close the surface being touched…
+    expect(root.querySelector(`[data-testid="${CAMERA_SELECT_CONFIRM_TEST_ID}"]`)).not.toBeNull()
+    // …and its ticks now describe the view, the picture's camera included.
+    // …and its ticks now describe the view: the picture's camera and the two
+    // others, so the confirm counts three without a single further tap.
+    expect(confirm(root).textContent).toContain('3')
+  })
+
+  it('ADD: ticking one more camera and confirming grows the wall', async () => {
+    const root = await openTheater(IPHONE_PORTRAIT, { members: [5], primaryId: 5 })
+    click(root, `[aria-label="${SWITCH_CAMERA_LABEL}"]`)
+    await act(async () => undefined)
+
+    click(root, '[aria-label="Select Retro"]')
+    act(() => {
+      fireEvent.click(confirm(root))
+    })
+
+    expect(members()).toEqual([1, 5, 12])
+  })
+
+  it('REMOVE: unticking a camera and confirming drops it, a cell remove updates the ticks', async () => {
+    const root = await openTheater(IPHONE_PORTRAIT, { members: [5, 9], primaryId: 5 })
+    click(root, `[aria-label="${SWITCH_CAMERA_LABEL}"]`)
+    await act(async () => undefined)
+
+    click(root, '[aria-label="Select Garage"]')
+    act(() => {
+      fireEvent.click(confirm(root))
+    })
+    expect(members()).toEqual([1, 5])
+    expect(confirm(root).textContent).toContain('2')
+
+    // Re-add one so the wall is three again, then remove a cell from the wall
+    // itself: the ticks follow it rather than keep describing the old view.
+    click(root, '[aria-label="Select Garage"]')
+    act(() => {
+      fireEvent.click(confirm(root))
+    })
+    expect(confirm(root).textContent).toContain('3')
+    act(() => {
+      useWorkspaceStore.getState().remove(9)
+    })
+    await waitFor(() => expect(confirm(root).textContent).toContain('2'))
+  })
+
+  it('unticking everything but the picture collapses the wall — it is not a navigation', async () => {
+    const root = await openTheater(IPHONE_PORTRAIT, { members: [5], primaryId: 5 })
+    click(root, `[aria-label="${SWITCH_CAMERA_LABEL}"]`)
+    await act(async () => undefined)
+    resetRouterStub()
+
+    click(root, '[aria-label="Select Garden"]')
+    act(() => {
+      fireEvent.click(confirm(root))
+    })
+
     expect(members()).toEqual([])
-    // The half that is new: portrait CAN draw a wall, so "no view was written"
-    // and "no wall went up" are two claims now, and this is the second.
+    expect(routerCalls()).toEqual([])
     expect(grid(root)).toBeNull()
+  })
+
+  it('the wall carries an always-visible close that empties it', async () => {
+    const root = await openTheater(IPHONE_PORTRAIT, { members: [5, 9], primaryId: 5 })
+    const close = root.querySelector('[aria-label="Close view"]')
+    expect(close).not.toBeNull()
+    act(() => {
+      fireEvent.click(close as Element)
+    })
+    expect(members()).toEqual([])
+    expect(grid(root)).toBeNull()
+  })
+
+  it('ESCAPE on the web collapses the wall too, before anything leaves', async () => {
+    setTestPlatform('web')
+    const root = await openTheater(IPHONE_PORTRAIT, { members: [5, 9], primaryId: 5 })
+    resetRouterStub()
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+    })
+    expect(members()).toEqual([])
+    expect(grid(root)).toBeNull()
+    expect(routerCalls()).toEqual([])
+    setTestPlatform('ios')
+  })
+
+  it('BACK collapses the wall first and leaves the camera on the second press', async () => {
+    const root = await openTheater(IPHONE_PORTRAIT, { members: [5, 9], primaryId: 5 })
+    resetRouterStub()
+    const back = (): Element => {
+      const el = root.querySelector('[aria-label="Back"]')
+      if (el === null) throw new Error('no back control')
+      return el
+    }
+
+    act(() => {
+      fireEvent.click(back())
+    })
+    expect(members()).toEqual([])
+    expect(grid(root)).toBeNull()
+    expect(routerCalls()).toEqual([])
+
+    act(() => {
+      fireEvent.click(back())
+    })
+    expect(routerCalls().length).toBeGreaterThan(0)
   })
 })
 
@@ -482,7 +611,7 @@ describe('the way OUT of a wall on a phone in landscape', () => {
    * renders and navigates nowhere is the failure this repo keeps hitting, and
    * it would pass a query for the label.
    */
-  it('one press on the back disc leaves the screen', async () => {
+  it('one press on the back disc collapses the wall; the camera is left on the next', async () => {
     const root = await openTheater(IPHONE_LANDSCAPE, { members: [5], primaryId: 5 })
     resetRouterStub()
 
@@ -499,7 +628,8 @@ describe('the way OUT of a wall on a phone in landscape', () => {
       fireEvent.click(back)
     })
 
-    expect(routerCalls().length).toBeGreaterThan(0)
+    expect(members()).toEqual([])
+    expect(routerCalls()).toEqual([])
   })
 })
 
