@@ -32,6 +32,8 @@ export const HOME_BAR_BELL_TEST_ID = 'home-bar-bell'
 export const HOME_BAR_SEARCH_TEST_ID = 'home-bar-search'
 
 const HIT = 40
+const BELL_ICON_SIZE = 22
+const SEARCH_HEIGHT = 36
 const LOGO_WIDTH = 112
 const SEARCH_MAX_WIDTH = 420
 
@@ -53,7 +55,8 @@ export const HomeBar = memo(function HomeBar({ variant, pathname, wrapBell }: Ho
   const insets = useSafeAreaInsets()
   const styles = useMemo(() => createStyles(colors), [colors])
   const wide = variant === 'wide'
-  const section = registeredTabs.find((tab) => isItemActive(pathname, tab.segment))
+  // `/` is the app's index and lands on the Cameras tab; it has no segment of its own.
+  const section = registeredTabs.find((tab) => isItemActive(pathname === '/' ? '/cameras' : pathname, tab.segment))
 
   const bell = wrapBell(
     <Pressable
@@ -64,14 +67,23 @@ export const HomeBar = memo(function HomeBar({ variant, pathname, wrapBell }: Ho
       accessibilityLabel={t('nav.notifications')}
       style={styles.hit}
     >
-      <Bell size={22} color={colors.foregroundMuted} />
+      <Bell size={BELL_ICON_SIZE} color={colors.foregroundMuted} />
     </Pressable>,
   )
 
   return (
     <View
       testID={HOME_BAR_TEST_ID}
-      style={[styles.bar, { height: homeBarHeight(variant) + insets.top, paddingTop: insets.top }]}
+      style={[
+        styles.bar,
+        {
+          height: homeBarHeight(variant) + insets.top,
+          paddingTop: insets.top,
+          // A notch in landscape sits at the side: keep ☰ and the avatar clear of it.
+          paddingLeft: SPACING.lg + insets.left,
+          paddingRight: SPACING.lg + insets.right,
+        },
+      ]}
     >
       {wide ? (
         <>
@@ -144,14 +156,14 @@ const createStyles = (colors: ColorTokens) =>
     spacer: { flex: 1 },
     // Centred on the BAR, not on the room left between the buttons.
     logo: { position: 'absolute', left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' },
-    title: { color: colors.foreground, fontSize: 18, fontWeight: TYPOGRAPHY.weight.bold, marginRight: SPACING.lg },
+    title: { color: colors.foreground, fontSize: TYPOGRAPHY.size.lg, fontWeight: TYPOGRAPHY.weight.bold, marginRight: SPACING.lg },
     search: {
       flex: 1,
       maxWidth: SEARCH_MAX_WIDTH,
       flexDirection: 'row',
       alignItems: 'center',
       gap: SPACING.md,
-      height: 36,
+      height: SEARCH_HEIGHT,
       paddingHorizontal: SPACING.lg,
       borderRadius: RADIUS.xl,
       backgroundColor: colors.surface,
