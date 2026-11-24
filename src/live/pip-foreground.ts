@@ -36,10 +36,10 @@ export function decideForeground(input: ForegroundInput): ForegroundAction {
 }
 
 /**
- * After the PiP window closed: does the peer need rebuilding? PiP keeps the
- * page's media alive in the background (it is its whole point), so a stream
- * that is still `playing` was never suspended and a rebuild would only
- * re-stall it. Anything else is rebuilt.
+ * After the PiP window closed: does the peer need rebuilding? Assumption, not
+ * yet proven on a device: PiP keeps the page's media alive in the background,
+ * so a stream that is still `playing` was never suspended and a rebuild would
+ * only re-stall it. Anything else is rebuilt.
  */
 export function needsReconnectAfterPipExit(playerState: string): boolean {
   return playerState !== 'playing'

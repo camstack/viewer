@@ -34,8 +34,6 @@ import {
   ActivityIndicator,
   Pressable,
   StyleSheet,
-  AppState,
-  type AppStateStatus,
   type LayoutChangeEvent,
 } from 'react-native'
 import { useViewportSize } from '../hooks/use-viewport-size.js'
@@ -81,13 +79,8 @@ import { mapRecState } from './rec-state.js'
 import { useSnapshotLink } from '../data/SnapshotOverviewProvider.js'
 import { resolveSnapshotUri } from '../data/snapshot-media-url.js'
 import { log } from '../lib/logger.js'
-import {
-  decideForeground,
-  needsReconnectAfterPipExit,
-  PIP_EXIT_SCRIPT,
-  PIP_RESTORE_FALLBACK_MS,
-  PIP_RESTORE_SETTLE_MS,
-} from './pip-foreground.js'
+import { PIP_EXIT_SCRIPT } from './pip-foreground.js'
+import { usePipForeground } from './use-pip-foreground.js'
 import { markBoot } from '../connection/boot-timeline.js'
 import { useNativeEmbedSource } from './use-native-embed-source.js'
 
@@ -726,82 +719,17 @@ go();})(); true;`
   // nothing: the peer is alive, and rebuilding it threw recorded playback off
   // the cursor and onto the live edge (a fresh connection starts live).
   // `background → inactive → active` still counts as a return from background.
-  const backgroundedRef = useRef<boolean>(AppState.currentState === 'background')
-  // The page's last presentation mode (from the `pipmode` reports) and the
-  // reconnect parked until PiP has closed.
-  const lastPipModeRef = useRef<string | null>(null)
-  const playerStateRef = useRef<string>(state)
-  playerStateRef.current = state
-  const pipRestoreRef = useRef<{ settle: ReturnType<typeof setTimeout> | null; fallback: ReturnType<typeof setTimeout> } | null>(null)
   const touchLoggedRef = useRef<boolean>(true)
-
-  const clearPipRestore = useCallback((): void => {
-    const pending = pipRestoreRef.current
-    if (pending === null) return
-    if (pending.settle !== null) clearTimeout(pending.settle)
-    clearTimeout(pending.fallback)
-    pipRestoreRef.current = null
-  }, [])
-
-  const finishPipRestore = useCallback(
-    (how: 'inline' | 'fallback'): void => {
-      clearPipRestore()
-      const needs = needsReconnectAfterPipExit(playerStateRef.current)
-      log.info('live:pip', needs ? 'deferred reconnect fired' : 'deferred reconnect skipped — stream still playing', {
-        tags: { deviceId },
-        how,
-        playerState: playerStateRef.current,
-      })
-      if (needs) reconnect()
-      onPeerReconnect?.()
-    },
-    [clearPipRestore, reconnect, onPeerReconnect, deviceId],
-  )
-
-  useEffect(() => {
-    const sub = AppState.addEventListener('change', (next: AppStateStatus) => {
-      log.info('live:pip', 'app state', {
-        tags: { deviceId },
-        next,
-        backgrounded: backgroundedRef.current,
-        lastPipMode: lastPipModeRef.current,
-      })
-      if (next === 'background') {
-        backgroundedRef.current = true
-        return
-      }
-      if (next !== 'active') return
-      const action = decideForeground({
-        backgrounded: backgroundedRef.current,
-        lastPipMode: lastPipModeRef.current,
-      })
-      if (action === 'none') return
-      backgroundedRef.current = false
+  const pipForeground = usePipForeground({
+    deviceId,
+    playerState: state,
+    reconnect,
+    onPeerReconnect,
+    exitPip: () => webViewRef.current?.injectJavaScript(PIP_EXIT_SCRIPT),
+    onReturn: () => {
       touchLoggedRef.current = false
-      if (action === 'reconnect') {
-        log.info('live', 'foreground → reconnect', { tags: { deviceId } })
-        reconnect()
-        onPeerReconnect?.()
-        return
-      }
-      log.info('live:pip', 'foreground in PiP — reconnect deferred, asking the page to leave PiP', {
-        tags: { deviceId },
-      })
-      clearPipRestore()
-      pipRestoreRef.current = {
-        settle: null,
-        fallback: setTimeout(() => {
-          log.warn('live:pip', 'PiP never reported inline — fallback', { tags: { deviceId } })
-          finishPipRestore('fallback')
-        }, PIP_RESTORE_FALLBACK_MS),
-      }
-      webViewRef.current?.injectJavaScript(PIP_EXIT_SCRIPT)
-    })
-    return () => {
-      sub.remove()
-      clearPipRestore()
-    }
-  }, [reconnect, onPeerReconnect, deviceId, clearPipRestore, finishPipRestore])
+    },
+  })
 
   // Self-heal on a network transition (Wi-Fi↔cellular, or offline→online): the
   // old ICE path is dead once the interface changes, so trigger a fast
@@ -984,12 +912,8 @@ go();})(); true;`
     const modeReport =
       typeof raw === 'string' && raw.includes('"pipmode"') ? parsePipModeReport(raw) : null
     if (modeReport !== null) {
-      lastPipModeRef.current = modeReport.mode
-      log.info('live:pip', 'presentation mode changed', { deviceId, mode: modeReport.mode })
-      const pending = pipRestoreRef.current
-      if (modeReport.mode !== 'picture-in-picture' && pending !== null && pending.settle === null) {
-        pending.settle = setTimeout(() => finishPipRestore('inline'), PIP_RESTORE_SETTLE_MS)
-      }
+      log.info('live:pip', 'presentation mode changed', { tags: { deviceId }, mode: modeReport.mode })
+      pipForeground.noteMode(modeReport.mode)
       return
     }
     const snap = parseSnapshotPayload(raw)
@@ -1087,7 +1011,7 @@ go();})(); true;`
       const mode = parseRecState(raw)
       if (mode) onPlaybackState?.(mode)
     }
-  }, [onPosition, onPlaybackState, onScrubDrawn, onServedProfile, onClipDuration, onClipAudio, onClipIncomplete, onLiveCaptureError, deviceId, logRouter, finishPipRestore])
+  }, [onPosition, onPlaybackState, onScrubDrawn, onServedProfile, onClipDuration, onClipAudio, onClipIncomplete, onLiveCaptureError, deviceId, logRouter, pipForeground])
 
   const handleLoadError = useCallback((): void => {
     // Covers DNS/connection failures and HTTP errors (incl. TLS rejections,
@@ -1095,13 +1019,14 @@ go();})(); true;`
     // This is the failure the in-embed retry loop can NEVER recover from — its
     // script never ran — so it is the reason the host keeps a loop of its own.
     log.warn('live', 'webview load error', { deviceId })
+    pipForeground.resetMode()
     // The page never rendered, so the next attempt should not be the same
     // source: a WebView that cannot read the bundled file (the Mac) gets the
     // hub's copy instead. No-op after the first call and on every platform
     // where the local asset loads.
     reportLoadFailure()
     setStatus({ state: 'error', reason: t('v2.live.errorPageLoad') })
-  }, [deviceId, t, reportLoadFailure])
+  }, [deviceId, t, reportLoadFailure, pipForeground])
 
 
   // Cover lifecycle. `coverActive` is the OLD overlay condition verbatim (so the
@@ -1161,6 +1086,7 @@ go();})(); true;`
         originWhitelist={['*']}
         injectedJavaScriptBeforeContentLoaded={injectedBefore}
         onMessage={handleMessage}
+        onLoadStart={() => pipForeground.resetMode()}
         onLoadEnd={() => {
           // WebView document load done (bundle fetched+parsed) — phase 1 of the
           // cold start. mount→loadEnd ≈ WebView boot + embed bundle cost.
