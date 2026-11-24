@@ -28,7 +28,7 @@ export interface CatalogQueryResult {
 /** `listApps` as a catalog: no answer yet, an answer that could not be read, or the list. */
 export function catalogOf(result: CatalogQueryResult): AppCatalog {
   if (result.status === 'pending') return { status: 'pending' }
-  if (result.status === 'error') return { status: 'unknown' }
+  // A refetch that fails keeps the last ANSWERED list: a hiccup must not unmount the app on screen.
   const apps = Array.isArray(result.data) ? parseAppInfos(result.data) : null
   return apps === null ? { status: 'unknown' } : { status: 'answered', apps }
 }

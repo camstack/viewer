@@ -440,7 +440,7 @@ const ADMIN_UI_PRESENT = existsSync(join(process.cwd(), '..', ...ADMIN_NAV_ITEMS
 describe.skipIf(!ADMIN_UI_PRESENT)('the admin sidebar uses the same word', () => {
   it('labels the admin Library page Library', () => {
     const src = read(ADMIN_NAV_ITEMS)
-    expect(src).toContain("labelKey: 'nav.library',\n        fallback: 'Library'")
+    expect(src).toMatch(/labelKey: 'nav\.library',\s*fallback: 'Library'/)
   })
 
   it('translates it in both admin locales', () => {

@@ -17,7 +17,7 @@ import { useServer } from '../app/ServerProvider.js'
 import { useAppCatalog } from '../data/use-apps.js'
 import { useTheme } from '../theme/theme-provider.js'
 import { findApp, isHostedEntry } from './app-catalog.js'
-import { launchResolvable, resolveLaunchApp } from './app-launch.js'
+import { launchResolvable, offeredLaunchPreferences, resolveLaunchApp } from './app-launch.js'
 import { useAppStore } from './app-store.js'
 import { AccountSheet } from './AccountSheet.js'
 import { AppDrawer } from './AppDrawer.js'
@@ -53,6 +53,14 @@ export function AppHost(): React.JSX.Element {
     if (!hydrated || settled || !launchResolvable(preference, lastApp, catalog)) return
     useAppStore.getState().settleLaunch(resolveLaunchApp(preference, lastApp, catalog))
   }, [hydrated, settled, preference, lastApp, catalog])
+
+  // A stored preference the hub no longer offers (a legacy bare id) goes back to "last used".
+  // Note: a failed listApps at boot settles the launch to the Viewer for the session.
+  useEffect(() => {
+    if (catalog.status === 'answered' && !offeredLaunchPreferences(catalog).includes(preference)) {
+      useAppStore.getState().setLaunchPreference('last')
+    }
+  }, [catalog, preference])
 
   // The app on screen is gone from an ANSWERED list (the session lost it): back to the shell.
   const activeId = active.appId

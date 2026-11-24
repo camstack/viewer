@@ -30,7 +30,7 @@ import { useTheme } from '../theme/theme-provider.js'
 import { SPACING } from '../theme/tokens.js'
 import {
   EMBEDDED_BY_VIEWER_SCRIPT,
-  HANDOFF_DESTINATION,
+  HANDOFF_LANDING,
   handoffUrl,
   parseHandoffPath,
   planAdminFrame,
@@ -102,7 +102,7 @@ export function EmbeddedApp({ info, title }: EmbeddedAppProps): React.JSX.Elemen
         if (system === null) throw new Error('not connected')
         const client: unknown = system.trpcClient
         if (!isCapClient(client)) throw new Error('not connected')
-        const raw = await capMutateOrThrow(client, 'auth', 'createBrowserHandoff', { destination: HANDOFF_DESTINATION })
+        const raw = await capMutateOrThrow(client, 'auth', 'createBrowserHandoff', { destination: HANDOFF_LANDING })
         const path = parseHandoffPath(raw)
         if (path === null) throw new Error('no handoff path')
         if (mine === generation.current) setLoaded({ status: 'ready', uri: handoffUrl(base, path), base, local })

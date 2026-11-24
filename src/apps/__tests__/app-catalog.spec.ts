@@ -82,6 +82,11 @@ describe('catalogOf — pending is not absent (D315)', () => {
   it('a failed read is unknown, not empty', () => {
     expect(catalogOf({ status: 'error', data: undefined })).toEqual({ status: 'unknown' })
   })
+  it('a refetch that fails after an answer keeps the last answered list', () => {
+    const data = [declared('a1', {})]
+    const catalog = catalogOf({ status: 'error', data })
+    expect(catalog.status).toBe('answered')
+  })
   it('an answer is answered, even when empty', () => {
     expect(catalogOf({ status: 'success', data: [] })).toEqual({ status: 'answered', apps: [] })
   })

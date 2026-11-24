@@ -57,11 +57,11 @@ export function planAdminFrame(input: AdminFrameInput): AdminFramePlan {
 }
 
 /**
- * The `auth.createBrowserHandoff` destination an embedded app signs in through:
- * the one the hub defines for its web apps. It names a landing page of the hub's
- * session, not an app of the shell.
+ * The `auth.createBrowserHandoff` landing every `auth: 'handoff'` web app signs
+ * in through. The hub knows only `account | admin` (a landing kind, not an app
+ * id); the app's own entry path is what the frame then opens.
  */
-export const HANDOFF_DESTINATION = 'admin'
+export const HANDOFF_LANDING = 'admin'
 
 /** The hub path a handoff mint must answer with; anything else is not trusted. */
 export const HANDOFF_PATH_PREFIX = '/api/auth/browser-handoff?'
