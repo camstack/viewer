@@ -43,6 +43,11 @@ describe('HomeBar', () => {
     expect(wrapped).toEqual(['home-bar-bell'])
   })
 
+  it('names the phone bar after the tab, so the bar is the tab\'s only header (#707)', () => {
+    const view = mountScreen(React.createElement(HomeBar, { variant: 'phone', pathname: '/grids', wrapBell }))
+    expect(view.getByTestId('home-bar').textContent).toContain('Grids')
+  })
+
   it('names the wide bar after Cameras on the index route', () => {
     const view = mountScreen(React.createElement(HomeBar, { variant: 'wide', pathname: '/', wrapBell }))
     expect(view.getByTestId('home-bar').textContent).toContain('Cameras')

@@ -2,8 +2,8 @@
  * HomeBar — the top bar of the list pages (Cameras, Library, Grids,
  * Notifications, Settings root). Agreed with the operator 2026-11-24 (#691).
  *
- *   - `phone` (48 px): ☰ at the left, the logo centred, bell · Activity · avatar
- *     at the right. The bottom tabs stay.
+ *   - `phone` (48 px): ☰ at the left, the tab's title centred, bell · Activity ·
+ *     avatar at the right (#707: this bar IS the tab's header, no second one). The bottom tabs stay.
  *   - `wide` (56 px, h-14 like the admin), beside the rail: the section title at
  *     the left, the shared search, bell, ☰ (the apps drawer), Activity, avatar.
  *
@@ -20,7 +20,6 @@ import { ActivityButton } from '../activity/ActivityButton.js'
 import { hapticTap } from '../lib/haptics.js'
 import { Bell, Menu, Search } from '../lib/icons.js'
 import { useTheme } from '../theme/theme-provider.js'
-import { BrandLogo } from '../theme/brand-logo.js'
 import { RADIUS, SPACING, TYPOGRAPHY, type ColorTokens } from '../theme/tokens.js'
 import { homeBarHeight, type HomeBarVariant } from './bar-kind.js'
 import { isItemActive, registeredTabs } from './nav-items.js'
@@ -34,7 +33,6 @@ export const HOME_BAR_SEARCH_TEST_ID = 'home-bar-search'
 const HIT = 40
 const BELL_ICON_SIZE = 22
 const SEARCH_HEIGHT = 36
-const LOGO_WIDTH = 112
 const SEARCH_MAX_WIDTH = 420
 
 export interface HomeBarProps {
@@ -57,6 +55,8 @@ export const HomeBar = memo(function HomeBar({ variant, pathname, wrapBell }: Ho
   const wide = variant === 'wide'
   // `/` is the app's index and lands on the Cameras tab; it has no segment of its own.
   const section = registeredTabs.find((tab) => isItemActive(pathname === '/' ? '/cameras' : pathname, tab.segment))
+
+  const title = section === undefined ? '' : t(`nav.${section.key}`)
 
   const bell = wrapBell(
     <Pressable
@@ -88,7 +88,7 @@ export const HomeBar = memo(function HomeBar({ variant, pathname, wrapBell }: Ho
       {wide ? (
         <>
           <Text style={styles.title} numberOfLines={1}>
-            {section === undefined ? '' : t(`nav.${section.key}`)}
+            {title}
           </Text>
           <SearchField />
           <View style={styles.spacer} />
@@ -100,8 +100,10 @@ export const HomeBar = memo(function HomeBar({ variant, pathname, wrapBell }: Ho
       ) : (
         <>
           <DrawerMenuButton orientation="column" />
-          <View style={[styles.logo, { top: insets.top }]} pointerEvents="none" accessibilityElementsHidden>
-            <BrandLogo width={LOGO_WIDTH} />
+          <View style={[styles.centre, { top: insets.top }]} pointerEvents="none">
+            <Text style={styles.centreTitle} numberOfLines={1} accessibilityRole="header">
+              {title}
+            </Text>
           </View>
           <View style={styles.spacer} />
           {bell}
@@ -154,8 +156,9 @@ const createStyles = (colors: ColorTokens) =>
     },
     hit: { width: HIT, height: HIT, alignItems: 'center', justifyContent: 'center' },
     spacer: { flex: 1 },
-    // Centred on the BAR, not on the room left between the buttons.
-    logo: { position: 'absolute', left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' },
+    // The tab's title, centred on the BAR, not on the room left between the buttons.
+    centre: { position: 'absolute', left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' },
+    centreTitle: { maxWidth: '50%', color: colors.foreground, fontSize: TYPOGRAPHY.size.lg, fontWeight: TYPOGRAPHY.weight.bold },
     title: { color: colors.foreground, fontSize: TYPOGRAPHY.size.lg, fontWeight: TYPOGRAPHY.weight.bold, marginRight: SPACING.lg },
     search: {
       flex: 1,

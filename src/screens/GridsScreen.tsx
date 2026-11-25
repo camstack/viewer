@@ -19,8 +19,8 @@
  * one and nothing else in the app does either.
  *
  * ADHERENCE. This screen used to apply `insets.top` by hand and paint its own
- * ad-hoc card. It now wears the same chrome as the Cameras list — `ScreenHeader`
- * (the single place srcV2 takes the top inset), the shared
+ * ad-hoc card. It now wears the same chrome as the Cameras list — the shell's
+ * `HomeBar` (the single place the tab pages take the top inset), the shared
  * `SPACING`/`RADIUS`/`TYPOGRAPHY` tokens, and the corner FAB for the primary
  * action.
  *
@@ -67,7 +67,6 @@ import { gridsForServer, useGridStore, resolveGridOptions, type Grid } from '../
 import { useActiveServerId } from '../store/server-scope.js'
 import { resolveGridLayout, resolveGridQuality, useGridLocalStore } from '../store/grid-local-store.js'
 import { GridShareDialog } from '../components/grid/GridShareDialog.js'
-import { ScreenHeader } from '../components/ScreenHeader.js'
 import { useServer } from '../app/ServerProvider.js'
 import { useCameras, type CameraInfo } from '../data/use-cameras.js'
 import { useSnapshot } from '../data/use-snapshot.js'
@@ -187,7 +186,6 @@ export function GridsScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <ScreenHeader />
       {grids.length === 0 ? (
         <View style={styles.empty}>
           <LayoutGrid size={40} color={colors.foregroundSubtle} />

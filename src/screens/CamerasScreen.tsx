@@ -11,7 +11,6 @@ import {
 } from '../data/snapshot-rotation.js'
 import { useSnapshotRefreshStore } from '../store/snapshot-refresh-store.js'
 import { hapticTap } from '../lib/haptics.js'
-import { ScreenHeader } from '../components/ScreenHeader.js'
 import { CameraCard } from '../components/CameraCard.js'
 import { openOnDemandPlayer } from '../store/ondemand-player-store.js'
 import { liveOnDemandRequest } from '../live/ondemand-player.js'
@@ -297,7 +296,6 @@ export function CamerasScreen() {
   return (
     <CameraBadgesProvider deviceIds={badgeIds} enabled={screenActive}>
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <ScreenHeader />
       <CamerasDisplaySheet visible={displayOpen} onClose={() => setDisplayOpen(false)} />
       <ReelFilterSheet visible={reelFilterOpen} onClose={() => setReelFilterOpen(false)} />
       {/* PTZ / linked devices / function switches for ONE camera at a time —
@@ -324,7 +322,7 @@ export function CamerasScreen() {
             reel card keeps working while they do — the block is a SIBLING of
             the list, not an overlay over it, so there is no hit-test to
             arbitrate and no absolute positioning to keep in sync with the
-            header's safe-area inset (`ScreenHeader` owns that, above).
+            shell's top bar (`HomeBar` owns the safe-area inset).
             ONE branch with the list, so the two can never disagree about
             whether the page has a reel. */}
         {recentReel}

@@ -29,6 +29,12 @@ describe('the top bar wiring (#691)', () => {
     }
   })
 
+  it('a tab page draws no header of its own under the home bar (#707)', () => {
+    for (const rel of ['screens/CamerasScreen.tsx', 'screens/GridsScreen.tsx']) {
+      expect(read(rel), rel).not.toMatch(/<ScreenHeader/)
+    }
+  })
+
   it('the inner bar is the screen header with a ☰, and only where the route map says inner', () => {
     const header = read('components/ScreenHeader.tsx')
     expect(header).toMatch(/barKindForPath\(pathname\) === 'inner'/)
