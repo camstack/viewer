@@ -345,10 +345,32 @@ go();})(); true;`
    */
   const adoptFrame = useCallback(
     (w: number, h: number, why: string): void => {
-      if (w <= 0 || h <= 0) return
+      if (w <= 0 || h <= 0) {
+        log.info('live:rotation', 'frame skipped — empty box', { tags: { deviceId }, why, w, h })
+        return
+      }
       const prev = frameRef.current
-      if (prev && prev.w === w && prev.h === h) return
+      if (prev && prev.w === w && prev.h === h) {
+        // Only the probes that find the box unchanged are this line; a rotation
+        // that never reaches `fit` shows here as every probe agreeing with the
+        // OLD box.
+        log.debug('live:rotation', 'frame skipped — same box as the last fit', {
+          tags: { deviceId },
+          why,
+          w,
+          h,
+        })
+        return
+      }
       frameRef.current = { w, h }
+      log.info('live:rotation', 'frame adopted → fit sent', {
+        tags: { deviceId },
+        why,
+        w,
+        h,
+        prevW: prev?.w ?? -1,
+        prevH: prev?.h ?? -1,
+      })
       // The embed sizes its <video> from these EXACT pixels — `window.innerWidth`
       // inside a WKWebView is stale after a rotation, which is the whole reason
       // `fit()` exists. Keep this line: it is what proved the container was
@@ -363,7 +385,7 @@ go();})(); true;`
       })
       applyFrame()
     },
-    [applyFrame],
+    [applyFrame, deviceId],
   )
 
   /**
@@ -395,14 +417,22 @@ go();})(); true;`
   useEffect(() => {
     const timers = [0, 180, 420, 900].map((delay) =>
       setTimeout(() => {
-        containerRef.current?.measure((_x, _y, w, h) => {
+        if (containerRef.current === null) {
+          log.info('live:rotation', 'probe skipped — container not mounted', {
+            tags: { deviceId },
+            delay,
+          })
+          return
+        }
+        containerRef.current.measure((_x, _y, w, h) => {
           // Belt and braces: whatever the measurement API does, the player can
           // never be larger than the window. A frame that claims otherwise is a
           // transform that leaked into the measurement, and acting on it is the
           // failure above — so refuse it, and SAY so rather than dropping it in
           // silence.
           if (w > winW + 1 || h > winH + 1) {
-            log.debug('live', 'webview frame REFUSED — larger than the window', {
+            log.info('live:rotation', 'frame skipped — larger than the window', {
+              tags: { deviceId },
               w: Math.round(w),
               h: Math.round(h),
               winW,
@@ -417,7 +447,7 @@ go();})(); true;`
     return () => {
       for (const t of timers) clearTimeout(t)
     }
-  }, [winW, winH, adoptFrame])
+  }, [winW, winH, adoptFrame, deviceId])
 
   const handleLayout = useCallback(
     (e: LayoutChangeEvent): void => {
@@ -885,7 +915,7 @@ go();})(); true;`
     if (typeof raw === 'string' && raw.includes('"fit-')) {
       const acked = raw.includes('"fit-ack"')
       if (acked) {
-        log.debug('live', 'embed confirmed the fit', { deviceId, report: raw })
+        log.info('live:rotation', 'embed confirmed the fit', { tags: { deviceId }, report: raw })
       } else {
         frameRef.current = null
         log.warn('live', 'the embed never took the fit — the box it draws in is NOT the measured one', {

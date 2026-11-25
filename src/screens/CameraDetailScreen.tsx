@@ -92,6 +92,8 @@
  * while the wall is up, so the chip and the bar are one control.
  */
 import type { ServedProfileReport } from '../recording/recording-messages.js'
+import { resolveAutoProfileBadge } from '../components/camera/theater/auto-profile-badge.js'
+import { useStreamDebugStore } from '../store/stream-debug-store.js'
 import { assertionAfterPlayerChange, shouldAssertClip } from '../clips/clip-assert-on-player.js'
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 
@@ -245,6 +247,7 @@ import {
 } from './camera-detail/container-width.js'
 import {
   isUnexpectedPortraitStack,
+  fullscreenToggleShown,
   resolveDetailLayoutMode,
   toolbarPlacementFor,
   type DetailLayoutMode,
@@ -1232,6 +1235,14 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
   const [servedTier, setServedTier] = useState<ServedProfileReport | null>(null)
   const servedTierRef = useRef<ServedProfileReport | null>(null)
   servedTierRef.current = servedTier
+  const streamDebugSample = useStreamDebugStore((state) => state.samples[deviceId] ?? null)
+  const autoProfile = resolveAutoProfileBadge({
+    quality,
+    isLive: playback.state.mode === 'live',
+    recorded: servedTier,
+    sample: streamDebugSample,
+    nowMs: Date.now(),
+  })
   // After AppState foreground the host reconnects the WebRTC peer; the broker's
   // recorded pointer is gone unless we playRecorded at the machine playhead.
   const pendingRecordedReassertRef = useRef(false)
@@ -1419,6 +1430,7 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
         playerEpoch: epochMs,
         nowMs,
         lastReportAt: lastDivergenceAtRef.current,
+        mode: playback.state.mode,
       })
       if (report === null) return
       lastDivergenceAtRef.current = nowMs
@@ -2550,6 +2562,39 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
     return { position: 'absolute', top: 0, left: 0, width: winWidth, height: defaultHeight }
   }, [winWidth, winHeight, fill, isWideDetail, wideStreamW, wideStreamH, defaultHeight])
 
+  // Rotation trail (planning#700): one line per stage per window change — the
+  // window React received, the wrapper size it computed, and (below, on the
+  // wrapper's `onLayout`) the layout actually applied. The embed's own stages
+  // (`live:rotation`) follow in `LiveViewWebView`. Not per frame: it fires on a
+  // change of the two window sides only.
+  const lastLoggedWindow = useRef<WindowSize | null>(null)
+  useEffect(() => {
+    const prev = lastLoggedWindow.current
+    lastLoggedWindow.current = { width: winWidth, height: winHeight }
+    if (prev === null) return
+    if (prev.width === winWidth && prev.height === winHeight) return // layout-mode-only change, not a rotation
+    log.info('live:rotation', 'window changed', {
+      tags: { deviceId },
+      oldW: Math.round(prev.width),
+      oldH: Math.round(prev.height),
+      newW: Math.round(winWidth),
+      newH: Math.round(winHeight),
+      orientation: winWidth > winHeight ? 'landscape' : 'portrait',
+      layoutMode,
+      fill,
+    })
+  }, [winWidth, winHeight, deviceId, layoutMode, fill])
+  const onCoverLayout = useCallback(
+    (e: LayoutChangeEvent): void => {
+      log.info('live:rotation', 'wrapper layout applied', {
+        tags: { deviceId },
+        w: Math.round(e.nativeEvent.layout.width),
+        h: Math.round(e.nativeEvent.layout.height),
+      })
+    },
+    [deviceId],
+  )
+
   // No `panelTopOffset` any more. Every panel this screen used to anchor is a
   // panel of the TIMELINE, laid out by its column — so nothing derives a
   // position from the animated video-box height, and no branch has to say what
@@ -2568,7 +2613,11 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
   // A touch browser that cannot force landscape gets NO fullscreen button —
   // the native button's promise is landscape, and an iPhone has no fullscreen
   // API at all (`decideWebFullscreenMode`). Native always offers it.
-  const fullscreenOffered = Platform.OS !== 'web' || webFullscreenButtonShown(webFullscreenMode)
+  const fullscreenOffered = fullscreenToggleShown({
+    platformOffered: Platform.OS !== 'web' || webFullscreenButtonShown(webFullscreenMode),
+    fullscreen,
+    layoutMode,
+  })
 
   // Orientation: manual fullscreen LOCKS landscape. Otherwise we UNLOCK so the
   // page follows the phone's physical orientation — rotating to landscape makes
@@ -2822,7 +2871,7 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
               It must never be swapped for a static style: reanimated leaves the
               properties it last wrote stuck on the view, which pinned the
               player to the portrait box across a rotation. */}
-          <View style={coverLayoutStyle}>
+          <View style={coverLayoutStyle} onLayout={onCoverLayout}>
           <Animated.View style={[styles.coverZoom, zoom.videoStyle]}>
             {/* The snapshot poster is a LIVE-pause affordance ONLY. In recorded
                 mode pause is a server rate-0 hold on the SAME session — the
@@ -3381,6 +3430,7 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
       // The SAME binding the on-video overlay receives — see the declaration.
       paused={effectivePaused}
       servedTier={servedTier}
+      autoProfile={autoProfile}
       onTogglePlayPause={wallPlayback.onTogglePlayPause}
       loading={transportLoading}
       streamFault={streamFaultBinding}

@@ -57,7 +57,7 @@ describe('the live box grows under the fingers, the player never changes frame',
     // A worklet capturing winWidth/winHeight wrote its size after the commit and
     // a rotation left the player at the old size until a touch flushed it.
     expect(SCREEN).not.toContain('videoCoverStyle = useAnimatedStyle')
-    expect(SCREEN).toContain('<View style={coverLayoutStyle}>')
+    expect(SCREEN).toMatch(/<View style={coverLayoutStyle}( onLayout={onCoverLayout})?>/)
     expect(SCREEN).toContain('<Animated.View style={[styles.coverZoom, zoom.videoStyle]}>')
     // Fill's height is React's too — no animated `height` on the fill box.
     expect(SCREEN).toContain('[styles.videoWrapFull, { height: winHeight }, boxSideStyle]')
