@@ -66,7 +66,10 @@ export class EmbedLogRouter {
       }
     }
     if (embedLogLevel(rec.scope) === 'info') {
-      if (rec.scope === 'playback' && rec.msg === 'stats') {
+      // Only the periodic census is throttled. A one-shot event the player
+      // reports on the same scope (`data.event`, e.g. `land-first-decode`,
+      // planning#715) is one line per seek land and always ships.
+      if (rec.scope === 'playback' && rec.msg === 'stats' && !isPlaybackEvent(rec.data)) {
         const now = this.ports.nowMs()
         if (now - this.lastPlaybackCensusAt < PLAYBACK_CENSUS_MIN_INTERVAL_MS) return
         this.lastPlaybackCensusAt = now
@@ -76,6 +79,11 @@ export class EmbedLogRouter {
     }
     this.ports.debug(`embed:${rec.scope}`, rec.msg, rec.data)
   }
+}
+
+/** A playback message that names a one-shot `event` rather than a census. */
+function isPlaybackEvent(data: unknown): boolean {
+  return typeof data === 'object' && data !== null && 'event' in data && typeof data.event === 'string'
 }
 
 /** A sample older than this no longer describes the picture on screen. */

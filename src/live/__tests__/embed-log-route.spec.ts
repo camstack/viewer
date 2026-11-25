@@ -96,6 +96,21 @@ describe('embed diagnostics', () => {
     expect(out.info).toEqual(['embed:playback stats', 'embed:playback stats'])
   })
 
+  /** planning#715: the player reports a seek land (`land-first-decode`) on the
+   *  census's own scope and message. It is one line per land, not a periodic
+   *  sample — throttled with the census, ~4 lands in 5 were dropped. */
+  it('a playback EVENT ships even inside the census window', () => {
+    const now = { ms: 100_000 }
+    const { router, out } = harness(now)
+    router.route({ scope: 'playback', msg: 'stats' })
+    now.ms += 1000
+    router.route({ scope: 'playback', msg: 'stats', data: { event: 'land-first-decode', firstDecodeMs: 420 } })
+    now.ms += 1000
+    router.route({ scope: 'playback', msg: 'stats' })
+    expect(out.info).toEqual(['embed:playback stats', 'embed:playback stats'])
+    expect(out.debug).toEqual([])
+  })
+
   it('the FIRST census ships even on a clock near zero', () => {
     const { router, out } = harness({ ms: 10 })
     router.route({ scope: 'playback', msg: 'stats' })

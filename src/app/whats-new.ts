@@ -31,6 +31,14 @@ export interface WhatsNewEntry {
 // i18n-ok: release notes carry their own `en` + `it` text per entry (typed, held by whats-new.spec.ts)
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.736',
+    date: '2026-11-25',
+    notes: {
+      en: ['Recorded playback reports each seek to the hub logs, to find slow scrubbing.'],
+      it: ['La riproduzione registrata invia ogni salto ai log dell’hub, per trovare lo scrub lento.'],
+    },
+  },
+  {
     version: '1.0.735',
     date: '2026-11-25',
     notes: {
