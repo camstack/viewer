@@ -299,6 +299,11 @@ export class RecordedTrackSession {
   /** Drag accounting for the `scrub:push-drag-end` summary. */
   private retargets = 0
   private renders = 0
+  /** Pushed frames rendered this drag, with the first and last render time —
+   *  summarised once at the drag's end, never one log line per frame. */
+  private drawnCount = 0
+  private drawnFirstAt: number | null = null
+  private drawnLastAt: number | null = null
   private acks = 0
   private lastCursorMs: number | null = null
   /** Last server playback state — a second land while still `playing` must
@@ -962,6 +967,9 @@ export class RecordedTrackSession {
     this.retargets = 0
     this.renders = 0
     this.acks = 0
+    this.drawnCount = 0
+    this.drawnFirstAt = null
+    this.drawnLastAt = null
     this.cancelPlaybackUpgrade()
     // Idempotence by VALUE — see `lastSentProfile`. Within a drag, the host's
     // scrubStart storm re-begins with the pin unchanged → nothing is sent and
@@ -1011,6 +1019,14 @@ export class RecordedTrackSession {
         renders: this.renders,
         acks: this.acks,
       })
+      if (this.drawnCount > 0) {
+        this.deps.onLog?.('scrub:drawn', {
+          depth: 'push',
+          count: this.drawnCount,
+          firstAt: this.drawnFirstAt,
+          lastAt: this.drawnLastAt,
+        })
+      }
     }
     this.begun = false
     this.cancelRenderAck()
@@ -1044,8 +1060,12 @@ export class RecordedTrackSession {
           this.firstFrameAnnounced = true
           this.deps.onFirstFrame?.()
         }
-        // Keep pushed-frame rendering visible in the session diagnostics.
-        this.deps.onLog?.('scrub:drawn', { depth: 'push' })
+        // Pushed-frame rendering stays visible in the diagnostics as ONE
+        // summary per drag (`end`), not a line per frame.
+        const now = Date.now()
+        this.drawnCount += 1
+        this.drawnFirstAt ??= now
+        this.drawnLastAt = now
       }
       this.armRenderAck()
     })

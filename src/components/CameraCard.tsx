@@ -27,7 +27,8 @@ import {
 } from './camera/StatusDetailPopover.js'
 import { batteryDetailLines, networkLinkDetailLines } from './camera/status-detail-lines.js'
 import { StreamBadge, streamBadgeVisible } from './camera/StreamBadge.js'
-import { useNetworkLink } from '../data/use-network-link.js'
+import { networkLinkAskable, useNetworkLink } from '../data/use-network-link.js'
+import { useDeviceCapNames } from '../data/use-device-cap-names.js'
 import { useMotionHighlight } from '../data/use-motion.js'
 import { useScreenActive } from '../hooks/use-screen-active.js'
 import { useCardSnapshotWidth } from '../hooks/use-responsive.js'
@@ -123,7 +124,11 @@ export const CameraCard = React.memo(function CameraCard({
   const battery = badges.supported ? badges.row.battery : ownBattery
   const isSleeping = isBattery && battery?.sleeping === true
   // The camera's own link, same aggregate-first rule as the battery.
-  const { data: ownLink = null } = useNetworkLink(camera.id, active && !off && askSelf)
+  // Asked only once the device's bindings ANSWERED with the cap in them (D315):
+  // a camera without `network-link` otherwise logs "not registered" per poll.
+  const askLink = active && !off && askSelf
+  const { data: linkCapNames } = useDeviceCapNames(camera.id, askLink)
+  const { data: ownLink = null } = useNetworkLink(camera.id, askLink && networkLinkAskable(linkCapNames))
   const networkLink = badges.supported ? badges.row.networkLink : ownLink
 
   // Two questions, not one flag (`tile-snapshot-gate.ts`): what may poll live,

@@ -43,3 +43,17 @@ describe('host clock', () => {
     expect(msToNextMinute(60_000 * 5)).toBe(60_000)
   })
 })
+
+import { networkLinkAskable } from '../use-network-link.js'
+
+describe('networkLinkAskable (D315)', () => {
+  it('never asks before the bindings answered', () => {
+    expect(networkLinkAskable(undefined)).toBe(false)
+  })
+  it('never asks a device whose bindings lack the cap', () => {
+    expect(networkLinkAskable(['battery', 'ptz'])).toBe(false)
+  })
+  it('asks when the cap is bound', () => {
+    expect(networkLinkAskable(['network-link'])).toBe(true)
+  })
+})

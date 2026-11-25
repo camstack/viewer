@@ -41,6 +41,9 @@ export interface DivergenceInput {
   readonly nowMs: number
   /** When the last report was emitted, or null if never. */
   readonly lastReportAt: number | null
+  /** The machine's mode. While `seeking` the indicator follows the drag and
+   *  the player is expected to lag it — an expected state, never a warning. */
+  readonly mode?: string
 }
 
 export interface DivergenceReport {
@@ -57,7 +60,8 @@ export interface DivergenceReport {
  * case, not a fault.
  */
 export function evaluateDivergence(input: DivergenceInput): DivergenceReport | null {
-  const { indicatorEpoch, playerEpoch, nowMs, lastReportAt } = input
+  const { indicatorEpoch, playerEpoch, nowMs, lastReportAt, mode } = input
+  if (mode === 'seeking') return null
   if (indicatorEpoch === null || playerEpoch === null) return null
   const delta = indicatorEpoch - playerEpoch
   if (Math.abs(delta) < DIVERGENCE_TOLERANCE_MS) return null

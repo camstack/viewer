@@ -55,3 +55,14 @@ export function useNetworkLink(
     },
   })
 }
+
+/**
+ * Whether a device may be asked for its link at all (D315). The `network-link`
+ * cap is only present on some devices; asking one without it logs a "not
+ * registered" warning per poll. `capNames` is the device's own bindings:
+ * `undefined` = not answered yet (never ask — not-yet-known is not present),
+ * a list without the cap = absent (never ask), a list with it = ask.
+ */
+export function networkLinkAskable(capNames: readonly string[] | undefined): boolean {
+  return capNames !== undefined && capNames.includes('network-link')
+}

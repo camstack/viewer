@@ -74,3 +74,26 @@ describe('evaluateDivergence', () => {
     expect(evaluateDivergence({ ...base, indicatorEpoch: null, playerEpoch: null })).toBeNull()
   })
 })
+
+describe('evaluateDivergence while seeking', () => {
+  it('stays silent: the indicator follows the drag, the player lags by design', () => {
+    expect(
+      evaluateDivergence({
+        nowMs: 100_000,
+        lastReportAt: null,
+        indicatorEpoch: 1_000_000,
+        playerEpoch: 1_000_000 - 60_000,
+        mode: 'seeking',
+      }),
+    ).toBeNull()
+    expect(
+      evaluateDivergence({
+        nowMs: 100_000,
+        lastReportAt: null,
+        indicatorEpoch: 1_000_000,
+        playerEpoch: 1_000_000 - 60_000,
+        mode: 'playback',
+      }),
+    ).not.toBeNull()
+  })
+})

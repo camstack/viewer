@@ -396,6 +396,29 @@ describe('RecordedTrackSession — the scrub sub-mode (field-proven behaviours k
     const summary = logs.find((l) => l.msg === 'scrub:push-drag-end')
     expect(summary?.data).toMatchObject({ retargets: 1, positions: 1, renders: 1, acks: 1 })
   })
+
+  it('logs scrub:drawn ONCE per drag, with count and first/last — not per frame (planning#731)', () => {
+    const ch = fakeChannel()
+    const video = fakeVideo()
+    const logs: Array<{ msg: string; data: Record<string, unknown> }> = []
+    const s = new RecordedTrackSession({
+      channel: ch,
+      video: () => video,
+      onLog: (msg, data) => logs.push({ msg, data }),
+    })
+    s.begin()
+    for (let i = 0; i < 5; i += 1) {
+      ch.emit(JSON.stringify({ t: 'position', epochMs: 1_000 + i }))
+      video.render()
+    }
+    expect(logs.filter((l) => l.msg === 'scrub:drawn')).toHaveLength(0)
+    s.end()
+    const drawn = logs.filter((l) => l.msg === 'scrub:drawn')
+    expect(drawn).toHaveLength(1)
+    expect(drawn[0]?.data).toMatchObject({ depth: 'push', count: 5 })
+    expect(drawn[0]?.data.firstAt).toBeTypeOf('number')
+    expect(drawn[0]?.data.lastAt).toBeTypeOf('number')
+  })
 })
 
 /**
