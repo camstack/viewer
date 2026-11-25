@@ -33,8 +33,8 @@ describe('the account menu', () => {
 
   it('the component gates the list on the rule and switches through the existing switchServer', () => {
     expect(read('apps/drawer-model.ts')).toContain('showServerList(serverCount)')
-    expect(read('apps/AccountSheet.tsx')).toContain('showServerList(servers.length)')
-    expect(read('apps/AccountSheet.tsx')).toContain('switchServer(id)')
+    expect(read('apps/AppDrawer.tsx')).toContain('showServerList(servers.length)')
+    expect(read('apps/ServerSwitchSheet.tsx')).toContain('switchServer(id)')
   })
 })
 

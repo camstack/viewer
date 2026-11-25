@@ -1,7 +1,8 @@
 /**
- * DrawerMenuButton — the hamburger at the LEFT of the viewer's bar (bottom bar on
+ * DrawerMenuButton — the user's avatar at the LEFT of the viewer's bar (bottom bar on
  * a phone, rail on a wide window). It opens the one app drawer
- * (`src/apps/AppDrawer.tsx`); the avatar at the other end opens the account sheet.
+ * (`src/apps/AppDrawer.tsx`), which shows the user and the server at its bottom;
+ * the avatar at the other end opens the account sheet.
  */
 import React, { memo } from 'react'
 import { Pressable, StyleSheet } from 'react-native'
@@ -9,13 +10,13 @@ import { useTranslation } from 'react-i18next'
 
 import { useAppStore } from '../apps/app-store.js'
 import { hapticTap } from '../lib/haptics.js'
-import { Menu } from '../lib/icons.js'
-import { useTheme } from '../theme/theme-provider.js'
+import { useMe } from '../data/use-me.js'
 import { SPACING } from '../theme/tokens.js'
+import { AVATAR_SIZE, UserAvatar } from './UserAvatar.js'
 
 export const DRAWER_MENU_TEST_ID = 'drawer-menu-button'
 
-const HIT = 34
+const HIT = AVATAR_SIZE
 
 export interface DrawerMenuButtonProps {
   /** `row` in the bottom bar (margin to the nav items), `column` on the rail (centred). */
@@ -24,7 +25,7 @@ export interface DrawerMenuButtonProps {
 
 export const DrawerMenuButton = memo(function DrawerMenuButton({ orientation }: DrawerMenuButtonProps): React.JSX.Element {
   const { t } = useTranslation()
-  const { colors } = useTheme()
+  const { data: me } = useMe()
   const open = useAppStore((s) => s.drawerOpen)
   const setDrawerOpen = useAppStore((s) => s.setDrawerOpen)
   return (
@@ -40,7 +41,7 @@ export const DrawerMenuButton = memo(function DrawerMenuButton({ orientation }: 
       accessibilityLabel={t('v2.apps.openMenu')}
       style={orientation === 'row' ? styles.hitRow : styles.hitColumn}
     >
-      <Menu size={22} color={colors.foregroundMuted} />
+      <UserAvatar name={me?.username ?? null} />
     </Pressable>
   )
 })

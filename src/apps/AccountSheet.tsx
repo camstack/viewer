@@ -1,11 +1,11 @@
 /**
  * AccountSheet — what the avatar opens: who is signed in and on which server
- * (with where the route runs), the saved servers, "open at launch" and sign-out.
+ * (with where the route runs), "open at launch" and sign-out. Switching server
+ * lives in the drawer's bottom block (`ServerSwitchSheet`).
  * The apps, their nav and Settings live in the drawer (`AppDrawer`), not here.
  */
 import React, { useState } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
-import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import type { AppLabel } from '@camstack/types'
 
@@ -20,8 +20,7 @@ import { useRouteChannel } from '../connection/use-route-channel.js'
 import { useMe } from '../data/use-me.js'
 import { useAppCatalog } from '../data/use-apps.js'
 import { hapticTap } from '../lib/haptics.js'
-import { Check, ChevronRight, LogOut, Server, Settings, X } from '../lib/icons.js'
-import { orderServers, showServerList } from '../navigation/user-menu.js'
+import { Check, ChevronRight, LogOut, Settings, X } from '../lib/icons.js'
 import { useTheme } from '../theme/theme-provider.js'
 import { SPACING } from '../theme/tokens.js'
 import { useAppStore } from './app-store.js'
@@ -30,8 +29,7 @@ import { launchChoices, launchValueLabel } from './launch-choices.js'
 export function AccountSheet(): React.JSX.Element | null {
   const { t } = useTranslation()
   const { colors } = useTheme()
-  const router = useRouter()
-  const { servers, server, signOut, switchServer } = useServer()
+  const { server, signOut } = useServer()
   const { data: me } = useMe()
   const { catalog } = useAppCatalog()
   const local = isLocalRouteChannel(useRouteChannel())
@@ -44,21 +42,10 @@ export function AccountSheet(): React.JSX.Element | null {
   if (!open) return null
 
   const translate = (label: AppLabel): string => t(label.key, { defaultValue: label.fallback })
-  const labelOfServer = (saved: (typeof servers)[number]): string =>
-    saved.name !== undefined ? serverLabelOf(saved) : saved.label !== '' ? saved.label : serverDisplayName(saved.serverUrl)
   const serverName =
     server === null ? '' : server.name !== undefined ? serverLabelOf(server) : server.label !== '' ? server.label : serverDisplayName(server.serverUrl)
   const close = (): void => setOpen(false)
   const value = launchValueLabel(preference, catalog, translate)
-
-  const switchTo = (id: string, serverUrl: string): void => {
-    close()
-    if (id === server?.id) return
-    void switchServer(id).then((outcome) => {
-      if (outcome.status === 'needs-login') router.push({ pathname: '/add-server', params: { url: serverUrl } })
-      else if (outcome.status === 'switched') router.replace('/cameras')
-    })
-  }
 
   if (picking) {
     return (
@@ -117,24 +104,6 @@ export function AccountSheet(): React.JSX.Element | null {
           </View>
         }
       />
-      {showServerList(servers.length) ? (
-        <View>
-          <Text style={[styles.section, { color: colors.foregroundSubtle }]}>{t('v2.userMenu.servers')}</Text>
-          {orderServers(servers, server?.id ?? null).map((saved) => {
-            const current = saved.id === server?.id
-            return (
-              <MenuRow
-                key={saved.id}
-                icon={Server}
-                label={labelOfServer(saved)}
-                selected={current}
-                onPress={() => switchTo(saved.id, saved.serverUrl)}
-                trailing={current ? <Check size={16} color={colors.primary} /> : null}
-              />
-            )
-          })}
-        </View>
-      ) : null}
       <MenuRow
         testID="account-sign-out"
         icon={LogOut}
@@ -151,7 +120,6 @@ export function AccountSheet(): React.JSX.Element | null {
 
 const styles = StyleSheet.create({
   headerRight: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md },
-  section: { fontSize: 11, fontWeight: '600', paddingHorizontal: SPACING.xl, paddingVertical: SPACING.sm },
   valueRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.xs },
   value: { fontSize: 13 },
 })

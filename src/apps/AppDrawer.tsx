@@ -1,13 +1,14 @@
 /**
  * AppDrawer — THE drawer: one overlay, the same on a phone and on the web.
- * Top to bottom: who is signed in and on which server, the shared search, the
+ * Top to bottom: the route badge, the shared search, the
  * APPS the hub offered (the active one ticked), the active app's NAV, its
- * Settings (only when it declares them) and sign-out.
+ * Settings (only when it declares them) and sign-out. The bottom block shows who is
+ * signed in, the current server and, with two or more saved, the server switch.
  *
  * Every row comes from the apps the hub listed (`apps.listApps`, `drawer-model`):
  * no app is named here. The Viewer's own tabs stay in its bar or rail, so the
- * hosted app's nav is empty. The avatar opens the account sheet instead
- * (servers, "open at launch").
+ * hosted app's nav is empty. The avatar at the right of the bar opens the account sheet
+ * ("open at launch"); the avatar at the left opens this drawer.
  *
  * Drawn as an absolute overlay over the whole app (not a Modal), so the viewer
  * underneath keeps running.
@@ -31,8 +32,10 @@ import { useAppCatalog } from '../data/use-apps.js'
 import { useDrawerSearch } from '../data/use-drawer-search.js'
 import { useMe } from '../data/use-me.js'
 import { hapticTap } from '../lib/haptics.js'
-import { Check, LogOut, Plug, Settings, Video, X } from '../lib/icons.js'
+import { Check, LogOut, Plug, Server, Settings, Video, X } from '../lib/icons.js'
 import { settingsNavigation, settingsTab } from '../navigation/nav-items.js'
+import { UserAvatar } from '../navigation/UserAvatar.js'
+import { showServerList } from '../navigation/user-menu.js'
 import { useTheme } from '../theme/theme-provider.js'
 import { BACKDROP_ALPHA, SPACING, withAlpha } from '../theme/tokens.js'
 import { navSearchEntries, searchAll, type NavSearchEntry } from './app-search.js'
@@ -42,6 +45,7 @@ import { bridgeChannel } from './bridge-channel.js'
 import { navigateMessage, searchMessage } from './bridge-host.js'
 import { buildDrawerModel } from './drawer-model.js'
 import { findApp, hostedAppOf } from './app-catalog.js'
+import { ServerSwitchSheet } from './ServerSwitchSheet.js'
 
 const PANEL_MAX_WIDTH = 320
 const PANEL_FRACTION = 0.85
@@ -65,6 +69,7 @@ export function AppDrawer(): React.JSX.Element | null {
   const setDrawerOpen = useAppStore((s) => s.setDrawerOpen)
   const openApp = useAppStore((s) => s.open)
   const [query, setQuery] = useState('')
+  const [switching, setSwitching] = useState(false)
 
   const translate = useMemo(() => (label: AppLabel): string => t(label.key, { defaultValue: label.fallback }), [t])
   const model = useMemo(
@@ -85,7 +90,10 @@ export function AppDrawer(): React.JSX.Element | null {
 
   // A closed drawer forgets the query.
   useEffect(() => {
-    if (!open) setQuery('')
+    if (!open) {
+      setQuery('')
+      setSwitching(false)
+    }
   }, [open])
 
   // The shared search reaches an embedded app that takes it, once the typing settles.
@@ -166,16 +174,7 @@ export function AppDrawer(): React.JSX.Element | null {
         }}
       >
         <View style={[styles.header, { borderBottomColor: colors.borderSubtle }]}>
-          <View style={styles.headerText}>
-            <Text style={[styles.name, { color: colors.foreground }]} numberOfLines={1}>
-              {me?.username ?? t('v2.settings.accountUnknown')}
-            </Text>
-            {serverName !== '' ? (
-              <Text style={[styles.sub, { color: colors.foregroundMuted }]} numberOfLines={1}>
-                {serverName}
-              </Text>
-            ) : null}
-          </View>
+          <View style={styles.headerText} />
           <Badge size="sm" tone={local ? 'success' : 'warning'} label={t(local ? 'v2.apps.routeLocal' : 'v2.apps.routeRemote')} />
           <Pressable onPress={close} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('v2.apps.closeMenu')}>
             <X size={18} color={colors.foregroundMuted} />
@@ -234,6 +233,22 @@ export function AppDrawer(): React.JSX.Element | null {
         </ScrollView>
 
         <View style={[styles.footer, { borderTopColor: colors.borderSubtle }]}>
+          <View style={styles.account} testID="drawer-account">
+            <UserAvatar name={me?.username ?? null} />
+            <View style={styles.headerText}>
+              <Text style={[styles.name, { color: colors.foreground }]} numberOfLines={1} testID="drawer-account-name">
+                {me?.username ?? t('v2.settings.accountUnknown')}
+              </Text>
+              {serverName !== '' ? (
+                <Text style={[styles.sub, { color: colors.foregroundMuted }]} numberOfLines={1} testID="drawer-account-server">
+                  {serverName}
+                </Text>
+              ) : null}
+            </View>
+          </View>
+          {showServerList(servers.length) ? (
+            <MenuRow testID="drawer-switch-server" icon={Server} label={t('v2.apps.switchServer')} onPress={() => setSwitching(true)} />
+          ) : null}
           {model.settings !== null ? (
             <MenuRow
               testID="drawer-settings"
@@ -254,6 +269,7 @@ export function AppDrawer(): React.JSX.Element | null {
           />
         </View>
       </View>
+      {switching ? <ServerSwitchSheet onClose={() => setSwitching(false)} /> : null}
     </View>
   )
 }
@@ -328,4 +344,5 @@ const styles = StyleSheet.create({
   note: { fontSize: 13, paddingHorizontal: SPACING.xl, paddingVertical: SPACING.md },
   value: { fontSize: 13 },
   footer: { borderTopWidth: StyleSheet.hairlineWidth, paddingVertical: SPACING.sm },
+  account: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md, paddingHorizontal: SPACING.xl, paddingVertical: SPACING.sm },
 })
