@@ -18,14 +18,39 @@
 import { HUB_PARAM } from '../connection/hub-link.js'
 import { parseHubOrigin } from '../connection/hub-origin.js'
 
-/** Path families a deep link may land on. Defaults and auth flows are not
- *  destinations — redirecting to them is what this module prevents. */
-const STASHABLE_PREFIXES = ['/camera/', '/events', '/grid/', '/notifications'] as const
+/**
+ * Route families a deep link may land on: the first path segment of every
+ * route the `(app)` group serves, except the default landing `/cameras`.
+ * Defaults and auth flows are not destinations — redirecting to them is what
+ * this module prevents.
+ *
+ * Matched on whole segments: `/grids` is a family, `/gridsfoo` is not. A
+ * prefix list that wrote `/grid/` silently refused `/grids` and every
+ * `/settings/*`, so a cold link to them landed on the cameras (#708); a spec
+ * walks `app/(app)` so a route added there cannot be dropped the same way.
+ */
+const DESTINATION_FAMILIES = [
+  '/camera',
+  '/events',
+  '/grid',
+  '/grids',
+  '/notifications',
+  '/settings',
+  '/device',
+  '/rule',
+  '/timelapse-rule',
+  '/summary-rule',
+  '/retrain',
+  '/remote',
+  '/artifacts',
+  '/exports',
+] as const
 
 let pending: string | null = null
 
 export function isStashableDeepLink(href: string): boolean {
-  return STASHABLE_PREFIXES.some((p) => href === p || href.startsWith(p))
+  const path = href.split(/[?#]/, 1)[0] ?? href
+  return DESTINATION_FAMILIES.some((family) => path === family || path.startsWith(`${family}/`))
 }
 
 export function stashPendingDeepLink(href: string): void {
