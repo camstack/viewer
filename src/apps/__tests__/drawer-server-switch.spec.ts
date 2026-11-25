@@ -19,8 +19,24 @@ vi.mock('../../connection/ConnectionProvider.js', async () =>
   (await import('../../testing/connection-stub.js')).connectionStubModule(),
 )
 
+const APP_X = {
+  addonId: 'a',
+  app: {
+    id: 'x',
+    label: { key: 'apps.x', fallback: 'Ex' },
+    icon: 'monitor',
+    entry: { kind: 'web', path: '/', auth: 'handoff' },
+    reach: { kind: 'hub' },
+    adminOnly: false,
+    nav: [],
+    takesSharedSearch: false,
+    settings: null,
+  },
+}
+
 type Outcome = { status: 'switched' } | { status: 'needs-login' }
 const switchServer = vi.fn((_id: string): Promise<Outcome> => Promise.resolve({ status: 'switched' }))
+const signOut = vi.fn(() => Promise.resolve({ ok: true }))
 const SAVED = [
   { id: 'a', label: 'Home', serverUrl: 'http://a.test', lastUsedAt: 2 },
   { id: 'b', label: 'Office', serverUrl: 'http://b.test', lastUsedAt: 1 },
@@ -30,12 +46,13 @@ vi.mock('../../app/ServerProvider.js', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../../app/ServerProvider.js')>()
   return {
     ...actual,
-    useServer: () => ({ ...actual.useServer(), servers: SAVED, server: SAVED[0], switchServer }),
+    useServer: () => ({ ...actual.useServer(), servers: SAVED, server: SAVED[0], switchServer, signOut }),
   }
 })
 
 beforeEach(() => {
   switchServer.mockReset()
+  signOut.mockClear()
   switchServer.mockResolvedValue({ status: 'switched' })
   useAppStore.getState().setDrawerOpen(true)
 })
@@ -77,13 +94,23 @@ describe('the drawer bottom with several servers', () => {
 })
 
 describe('"open at launch" and the bar', () => {
-  it('"open at launch" is in the drawer bottom and stores the choice', () => {
-    const view = mountScreen(React.createElement(AppDrawer))
+  it('"open at launch" shows the current choice and a pick changes the stored one', async () => {
+    useAppStore.getState().setLaunchPreference('x')
+    const view = mountScreen(React.createElement(AppDrawer), { hub: { 'apps.listApps': [APP_X] } })
+    await waitFor(() => expect(view.getByTestId('drawer-open-at-launch').textContent).toContain('Ex'))
     fireEvent.click(view.getByTestId('drawer-open-at-launch'))
     expect(view.getByTestId('launch-preference-sheet')).toBeTruthy()
     fireEvent.click(view.getByTestId('launch-option-last'))
     expect(useAppStore.getState().launchPreference).toBe('last')
     expect(view.queryByTestId('launch-preference-sheet')).toBeNull()
+    await waitFor(() => expect(view.getByTestId('drawer-open-at-launch').textContent).toContain('Last used'))
+  })
+
+  it('sign out closes the drawer and runs the existing sign-out', () => {
+    const view = mountScreen(React.createElement(AppDrawer))
+    fireEvent.click(view.getByTestId('drawer-sign-out'))
+    expect(signOut).toHaveBeenCalledTimes(1)
+    expect(useAppStore.getState().drawerOpen).toBe(false)
   })
 
   it('the home bar has no avatar at its right, only the one that opens the drawer', () => {
