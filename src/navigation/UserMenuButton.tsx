@@ -1,8 +1,7 @@
 /**
- * UserMenuButton — the account avatar at the right of the navigation. It opens
- * the account sheet (`src/apps/AccountSheet.tsx`): who is signed in, the saved
- * servers, "open at launch" and sign-out. The apps live in the drawer, opened by
- * the avatar at the other end (`DrawerMenuButton`).
+ * UserMenuButton — the account avatar of the rail and the phone bar's cluster
+ * (`NavAccountCluster`). It opens the one app drawer, whose bottom block holds the
+ * account: who is signed in, the server and its switch, "open at launch", sign-out.
  */
 import React, { memo } from 'react'
 import { Pressable, StyleSheet, Text } from 'react-native'
@@ -26,8 +25,8 @@ export const UserMenuButton = memo(function UserMenuButton({ showName = false }:
   const { t } = useTranslation()
   const { colors } = useTheme()
   const { data: me } = useMe()
-  const open = useAppStore((s) => s.accountOpen)
-  const setAccountOpen = useAppStore((s) => s.setAccountOpen)
+  const open = useAppStore((s) => s.drawerOpen)
+  const setDrawerOpen = useAppStore((s) => s.setDrawerOpen)
   const name = me?.username ?? null
 
   return (
@@ -35,7 +34,7 @@ export const UserMenuButton = memo(function UserMenuButton({ showName = false }:
       testID={USER_MENU_TEST_ID}
       onPress={() => {
         hapticTap()
-        setAccountOpen(true)
+        setDrawerOpen(true)
       }}
       hitSlop={6}
       accessibilityRole="button"

@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  *
- * HomeBar, mounted: the ☰ opens the app drawer, the bell is the element the
+ * HomeBar, mounted: the avatar opens the app drawer, the bell is the element the
  * navigator wraps in its notifications trigger, the wide title names `/` as
  * Cameras, and the bar clears a side notch.
  */
@@ -30,7 +30,7 @@ beforeEach(() => {
 afterEach(cleanup)
 
 describe('HomeBar', () => {
-  it('opens the app drawer from the ☰', () => {
+  it('opens the app drawer from the avatar', () => {
     const view = mountScreen(React.createElement(HomeBar, { variant: 'phone', pathname: '/cameras', wrapBell }))
     expect(useAppStore.getState().drawerOpen).toBe(false)
     fireEvent.click(view.getByTestId('drawer-menu-button'))

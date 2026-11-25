@@ -20,7 +20,6 @@ beforeEach(async () => {
     framePath: null,
     launchSettled: false,
     drawerOpen: false,
-    accountOpen: false,
   })
 })
 

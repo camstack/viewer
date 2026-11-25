@@ -1,7 +1,8 @@
 /**
  * ServerSwitchSheet — the saved servers, the current one first and ticked; a tap
  * on another switches to it (or sends you to sign in when that server needs it).
- * Opened from the drawer's bottom block, the one place a server is switched.
+ * Opened from the drawer's bottom block, the one place a server is switched; the
+ * drawer closes with the tap, whatever the outcome.
  */
 import React from 'react'
 import { useRouter } from 'expo-router'
@@ -15,6 +16,7 @@ import { serverLabelOf } from '../connection/server-name.js'
 import { Check, Server, X } from '../lib/icons.js'
 import { orderServers } from '../navigation/user-menu.js'
 import { useTheme } from '../theme/theme-provider.js'
+import { useAppStore } from './app-store.js'
 
 export interface ServerSwitchSheetProps {
   readonly onClose: () => void
@@ -25,12 +27,14 @@ export function ServerSwitchSheet({ onClose }: ServerSwitchSheetProps): React.JS
   const { colors } = useTheme()
   const router = useRouter()
   const { servers, server, switchServer } = useServer()
+  const setDrawerOpen = useAppStore((s) => s.setDrawerOpen)
 
   const labelOf = (saved: (typeof servers)[number]): string =>
     saved.name !== undefined ? serverLabelOf(saved) : saved.label !== '' ? saved.label : serverDisplayName(saved.serverUrl)
 
   const switchTo = (id: string, serverUrl: string): void => {
     onClose()
+    setDrawerOpen(false)
     if (id === server?.id) return
     void switchServer(id).then((outcome) => {
       if (outcome.status === 'needs-login') router.push({ pathname: '/add-server', params: { url: serverUrl } })

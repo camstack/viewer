@@ -45,6 +45,8 @@ import { bridgeChannel } from './bridge-channel.js'
 import { navigateMessage, searchMessage } from './bridge-host.js'
 import { buildDrawerModel } from './drawer-model.js'
 import { findApp, hostedAppOf } from './app-catalog.js'
+import { LaunchPreferenceSheet } from './LaunchPreferenceSheet.js'
+import { launchValueLabel } from './launch-choices.js'
 import { ServerSwitchSheet } from './ServerSwitchSheet.js'
 
 const PANEL_MAX_WIDTH = 320
@@ -63,6 +65,7 @@ export function AppDrawer(): React.JSX.Element | null {
   const { catalog } = useAppCatalog()
   const local = isLocalRouteChannel(useRouteChannel())
   const open = useAppStore((s) => s.drawerOpen)
+  const launchPreference = useAppStore((s) => s.launchPreference)
   const active = useAppStore((s) => s.active)
   const framePath = useAppStore((s) => s.framePath)
   const searchFocus = useAppStore((s) => s.drawerSearchFocus)
@@ -70,6 +73,7 @@ export function AppDrawer(): React.JSX.Element | null {
   const openApp = useAppStore((s) => s.open)
   const [query, setQuery] = useState('')
   const [switching, setSwitching] = useState(false)
+  const [launching, setLaunching] = useState(false)
 
   const translate = useMemo(() => (label: AppLabel): string => t(label.key, { defaultValue: label.fallback }), [t])
   const model = useMemo(
@@ -83,6 +87,7 @@ export function AppDrawer(): React.JSX.Element | null {
     [query, navEntries, data.devices, data.integrations],
   )
   const searching = query.trim() !== ''
+  const launchValue = launchValueLabel(launchPreference, catalog, translate)
 
   const hosted = hostedAppOf(catalog)
   const activeInfo = model.activeId === null ? null : findApp(catalog, model.activeId)
@@ -93,6 +98,7 @@ export function AppDrawer(): React.JSX.Element | null {
     if (!open) {
       setQuery('')
       setSwitching(false)
+      setLaunching(false)
     }
   }, [open])
 
@@ -174,7 +180,7 @@ export function AppDrawer(): React.JSX.Element | null {
         }}
       >
         <View style={[styles.header, { borderBottomColor: colors.borderSubtle }]}>
-          <View style={styles.headerText} />
+          <View style={styles.spacer} />
           <Badge size="sm" tone={local ? 'success' : 'warning'} label={t(local ? 'v2.apps.routeLocal' : 'v2.apps.routeRemote')} />
           <Pressable onPress={close} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('v2.apps.closeMenu')}>
             <X size={18} color={colors.foregroundMuted} />
@@ -258,6 +264,13 @@ export function AppDrawer(): React.JSX.Element | null {
             />
           ) : null}
           <MenuRow
+            testID="drawer-open-at-launch"
+            icon={Settings}
+            label={t('v2.apps.openAtLaunch')}
+            onPress={() => setLaunching(true)}
+            trailing={<Text style={[styles.value, { color: colors.foregroundMuted }]}>{launchValue ?? t('v2.apps.launchLast')}</Text>}
+          />
+          <MenuRow
             testID="drawer-sign-out"
             icon={LogOut}
             label={t('v2.userMenu.signOut')}
@@ -270,6 +283,7 @@ export function AppDrawer(): React.JSX.Element | null {
         </View>
       </View>
       {switching ? <ServerSwitchSheet onClose={() => setSwitching(false)} /> : null}
+      {launching ? <LaunchPreferenceSheet onClose={() => setLaunching(false)} /> : null}
     </View>
   )
 }
@@ -337,6 +351,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   headerText: { flex: 1, gap: 2 },
+  spacer: { flex: 1 },
   name: { fontSize: 15, fontWeight: '700' },
   sub: { fontSize: 12 },
   body: { paddingVertical: SPACING.sm },

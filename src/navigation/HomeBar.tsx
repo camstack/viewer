@@ -2,10 +2,9 @@
  * HomeBar — the top bar of the list pages (Cameras, Library, Grids,
  * Notifications, Settings root). Agreed with the operator 2026-11-24 (#691).
  *
- *   - `phone` (48 px): ☰ at the left, the tab's title centred, bell · Activity ·
- *     avatar at the right (#707: this bar IS the tab's header, no second one). The bottom tabs stay.
- *   - `wide` (56 px, h-14 like the admin), beside the rail: the section title at
- *     the left, the shared search, bell, ☰ (the apps drawer), Activity, avatar.
+ *   - `phone` (48 px): the user's avatar (opens the drawer) at the left, the tab's title centred, bell · Activity at
+ *     the right (#707: this bar IS the tab's header, no second one). The bottom tabs stay.
+ *   - `wide` (56 px, h-14 like the admin), beside the rail: the avatar at the left, then the section title, the shared search, bell, Activity; the avatar (the apps drawer) leads the bar.
  *
  * It spends the top safe-area inset once; the screens below read
  * `useScreenTopInset()` and spend none (`TopInsetSpentContext`).
@@ -23,7 +22,6 @@ import { useTheme } from '../theme/theme-provider.js'
 import { RADIUS, SPACING, TYPOGRAPHY, type ColorTokens } from '../theme/tokens.js'
 import { homeBarHeight, type HomeBarVariant } from './bar-kind.js'
 import { isItemActive, registeredTabs } from './nav-items.js'
-import { UserMenuButton } from './UserMenuButton.js'
 import { DrawerMenuButton } from './DrawerMenuButton.js'
 
 export const HOME_BAR_TEST_ID = 'home-bar'
@@ -79,7 +77,7 @@ export const HomeBar = memo(function HomeBar({ variant, pathname, wrapBell }: Ho
         {
           height: homeBarHeight(variant) + insets.top,
           paddingTop: insets.top,
-          // A notch in landscape sits at the side: keep ☰ and the avatar clear of it.
+          // A notch in landscape sits at the side: keep the avatar clear of it.
           paddingLeft: SPACING.lg + insets.left,
           paddingRight: SPACING.lg + insets.right,
         },
@@ -87,15 +85,14 @@ export const HomeBar = memo(function HomeBar({ variant, pathname, wrapBell }: Ho
     >
       {wide ? (
         <>
+          <DrawerMenuButton orientation="column" />
           <Text style={styles.title} numberOfLines={1}>
             {title}
           </Text>
           <SearchField />
           <View style={styles.spacer} />
           {bell}
-          <DrawerMenuButton orientation="column" />
           <ActivityButton menuAlign="end" />
-          <UserMenuButton />
         </>
       ) : (
         <>
@@ -108,7 +105,6 @@ export const HomeBar = memo(function HomeBar({ variant, pathname, wrapBell }: Ho
           <View style={styles.spacer} />
           {bell}
           <ActivityButton menuAlign="end" />
-          <UserMenuButton />
         </>
       )}
     </View>

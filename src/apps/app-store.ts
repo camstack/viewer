@@ -67,8 +67,6 @@ interface AppSwitcherState extends PersistedAppSwitcher {
   readonly drawerOpen: boolean
   /** The drawer was opened from the top bar's search field: its search takes focus. */
   readonly drawerSearchFocus: boolean
-  /** The account sheet (avatar): account, saved servers, "open at launch". */
-  readonly accountOpen: boolean
   /** The path the embedded app last reported, to tick its nav item. */
   readonly framePath: string | null
   hydrate: () => Promise<void>
@@ -80,7 +78,6 @@ interface AppSwitcherState extends PersistedAppSwitcher {
   setDrawerOpen: (open: boolean) => void
   /** Open the drawer with its search focused (the wide top bar's search field). */
   openDrawerSearch: () => void
-  setAccountOpen: (open: boolean) => void
   setFramePath: (path: string | null) => void
   /** The embedded app took the path it was asked to open on. */
   clearEntryPath: () => void
@@ -100,7 +97,6 @@ export const useAppStore = create<AppSwitcherState>((set, get) => ({
   launchSettled: false,
   drawerOpen: false,
   drawerSearchFocus: false,
-  accountOpen: false,
   framePath: null,
   hydrate: async () => {
     if (get().hydrated) return
@@ -126,9 +122,8 @@ export const useAppStore = create<AppSwitcherState>((set, get) => ({
   },
   setDrawerOpen: (drawerOpen) => set({ drawerOpen, drawerSearchFocus: false }),
   openDrawerSearch: () => set({ drawerOpen: true, drawerSearchFocus: true }),
-  setAccountOpen: (accountOpen) => set({ accountOpen }),
   setFramePath: (framePath) => set({ framePath }),
   clearEntryPath: () => set({ entryPath: null }),
   resetSession: () =>
-    set({ active: { appId: DEFAULT_APP }, entryPath: null, framePath: null, launchSettled: false, drawerOpen: false, drawerSearchFocus: false, accountOpen: false }),
+    set({ active: { appId: DEFAULT_APP }, entryPath: null, framePath: null, launchSettled: false, drawerOpen: false, drawerSearchFocus: false }),
 }))

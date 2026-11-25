@@ -19,7 +19,6 @@ import { useTheme } from '../theme/theme-provider.js'
 import { findApp, isHostedEntry } from './app-catalog.js'
 import { launchResolvable, offeredLaunchPreferences, resolveLaunchApp } from './app-launch.js'
 import { useAppStore } from './app-store.js'
-import { AccountSheet } from './AccountSheet.js'
 import { AppDrawer } from './AppDrawer.js'
 import { EmbeddedApp } from './EmbeddedApp.js'
 
@@ -81,7 +80,6 @@ export function AppHost(): React.JSX.Element {
         </View>
       ) : null}
       <AppDrawer />
-      <AccountSheet />
     </>
   )
 }
