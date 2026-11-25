@@ -3226,6 +3226,8 @@
       "exitFullscreen": "Esci da schermo intero"
     },
     "playback": {
+      "autoProfile": "Auto: {{tier}}{{resolution}}",
+      "autoProfilePending": "Auto: rilevo la qualità",
       "servedTier": "In riproduzione {{tier}}",
       "servedTierDegraded": "{{requested}} non disponibile qui — riproduco {{served}}",
       "tier": {

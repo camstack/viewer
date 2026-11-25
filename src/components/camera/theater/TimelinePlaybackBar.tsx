@@ -46,6 +46,11 @@
  * which dropdown is open.
  */
 import type { ServedProfileReport } from '../../../recording/recording-messages.js'
+import {
+  autoProfileBadgeText,
+  autoProfileResolutionSuffix,
+  type AutoProfileBadge,
+} from './auto-profile-badge.js'
 import React, { useRef, useState } from 'react'
 import { View, Text, Pressable, StyleSheet, type LayoutChangeEvent } from 'react-native'
 import Animated from 'react-native-reanimated'
@@ -121,6 +126,12 @@ export interface TimelinePlaybackBarProps {
    * message: the operator asked for that. Hidden while live.
    */
   readonly servedTier?: ServedProfileReport | null
+  /**
+   * Under Auto quality: the profile actually selected, live AND recorded
+   * (planning#733). When present it replaces the recorded-only tier letter;
+   * `pending` while not yet known — never a guessed rung.
+   */
+  readonly autoProfile?: AutoProfileBadge | null
   /** The picture is not there yet (live connecting / recorded seek in flight) —
    *  drawn as a ring around play/pause, which stays fully tappable. */
   readonly loading: boolean
@@ -272,6 +283,7 @@ export function TimelinePlaybackBar({
   rate,
   paused,
   servedTier = null,
+  autoProfile = null,
   loading,
   faulted = false,
   scrubDirection = null,
@@ -800,7 +812,27 @@ export function TimelinePlaybackBar({
             <Pause size={ui.icon.md} color={colors.primaryForeground} fill={colors.primaryForeground} />
           )}
         </Pressable>
-        {mode !== 'live' && servedTier !== null ? (
+        {autoProfile !== undefined && autoProfile !== null ? (
+          <View
+            accessibilityRole="text"
+            accessibilityLabel={
+              autoProfile.state === 'known'
+                ? t('v2.playback.autoProfile', {
+                    tier: t(`v2.playback.tier.${autoProfile.profile}`),
+                    resolution: autoProfileResolutionSuffix(autoProfile.heightPx),
+                  })
+                : t('v2.playback.autoProfilePending')
+            }
+            style={[
+              styles.tierBadge,
+              { backgroundColor: colors.backgroundElevated, borderColor: colors.border },
+            ]}
+          >
+            <Text style={[styles.tierBadgeText, { color: colors.foregroundMuted, fontSize: ui.font.xs }]}>
+              {autoProfileBadgeText(autoProfile)}
+            </Text>
+          </View>
+        ) : mode !== 'live' && servedTier !== undefined && servedTier !== null ? (
           <View
             accessibilityRole="text"
             accessibilityLabel={

@@ -36,6 +36,7 @@
  */
 import { clusterRenderStateSignature } from './cluster-render-state-signature.js'
 import type { ServedProfileReport } from '../../../recording/recording-messages.js'
+import type { AutoProfileBadge } from './auto-profile-badge.js'
 import React, { memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import { View, StyleSheet } from 'react-native'
 import { cancelAnimation, useSharedValue, withTiming } from 'react-native-reanimated'
@@ -486,6 +487,8 @@ export interface TheaterTimelineProps {
   /** The recorded tier the player is really on, next to the one asked for —
    *  the bar's tier badge. Null until the embed has said. */
   readonly servedTier?: ServedProfileReport | null
+  /** The Auto-quality profile badge (live and recorded); null when not Auto. */
+  readonly autoProfile?: AutoProfileBadge | null
   /** The picture is not there yet — live connecting, or a recorded seek in
    *  flight. Drawn as a ring around the bar's play/pause. */
   readonly loading: boolean
@@ -2662,6 +2665,7 @@ export const TheaterTimeline = memo(function TheaterTimeline(props: TheaterTimel
             rate: props.playbackRate,
             paused: props.paused,
             servedTier: props.servedTier ?? null,
+            autoProfile: props.autoProfile ?? null,
             loading: props.loading,
             // A BOOLEAN: the ring is a status on this control. The reason and
             // the retry belong to the fault notice under the band.

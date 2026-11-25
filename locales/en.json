@@ -3226,6 +3226,8 @@
       "exitFullscreen": "Exit fullscreen"
     },
     "playback": {
+      "autoProfile": "Auto: {{tier}}{{resolution}}",
+      "autoProfilePending": "Auto: working out the quality",
       "servedTier": "Playing {{tier}}",
       "servedTierDegraded": "{{requested}} not available here — playing {{served}}",
       "tier": {
