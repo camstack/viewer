@@ -140,3 +140,20 @@ export function isUnexpectedPortraitStack(
 ): boolean {
   return mode === 'stack' && isTabletViewport(input)
 }
+
+/**
+ * Does the fullscreen disc DO anything right now? Toggling `fullscreen` only
+ * changes the layout when the picture is not already filling the window: a
+ * phone rotated to landscape is `fill` on its own, so the disc would be shown
+ * and press into nothing (planning#700). It stays while explicit fullscreen is
+ * on — that is the way out of the state. `platformOffered` is the platform's
+ * own gate (a touch browser that cannot force landscape has none).
+ */
+export function fullscreenToggleShown(input: {
+  readonly platformOffered: boolean
+  readonly fullscreen: boolean
+  readonly layoutMode: DetailLayoutMode
+}): boolean {
+  if (input.fullscreen) return true
+  return input.platformOffered && input.layoutMode !== 'fill'
+}

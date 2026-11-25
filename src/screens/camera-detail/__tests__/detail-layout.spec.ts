@@ -108,3 +108,21 @@ describe('isFillMode', () => {
     expect(isFillMode('stack')).toBe(false)
   })
 })
+
+import { fullscreenToggleShown } from '../detail-layout.js'
+
+describe('fullscreenToggleShown (planning#700)', () => {
+  it('hidden when the picture already fills the window by landscape', () => {
+    expect(fullscreenToggleShown({ platformOffered: true, fullscreen: false, layoutMode: 'fill' })).toBe(false)
+  })
+  it('shown in the stack and wide layouts', () => {
+    expect(fullscreenToggleShown({ platformOffered: true, fullscreen: false, layoutMode: 'stack' })).toBe(true)
+    expect(fullscreenToggleShown({ platformOffered: true, fullscreen: false, layoutMode: 'wide' })).toBe(true)
+  })
+  it('kept while explicit fullscreen is on: it is the way out', () => {
+    expect(fullscreenToggleShown({ platformOffered: false, fullscreen: true, layoutMode: 'fill' })).toBe(true)
+  })
+  it('never where the platform offers none', () => {
+    expect(fullscreenToggleShown({ platformOffered: false, fullscreen: false, layoutMode: 'stack' })).toBe(false)
+  })
+})
