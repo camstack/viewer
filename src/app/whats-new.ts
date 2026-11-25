@@ -31,6 +31,20 @@ export interface WhatsNewEntry {
 // i18n-ok: release notes carry their own `en` + `it` text per entry (typed, held by whats-new.spec.ts)
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.735',
+    date: '2026-11-25',
+    notes: {
+      en: [
+        'Each screen shows one top bar, with the tab title in it.',
+        'A link to grids or settings opens that page after sign-in.',
+      ],
+      it: [
+        'Ogni schermata ha una sola barra in alto, con il titolo della scheda.',
+        'Un link a griglie o impostazioni apre quella pagina dopo l’accesso.',
+      ],
+    },
+  },
+  {
     version: '1.0.734',
     date: '2026-11-24',
     notes: {
