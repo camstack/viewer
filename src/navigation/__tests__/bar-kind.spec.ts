@@ -9,7 +9,7 @@ describe('the bar a route wears (#691)', () => {
 
   it.each([
     '/settings/cameras',
-    '/settings/sign-in',
+    '/settings/sign-in', // redirect alias of /account (D1102)
     '/account',
     '/settings/notifications',
     '/settings/alarm',

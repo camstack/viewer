@@ -53,7 +53,7 @@ export function AccountScreen() {
   return (
     <ReauthProvider>
       <View style={{ flex: 1, backgroundColor: colors.background }}>
-        <ScreenHeader title={t('v2.settings.segments.account')} onBack={() => router.back()} bordered />
+        <ScreenHeader title={t('v2.apps.account')} onBack={() => router.back()} bordered />
         <KeyboardAwareScrollView
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: SPACING.xl, paddingBottom: SPACING['3xl'], gap: SPACING['2xl'] }}
@@ -75,7 +75,7 @@ export function AccountScreen() {
             <TotpSection />
             <PasskeysSection />
             <LinkedAccountsSection />
-            <ActiveSessionsSection />
+            <ActiveSessionsSection collapsible />
           </SettingsGrid>
         </KeyboardAwareScrollView>
       </View>

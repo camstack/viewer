@@ -313,7 +313,10 @@ describe('Account → Sign-in methods', () => {
     setTestPlatform('web')
     mountScreen(React.createElement(AccountScreen), { hub: HUB })
     expect(await screen.findByText('Active sessions')).toBeTruthy()
-    expect(screen.getByText('CamStack app on iOS')).toBeTruthy()
+    act(() => {
+      fireEvent.click(screen.getByText('Active sessions'))
+    })
+    expect(await screen.findByText('CamStack app on iOS')).toBeTruthy()
     expect(screen.getByText(/This device/)).toBeTruthy()
     expect(screen.getByText('Safari on macOS')).toBeTruthy()
     // Only the other device has its own Sign out.

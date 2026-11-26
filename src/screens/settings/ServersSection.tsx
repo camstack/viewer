@@ -1,5 +1,5 @@
 /**
- * Settings → Servers: every hub this device knows, one tap to switch.
+ * Account → Servers: every hub this device knows, one tap to switch.
  *
  * A switch is `ServerProvider.switchServer` — the other server's OWN token, no
  * sign-out, no restart (the connected subtree is re-keyed by server id). A
@@ -20,17 +20,15 @@ import { Row } from '../../components/ui/Row.js'
 import { useTheme } from '../../theme/theme-provider.js'
 import { SPACING } from '../../theme/tokens.js'
 import { useDateLocale } from '../../lib/date-locale.js'
-import { Check, KeyRound, LogOut, Plus, Server, Trash2, User } from '../../lib/icons.js'
+import { Check, LogOut, Plus, Server, Trash2, User } from '../../lib/icons.js'
 
 export interface ServersSectionProps {
   /** The "Signed in as" value, computed by the caller (it owns `useMe`). */
   readonly accountValue: string
   readonly onSignOut: () => void
-  /** Opens Sign-in methods; the row is drawn only when this is set. */
-  readonly onOpenSignInMethods?: () => void
 }
 
-export function ServersSection({ accountValue, onSignOut, onOpenSignInMethods }: ServersSectionProps) {
+export function ServersSection({ accountValue, onSignOut }: ServersSectionProps) {
   const { t } = useTranslation()
   const confirm = useConfirm()
   const notice = useNotice()
@@ -77,9 +75,6 @@ export function ServersSection({ accountValue, onSignOut, onOpenSignInMethods }:
   return (
     <Section title={t('v2.servers.title')}>
       <Row icon={User} label={t('v2.settings.account')} value={accountValue} />
-      {onOpenSignInMethods !== undefined ? (
-        <Row icon={KeyRound} label={t('v2.signIn.title')} onPress={onOpenSignInMethods} />
-      ) : null}
       {ordered.map((saved) => (
         <ServerRow
           key={saved.id}

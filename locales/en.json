@@ -883,7 +883,6 @@
       "overlaySizeLarge": "Large",
       "general": "General",
       "segments": {
-        "account": "Account",
         "viewing": "Viewing",
         "app": "App",
         "advanced": "Advanced"
@@ -3803,7 +3802,6 @@
       "cancel": "Cancel"
     },
     "signIn": {
-      "title": "Sign-in methods",
       "on": "On",
       "off": "Off",
       "loading": "Loading…",

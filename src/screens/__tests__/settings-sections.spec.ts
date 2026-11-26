@@ -250,7 +250,7 @@ describe('the four segments', () => {
 
   it('the Account screen owns the moved sections, and the old sign-in route is an alias that redirects', () => {
     const src = read('src/screens/account/AccountScreen.tsx')
-    for (const mark of ['<ServersSection', '<ThisDeviceSection', '<TokensSection', '<PasskeysSection', '<ActiveSessionsSection']) {
+    for (const mark of ['<ServersSection', '<ThisDeviceSection', '<TokensSection', '<PasskeysSection', '<ActiveSessionsSection collapsible']) {
       expect(src, `Account lost ${mark}`).toContain(mark)
     }
     expect(existsSync(join(ROOT, 'app/(app)/account.tsx'))).toBe(true)

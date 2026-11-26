@@ -78,6 +78,48 @@ describe('the Account screen', () => {
   })
 })
 
+describe('Account → Active sessions', () => {
+  const SESSIONS = [
+    { id: 'ls_me', userId: 'u1', method: 'handoff', refreshable: true, createdAt: 1, lastUsedAt: 30, expiresAt: 99, client: 'CamStack/1 CFNetwork/1568 Darwin/24.1.0', ip: '10.0.0.5', current: true },
+    { id: 'ls_mac', userId: 'u1', method: 'password', refreshable: true, createdAt: 1, lastUsedAt: 20, expiresAt: 99, client: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Safari/605.1.15', ip: '10.0.0.9', current: false },
+  ]
+
+  it('is folded under its title with the count (operator-approved layout, 2026-10-21)', async () => {
+    mountScreen(React.createElement(AccountScreen), { hub: { ...HUB, 'auth.listOwnSessions': SESSIONS } })
+    expect(await screen.findByText('Active sessions')).toBeTruthy()
+    expect(await screen.findByText('2')).toBeTruthy()
+    expect(screen.queryByText('Safari on macOS')).toBeNull()
+    act(() => {
+      fireEvent.click(screen.getByText('Active sessions'))
+    })
+    expect(await screen.findByText('Safari on macOS')).toBeTruthy()
+  })
+})
+
+describe('the Account screen for a non-admin', () => {
+  const VIEWER_HUB = { ...HUB, 'auth.me': { id: 'u1', username: 'operator', isAdmin: false } }
+
+  it('shows the viewer role and every section, owning only its own tokens', async () => {
+    mountScreen(React.createElement(AccountScreen), { hub: VIEWER_HUB })
+    expect(await screen.findByText(/operator · Viewer/)).toBeTruthy()
+    expect(await screen.findByText('Kitchen wall')).toBeTruthy()
+    expect(screen.queryByText('Somebody else')).toBeNull()
+    expect(await screen.findByText('MacBook')).toBeTruthy()
+  })
+
+  it('offers no Admin token, so minting never asks for a re-authentication', async () => {
+    mountScreen(React.createElement(AccountScreen), { hub: VIEWER_HUB })
+    await screen.findByText('Kitchen wall')
+    act(() => {
+      fireEvent.click(screen.getByText('New token'))
+    })
+    await screen.findByLabelText('Name')
+    expect(screen.queryByText('Admin')).toBeNull()
+    expect(screen.queryByText('Confirm it’s you')).toBeNull()
+    expect(hubCalls().some((c) => c.path === 'auth.reauthenticate')).toBe(false)
+  })
+})
+
 describe('Account → Tokens', () => {
   it("lists this account's tokens only, with what each may do and its dates", async () => {
     mountScreen(React.createElement(AccountScreen), { hub: HUB })
