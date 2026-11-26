@@ -16,12 +16,10 @@ import { useSafeAreaFrame } from 'react-native-safe-area-context'
 
 import {
   describeViewportSources,
-  isCoherentViewport,
   resolveViewportSize,
   type MeasuredSize,
   type ResolvedViewport,
   type ViewportReadout,
-  type ViewportSizeInput,
 } from './viewport-size.js'
 
 export type { ResolvedViewport, ViewportReadout, ViewportSource } from './viewport-size.js'
@@ -42,36 +40,33 @@ function useViewportSources(): ViewportHookSources {
 }
 
 /**
- * The last viewport both sources agreed on, per hook instance. Written after
- * commit, read on the next render: a pure input to `resolveViewportSize`.
+ * The hook face of `resolveViewportSize`: the last viewport that was NOT held
+ * lives in a ref (per hook instance), is fed back in as `settled`, and is
+ * rewritten after commit whenever the answer is not a hold.
  */
-function useSettledViewport(resolved: ResolvedViewport, coherent: boolean): MeasuredSize | null {
+function useResolvedViewport(sources: ViewportHookSources): ResolvedViewport {
   const settled = useRef<MeasuredSize | null>(null)
-  const { width, height } = resolved
+  const { isWeb } = sources
+  const { width: dw, height: dh } = sources.window
+  const { width: fw, height: fh } = sources.frame
+  const resolved = useMemo(
+    () =>
+      resolveViewportSize({
+        isWeb,
+        window: { width: dw, height: dh },
+        frame: { width: fw, height: fh },
+        settled: settled.current,
+      }),
+    [isWeb, dw, dh, fw, fh],
+  )
   useLayoutEffect(() => {
-    if (coherent) settled.current = { width, height }
-  }, [coherent, width, height])
-  return settled.current
+    if (resolved.source !== 'held') settled.current = { width: resolved.width, height: resolved.height }
+  }, [resolved])
+  return resolved
 }
 
 export function useViewportSize(): ResolvedViewport {
-  const sources = useViewportSources()
-  const { width: dw, height: dh } = sources.window
-  const { width: fw, height: fh } = sources.frame
-  const settled = useSettledViewport(
-    resolveViewportSize(sources),
-    sources.isWeb || isCoherentViewport({ width: dw, height: dh }, { width: fw, height: fh }),
-  )
-  return useMemo(
-    () =>
-      resolveViewportSize({
-        isWeb: sources.isWeb,
-        window: { width: dw, height: dh },
-        frame: { width: fw, height: fh },
-        settled,
-      }),
-    [sources.isWeb, dw, dh, fw, fh, settled],
-  )
+  return useResolvedViewport(useViewportSources())
 }
 
 /** The resolved viewport AND its raw sources — for the theater's trace. */
@@ -86,28 +81,20 @@ export interface ViewportReadoutResult {
  * out reads the resolved one and nothing else.
  */
 export function useViewportReadout(): ViewportReadoutResult {
-  const { isWeb, window, frame } = useViewportSources()
-  const { width: dimWidth, height: dimHeight } = window
-  const { width: frameWidth, height: frameHeight } = frame
+  const sources = useViewportSources()
+  const viewport = useResolvedViewport(sources)
+  const { isWeb } = sources
+  const { width: dimWidth, height: dimHeight } = sources.window
+  const { width: frameWidth, height: frameHeight } = sources.frame
   // Memoised on the numbers, not on the two objects: `useWindowDimensions` and
   // `useSafeAreaFrame` hand back fresh objects, and a diagnostic effect keyed
   // on this result must fire on a change of SHAPE, never on a render.
-  const coherent =
-    isWeb ||
-    isCoherentViewport(
-      { width: dimWidth, height: dimHeight },
-      { width: frameWidth, height: frameHeight },
-    )
-  const base: ViewportSizeInput = {
-    isWeb,
-    window: { width: dimWidth, height: dimHeight },
-    frame: { width: frameWidth, height: frameHeight },
-  }
-  const settled = useSettledViewport(resolveViewportSize(base), coherent)
   return useMemo(() => {
-    const sources: ViewportSizeInput = { ...base, settled }
-    const viewport = resolveViewportSize(sources)
-    return { viewport, readout: describeViewportSources(sources) }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- `base` is built from the listed numbers
-  }, [isWeb, dimWidth, dimHeight, frameWidth, frameHeight, settled])
+    const readout = describeViewportSources({
+      isWeb,
+      window: { width: dimWidth, height: dimHeight },
+      frame: { width: frameWidth, height: frameHeight },
+    })
+    return { viewport, readout: { ...readout, source: viewport.source } }
+  }, [viewport, isWeb, dimWidth, dimHeight, frameWidth, frameHeight])
 }

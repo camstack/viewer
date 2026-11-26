@@ -29,8 +29,8 @@ describe('resolveViewportSize across a rotation', () => {
   it('with nothing complete yet, the settled viewport is held', () => {
     const v = resolveViewportSize({
       isWeb: false,
-      window: { width: 430, height: 430 },
-      frame: { width: 932, height: 932 },
+      window: { width: 430, height: 700 },
+      frame: { width: 430, height: 430 },
       settled: LANDSCAPE,
     })
     expect(v).toMatchObject({ ...LANDSCAPE, source: 'held' })
@@ -39,6 +39,24 @@ describe('resolveViewportSize across a rotation', () => {
   it('a stale window next to a complete frame still follows the frame', () => {
     const v = resolveViewportSize({ isWeb: false, window: PORTRAIT, frame: LANDSCAPE, settled: PORTRAIT })
     expect(v).toMatchObject({ ...LANDSCAPE, source: 'frame' })
+  })
+})
+
+describe('a steady mismatch is not a rotation', () => {
+  const window = { width: 412, height: 915 }
+  const frame = { width: 412, height: 871 }
+
+  it('the frame wins on the first pass (an Android window without its system bars)', () => {
+    expect(resolveViewportSize({ isWeb: false, window, frame })).toMatchObject({ ...frame, source: 'frame' })
+  })
+
+  it('and after a settled value exists (an adjustResize keyboard shrinking only the frame)', () => {
+    expect(resolveViewportSize({ isWeb: false, window, frame, settled: window })).toMatchObject({
+      ...frame,
+      source: 'frame',
+    })
+    expect(resolveViewportSize({ isWeb: false, window, frame: { width: 412, height: 500 }, settled: window }))
+      .toMatchObject({ width: 412, height: 500, source: 'frame' })
   })
 })
 

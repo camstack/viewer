@@ -72,6 +72,20 @@ function isCompleteShapeOf(a: MeasuredSize, b: MeasuredSize): boolean {
 }
 
 /**
+ * The frame of a rotation in flight: the window has left the settled shape, and
+ * the frame has one side from each — its width or height already the window's,
+ * the other axis still the settled viewport's.
+ */
+function isMixedAxes(frame: MeasuredSize, window: MeasuredSize, settled: MeasuredSize): boolean {
+  if (sameSize(window, settled)) return false
+  const widthNew = Math.abs(frame.width - window.width) <= SAME_PT
+  const heightNew = Math.abs(frame.height - window.height) <= SAME_PT
+  const widthOld = Math.abs(frame.width - settled.width) <= SAME_PT
+  const heightOld = Math.abs(frame.height - settled.height) <= SAME_PT
+  return (widthNew && heightOld) || (heightNew && widthOld)
+}
+
+/**
  * A viewport both sources vouch for: equal, or one the other turned on its
  * side (the stale-`Dimensions` rotation of 2026-09-10, which the frame wins).
  * The provider view IS the app's window, so in steady state the two are equal.
@@ -96,14 +110,17 @@ export function resolveViewportSize({
     if (!isMeasured(window) || isCoherentViewport(window, frame)) {
       return { width: frame.width, height: frame.height, source: 'frame' }
     }
-    // The two disagree and neither is the other turned over: a rotation in
-    // flight (planning#748 — frame 430x430 next to a window of 430x932, the
-    // height still the landscape one). Deciding on that half-way pair sized the
-    // player and the timeline from a box that never existed. Take a source
-    // only when it is a COMPLETE shape of the last settled viewport; otherwise
-    // keep the settled one until a source completes. No timer: the next frame
-    // or window update re-enters here.
-    if (settled !== null && isMeasured(settled)) {
+    // The two disagree and neither is the other turned over. Only ONE shape of
+    // that is a rotation in flight (planning#748): the frame MIXES the axes —
+    // one side already the window's, the other still the settled viewport's
+    // (430x430 between 932x430 and 430x932). Deciding on that half-way box
+    // sized the player and the timeline from a box that never existed, so take
+    // a source only when it is a COMPLETE shape of the settled viewport, else
+    // keep the settled one. No timer: the next frame or window update re-enters.
+    // Any other disagreement is steady (an Android window without its system
+    // bars, an adjustResize keyboard shrinking only the frame): the frame wins,
+    // as it always did, and the hook records it as settled.
+    if (settled !== null && isMeasured(settled) && isMixedAxes(frame, window, settled)) {
       if (isCompleteShapeOf(window, settled)) {
         return { width: window.width, height: window.height, source: 'window' }
       }
