@@ -4194,7 +4194,6 @@
     "apps": {
       "apps": "App",
       "openMenu": "Apri il menu",
-      "switchServer": "Cambia server",
       "closeMenu": "Chiudi il menu",
       "routeLocal": "LOCALE",
       "routeRemote": "REMOTO",

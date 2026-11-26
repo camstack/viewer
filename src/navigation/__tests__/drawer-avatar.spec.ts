@@ -6,7 +6,7 @@
  * and the server switch.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent } from '@testing-library/react'
+import { cleanup, fireEvent, waitFor } from '@testing-library/react'
 import React from 'react'
 
 import { mountScreen } from '../../testing/mount.js'
@@ -48,6 +48,15 @@ describe('the drawer bottom', () => {
     const block = view.getByTestId('drawer-account')
     expect(block.textContent).toBeTruthy()
     expect(view.getByTestId('drawer-account-name')).toBeTruthy()
+  })
+
+  it.each([
+    [true, 'operator · Admin'],
+    [false, 'operator · Viewer'],
+  ])('the user block names the user and the role (isAdmin=%s)', async (isAdmin, line) => {
+    useAppStore.getState().setDrawerOpen(true)
+    const view = mountScreen(React.createElement(AppDrawer), { hub: { 'auth.me': { id: 'u1', username: 'operator', isAdmin } } })
+    await waitFor(() => expect(view.getByTestId('drawer-user-block').textContent).toContain(line))
   })
 
   it('the Account entry sits inside the user block, with the user name', () => {

@@ -251,7 +251,9 @@ export function AppDrawer(): React.JSX.Element | null {
               <UserAvatar name={me?.username ?? null} />
               <View style={styles.headerText}>
                 <Text style={[styles.name, { color: colors.foreground }]} numberOfLines={1} testID="drawer-account-name">
-                  {me?.username ?? t('v2.settings.accountUnknown')}
+                  {me == null
+                    ? t('v2.settings.accountUnknown')
+                    : `${me.username} · ${me.isAdmin ? t('v2.settings.roleAdmin') : t('v2.settings.roleViewer')}`}
                 </Text>
                 {serverName !== '' ? (
                   <Text style={[styles.sub, { color: colors.foregroundMuted }]} numberOfLines={1} testID="drawer-account-server">
