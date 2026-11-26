@@ -109,6 +109,8 @@ export interface DetailLayoutTrace {
   /** `useSafeAreaFrame()` — the provider view's layout pass. `-1` on web. */
   readonly frameWidth: number
   readonly frameHeight: number
+  /** The two sources agree; `false` = a rotation in flight, `viewportSource` says what was done. */
+  readonly viewportCoherent: boolean
   // ── the device, raw ──
   /** `Dimensions.get('screen')`'s shortest side; `-1` when unknown (web). */
   readonly screenMinSide: number
@@ -162,6 +164,7 @@ export function buildDetailLayoutTrace({
     dimHeight: viewport.dimHeight,
     frameWidth: viewport.frameWidth,
     frameHeight: viewport.frameHeight,
+    viewportCoherent: viewport.coherent,
     screenMinSide: layout.screenMinSide ?? -1,
     isWeb: layout.isWeb,
     tabletSource: tabletSourceFor(layout),
@@ -224,6 +227,7 @@ export function detailLayoutTraceSignature(trace: DetailLayoutTrace): string {
     trace.dimHeight,
     trace.frameWidth,
     trace.frameHeight,
+    trace.viewportCoherent ? 'c' : 'x',
     trace.screenMinSide,
     trace.isWeb ? 'w' : 'n',
     trace.tabletSource,

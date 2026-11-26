@@ -10,12 +10,13 @@
  * different windows — the exact split the tablet showed on 2026-09-10, when the
  * theater's gate read a portrait window inside a landscape root.
  */
-import { useMemo } from 'react'
+import { useLayoutEffect, useMemo, useRef } from 'react'
 import { Platform, useWindowDimensions } from 'react-native'
 import { useSafeAreaFrame } from 'react-native-safe-area-context'
 
 import {
   describeViewportSources,
+  isCoherentViewport,
   resolveViewportSize,
   type MeasuredSize,
   type ResolvedViewport,
@@ -40,8 +41,37 @@ function useViewportSources(): ViewportHookSources {
   return { isWeb: Platform.OS === 'web', window, frame }
 }
 
+/**
+ * The last viewport both sources agreed on, per hook instance. Written after
+ * commit, read on the next render: a pure input to `resolveViewportSize`.
+ */
+function useSettledViewport(resolved: ResolvedViewport, coherent: boolean): MeasuredSize | null {
+  const settled = useRef<MeasuredSize | null>(null)
+  const { width, height } = resolved
+  useLayoutEffect(() => {
+    if (coherent) settled.current = { width, height }
+  }, [coherent, width, height])
+  return settled.current
+}
+
 export function useViewportSize(): ResolvedViewport {
-  return resolveViewportSize(useViewportSources())
+  const sources = useViewportSources()
+  const { width: dw, height: dh } = sources.window
+  const { width: fw, height: fh } = sources.frame
+  const settled = useSettledViewport(
+    resolveViewportSize(sources),
+    sources.isWeb || isCoherentViewport({ width: dw, height: dh }, { width: fw, height: fh }),
+  )
+  return useMemo(
+    () =>
+      resolveViewportSize({
+        isWeb: sources.isWeb,
+        window: { width: dw, height: dh },
+        frame: { width: fw, height: fh },
+        settled,
+      }),
+    [sources.isWeb, dw, dh, fw, fh, settled],
+  )
 }
 
 /** The resolved viewport AND its raw sources — for the theater's trace. */
@@ -62,12 +92,22 @@ export function useViewportReadout(): ViewportReadoutResult {
   // Memoised on the numbers, not on the two objects: `useWindowDimensions` and
   // `useSafeAreaFrame` hand back fresh objects, and a diagnostic effect keyed
   // on this result must fire on a change of SHAPE, never on a render.
+  const coherent =
+    isWeb ||
+    isCoherentViewport(
+      { width: dimWidth, height: dimHeight },
+      { width: frameWidth, height: frameHeight },
+    )
+  const base: ViewportSizeInput = {
+    isWeb,
+    window: { width: dimWidth, height: dimHeight },
+    frame: { width: frameWidth, height: frameHeight },
+  }
+  const settled = useSettledViewport(resolveViewportSize(base), coherent)
   return useMemo(() => {
-    const sources: ViewportSizeInput = {
-      isWeb,
-      window: { width: dimWidth, height: dimHeight },
-      frame: { width: frameWidth, height: frameHeight },
-    }
-    return { viewport: resolveViewportSize(sources), readout: describeViewportSources(sources) }
-  }, [isWeb, dimWidth, dimHeight, frameWidth, frameHeight])
+    const sources: ViewportSizeInput = { ...base, settled }
+    const viewport = resolveViewportSize(sources)
+    return { viewport, readout: describeViewportSources(sources) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `base` is built from the listed numbers
+  }, [isWeb, dimWidth, dimHeight, frameWidth, frameHeight, settled])
 }

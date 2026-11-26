@@ -246,7 +246,8 @@ import { resolveCellPanel, type GridCellPanel, type GridCellPanelKind } from '..
 import {
   isUsableMeasurement,
   resolveContainerWidth,
-  type MeasuredContainerWidth,
+  stampRootLayout,
+  type RootLayoutPass,
 } from './camera-detail/container-width.js'
 import {
   isUnexpectedPortraitStack,
@@ -1916,18 +1917,29 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
   // wrong; the rules are (a) refuse a degenerate pass, (b) a measurement
   // expires with the window it was taken in, (c) the unmeasured answer already
   // knows about the rail instead of pretending the column is the whole window.
-  const [measuredWidth, setMeasuredWidth] = useState<MeasuredContainerWidth | null>(null)
+  const [rootPass, setRootPass] = useState<RootLayoutPass | null>(null)
   const onRootLayout = useCallback(
     (e: LayoutChangeEvent) => {
-      const width = e.nativeEvent.layout.width
+      const { width, height } = e.nativeEvent.layout
       if (!isUsableMeasurement(width)) return
-      setMeasuredWidth((prev) =>
-        prev !== null && prev.width === width && prev.windowWidth === winWidth
+      setRootPass((prev) =>
+        prev !== null &&
+        prev.width === width &&
+        prev.height === height &&
+        prev.windowWidth === winWidth &&
+        prev.windowHeight === winHeight
           ? prev
-          : { width, windowWidth: winWidth },
+          : { width, height, windowWidth: winWidth, windowHeight: winHeight },
       )
     },
-    [winWidth],
+    [winWidth, winHeight],
+  )
+  // Stamped at RENDER, against the viewport held now (`stampRootLayout`): a
+  // layout pass that beat the viewport hook to a rotation is adopted once the
+  // viewport catches up instead of being refused for good (planning#748).
+  const measuredWidth = useMemo(
+    () => stampRootLayout(rootPass, { width: winWidth, height: winHeight }),
+    [rootPass, winWidth, winHeight],
   )
   const sideNav = useMemo(
     () => ({ visible: showSideNav && !fill, compact: sidebarCompact, insetLeft: insets.left }),

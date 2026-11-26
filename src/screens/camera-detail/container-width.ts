@@ -108,3 +108,48 @@ export function resolveContainerWidth({
   const derived = windowWidth - sideNavFootprint(sideNav)
   return derived > 0 ? derived : Math.max(0, windowWidth)
 }
+
+/** What the root's `onLayout` reported, and the window the screen held then. */
+export interface RootLayoutPass {
+  readonly width: number
+  readonly height: number
+  /** The viewport width the screen had in hand when the event ARRIVED. */
+  readonly windowWidth: number
+  readonly windowHeight: number
+}
+
+function isLandscapeBox(width: number, height: number): boolean {
+  return width >= height
+}
+
+/**
+ * The measurement this layout pass amounts to for the viewport held NOW.
+ *
+ * A layout event is taken from the view tree and can land before the viewport
+ * hook has republished (planning#748: `measuredInWindowWidth` was always the
+ * PREVIOUS axis, 430 in landscape and 932 in portrait). Stamping it with the
+ * window of the moment threw the good pass away as "taken in another window"
+ * when the viewport caught up, and no second pass came because the root had not
+ * changed again.
+ *
+ * So the stamp follows the pass's own shape: a root and a viewport of the same
+ * orientation belong together, and the pass is stamped with the current width
+ * — which also re-stamps it the moment the viewport catches up, with no timer,
+ * because this runs on every render. A root of the other orientation is not
+ * trusted yet (`windowWidth: -1`, refused by {@link acceptsMeasurement}).
+ */
+export function stampRootLayout(
+  pass: RootLayoutPass | null,
+  viewport: { readonly width: number; readonly height: number },
+): MeasuredContainerWidth | null {
+  if (pass === null) return null
+  const sameShape =
+    isLandscapeBox(pass.width, pass.height) === isLandscapeBox(viewport.width, viewport.height)
+  const arrivedInSameShape =
+    isLandscapeBox(pass.windowWidth, pass.windowHeight) === isLandscapeBox(pass.width, pass.height)
+  if (sameShape) {
+    // Same shape as now: this window if it arrived early, else the one it was taken in.
+    return { width: pass.width, windowWidth: arrivedInSameShape ? pass.windowWidth : viewport.width }
+  }
+  return { width: pass.width, windowWidth: -1 }
+}
