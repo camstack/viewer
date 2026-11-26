@@ -19,6 +19,7 @@ export interface RouterCall {
 }
 
 let calls: RouterCall[] = []
+let redirects: string[] = []
 let searchParams: Record<string, string | string[] | undefined> = {}
 let pathname = '/'
 /** What `router.canGoBack()` answers — `false` is a screen reached COLD
@@ -27,6 +28,7 @@ let canGoBack = true
 
 export function resetRouterStub(): void {
   calls = []
+  redirects = []
   searchParams = {}
   pathname = '/'
   canGoBack = true
@@ -42,6 +44,11 @@ export function setTestSearchParams(next: Record<string, string | string[] | und
 
 export function setTestPathname(next: string): void {
   pathname = next
+}
+
+/** The `href` of every `<Redirect>` rendered since the last reset. */
+export function redirectTargets(): readonly string[] {
+  return redirects
 }
 
 export function routerCalls(): readonly RouterCall[] {
@@ -112,7 +119,10 @@ export function useIsFocused(): boolean {
   return useTestIsFocused()
 }
 
-export const Redirect = (): null => null
+export const Redirect = ({ href }: { readonly href: string }): null => {
+  redirects = [...redirects, href]
+  return null
+}
 
 const Passthrough = ({ children }: ViewProps): React.ReactElement => <View>{children}</View>
 

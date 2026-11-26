@@ -10,6 +10,7 @@ import { cleanup, fireEvent } from '@testing-library/react'
 import React from 'react'
 
 import { mountScreen } from '../../testing/mount.js'
+import { resetRouterStub, routerCalls } from '../../testing/native-stubs/expo-router.js'
 import { useAppStore } from '../../apps/app-store.js'
 import { AppDrawer } from '../../apps/AppDrawer.js'
 import { DrawerMenuButton } from '../DrawerMenuButton.js'
@@ -47,6 +48,15 @@ describe('the drawer bottom', () => {
     const block = view.getByTestId('drawer-account')
     expect(block.textContent).toBeTruthy()
     expect(view.getByTestId('drawer-account-name')).toBeTruthy()
+  })
+
+  it('has an Account entry that opens /account (planning#716 P2) and closes the drawer', () => {
+    resetRouterStub()
+    useAppStore.getState().setDrawerOpen(true)
+    const view = mountScreen(React.createElement(AppDrawer))
+    fireEvent.click(view.getByTestId('drawer-account-link'))
+    expect(routerCalls().some((c) => c.kind === 'push' && c.target === '/account')).toBe(true)
+    expect(useAppStore.getState().drawerOpen).toBe(false)
   })
 
   it('keeps the switch out when there is a single server (a control with one option is not rendered)', () => {

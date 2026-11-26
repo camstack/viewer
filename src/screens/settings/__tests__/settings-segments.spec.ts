@@ -13,15 +13,15 @@ import {
 import { DEVICE_SETTINGS_DEFAULTS, parseDeviceSettings } from '../../../store/device-settings-store.js'
 
 describe('settings segments', () => {
-  it('are Account, Viewing, App, Advanced — in that order', () => {
-    expect(SETTINGS_SEGMENT_ORDER).toEqual(['account', 'viewing', 'app', 'advanced'])
-    expect(DEFAULT_SETTINGS_SEGMENT).toBe('account')
+  it('are Viewing, App, Advanced — in that order (Account is the shell screen, D1102)', () => {
+    expect(SETTINGS_SEGMENT_ORDER).toEqual(['viewing', 'app', 'advanced'])
+    expect(DEFAULT_SETTINGS_SEGMENT).toBe('viewing')
   })
 
   it('builds one option per segment through t', () => {
     const options = buildSettingsSegments((k) => `T:${k}`)
     expect(options.map((o) => o.value)).toEqual([...SETTINGS_SEGMENT_ORDER])
-    expect(options[0]?.label).toBe('T:v2.settings.segments.account')
+    expect(options[0]?.label).toBe('T:v2.settings.segments.viewing')
   })
 
   it('every label exists in both locales, translated', () => {
@@ -32,26 +32,26 @@ describe('settings segments', () => {
       expect(en, `en ${leaf}`).toBeTypeOf('string')
       expect(it, `it ${leaf}`).toBeTypeOf('string')
     }
-    // "Account" and "App" are the Italian words too; the other two are not.
+    // "App" is the Italian word too; the other two are not.
     expect(itLocale.v2.settings.segments.viewing).not.toBe(enLocale.v2.settings.segments.viewing)
     expect(itLocale.v2.settings.segments.advanced).not.toBe(enLocale.v2.settings.segments.advanced)
   })
 })
 
 describe('the last segment is kept for the session only', () => {
-  it('defaults to Account', () => {
-    expect(DEVICE_SETTINGS_DEFAULTS.settingsSegment).toBe('account')
-    expect(parseDeviceSettings(null).settingsSegment).toBe('account')
+  it('defaults to Viewing', () => {
+    expect(DEVICE_SETTINGS_DEFAULTS.settingsSegment).toBe('viewing')
+    expect(parseDeviceSettings(null).settingsSegment).toBe('viewing')
   })
 
   it('a segment an older build stored is not read back', () => {
     expect(parseDeviceSettings(JSON.stringify({ debugMode: false, settingsSegment: 'app' })).settingsSegment).toBe(
-      'account',
+      'viewing',
     )
   })
 
   it('a stored document keeps its debug switch', () => {
     const parsed = parseDeviceSettings(JSON.stringify({ debugMode: true, settingsSegment: 'network' }))
-    expect(parsed).toEqual({ debugMode: true, settingsSegment: 'account', overlaySize: 'medium' })
+    expect(parsed).toEqual({ debugMode: true, settingsSegment: 'viewing', overlaySize: 'medium' })
   })
 })

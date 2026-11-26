@@ -68,7 +68,7 @@ describe('one keyboard mechanism', () => {
   it.each([
     'src/screens/LoginScreen.tsx',
     'src/screens/notifications/rule-editor/EditorScroll.tsx',
-    'src/screens/settings/SignInMethodsScreen.tsx',
+    'src/screens/account/AccountScreen.tsx',
     'src/screens/SettingsScreen.tsx',
     'src/components/camera/CameraControlsOverlay.tsx',
     'src/components/camera/theater/TimelinePanelHost.tsx',

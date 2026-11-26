@@ -4202,6 +4202,7 @@
       "routeRemote": "REMOTO",
       "reload": "Ricarica",
       "openAtLaunch": "All'avvio",
+      "account": "Account",
       "switchLocal": "È disponibile una connessione locale più veloce.",
       "switchLocalAction": "Passa al locale",
       "openInBrowser": "Apri nel browser",

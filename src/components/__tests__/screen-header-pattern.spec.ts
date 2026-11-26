@@ -55,7 +55,7 @@ describe('one header pattern', () => {
     'screens/CamerasManageScreen.tsx',
     'screens/GridBuilderScreen.tsx',
     'screens/retrain/editor/RetrainEditorScreen.tsx',
-    'screens/settings/SignInMethodsScreen.tsx',
+    'screens/account/AccountScreen.tsx',
     'screens/artifacts/ArtifactsScreen.tsx',
     'screens/notifications/NotificationCenterScreen.tsx',
     'screens/notifications/RuleHistoryScreen.tsx',

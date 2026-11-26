@@ -59,7 +59,7 @@ import { RemoteScreen } from '../RemoteScreen.js'
 import { RetrainEditorScreen } from '../retrain/editor/RetrainEditorScreen.js'
 import { RetrainScreen } from '../retrain/RetrainScreen.js'
 import { ScenesScreen } from '../scenes/ScenesScreen.js'
-import { SignInMethodsScreen } from '../settings/SignInMethodsScreen.js'
+import { AccountScreen } from '../account/AccountScreen.js'
 import { SettingsScreen } from '../SettingsScreen.js'
 import { TimelineLibraryScreen } from '../TimelineLibraryScreen.js'
 
@@ -307,15 +307,17 @@ const SMOKE: Readonly<Record<string, SmokeCase>> = {
     element: () => h(ScenesScreen),
     expectKeyContent: () => seesTestId('scenes-action-refresh'),
   },
-  'settings/SignInMethodsScreen.tsx': {
-    element: () => h(SignInMethodsScreen),
-    expectKeyContent: () => seesText(t('v2.signIn.title')),
+  'account/AccountScreen.tsx': {
+    element: () => h(AccountScreen),
+    expectKeyContent: async () => {
+      await seesText(t('v2.settings.segments.account'))
+      await seesFragment(OPERATOR)
+    },
   },
   'SettingsScreen.tsx': {
     element: () => h(SettingsScreen),
     expectKeyContent: async () => {
-      await seesText(t('v2.settings.account'))
-      await seesFragment(OPERATOR)
+      await seesText(t('v2.settings.segments.viewing'))
     },
   },
   'TimelineLibraryScreen.tsx': {

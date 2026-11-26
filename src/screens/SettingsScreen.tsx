@@ -1,12 +1,12 @@
 /**
- * Settings tab — a thin shell over four segments (`settings/settings-segments.ts`):
- * Account, Viewing, App, Advanced. The selector is the Library tab's
+ * Settings tab — a thin shell over three segments (`settings/settings-segments.ts`):
+ * Viewing, App, Advanced. The selector is the Library tab's
  * `ScopeBar`, so the two tabs split into sections read as one control.
  *
  * Each segment is its OWN scroll view and stays mounted once visited (hidden,
  * not unmounted), so switching back lands where the operator left it rather
- * than at the top. A segment never visited is never mounted — the Account
- * segment's share-link list costs nothing to an operator who only opens App.
+ * than at the top. A segment never visited is never mounted — Advanced's
+ * network poll costs nothing to an operator who only opens App.
  *
  * The segment last shown is remembered per device (`device-settings-store`),
  * read straight from the store so a late hydration simply moves the selector.
@@ -25,7 +25,6 @@ import {
   buildSettingsSegments,
   type SettingsSegmentKey,
 } from './settings/settings-segments.js'
-import { AccountSegment } from './settings/AccountSegment.js'
 import { ViewingSegment } from './settings/ViewingSegment.js'
 import { AppSegment } from './settings/AppSegment.js'
 import { AdvancedSegment } from './settings/AdvancedSegment.js'
@@ -72,8 +71,6 @@ export function SettingsScreen() {
 
 function SegmentBody({ segment, active }: { readonly segment: SettingsSegmentKey; readonly active: boolean }) {
   switch (segment) {
-    case 'account':
-      return <AccountSegment />
     case 'viewing':
       return <ViewingSegment />
     case 'app':

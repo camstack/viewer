@@ -32,7 +32,7 @@ import { useAppCatalog } from '../data/use-apps.js'
 import { useDrawerSearch } from '../data/use-drawer-search.js'
 import { useMe } from '../data/use-me.js'
 import { hapticTap } from '../lib/haptics.js'
-import { Check, LogOut, Plug, Server, Settings, Video, X } from '../lib/icons.js'
+import { Check, LogOut, Plug, Server, Settings, User, Video, X } from '../lib/icons.js'
 import { settingsNavigation, settingsTab } from '../navigation/nav-items.js'
 import { UserAvatar } from '../navigation/UserAvatar.js'
 import { showServerList } from '../navigation/user-menu.js'
@@ -47,6 +47,7 @@ import { buildDrawerModel } from './drawer-model.js'
 import { findApp, hostedAppOf } from './app-catalog.js'
 import { LaunchPreferenceSheet } from './LaunchPreferenceSheet.js'
 import { launchValueLabel } from './launch-choices.js'
+import { ACCOUNT_PATH } from '../screens/account/AccountScreen.js'
 import { ServerSwitchSheet } from './ServerSwitchSheet.js'
 
 const PANEL_MAX_WIDTH = 320
@@ -140,6 +141,13 @@ export function AppDrawer(): React.JSX.Element | null {
     const how = settingsNavigation(pathname)
     if (how === 'replace') router.replace(settingsTab.href)
     else if (how === 'dismiss') router.dismissTo(settingsTab.href)
+  }
+  const goAccount = (): void => {
+    hapticTap()
+    close()
+    // The Account is the shell's own screen: it opens over whatever is framed.
+    openApp({ appId: null })
+    router.push(ACCOUNT_PATH)
   }
   const goDevice = (id: number): void => {
     hapticTap()
@@ -252,6 +260,7 @@ export function AppDrawer(): React.JSX.Element | null {
               ) : null}
             </View>
           </View>
+          <MenuRow testID="drawer-account-link" icon={User} label={t('v2.apps.account')} onPress={goAccount} />
           {showServerList(servers.length) ? (
             <MenuRow testID="drawer-switch-server" icon={Server} label={t('v2.apps.switchServer')} onPress={() => setSwitching(true)} />
           ) : null}

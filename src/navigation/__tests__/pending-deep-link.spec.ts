@@ -43,7 +43,7 @@ describe('a cold link to a tab or a settings page is not dropped (#708)', () => 
   beforeEach(() => _resetPendingDeepLink())
 
   it('keeps /grids and /settings/*, which the allow-list used to refuse', () => {
-    for (const href of ['/grids', '/settings', '/settings/cameras', '/settings/sign-in?x=1']) {
+    for (const href of ['/grids', '/settings', '/settings/cameras', '/settings/sign-in?x=1', '/account']) {
       expect(isStashableDeepLink(href), href).toBe(true)
     }
     stashPendingDeepLink('/settings/cameras')

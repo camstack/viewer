@@ -13,7 +13,6 @@ const read = (rel: string): string => readFileSync(join(ROOT, rel), 'utf8')
 /** The Settings tab is a shell over four segment files; read them as one. */
 const SETTINGS_FILES = [
   'src/screens/SettingsScreen.tsx',
-  'src/screens/settings/AccountSegment.tsx',
   'src/screens/settings/ViewingSegment.tsx',
   'src/screens/settings/AppSegment.tsx',
   'src/screens/settings/AdvancedSegment.tsx',

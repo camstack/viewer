@@ -1,8 +1,6 @@
-// Sign-in methods — password, authenticator app, passkeys, linked accounts.
-// A stacked route in the (app) group, pushed OVER the tabs from Settings →
-// Account (`router.push('/settings/sign-in')`).
-import { SignInMethodsScreen } from "../../../src/screens/settings/SignInMethodsScreen";
+// Old deep link: sign-in methods moved into the shell Account screen (D1102).
+import { Redirect } from "expo-router";
 
-export default function SignInMethodsRoute() {
-  return <SignInMethodsScreen />;
+export default function SignInMethodsRedirect() {
+  return <Redirect href="/account" />;
 }

@@ -5,13 +5,13 @@
  * which self-service procedure each control calls with what.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { act, cleanup, fireEvent, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import React from 'react'
 
 import { mountScreen } from '../../../testing/mount.js'
 import { hubCalls } from '../../../testing/hub-stub.js'
 import { setTestPlatform, type TestPlatformOS } from '../../../testing/platform-control.js'
-import { SignInMethodsScreen } from '../SignInMethodsScreen.js'
+import { AccountScreen } from '../../account/AccountScreen.js'
 
 vi.mock('../../../connection/ConnectionProvider.js', async () =>
   (await import('../../../testing/connection-stub.js')).connectionStubModule(),
@@ -78,7 +78,7 @@ async function pressDialogButton(label: string, before: number): Promise<void> {
 
 function mount(os: TestPlatformOS): void {
   setTestPlatform(os)
-  mountScreen(React.createElement(SignInMethodsScreen), { hub: HUB })
+  mountScreen(React.createElement(AccountScreen), { hub: HUB })
 }
 
 beforeEach(() => setTestPlatform('ios'))
@@ -87,7 +87,7 @@ afterEach(() => {
   setTestPlatform('ios')
 })
 
-describe('Sign-in methods', () => {
+describe('Account → Sign-in methods', () => {
   it('lists passkeys, and a linked account whose provider is gone', async () => {
     mount('ios')
     expect(await screen.findByText('MacBook')).toBeTruthy()
@@ -126,7 +126,7 @@ describe('Sign-in methods', () => {
 
   it('a wrong password stays in the sheet with the hub\'s message, and starts nothing', async () => {
     setTestPlatform('ios')
-    mountScreen(React.createElement(SignInMethodsScreen), {
+    mountScreen(React.createElement(AccountScreen), {
       hub: {
         ...HUB,
         'auth.reauthenticate': () => {
@@ -150,7 +150,7 @@ describe('Sign-in methods', () => {
   it('an older hub without re-authentication links as before, with no proof field', async () => {
     setTestPlatform('ios')
     const { 'auth.reauthenticate': _absent, ...olderHub } = HUB
-    mountScreen(React.createElement(SignInMethodsScreen), { hub: olderHub })
+    mountScreen(React.createElement(AccountScreen), { hub: olderHub })
     const link = await screen.findByText('Link Authentik')
     act(() => {
       fireEvent.click(link)
@@ -263,7 +263,7 @@ describe('Sign-in methods', () => {
 
   it('turning the authenticator off: the confirmation, then the proof, then disableOwnTotp({ reauthToken })', async () => {
     setTestPlatform('web')
-    mountScreen(React.createElement(SignInMethodsScreen), {
+    mountScreen(React.createElement(AccountScreen), {
       hub: { ...HUB, 'auth.getOwnTotpStatus': { enabled: true, confirmedAt: 1 } },
     })
     const turnOff = await screen.findAllByText('Turn off')
@@ -283,7 +283,7 @@ describe('Sign-in methods', () => {
 
   it('a refusal (FORBIDDEN) is shown with the hub\'s own message', async () => {
     setTestPlatform('web')
-    mountScreen(React.createElement(SignInMethodsScreen), {
+    mountScreen(React.createElement(AccountScreen), {
       hub: {
         ...HUB,
         'auth.removeOwnPasskey': () => {
@@ -311,7 +311,7 @@ describe('Sign-in methods', () => {
 
   it('Active sessions: this app first and marked, another device can be signed out', async () => {
     setTestPlatform('web')
-    mountScreen(React.createElement(SignInMethodsScreen), { hub: HUB })
+    mountScreen(React.createElement(AccountScreen), { hub: HUB })
     expect(await screen.findByText('Active sessions')).toBeTruthy()
     expect(screen.getByText('CamStack app on iOS')).toBeTruthy()
     expect(screen.getByText(/This device/)).toBeTruthy()
@@ -320,7 +320,7 @@ describe('Sign-in methods', () => {
     const own = screen.getByTestId('session-ls_me')
     expect(own.textContent).not.toContain('Sign out')
     act(() => {
-      fireEvent.click(screen.getAllByText('Sign out')[0]!)
+      fireEvent.click(within(screen.getByTestId('session-ls_mac')).getByText('Sign out'))
     })
     await pressDialogButton('Sign out', 1)
     await waitFor(() => {
@@ -331,7 +331,7 @@ describe('Sign-in methods', () => {
   it('a hub without login sessions draws no Active sessions section', async () => {
     const { 'auth.listOwnSessions': _absent, ...olderHub } = HUB
     setTestPlatform('ios')
-    mountScreen(React.createElement(SignInMethodsScreen), { hub: olderHub })
+    mountScreen(React.createElement(AccountScreen), { hub: olderHub })
     expect(await screen.findByText('MacBook')).toBeTruthy()
     await waitFor(() => expect(hubCalls().some((c) => c.path === 'auth.listOwnSessions')).toBe(true))
     expect(screen.queryByText('Active sessions')).toBeNull()

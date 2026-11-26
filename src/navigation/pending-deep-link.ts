@@ -36,6 +36,7 @@ const DESTINATION_FAMILIES = [
   '/grids',
   '/notifications',
   '/settings',
+  '/account',
   '/device',
   '/rule',
   '/timelapse-rule',

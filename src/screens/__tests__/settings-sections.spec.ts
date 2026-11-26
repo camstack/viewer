@@ -31,7 +31,6 @@ const ROOT = process.cwd()
 const read = (rel: string): string => readFileSync(join(ROOT, rel), 'utf8')
 const SEGMENT_FILES = {
   shell: 'src/screens/SettingsScreen.tsx',
-  account: 'src/screens/settings/AccountSegment.tsx',
   viewing: 'src/screens/settings/ViewingSegment.tsx',
   app: 'src/screens/settings/AppSegment.tsx',
   advanced: 'src/screens/settings/AdvancedSegment.tsx',
@@ -128,7 +127,7 @@ describe('Stream defaults and Timeline are two sections of the Viewing segment',
  */
 describe('the Servers section names who is signed in', () => {
   it('renders the session user from useMe, with the role the hub confirmed', () => {
-    const src = read(SEGMENT_FILES.account)
+    const src = read('src/screens/account/AccountScreen.tsx')
     expect(src).toContain('useMe')
     const open = src.indexOf('<ServersSection')
     expect(open, 'no <ServersSection> in Settings').toBeGreaterThan(-1)
@@ -232,7 +231,6 @@ describe('the four segments', () => {
   it('each segment owns its sections', () => {
     const owns: Record<keyof typeof SEGMENT_FILES, readonly string[]> = {
       shell: [],
-      account: ['<ServersSection', '<TokensSection', '<ActiveSessionsSection collapsible'],
       viewing: ['v2.settings.streamDefaults', 'v2.settings.timeline', 'v2.settings.highlightAppearance'],
       app: ['v2.settings.general', '<SettingsLevelsSection', 'v2.settings.aboutUpdates'],
       advanced: ['<NetworkSection', 'v2.settings.diagnostics', 'v2.settings.data'],
@@ -243,10 +241,20 @@ describe('the four segments', () => {
     }
   })
 
-  it('Account offers Sign-in methods, and the route exists', () => {
-    expect(read(SEGMENT_FILES.account)).toContain('onOpenSignInMethods')
-    expect(read(SEGMENT_FILES.account)).toContain("'/settings/sign-in'")
-    expect(existsSync(join(ROOT, 'app/(app)/settings/sign-in.tsx'))).toBe(true)
+  it('the settings carry no account or server data any more (D1102)', () => {
+    const src = SETTINGS()
+    for (const mark of ['<ServersSection', '<TokensSection', '<ThisDeviceSection', '<ActiveSessionsSection', '<PasskeysSection']) {
+      expect(src, `Settings still renders ${mark}`).not.toContain(mark)
+    }
+  })
+
+  it('the Account screen owns the moved sections, and the old sign-in route is an alias that redirects', () => {
+    const src = read('src/screens/account/AccountScreen.tsx')
+    for (const mark of ['<ServersSection', '<ThisDeviceSection', '<TokensSection', '<PasskeysSection', '<ActiveSessionsSection']) {
+      expect(src, `Account lost ${mark}`).toContain(mark)
+    }
+    expect(existsSync(join(ROOT, 'app/(app)/account.tsx'))).toBe(true)
+    expect(read('app/(app)/settings/sign-in.tsx')).toContain('href="/account"')
   })
 
   it('the network poll is gated on the segment being shown, not only the tab', () => {

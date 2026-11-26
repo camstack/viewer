@@ -22,6 +22,7 @@ const HOME_ROUTES: readonly string[] = ['/', '/cameras', '/events', '/grids', '/
 /** Stacked detail routes that read or edit something, matched by prefix. */
 const INNER_PREFIXES: readonly string[] = [
   '/settings/',
+  '/account',
   '/notifications/',
   '/rule/',
   '/timelapse-rule/',
