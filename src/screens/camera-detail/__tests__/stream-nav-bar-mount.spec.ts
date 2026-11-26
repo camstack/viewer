@@ -93,11 +93,12 @@ describe('the bar appears only when the setting is on', () => {
     for (const label of ['Cameras', 'Grids', 'Library']) {
       expect(bar?.textContent, label).toContain(label)
     }
-    // Settings left the bar: it is a route behind the account menu now, and
-    // the bar carries that menu's avatar instead, and the Activity centre only
-    // while it has something not yet dismissed.
+    // Settings left the bar: it is a route behind the drawer now. The bar carries
+    // no avatar (the one avatar is the shell top bar's), and the Activity centre
+    // only while it has something not yet dismissed.
     expect(bar?.textContent).not.toContain('Settings')
-    expect(bar?.querySelector('[data-testid="user-menu-button"]')).not.toBeNull()
+    expect(bar?.querySelector('[data-testid="user-menu-button"]')).toBeNull()
+    expect(bar?.querySelector('[data-testid="drawer-menu-button"]')).toBeNull()
     expect(bar?.querySelector('[data-testid="activity-button"]')).toBeNull()
     act(() => {
       useActivityStore.setState({ items: [queuedJob({ id: 'job:1', jobKind: 'face-assign', title: 'Assign', now: 1 })] })

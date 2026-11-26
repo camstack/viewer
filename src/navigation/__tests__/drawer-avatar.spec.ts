@@ -55,3 +55,22 @@ describe('the drawer bottom', () => {
     expect(view.queryByTestId('drawer-switch-server')).toBeNull()
   })
 })
+
+describe('the bottom bar and the side rail carry no avatar (the one avatar is the shell bar\'s)', () => {
+  it('neither renders a user-menu-button or a drawer button', async () => {
+    const { readFileSync } = await import('node:fs')
+    const { join } = await import('node:path')
+    for (const rel of ['src/navigation/BottomNavBar.tsx', 'src/navigation/SideNavRail.tsx', 'src/navigation/NavAccountCluster.tsx']) {
+      const src = readFileSync(join(process.cwd(), rel), 'utf8')
+      expect(src, rel).not.toMatch(/UserMenuButton|user-menu-button|DrawerMenuButton|UserAvatar/)
+    }
+  })
+
+  it('the wide home bar still reaches the drawer, at its left', () => {
+    const view = mountScreen(React.createElement(HomeBar, { variant: 'wide', pathname: '/cameras', wrapBell }))
+    const bar = view.getByTestId('home-bar')
+    expect(bar.firstElementChild?.getAttribute('data-testid')).toBe('drawer-menu-button')
+    fireEvent.click(view.getByTestId('drawer-menu-button'))
+    expect(useAppStore.getState().drawerOpen).toBe(true)
+  })
+})

@@ -44,7 +44,7 @@ export const navItems: readonly NavItem[] = [
 
 /**
  * Settings is a ROUTE, not a destination in the bar: it is reached from the
- * drawer (`DrawerMenuButton`, `UserMenuButton`). It still has to be registered with the
+ * drawer (`DrawerMenuButton`). It still has to be registered with the
  * headless tab navigator or `/settings` would not resolve, so the registered
  * list is the bar's list plus it.
  */

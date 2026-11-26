@@ -36,11 +36,8 @@ describe('reaching Settings from the app drawer', () => {
     expect(drawer).not.toContain("router.dismissTo('/settings')")
   })
 
-  it('both avatars open the drawer; the popover is gone', () => {
+  it('the avatar opens the drawer; the popover is gone', () => {
     expect(read('navigation/DrawerMenuButton.tsx')).toContain('setDrawerOpen(true)')
-    const button = read('navigation/UserMenuButton.tsx')
-    expect(button).toContain('setDrawerOpen(true)')
-    expect(button).not.toContain('AnchoredMenu')
     expect(read('navigation/NavAccountCluster.tsx')).not.toContain('wrapSettings')
   })
 })

@@ -1,21 +1,16 @@
 /**
- * NavAccountCluster — the items at the end of the navigation: the Activity
- * centre (only while it has something to show) and the account menu.
+ * NavAccountCluster — the item at the end of the navigation: the Activity
+ * centre (only while it has something to show). The account is not here: the one
+ * avatar sits at the left of the shell's top bar and opens the drawer.
  *
  * Shared by the phone bar (a row at its right edge) and the side rail (a column
- * at its foot) so both surfaces carry the same two controls in the same order,
- * drawn once.
+ * at its foot) so both surfaces carry it the same way, drawn once.
  */
 import React, { memo, useRef } from 'react'
 import { StyleSheet, View } from 'react-native'
 
 import { ActivityButton } from '../activity/ActivityButton.js'
-import { useViewportSize } from '../hooks/use-viewport-size.js'
 import { SPACING } from '../theme/tokens.js'
-import { UserMenuButton } from './UserMenuButton.js'
-
-/** Width from which the bar has room to print the user's name. */
-const NAME_MIN_WIDTH = 560
 
 export interface NavAccountClusterProps {
   readonly orientation: 'row' | 'column'
@@ -24,17 +19,13 @@ export interface NavAccountClusterProps {
 export const NavAccountCluster = memo(function NavAccountCluster({
   orientation,
 }: NavAccountClusterProps): React.JSX.Element {
-  const { width } = useViewportSize()
   const row = orientation === 'row'
-  // BOTH popovers open against this block (avatar + Activity), so they open in
-  // the same place with the same width.
+  // The Activity popover opens against this block.
   const blockRef = useRef<View>(null)
   return (
     <View ref={blockRef} collapsable={false} style={row ? styles.row : styles.column}>
-      {/* Before the avatar (left of it in the bar, above it in the rail), and
-          absent while the Activity centre has nothing undismissed. */}
+      {/* Absent while the Activity centre has nothing undismissed. */}
       <ActivityButton menuAlign={row ? 'end' : 'start'} anchorRef={blockRef} />
-      <UserMenuButton showName={row && width >= NAME_MIN_WIDTH} />
     </View>
   )
 })

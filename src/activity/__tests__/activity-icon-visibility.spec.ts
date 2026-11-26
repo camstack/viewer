@@ -50,9 +50,7 @@ describe('the Activity icon visibility rule', () => {
     const button = readFileSync(join(process.cwd(), 'src/activity/ActivityButton.tsx'), 'utf8')
     expect(button).toContain('hasUndismissedItems(items)')
     expect(button).toContain('if (!present && !open)')
-    // Immediately left of the Settings (account) entry: first in the cluster.
     const cluster = readFileSync(join(process.cwd(), 'src/navigation/NavAccountCluster.tsx'), 'utf8')
     expect(cluster.indexOf('<ActivityButton')).toBeGreaterThan(-1)
-    expect(cluster.indexOf('<ActivityButton')).toBeLessThan(cluster.indexOf('<UserMenuButton'))
   })
 })

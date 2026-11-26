@@ -15,7 +15,7 @@ describe('the top bar wiring (#691)', () => {
     expect(tabs).toMatch(/TopInsetSpentContext\.Provider value=\{showHomeBar\}/)
   })
 
-  it('the rail and the bottom capsule give up the ☰ and the account only while the bar carries them', () => {
+  it('the rail and the bottom capsule give up the Activity centre only while the bar carries them', () => {
     expect(tabs.match(/chrome=\{showHomeBar \? 'nav' : 'full'\}/g)).toHaveLength(2)
     expect(read('navigation/SideNavRail.tsx')).toMatch(/chrome = 'full'/)
     expect(read('navigation/BottomNavBar.tsx')).toMatch(/chrome = 'full'/)

@@ -48,7 +48,6 @@ import {
   bottomNavFootprint,
   bottomNavPaddingBottom,
 } from './bottom-nav-metrics.js'
-import { DrawerMenuButton } from './DrawerMenuButton.js'
 import { NavAccountCluster } from './NavAccountCluster.js'
 
 /** Marker for the bar's root. `testID` reaches the web as `data-testid` and is
@@ -139,8 +138,6 @@ export function BottomNavBar({
     >
       <GlassGroup>
       <GlassSurface variant="bar" style={styles.capsule} contentStyle={styles.capsuleRow}>
-      {/* The hamburger at the left: the one app drawer. */}
-      {chrome === 'full' ? <DrawerMenuButton orientation="row" /> : null}
       <View style={styles.itemsRow} onLayout={onRowLayout}>
       {rowWidth > 0 ? <SlidingGlassPill target={pill} testID="bottom-nav-pill" /> : null}
       {navItems.map((item) => {
@@ -195,8 +192,8 @@ export function BottomNavBar({
         )
       })}
       </View>
-      {/* The two fixed items at the right: the account menu and the Activity
-          centre. They are not destinations — no highlight, no TabTrigger. */}
+      {/* The Activity centre at the right. It is not a destination — no
+          highlight, no TabTrigger; the one avatar (the drawer) is the shell bar's. */}
       {chrome === 'full' ? <NavAccountCluster orientation="row" /> : null}
       </GlassSurface>
       </GlassGroup>

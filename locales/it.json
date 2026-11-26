@@ -4189,7 +4189,6 @@
       "clearFinished": "Svuota completate"
     },
     "userMenu": {
-      "open": "Menu account {{name}}",
       "settings": "Impostazioni",
       "signOut": "Esci",
       "servers": "Server"

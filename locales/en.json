@@ -4189,7 +4189,6 @@
       "clearFinished": "Clear finished"
     },
     "userMenu": {
-      "open": "Account menu {{name}}",
       "settings": "Settings",
       "signOut": "Sign out",
       "servers": "Servers"

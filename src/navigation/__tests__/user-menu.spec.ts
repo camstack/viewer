@@ -49,7 +49,7 @@ describe('Settings is a route, not a destination in the bar', () => {
     expect(read('navigation/TabsNavigator.tsx')).toContain('registeredTabs.map')
   })
 
-  it('both navigation surfaces carry the account cluster', () => {
+  it('both navigation surfaces carry the cluster (Activity only, the account lives in the drawer)', () => {
     expect(read('navigation/BottomNavBar.tsx')).toContain('<NavAccountCluster')
     expect(read('navigation/SideNavRail.tsx')).toContain('<NavAccountCluster')
   })

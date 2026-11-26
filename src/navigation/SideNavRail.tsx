@@ -32,7 +32,6 @@ import { CAMERAS_TAB_HREF } from './back-to-cameras.js'
 import { resolveCamerasPress } from './cameras-press.js'
 import { useLastCameraStore } from '../store/last-camera-store.js'
 import { SIDE_NAV_WIDTH } from './side-nav-metrics.js'
-import { DrawerMenuButton } from './DrawerMenuButton.js'
 import { NavAccountCluster } from './NavAccountCluster.js'
 
 export interface NavItemWrapperProps {
@@ -127,8 +126,6 @@ export function SideNavRail({
         },
       ]}
     >
-      {/* The hamburger at the top (the start of the rail): the one app drawer. */}
-      {navOnly ? null : <DrawerMenuButton orientation="column" />}
       <View style={styles.sidebarInner}>
         {items.map((item) => {
           const { key, segment, icon: Icon } = item
