@@ -31,6 +31,22 @@ export interface WhatsNewEntry {
 // i18n-ok: release notes carry their own `en` + `it` text per entry (typed, held by whats-new.spec.ts)
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.740',
+    date: '2026-11-26',
+    notes: {
+      en: [
+        'Apps are picked from one selector row in the menu.',
+        'Addon pages open as apps inside the viewer.',
+        'Switching server shows a full-page loader.',
+      ],
+      it: [
+        'Le app si scelgono da una riga di selezione nel menu.',
+        'Le pagine degli addon si aprono come app dentro il viewer.',
+        'Il cambio server mostra un caricamento a tutto schermo.',
+      ],
+    },
+  },
+  {
     version: '1.0.739',
     date: '2026-11-26',
     notes: {
