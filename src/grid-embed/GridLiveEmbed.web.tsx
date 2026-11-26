@@ -39,6 +39,7 @@ interface GridLiveEmbedProps {
   readonly activeOnly?: boolean
   /** Live detection bounding-box overlay on every tile (session toggle). */
   readonly showBoxes?: boolean
+  readonly showMotion?: boolean
   readonly ptzIds?: readonly number[]
   readonly onTileTap?: (deviceId: number, rect: TileRect) => void
   readonly onTileLongPress?: (deviceId: number, rect: TileRect) => void
@@ -61,7 +62,7 @@ interface GridLiveEmbedProps {
 }
 
 export function GridLiveEmbed(props: GridLiveEmbedProps) {
-  const { devices, quality, layout, showName, audioOnIds, pausedIds, highlight, activeOnly, showBoxes, ptzIds, editable, spans } = props
+  const { devices, quality, layout, showName, audioOnIds, pausedIds, highlight, activeOnly, showBoxes, showMotion, ptzIds, editable, spans } = props
   const { server, token } = useServer()
   const { colors } = useTheme()
   const { t } = useTranslation()
@@ -100,6 +101,7 @@ export function GridLiveEmbed(props: GridLiveEmbedProps) {
             highlight,
             activeOnly,
             showBoxes,
+            showMotion,
             audioOnIds,
             pausedIds,
             ptzIds,
@@ -108,7 +110,7 @@ export function GridLiveEmbed(props: GridLiveEmbedProps) {
             labels,
           })
         : {},
-    [serverUrl, token, devices, showName, quality, layout, highlight, activeOnly, showBoxes, audioOnIds, pausedIds, ptzIds, editable, spans, labels],
+    [serverUrl, token, devices, showName, quality, layout, highlight, activeOnly, showBoxes, showMotion, audioOnIds, pausedIds, ptzIds, editable, spans, labels],
   )
 
   const onHostMessage = useCallback(
@@ -213,6 +215,7 @@ export function GridLiveEmbed(props: GridLiveEmbedProps) {
   }, [highlight, postCommand])
   useEffect(() => postCommand({ kind: 'setActiveOnly', value: activeOnly ?? false }), [activeOnly, postCommand])
   useEffect(() => postCommand({ kind: 'setShowBoxes', value: showBoxes ?? false }), [showBoxes, postCommand])
+  useEffect(() => postCommand({ kind: 'setShowMotion', value: showMotion ?? false }), [showMotion, postCommand])
 
   useEffect(() => {
     const onOnline = (): void => postCommand({ kind: 'reconnect' })

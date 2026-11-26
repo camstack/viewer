@@ -110,3 +110,54 @@ describe('the previous window as a placeholder', () => {
     expect(keepPreviousWindow(a, 2, T)).toBeUndefined()
   })
 })
+
+describe('readPlaybackWindow — audio and motion reads (planning#745)', () => {
+  const calls: { path: string; input: Record<string, unknown> }[] = []
+  function hubWith(over: { audio?: unknown; motion?: unknown; failAudio?: boolean; failMotion?: boolean }): Record<string, unknown> {
+    calls.length = 0
+    return {
+      pipelineAnalytics: {
+        listTracks: { query: async () => [] },
+        getMotionEvents: {
+          query: async (input: Record<string, unknown>) => {
+            calls.push({ path: 'getMotionEvents', input })
+            if (over.failMotion) throw new Error('down')
+            return over.motion ?? []
+          },
+        },
+      },
+      deviceHistory: {
+        query: {
+          query: async (input: Record<string, unknown>) => {
+            calls.push({ path: 'deviceHistory.query', input })
+            if (over.failAudio) throw new Error('down')
+            return over.audio
+          },
+        },
+      },
+    }
+  }
+
+  it('queries the stored audio series raw, and the motion episodes, for the window', async () => {
+    const read = await readPlaybackWindow(hubWith({ audio: { series: [{ points: [{ t: block, last: -33, mean: -33, min: -40, max: -30, samples: 1 }] }] }, motion: [{ timestamp: block + 1_000, durationMs: 3_000 }] }), 7, block)
+    const hist = calls.find((c) => c.path === 'deviceHistory.query')
+    expect(hist?.input).toMatchObject({ deviceId: 7, key: 'addon:pipeline-analytics/audio-level', resolution: 'raw' })
+    expect(calls.some((c) => c.path === 'getMotionEvents' && c.input.deviceId === 7)).toBe(true)
+    expect(read.audio?.points).toHaveLength(1)
+    expect(read.motion).toHaveLength(1)
+  })
+
+  it('a failed audio or motion read leaves the window readable, with those two unknown', async () => {
+    const read = await readPlaybackWindow(hubWith({ failAudio: true, failMotion: true }), 7, block)
+    expect(read.audio).toBeNull()
+    expect(read.motion).toBeNull()
+    expect(read.windowTracks).toBe(0)
+    expect(frameFromWindow({ ...read, probeTracks: 1 }, block + 1_000).availability).toBe('known')
+  })
+
+  it('a motion read that hit its row limit is not trusted', async () => {
+    const full = Array.from({ length: 200 }, (_, i) => ({ timestamp: block + i, durationMs: 1 }))
+    const read = await readPlaybackWindow(hubWith({ motion: full }), 7, block)
+    expect(read.motion).toBeNull()
+  })
+})

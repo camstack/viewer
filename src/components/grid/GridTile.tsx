@@ -33,6 +33,7 @@ import { qualityToTarget } from '../../live/quality-target.js'
 import { useSnapshot } from '../../data/use-snapshot.js'
 import { SnapshotImage } from '../camera/SnapshotImage.js'
 import { snapshotWidthForCssPx } from '../../hooks/use-responsive.js'
+import { wallMotionOn, wallTileOverlay } from '../../grid/grid-motion.js'
 import { useMotionHighlight } from '../../data/use-motion.js'
 import { useSettings } from '../../data/use-settings.js'
 import { useSwitchedOffFor } from '../../data/CameraSwitchedOffProvider.js'
@@ -46,7 +47,7 @@ import {
 } from '../../live/battery-stream-gate.js'
 import { BatteryHoldOverlay } from '../camera/BatteryHoldOverlay.js'
 import type { GridQuality } from '../../store/grid-store.js'
-import { hasLayer, type OverlayLayer } from '../camera/overlay/overlay-config.js'
+import { type OverlayLayer } from '../camera/overlay/overlay-config.js'
 
 /** Stable empty default — see `GridWall`. */
 const EMPTY_LAYERS: readonly OverlayLayer[] = []
@@ -240,7 +241,7 @@ export const GridTile = React.memo(function GridTile({
           offers them. Everything below is mounted only when this camera placed
           it, so the subscription/poll it opens is the one the operator asked
           for. */}
-      {hasLayer(overlay, 'motion') && live ? (
+      {wallMotionOn(layers) && live ? (
         <MotionRegionsOverlay deviceId={camera.id} enabled />
       ) : null}
       {/* The read-outs, anchored to the cell's corners (a spanned cell letterboxes
@@ -252,13 +253,14 @@ export const GridTile = React.memo(function GridTile({
             the tile's own controls. Nothing fades (no auto-hiding controls). */}
         <OverlayLayerView
           deviceId={camera.id}
-          config={overlay}
+          config={wallTileOverlay(overlay, layers)}
           controlsVisible
           deviceInfo="off"
           getStats={getStats}
           statsCompact={!statsPanelFits(width, height)}
           gates={{
             audioMeter: live,
+            motion: live && motionOn && wallMotionOn(layers),
             occupancy: live,
             stats: live,
             viewers: live,
@@ -271,7 +273,7 @@ export const GridTile = React.memo(function GridTile({
           active (and for the configured linger after). Non-interactive; painted
           over the video edge-to-edge. Color/thickness from the global highlight
           appearance so it matches the embed + detail borders. */}
-      {motionOn ? (
+      {motionOn && wallMotionOn(layers) ? (
         <View
           pointerEvents="none"
           style={[

@@ -86,6 +86,9 @@ export function GridMenuPanel({
     detectionLayers: (
       <OverlayLayersRow layers={BAR_LAYERS} selected={layers} onToggle={onToggleLayer} />
     ),
+    // The motion chip is one of the chips of the row above (`BAR_LAYERS` carries
+    // it): one control, two owners in the record, never a second selector.
+    motionLayer: <></>,
     highlightBorder: (
       <>
         <PanelToggleRow

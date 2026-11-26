@@ -132,6 +132,8 @@ export const gridConfigSchema = z.object({
   /** Live detection bounding-box overlay on every tile. Host-owned session
    *  toggle (pushed at runtime via setShowBoxes). Absent ⇒ off. */
   showBoxes: z.boolean().optional(),
+  /** The grid's motion layer (motion regions on every tile). Absent ⇒ off. */
+  showMotion: z.boolean().optional(),
   /** Device ids whose audio starts ON (combinable — more than one allowed). The
    *  host owns this set at runtime and pushes updates via setAudioOn. */
   audioOnIds: z.array(z.number().int().nonnegative()).optional(),

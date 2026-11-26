@@ -91,17 +91,19 @@ describe('every row is owned, and no row is hidden from everyone', () => {
     }
   })
 
-  it('keeps the motion overlays per-camera too', () => {
-    // `motionLayer` is a chip of the SAME control the bar owns the rest of, and
-    // it stays here on purpose: the tile paints motion regions from the
-    // camera's own document, and the bar has no write path to N of those.
-    expect(isRowVisible('motionLayer', 'grid-cell')).toBe(true)
+  it('gives the motion layer to the bar too (planning#745)', () => {
+    // `motionLayer` is a chip of the SAME control, and a grid follows the GRID's
+    // settings: the tile paints motion from the grid document, never from each
+    // camera's own one.
+    expect(isRowVisible('motionLayer', 'grid-cell')).toBe(false)
+    expect(GRID_ROW_OWNER.motionLayer).toBe('bar')
   })
 
   it('lists the bar rows as exactly the rows the bar owns', () => {
     expect([...GRID_BAR_ROWS]).toEqual(VIEW_OPTION_ROWS.filter((r) => GRID_ROW_OWNER[r] === 'bar'))
     expect([...GRID_BAR_ROWS]).toEqual([
       'detectionLayers',
+      'motionLayer',
       'highlightBorder',
       'deviceInfo',
       'clusterLabel',
@@ -136,8 +138,12 @@ describe('a grid CELL shows what the tile paints per camera', () => {
     // camera by the operator's own rule ("come provider di quella camera") —
     // so the exception is gone and the rule is now universal, which is what it
     // always wanted to be. The assertion is tightened rather than relaxed.
+    //
+    // AMENDED planning#745: the `detection` group is the exception again. Its
+    // three rows (detector layers, motion layer, highlight border) are all the
+    // GRID's, so the group lives in the bar and the cell wears none of it.
     for (const group of VIEW_OPTION_GROUPS) {
-      expect(isGroupVisible(group, 'grid-cell'), group).toBe(true)
+      expect(isGroupVisible(group, 'grid-cell'), group).toBe(group !== 'detection')
     }
   })
 })
@@ -150,7 +156,7 @@ describe('the bar wears the same groups', () => {
   it('splits its rows into those groups without losing any', () => {
     const collected = GRID_BAR_GROUPS.flatMap((g) => barRowsInGroup(g))
     expect([...collected].sort()).toEqual([...GRID_BAR_ROWS].sort())
-    expect(barRowsInGroup('detection')).toEqual(['detectionLayers', 'highlightBorder'])
+    expect(barRowsInGroup('detection')).toEqual(['detectionLayers', 'motionLayer', 'highlightBorder'])
     expect(barRowsInGroup('liveIndicators')).toEqual(['deviceInfo'])
     expect(barRowsInGroup('timeline')).toEqual(['clusterLabel'])
   })

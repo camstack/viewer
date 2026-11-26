@@ -28,7 +28,6 @@
  * Pure module — no React. Safe for tests.
  */
 import {
-  DOORBELL_ANCHOR,
   type OverlayConfig,
   type OverlayItemId,
 } from './overlay-config.js'
@@ -76,7 +75,7 @@ export function stackItems(config: OverlayConfig, ctx: StackContext): readonly S
     { id: 'controlsLeft', anchor: config.controlsLeft },
     { id: 'controlsRight', anchor: config.controlsRight },
     ...(config.doorbell && ctx.hasDoorbell
-      ? [{ id: 'doorbell' as const, anchor: DOORBELL_ANCHOR }]
+      ? [{ id: 'doorbell' as const, anchor: config.doorbellAnchor }]
       : []),
     ...placed(config.motionBadge, 'motionBadge'),
     ...placed(config.stats, 'stats'),

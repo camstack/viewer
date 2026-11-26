@@ -14,7 +14,7 @@
  * Contract:
  *   IN  (set before load):  window.__CAMSTACK_GRID__ = { serverUrl, token, devices, layout, quality, showName, showBadges, muted, paused }
  *   OUT (postMessage):      state / layout / tileOpen / audioToggle (see grid-messages)
- *   IN  (once mounted):     window.__camstackGrid = { setAudioOn, setMutedAll, setActiveMic, setPaused, setDevices, setQuality, setLayout, setShowName, setShowBadges, setShowBoxes, setOverlays, fit }
+ *   IN  (once mounted):     window.__camstackGrid = { setAudioOn, setMutedAll, setActiveMic, setPaused, setDevices, setQuality, setLayout, setShowName, setShowBadges, setShowBoxes, setShowMotion, setOverlays, fit }
  *
  * Tap a tile to reveal in-tile controls (auto-hide): center pause/play (per
  * tile), bottom-left audio + mic, bottom-right open (→ host navigates via the
@@ -75,6 +75,7 @@ declare global {
       setHighlight: (h: GridHighlightConfig) => void
       setActiveOnly: (b: boolean) => void
       setShowBoxes: (b: boolean) => void
+      setShowMotion: (b: boolean) => void
       /** PER-DEVICE indicators, keyed by device id (string) — the first
        *  per-camera channel in this protocol (everything before it was one
        *  value for the whole wall). */
@@ -175,6 +176,7 @@ function Grid({ system, config }: GridProps) {
   const [activeOnly, setActiveOnly] = useState(config.activeOnly ?? false)
   // Live bounding-box overlay — grid-wide session toggle (host-pushed).
   const [showBoxes, setShowBoxes] = useState(config.showBoxes ?? false)
+  const [showMotion, setShowMotion] = useState(config.showMotion ?? false)
   // Per-device indicators (motion regions, motion pill, audio meter, occupancy,
   // stats) — set per camera in the app's cell menu and pushed here, because a
   // menu may only offer what something DRAWS and on this platform that is us.
@@ -264,6 +266,7 @@ function Grid({ system, config }: GridProps) {
       setHighlight: (h) => setHighlight(h),
       setActiveOnly: (b) => setActiveOnly(b),
       setShowBoxes: (b) => setShowBoxes(b),
+      setShowMotion: (b) => setShowMotion(b),
       setOverlays: (next) => setOverlays(next),
       setPaused: (ids) => setPausedIds(new Set(ids)),
       setDevices: (ids) => setDevices((prev) => (sameIds(prev, ids) ? prev : [...ids])),
@@ -308,6 +311,9 @@ function Grid({ system, config }: GridProps) {
             break
           case 'setShowBoxes':
             api.setShowBoxes(command.value === true)
+            break
+          case 'setShowMotion':
+            api.setShowMotion(command.value === true)
             break
           case 'setOverlays':
             api.setOverlays(command.value as Record<string, TileOverlayConfig>)
@@ -446,6 +452,7 @@ function Grid({ system, config }: GridProps) {
             }
             highlight={highlight}
             showBoxes={showBoxes}
+            showMotion={showMotion}
             overlay={overlays[String(deviceId)]}
             reconnectSignal={reconnectNonce}
             posterUrl={snapshots[String(deviceId)]}

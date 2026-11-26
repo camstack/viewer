@@ -95,20 +95,21 @@ describe('position choices go through ONE picker, inline, never cycled', () => {
     // broke the moment the three identical rows were folded into one
     // `PanelPositionRow`, which is the very deduplication it should reward.
     // Assert the INTENT instead: five placeable overlays, one row shape.
-    // The motion pill was retired (the overlay is the motion treatment); the
-    // stream stats joined on 2026-10-07 (it was a bare switch), the live
+    // The motion pill is placeable again (planning#745: it is drawn by the
+    // overlay stack, live and in playback); the stream stats joined on 2026-10-07 (it was a bare switch), the live
     // viewers count on 2026-10-14.
     const src = read('components/camera/theater/TimelineOverlayPanel.tsx')
     const rows = src.match(/<PanelPositionRow/g) ?? []
     // audio, occupancy, stats, viewers, device info + camera name and the two
-    // control groups (the global layout rows).
-    expect(rows.length).toBe(8)
+    // control groups (the global layout rows), the motion pill and the doorbell
+    // badge's corner.
+    expect(rows.length).toBe(10)
     expect(src).toContain("place('stats', next)")
     expect(src).toContain("place('viewers', next)")
     for (const field of ['audioMeter', 'occupancy', 'deviceInfo']) {
       expect(src).toContain(field)
     }
-    expect(src).not.toContain('motionBadge')
+    expect(src).toContain("place('motionBadge', next)")
   })
 
   it('the superseded twin pickers are gone, not left as unused files', () => {

@@ -45,9 +45,8 @@ describe('tileOverlayFor', () => {
         stats: 'top-left',
       }),
     )
+    // Motion is NOT here: a wall follows the grid's motion layer (`showMotion`).
     expect(config).toEqual({
-      motionBoxes: true,
-      motionBadge: 'top-right',
       audioMeter: 'bottom-right',
       occupancy: 'bottom-left',
       // `stats` keeps its boolean so a page built before `statsAt` still draws.
@@ -59,8 +58,8 @@ describe('tileOverlayFor', () => {
   it('never carries the rows the GRID BAR owns', () => {
     // The DETECTOR layers and the highlight border are wall-wide and already
     // travel in `showBoxes` / `highlight`. A second copy here would be the
-    // two-documents bug in a new place. Only `motion` — the one layer the tile
-    // paints per camera — may cross.
+    // two-documents bug in a new place. The motion layer is the grid's too
+    // (`showMotion`), so no layer crosses here.
     const config = tileOverlayFor(
       overlay({
         layers: ['objects', 'discarded', 'stationary'],

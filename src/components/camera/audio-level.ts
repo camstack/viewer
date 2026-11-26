@@ -36,12 +36,12 @@ export const AUDIO_LEVEL_STEPS = AUDIO_LEVEL_THRESHOLDS_DBFS.length
  * so the meter grows hotter instead of collapsing to green / amber / red.
  */
 export const AUDIO_LEVEL_COLORS: readonly string[] = [
-  '#22c55e',
-  '#84cc16',
-  '#eab308',
-  '#f59e0b',
-  '#f97316',
-  '#ef4444',
+  '#22c55e', // ui-check-ok: six-rung level ramp, quiet to loud; no token carries a ramp
+  '#84cc16', // ui-check-ok: six-rung level ramp, quiet to loud; no token carries a ramp
+  '#eab308', // ui-check-ok: six-rung level ramp, quiet to loud; no token carries a ramp
+  '#f59e0b', // ui-check-ok: six-rung level ramp, quiet to loud; no token carries a ramp
+  '#f97316', // ui-check-ok: six-rung level ramp, quiet to loud; no token carries a ramp
+  '#ef4444', // ui-check-ok: six-rung level ramp, quiet to loud; no token carries a ramp
 ]
 
 export function audioLevelColor(logicalIndex: number): string {
@@ -122,6 +122,13 @@ export function dbfsToLevel(dbfs: number | null): number {
     if (dbfs >= floor) level += 1
   }
   return level
+}
+
+/** The number drawn above the meter bars. A reading that is not there is a
+ *  dash — never `0 dBFS`, which is a real (full-scale) level. */
+export function formatAudioDbfs(dbfs: number | null): string {
+  if (dbfs === null || !Number.isFinite(dbfs)) return '—'
+  return `${Math.round(dbfs)} dBFS`
 }
 
 /** The default meter position when first enabled from `off`. The meter's

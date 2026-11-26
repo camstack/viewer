@@ -121,7 +121,8 @@ describe('what the cell menu offers, the TILE draws', () => {
     const tile = code(TILE)
     // The layer builds its stacks from the PLACED overlays only (`stackItems`
     // skips `off`), and the tile gates every one on `live`.
-    expect(tile).toContain("hasLayer(overlay, 'motion') && live")
+    // Motion follows the GRID's layer (planning#745), never the camera's own.
+    expect(tile).toContain('wallMotionOn(layers) && live')
     expect(tile).toContain('audioMeter: live')
     expect(tile).toContain('stats: live')
     expect(code(join(CAMERA_OVERLAY, 'overlay-stack.ts'))).toContain("placed(config.audioMeter, 'audioMeter')")
@@ -134,7 +135,7 @@ describe('what the cell menu offers, the TILE draws', () => {
     expect(tile).toContain('<TileAudioMeter')
     expect(tile).toContain('<TileOccupancy')
     expect(tile).toContain('<TileStats')
-    expect(tile).toContain('overlay?.motionBoxes === true')
+    expect(tile).toContain('showMotion && !paused')
     expect(tile).toContain('overlay?.stats === true')
   })
 

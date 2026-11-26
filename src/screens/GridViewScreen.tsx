@@ -51,6 +51,7 @@ import { HEADER_BUTTON_SIZE, HEADER_PADDING_TOP, HEADER_PADDING_X } from '../com
 import { useTheme } from '../theme/theme-provider.js'
 import { GridWall } from '../components/grid/GridWall.js'
 import { GridWallBackButton } from '../components/grid/GridWallBackButton.js'
+import { wallHighlight, wallMotionOn } from '../grid/grid-motion.js'
 import { createWallTouchRelay } from '../grid/wall-back-visibility.js'
 import { GridWallTimeline } from '../components/grid/GridWallTimeline.js'
 import {
@@ -520,11 +521,11 @@ export function GridViewScreen({ gridId, adhocCameraIds, originDeviceId = null }
   const highlightConfig = useMemo<GridHighlightEmbedConfig>(
     () => ({
       enabled: highlightOn,
-      ...highlightSettings,
+      ...wallHighlight(highlightSettings, layers),
       appearance: settings.highlight,
       motionHoldSec: settings.grid.motionHoldSec,
     }),
-    [highlightOn, highlightSettings, settings.highlight, settings.grid.motionHoldSec],
+    [highlightOn, highlightSettings, layers, settings.highlight, settings.grid.motionHoldSec],
   )
 
   // Ad-hoc grids have no builder to edit — the action is hidden entirely.
@@ -671,6 +672,7 @@ export function GridViewScreen({ gridId, adhocCameraIds, originDeviceId = null }
             // discarded nor a parked layer — so only the `objects` chip
             // reaches it. The other two are native-wall/single-view for now.
             showBoxes={layers.includes('objects')}
+            showMotion={wallMotionOn(layers)}
             // Each camera's OWN indicators — the per-cell menu offers them
             // per camera, so the wall paints them per camera.
             overlays={tileOverlays}

@@ -3322,10 +3322,9 @@
       "liveViewersCount_other": "{{count}} persone guardano in diretta",
       "addReadout": "Aggiungi un valore",
       "removeReadout": "Rimuovi valore",
-      "readoutsHint": "Fissa un valore live sull'immagine: il livello audio, o un sensore collegato a questa telecamera.",
+      "readoutsHint": "Fissa un valore live sull'immagine: un valore di questa telecamera o di un sensore collegato.",
       "noFields": "Questo dispositivo non pubblica valori live.",
       "thisCamera": "Questa telecamera",
-      "audioDbfs": "Livello audio",
       "liveOnlyHint": "Si disegnano solo sull'immagine live — non in riproduzione né in pausa.",
       "positions": {
         "off": "Off",
@@ -3344,7 +3343,9 @@
       "controlsRight": "Controlli a destra",
       "fadeSection": "Nascondi con i controlli",
       "fadeHint": "Questi overlay scompaiono quando i controlli si nascondono da soli.",
-      "fadeReadout": "Nascondi con i controlli"
+      "fadeReadout": "Nascondi con i controlli",
+      "motionBadge": "Badge movimento",
+      "doorbellCorner": "Angolo del badge campanello"
     },
     "clips": {
       "title": "Clip",

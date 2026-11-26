@@ -16,17 +16,10 @@ import {
 } from '../../components/camera/overlay/overlay-config.js'
 
 /**
- * The four layers are ONE control, but they are not ONE owner.
- *
- * Folding motion into the same chip row would promote it from per-camera
- * (`cell`) to wall-wide (`bar`) on the grid — and the tiles ALREADY paint motion
- * regions from each camera's own document. Promoting it would mean either the
- * bar writing N camera documents (the "one picture, two documents" bug this
- * module exists to end) or silently dropping a capability that ships today.
- *
- * So: two REGISTRY rows, one RENDERED control. The panel asks which layers are
- * visible in its context and draws that many chips — four in the single-camera
- * view, one (motion) in a grid cell, three in the grid bar.
+ * The four layers are ONE control and, since planning#745, ONE owner on the
+ * wall: a grid follows the GRID's settings, never each camera's own document.
+ * The single view keeps its own per-camera set; a grid cell's menu offers none
+ * of them (the bar owns all four).
  */
 const ROOT = process.cwd()
 const read = (...rel: readonly string[]): string => readFileSync(join(ROOT, ...rel), 'utf8')
@@ -45,19 +38,18 @@ describe('every layer is owned, exactly once', () => {
     }
   })
 
-  it('keeps MOTION per-camera and the detector layers wall-wide', () => {
-    // The judgement call, pinned. Motion is the one layer a tile paints from
-    // the camera's own document, so the bar must not claim it.
-    expect(GRID_ROW_OWNER[LAYER_ROW.motion]).toBe('cell')
-    for (const layer of ['objects', 'discarded', 'stationary'] as const) {
+  it('owns ALL four layers on the wall (planning#745: a grid follows the grid settings)', () => {
+    // Reversed on 2026-11-26: a tile used to paint motion from the camera's own
+    // document, so a wall had no setting that turned the regions off.
+    for (const layer of ['motion', 'objects', 'discarded', 'stationary'] as const) {
       expect(GRID_ROW_OWNER[LAYER_ROW[layer]]).toBe('bar')
     }
   })
 
   it('offers all four in the single view, and splits them on the wall', () => {
     expect([...visibleLayers('single')]).toEqual(['motion', 'objects', 'discarded', 'stationary'])
-    expect([...visibleLayers('grid-cell')]).toEqual(['motion'])
-    expect([...BAR_LAYERS]).toEqual(['objects', 'discarded', 'stationary'])
+    expect([...visibleLayers('grid-cell')]).toEqual([])
+    expect([...BAR_LAYERS]).toEqual(['motion', 'objects', 'discarded', 'stationary'])
   })
 
   it('never offers the same layer in both grid menus', () => {

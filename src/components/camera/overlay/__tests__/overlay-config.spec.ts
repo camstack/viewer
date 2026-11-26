@@ -23,7 +23,7 @@ import {
 import { parseLiveFields, formatLiveValue } from '../../../../data/use-device-live-fields.js'
 
 function readout(over: Partial<OverlayReadout> = {}): OverlayReadout {
-  const source = over.source ?? { kind: 'audioDbfs' as const }
+  const source = over.source ?? { kind: 'cameraField' as const, sectionId: 'sensors', fieldKey: 'temp' }
   return { id: readoutId(source), source, label: 'Audio', corner: 'top-right', ...over }
 }
 
@@ -37,6 +37,46 @@ describe('the defaults of the one global overlay document', () => {
     for (const id of FADEABLE_OVERLAYS) {
       expect(FADE_DEFAULTS[id], id).toBe(id === 'cameraName')
     }
+  })
+
+  it('the motion pill fades like every other overlay, and the doorbell badge has a corner (planning#745)', () => {
+    expect(FADEABLE_OVERLAYS).toContain('motionBadge')
+    expect(OVERLAY_DEFAULTS.doorbellAnchor).toBe('top-left')
+    expect(parseOverlayConfig({ doorbellAnchor: 'bottom-right' }).doorbellAnchor).toBe('bottom-right')
+    expect(parseOverlayConfig({ doorbellAnchor: 'off' }).doorbellAnchor).toBe('top-left')
+    expect(parseOverlayConfig({ fade: { motionBadge: true } }).fade.motionBadge).toBe(true)
+    expect(isDefaultOverlay(parseOverlayConfig({ doorbellAnchor: 'bottom-right' }))).toBe(false)
+  })
+})
+
+describe('the audio readout is retired into the audio meter (planning#745)', () => {
+  // The marker is the readout's CORNER: a corner nothing defaults to, so a
+  // migration that only switched the meter back on to its default would fail.
+  const stored = {
+    audioMeter: 'off',
+    readouts: [
+      { id: 'audio-dbfs', source: { kind: 'audioDbfs' }, label: 'Audio', unit: 'dBFS', corner: 'bottom-left' },
+      { id: 'cam:s:f', source: { kind: 'cameraField', sectionId: 's', fieldKey: 'f' }, label: 'Temp', corner: 'top-right' },
+    ],
+  }
+
+  it('a user who had the readout on and the meter off gets the meter on, at the readout corner', () => {
+    const config = parseOverlayConfig(stored)
+    expect(config.audioMeter).toBe('bottom-left')
+    expect(config.readouts.map((r) => r.id)).toEqual(['cam:s:f'])
+  })
+
+  it('a meter the user had placed stays where it was', () => {
+    expect(parseOverlayConfig({ ...stored, audioMeter: 'top-right' }).audioMeter).toBe('top-right')
+  })
+
+  it('a meter that was off and no readout stays off', () => {
+    expect(parseOverlayConfig({ audioMeter: 'off', readouts: [] }).audioMeter).toBe('off')
+  })
+
+  it('the readout fade carries to the meter fade', () => {
+    const faded = { ...stored, readouts: [{ ...stored.readouts[0], fade: true }] }
+    expect(parseOverlayConfig(faded).fade.audioMeter).toBe(true)
   })
 
   it('the control groups default to the bottom corners, left and right', () => {
@@ -178,7 +218,7 @@ describe('the global config read (parseOverlayConfig)', () => {
       audioMeter: 'bottom-left',
       readouts: [
         { id: 'x', source: { kind: 'deviceField', deviceId: 'not-a-number' }, label: 'Broken' },
-        { id: 'y', source: { kind: 'audioDbfs' }, label: 'Audio', corner: 'top-left' },
+        { id: 'y', source: { kind: 'cameraField', sectionId: 's', fieldKey: 'f' }, label: 'Audio', corner: 'top-left' },
       ],
     }
     const config = parseOverlayConfig(raw)

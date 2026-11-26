@@ -18,7 +18,6 @@ import React, { useMemo } from 'react'
 import { View, Text, StyleSheet } from 'react-native'
 import { useTranslation } from 'react-i18next'
 
-import { useAudioLevel } from '../../../data/use-audio.js'
 import {
   formatLiveValue,
   useDeviceLiveFields,
@@ -137,22 +136,8 @@ export function useReadoutEntries({
     setByDevice((prev) => (prev[id] === fields ? prev : { ...prev, [id]: fields }))
   }, [])
 
-  // The audio chip is the only source that is not a device field, and it is the
-  // one the operator asked for by name ("il db/rms correnti").
-  const wantsAudio = readoutsForCamera(config.readouts, deviceId).some((r) => r.source.kind === 'audioDbfs')
-  const dbfs = useAudioLevel(deviceId, enabled && wantsAudio)
-
   const valueFor = React.useCallback(
     (r: OverlayReadout): string => {
-      if (r.source.kind === 'audioDbfs') {
-        if (dbfs === null || !Number.isFinite(dbfs)) return '—'
-        return formatLiveValue(dbfs, {
-          precision: r.precision ?? 1,
-          unit: r.unit ?? 'dBFS',
-          onLabel: t('v2.common.on'),
-          offLabel: t('v2.common.off'),
-        })
-      }
       const source = sourceDeviceId(r, deviceId)
       const fields = source === null ? [] : (byDevice[source] ?? [])
       const match = matchDeviceLiveField(fields, r.source.sectionId, r.source.fieldKey)
@@ -167,7 +152,7 @@ export function useReadoutEntries({
       if (unit !== undefined) opts.unit = unit
       return formatLiveValue(match.value, opts)
     },
-    [byDevice, dbfs, deviceId, t],
+    [byDevice, deviceId, t],
   )
 
   const entries = useMemo<readonly OverlayStackEntry[]>(

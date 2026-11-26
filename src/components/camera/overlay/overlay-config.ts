@@ -52,15 +52,10 @@ import {
 } from './overlay-position.js'
 
 /**
- * Where a readout's number comes from.
- *
- * `audioDbfs` is special-cased rather than expressed as a device field because
- * it is not one: the dBFS the meter shows arrives on the live audio-inference
- * event, not through the settings aggregate, and it updates per second rather
- * than per poll.
+ * Where a readout's number comes from — a live field of a device. (The audio
+ * level is not a readout: it is the audio meter's number, drawn above its bars.)
  */
 export type OverlayReadoutSource =
-  | { readonly kind: 'audioDbfs' }
   | {
       /** A live field of the camera the overlay is DRAWN ON. The document is
        *  global, so "this camera" cannot be a device id: it is whichever stream
@@ -158,6 +153,7 @@ export const LAYER_LABEL_KEY = {
 export type FadeableOverlay =
   | 'cameraName'
   | 'doorbell'
+  | 'motionBadge'
   | 'audioMeter'
   | 'stats'
   | 'occupancy'
@@ -166,6 +162,7 @@ export type FadeableOverlay =
 export const FADEABLE_OVERLAYS: readonly FadeableOverlay[] = Object.freeze([
   'cameraName',
   'doorbell',
+  'motionBadge',
   'audioMeter',
   'stats',
   'occupancy',
@@ -214,6 +211,9 @@ export interface OverlayConfig {
    *  doorbell feature. A switch and not a position — it sits at
    *  {@link DOORBELL_ANCHOR}, in the stack of that corner. */
   readonly doorbell: boolean
+  /** The corner the doorbell badge sits in (never `off`: the switch above is
+   *  the on/off). Default {@link DOORBELL_ANCHOR}. */
+  readonly doorbellAnchor: OverlayAnchor
   /** The camera's name over the picture: an anchor, or off. ON at the top-left
    *  by default — it used to be a fixed, always-on tag. */
   readonly cameraName: OverlayPosition
@@ -235,7 +235,7 @@ export interface OverlayConfig {
   readonly readouts: readonly OverlayReadout[]
 }
 
-/** The corner the doorbell badge sits in. */
+/** The corner the doorbell badge sits in until the operator moves it. */
 export const DOORBELL_ANCHOR: OverlayAnchor = 'top-left'
 
 /** `fade` defaults: only the camera name hides with the controls — it did
@@ -243,6 +243,7 @@ export const DOORBELL_ANCHOR: OverlayAnchor = 'top-left'
 export const FADE_DEFAULTS: Readonly<Record<FadeableOverlay, boolean>> = Object.freeze({
   cameraName: true,
   doorbell: false,
+  motionBadge: false,
   audioMeter: false,
   stats: false,
   occupancy: false,
@@ -264,6 +265,7 @@ export const OVERLAY_DEFAULTS: OverlayConfig = Object.freeze({
   stats: 'off',
   viewers: 'off',
   doorbell: false,
+  doorbellAnchor: DOORBELL_ANCHOR,
   cameraName: 'top-left',
   controlsLeft: 'bottom-left',
   controlsRight: 'bottom-right',
@@ -332,7 +334,6 @@ export function patchReadout(
 }
 
 export function sameSource(a: OverlayReadoutSource, b: OverlayReadoutSource): boolean {
-  if (a.kind === 'audioDbfs') return b.kind === 'audioDbfs'
   if (a.kind === 'cameraField') {
     return b.kind === 'cameraField' && a.sectionId === b.sectionId && a.fieldKey === b.fieldKey
   }
@@ -347,7 +348,6 @@ export function sameSource(a: OverlayReadoutSource, b: OverlayReadoutSource): bo
 /** A deterministic id for a source — so the same field always maps to the same
  *  readout, and a config round-tripped through storage keeps its identity. */
 export function readoutId(source: OverlayReadoutSource): string {
-  if (source.kind === 'audioDbfs') return 'audio-dbfs'
   if (source.kind === 'cameraField') return `cam:${source.sectionId}:${source.fieldKey}`
   return `dev:${source.deviceId}:${source.sectionId}:${source.fieldKey}`
 }
@@ -445,7 +445,6 @@ export function canonicalLayers(raw: unknown): readonly OverlayLayer[] {
 
 function normaliseSource(raw: unknown): OverlayReadoutSource | null {
   if (!isRecord(raw)) return null
-  if (raw.kind === 'audioDbfs') return { kind: 'audioDbfs' }
   if (
     raw.kind === 'cameraField' &&
     typeof raw.sectionId === 'string' &&
@@ -544,6 +543,19 @@ export function parseOverlayConfig(raw: unknown): OverlayConfig {
   const readouts = Array.isArray(raw.readouts)
     ? raw.readouts.map(normaliseReadout).filter((r): r is OverlayReadout => r !== null)
     : OVERLAY_DEFAULTS.readouts
+  // The audio readout was retired into the audio meter (planning#745): a
+  // stored one is dropped here, and a user who had it on gets the meter on.
+  const retiredAudio = Array.isArray(raw.readouts)
+    ? raw.readouts.find((r) => isRecord(r) && isRecord(r.source) && r.source.kind === 'audioDbfs')
+    : undefined
+  const meterStored = position(raw.audioMeter, OVERLAY_DEFAULTS.audioMeter)
+  const audioMeter: OverlayPosition =
+    meterStored === 'off' && isRecord(retiredAudio)
+      ? (normaliseAnchor(retiredAudio.corner) ?? 'top-right')
+      : meterStored
+  const fade = parseFade(raw.fade)
+  const migratedFade =
+    isRecord(retiredAudio) && retiredAudio.fade === true ? { ...fade, audioMeter: true } : fade
   const seen = new Set<string>()
   const order = (Array.isArray(raw.order) ? raw.order : []).filter(
     (id): id is OverlayItemId => isOverlayItemId(id) && !seen.has(id) && !!seen.add(id),
@@ -552,16 +564,17 @@ export function parseOverlayConfig(raw: unknown): OverlayConfig {
     layers: canonicalLayers(raw.layers),
     motionBadge: position(raw.motionBadge, OVERLAY_DEFAULTS.motionBadge),
     highlightBorder: raw.highlightBorder !== false,
-    audioMeter: position(raw.audioMeter, OVERLAY_DEFAULTS.audioMeter),
+    audioMeter,
     occupancy: position(raw.occupancy, OVERLAY_DEFAULTS.occupancy),
     stats: position(raw.stats, OVERLAY_DEFAULTS.stats),
     viewers: position(raw.viewers, OVERLAY_DEFAULTS.viewers),
     // Strictly `true`: a document stored before the field existed reads as off.
     doorbell: raw.doorbell === true,
+    doorbellAnchor: anchor(raw.doorbellAnchor, OVERLAY_DEFAULTS.doorbellAnchor),
     cameraName: position(raw.cameraName, OVERLAY_DEFAULTS.cameraName),
     controlsLeft: anchor(raw.controlsLeft, OVERLAY_DEFAULTS.controlsLeft),
     controlsRight: anchor(raw.controlsRight, OVERLAY_DEFAULTS.controlsRight),
-    fade: parseFade(raw.fade),
+    fade: migratedFade,
     order,
     readouts,
   }
@@ -602,6 +615,8 @@ export function placeOverlay(
       return { ...config, viewers: next, order }
     case 'motionBadge':
       return { ...config, motionBadge: next, order }
+    case 'doorbell':
+      return next === 'off' ? config : { ...config, doorbellAnchor: next, order }
     case 'controlsLeft':
       return next === 'off' ? config : { ...config, controlsLeft: next, order }
     case 'controlsRight':
@@ -655,6 +670,7 @@ export function isDefaultOverlay(config: OverlayConfig): boolean {
     config.stats === OVERLAY_DEFAULTS.stats &&
     config.viewers === OVERLAY_DEFAULTS.viewers &&
     config.doorbell === OVERLAY_DEFAULTS.doorbell &&
+    config.doorbellAnchor === OVERLAY_DEFAULTS.doorbellAnchor &&
     config.cameraName === OVERLAY_DEFAULTS.cameraName &&
     config.controlsLeft === OVERLAY_DEFAULTS.controlsLeft &&
     config.controlsRight === OVERLAY_DEFAULTS.controlsRight &&

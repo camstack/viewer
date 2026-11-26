@@ -8,6 +8,7 @@
  *   • corner  → a compact VU pill (increasing-height bars, short→tall).
  *   • top/bottom edge → a horizontal strip (equal bars, lit left→right).
  *   • left/right side → a vertical strip (equal bars, lit bottom→top).
+ * The level also shows as a number above the bars (`formatAudioDbfs`).
  * Segments light up to the current level (green low → amber → red at the top);
  * above-level segments stay dim. While placed it always shows the frame, so the
  * operator sees the meter even in silence.
@@ -30,6 +31,7 @@ import { useStyleScaler } from './overlay/OverlayFrame.js'
 import { type OverlayPosition } from './overlay/overlay-position.js'
 import {
   dbfsToLevel,
+  formatAudioDbfs,
   meterOrientation,
   meterSegmentSize,
   meterRenderOrder,
@@ -88,12 +90,14 @@ export function AudioLevelMeter({ deviceId, position, onPress, playbackDbfs }: A
         onLongPress={onPress}
         accessibilityRole={interactive ? 'button' : 'image'}
         accessibilityLabel={t('v2.cameraMenu.audioLevel')}
-        style={[
-          sx(styles.meter),
-          sx(meterContainerStyle(orientation)),
-          { backgroundColor: `${colors.background}B3` },
-        ]}
+        style={[sx(styles.meter), { backgroundColor: `${colors.background}B3` }]}
       >
+        {/* The level as a number, ABOVE the bars — the audio overlay is one
+            thing, not a meter plus a separate readout chip. */}
+        <Text style={[sx(styles.value), { color: colors.foreground }]} numberOfLines={1}>
+          {formatAudioDbfs(dbfs)}
+        </Text>
+        <View style={sx(meterContainerStyle(orientation))}>
         {meterRenderOrder(orientation).map((logicalIndex) => {
           const lit = logicalIndex < level
           return (
@@ -110,6 +114,7 @@ export function AudioLevelMeter({ deviceId, position, onPress, playbackDbfs }: A
             />
           )
         })}
+        </View>
       </Pressable>
     </View>
   )
@@ -146,6 +151,8 @@ export function AudioMeterPicker({ position, onPick, onClose }: AudioMeterPicker
 
 const styles = StyleSheet.create({
   meter: {
+    alignItems: 'center',
+    gap: SPACING.xs,
     paddingHorizontal: SPACING.sm,
     paddingVertical: SPACING.xs,
     borderRadius: RADIUS.md,
@@ -153,6 +160,8 @@ const styles = StyleSheet.create({
   segment: {
     borderRadius: 2,
   },
+  // Tabular figures so a level ticking between -9 and -10 does not shift the pill.
+  value: { fontSize: 10, fontWeight: '700', fontVariant: ['tabular-nums'] },
   // Inline picker — a sibling of the stack, so it renders above the
   // video/gesture layer.
   pickerOverlay: {

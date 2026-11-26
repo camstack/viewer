@@ -3322,10 +3322,9 @@
       "liveViewersCount_other": "{{count}} people watching live",
       "addReadout": "Add a readout",
       "removeReadout": "Remove readout",
-      "readoutsHint": "Pin a live value over the picture — the audio level, or any sensor linked to this camera.",
+      "readoutsHint": "Pin a live value over the picture — any value of this camera or of a sensor linked to it.",
       "noFields": "This device publishes no live values.",
       "thisCamera": "This camera",
-      "audioDbfs": "Audio level",
       "liveOnlyHint": "These draw on the live picture only — not during playback or while paused.",
       "positions": {
         "off": "Off",
@@ -3344,7 +3343,9 @@
       "controlsRight": "Right controls",
       "fadeSection": "Hide with the controls",
       "fadeHint": "These overlays disappear when the controls auto-hide.",
-      "fadeReadout": "Hide with the controls"
+      "fadeReadout": "Hide with the controls",
+      "motionBadge": "Motion badge",
+      "doorbellCorner": "Doorbell badge corner"
     },
     "clips": {
       "title": "Clips",

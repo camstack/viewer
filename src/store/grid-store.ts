@@ -57,8 +57,9 @@ export interface GridOptions {
   /**
    * The box overlay drawn on every tile — the SAME checkable layer set the
    * camera-detail overlay uses. Only the WALL-owned layers are meaningful here
-   * (`BAR_LAYERS`: objects / discarded / stationary); the motion layer is each
-   * camera's and travels on that camera's own document.
+   * (`BAR_LAYERS`: all four, motion included since planning#745 — a grid
+   * follows the GRID's settings, never each camera's own document). Absent or
+   * not containing `motion` = motion OFF.
    *
    * Migrated from the retired `boxes: 'off'|'kept'|'all'` scale by
    * {@link resolveGridOptions} — a grid persisted at `'kept'` keeps drawing the
@@ -95,8 +96,9 @@ export interface StoredGridOptions extends GridOptions {
   /** @deprecated retired 2026-08-18 → `layers`. The ordered scale, or the
    *  boolean it was before that. */
   readonly boxes?: 'off' | 'kept' | 'all' | boolean
-  /** @deprecated retired 2026-08-18 → `layers`. Never applied to a grid: motion
-   *  regions are per-camera and the tile reads them off the camera document. */
+  /** @deprecated retired 2026-08-18 → `layers`. Still never applied to a grid:
+   *  a stored `true` came from the per-camera era and must not switch the wall's
+   *  motion on; only a canonical `layers` containing `motion` does. */
   readonly motionBoxes?: boolean
   /** @deprecated retired 2026-08-12 → the `discarded` layer. */
   readonly discardedBoxes?: boolean
@@ -259,13 +261,13 @@ export function resolveGridOptions(
     activeOnly: options?.activeOnly ?? defaults.activeOnly,
     // A canonical `layers` is authoritative; a grid stored before the set
     // existed is migrated off its `boxes` rung so the wall keeps drawing what
-    // it drew. The motion layer never applies to a grid document — it is
-    // per-camera — so it is dropped here rather than silently ignored later.
+    // it drew. Motion is the grid's own layer only when the canonical set says
+    // so; the retired fields never carry it (default OFF).
     layers:
       options === undefined
         ? defaults.layers
         : Array.isArray(options.layers)
-          ? canonicalLayers(options.layers).filter((layer) => layer !== 'motion')
+          ? canonicalLayers(options.layers)
           : migrateLegacyLayers(options).filter((layer) => layer !== 'motion'),
   }
 }

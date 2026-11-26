@@ -78,6 +78,8 @@ interface GridTilePlayerProps {
   readonly highlight?: GridHighlightConfig
   /** Live detection bounding-box overlay (grid-wide session toggle). */
   readonly showBoxes?: boolean
+  /** The grid's motion layer: motion regions on this tile (grid-wide setting). */
+  readonly showMotion?: boolean
   /** THIS camera's own indicators, as its per-cell view-options menu set them
    *  (`GridConfig.overlays[deviceId]`). Absent ⇒ this camera placed none, and
    *  none of the subscriptions behind them are opened. */
@@ -130,6 +132,7 @@ export function GridTilePlayer({
   onCellPanel,
   highlight,
   showBoxes,
+  showMotion,
   overlay,
   reconnectSignal,
   onStall,
@@ -353,7 +356,7 @@ export function GridTilePlayer({
           only where the operator placed it, so the subscription/poll behind it
           is the one that was asked for. Live only: a paused tile shows a still,
           and an indicator over a frozen frame describes a moment that passed. */}
-      {overlay?.motionBoxes === true && !paused ? (
+      {showMotion && !paused ? (
         <TileMotionRegionsOverlay deviceId={deviceId} />
       ) : null}
       </div>

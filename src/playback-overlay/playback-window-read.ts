@@ -11,10 +11,16 @@
  */
 import { BULK_QUERY_DEADLINE_MS, capQuery } from '../data/cap-query.js'
 import {
+  AUDIO_LEVEL_HISTORY_KEY,
+  AUDIO_HOLD_MS,
   frameAt,
   normalizeTracks,
+  parseAudioSeries,
+  parseMotionEvents,
   resolveCoverage,
+  type AudioSeries,
   type OverlayTrack,
+  type StoredMotionEpisode,
   type PlaybackOverlayFrame,
 } from './playback-overlay-source.js'
 
@@ -28,6 +34,8 @@ export const OVERLAY_LOOKBACK_MS = 600_000
 export const OVERLAY_PREFETCH_MS = 10_000
 /** Row limit of the window read; a full answer is treated as truncated. */
 export const WINDOW_TRACK_LIMIT = 500
+/** Row limit of the motion-episode read; a full answer is not trusted. */
+export const WINDOW_MOTION_LIMIT = 200
 
 export interface WindowRead {
   /** The camera this window belongs to. */
@@ -38,6 +46,12 @@ export interface WindowRead {
   readonly windowTracks: number
   readonly truncated: boolean
   readonly probeTracks: number
+  /** The stored audio level over the window; null = the read did not answer or
+   *  held no point (unknown — never silence). */
+  readonly audio: AudioSeries | null
+  /** The stored motion episodes; null = the read did not answer or hit its row
+   *  limit (the tracks' spans stand in). */
+  readonly motion: readonly StoredMotionEpisode[] | null
 }
 
 /** The window block a playback time reads (an early switch, see PREFETCH). */
@@ -74,7 +88,10 @@ export async function readPlaybackWindow(
 ): Promise<WindowRead> {
   const opts = { deadlineMs: BULK_QUERY_DEADLINE_MS, rethrow: true }
   const until = block + OVERLAY_WINDOW_MS
-  const [windowRaw, probeRaw] = await Promise.all([
+  // The audio level and the motion episodes are reads of their own: when one of
+  // them fails the window still draws the tracks, and that overlay is unknown.
+  const soft = { deadlineMs: BULK_QUERY_DEADLINE_MS }
+  const [windowRaw, probeRaw, audioRaw, motionRaw] = await Promise.all([
     capQuery(
       client,
       'pipelineAnalytics',
@@ -89,7 +106,28 @@ export async function readPlaybackWindow(
       { deviceId, until, limit: 1, projection: 'slim' },
       opts,
     ),
+    capQuery(
+      client,
+      'deviceHistory',
+      'query',
+      {
+        deviceId,
+        key: AUDIO_LEVEL_HISTORY_KEY,
+        from: block - OVERLAY_PREFETCH_MS - AUDIO_HOLD_MS,
+        to: until,
+        resolution: 'raw',
+      },
+      soft,
+    ),
+    capQuery(
+      client,
+      'pipelineAnalytics',
+      'getMotionEvents',
+      { deviceId, since: block - OVERLAY_LOOKBACK_MS, until, limit: WINDOW_MOTION_LIMIT },
+      soft,
+    ),
   ])
+  const motionRows = Array.isArray(motionRaw) && motionRaw.length >= WINDOW_MOTION_LIMIT ? null : motionRaw
   const windowRows = rows(windowRaw)
   return {
     deviceId,
@@ -99,6 +137,8 @@ export async function readPlaybackWindow(
     windowTracks: windowRows.length,
     truncated: windowRows.length >= WINDOW_TRACK_LIMIT,
     probeTracks: rows(probeRaw).length,
+    audio: parseAudioSeries(audioRaw),
+    motion: parseMotionEvents(motionRows, Date.now()),
   }
 }
 
@@ -111,5 +151,5 @@ export function frameFromWindow(read: WindowRead | undefined, t: number): Playba
     probeTracks: read.probeTracks,
     truncated: read.truncated,
   })
-  return frameAt({ tracks: read.tracks, coverage }, t)
+  return frameAt({ tracks: read.tracks, coverage, audio: read.audio, motion: read.motion }, t)
 }

@@ -179,6 +179,7 @@ export type GridCommand =
   | { readonly kind: 'setHighlight'; readonly value: GridHighlightEmbedConfig }
   | { readonly kind: 'setActiveOnly'; readonly value: boolean }
   | { readonly kind: 'setShowBoxes'; readonly value: boolean }
+  | { readonly kind: 'setShowMotion'; readonly value: boolean }
   // The first PER-DEVICE command: each camera's own indicators (motion regions,
   // motion pill, audio meter, occupancy, stats), keyed by device id. Everything
   // above it is one value for the whole wall — this is the channel a per-device

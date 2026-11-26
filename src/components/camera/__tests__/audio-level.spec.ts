@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   dbfsToLevel,
+  formatAudioDbfs,
   meterOrientation,
   AUDIO_LEVEL_STEPS,
   AUDIO_METER_FLOOR_DBFS,
@@ -169,5 +170,16 @@ describe('meter segment geometry', () => {
   it('a corner is the compact pill — bars grow in height', () => {
     expect(meterSegmentSize('compact', 0).height).toBeLessThan(meterSegmentSize('compact', 5).height)
     expect(meterRenderOrder('compact')).toEqual([0, 1, 2, 3, 4, 5])
+  })
+})
+
+describe('formatAudioDbfs — the number above the meter bars (planning#745)', () => {
+  it('shows the level rounded, with the unit', () => {
+    expect(formatAudioDbfs(-42.4)).toBe('-42 dBFS')
+    expect(formatAudioDbfs(-0.2)).toBe('0 dBFS')
+  })
+  it('an unknown level is a dash, never 0 dBFS (D315)', () => {
+    expect(formatAudioDbfs(null)).toBe('—')
+    expect(formatAudioDbfs(Number.NaN)).toBe('—')
   })
 })

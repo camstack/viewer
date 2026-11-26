@@ -71,6 +71,7 @@ describe('gridCommandScript', () => {
     expect(gridCommandScript({ kind: 'setMutedAll', value: true })).toContain('window.__camstackGrid')
     expect(gridCommandScript({ kind: 'setMutedAll', value: true })).toContain('setMutedAll(true)')
     expect(gridCommandScript({ kind: 'setPaused', value: [1, 2] })).toContain('setPaused([1,2])')
+    expect(gridCommandScript({ kind: 'setShowMotion', value: true })).toContain('setShowMotion(true)')
     expect(gridCommandScript({ kind: 'setQuality', value: 'high' })).toContain('setQuality("high")')
     expect(gridCommandScript({ kind: 'setLayout', value: 3 })).toContain('setLayout(3)')
     expect(gridCommandScript({ kind: 'setLayout', value: 'auto' })).toContain('setLayout("auto")')

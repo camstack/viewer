@@ -4,6 +4,11 @@ import { join } from 'node:path'
 import { resolvePlaybackGates } from '../playback-overlay-source'
 
 describe('which source an overlay draws from', () => {
+  it('the motion gate follows either source, and nothing else (planning#745)', () => {
+    expect(resolvePlaybackGates({ isLive: false, paused: false, availability: 'known', audioDbfs: null }).motion).toBe(true)
+    expect(resolvePlaybackGates({ isLive: false, paused: false, availability: 'unknown', audioDbfs: null }).motion).toBe(false)
+  })
+
   it('live edge, playing: the live feeds', () => {
     const g = resolvePlaybackGates({ isLive: true, paused: false, availability: 'unknown', audioDbfs: null })
     expect(g).toMatchObject({ liveOverlays: true, fromPlayback: false, boxes: true, border: true, occupancy: true, audioMeter: true })
@@ -25,8 +30,8 @@ describe('which source an overlay draws from', () => {
 
 describe('the screen keeps the layers it has no stored data for live-only', () => {
   const screen = readFileSync(join(__dirname, '../../screens/CameraDetailScreen.tsx'), 'utf8')
-  it('regions, parked and discarded stay behind the live gate', () => {
-    expect(screen).toMatch(/motionRegionsOn && liveOverlaysVisible/)
+  it('parked and discarded stay behind the live gate; the regions also draw from the stored episodes', () => {
+    expect(screen).toMatch(/motionRegionsOn && \(liveOverlaysVisible \|\| playbackOverlaysVisible\)/)
     expect(screen).toMatch(/stationaryBoxesOn && liveOverlaysVisible/)
     expect(screen).toMatch(/discardedBoxesOn && liveOverlaysVisible/)
   })

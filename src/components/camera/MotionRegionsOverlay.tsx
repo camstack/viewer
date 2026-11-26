@@ -22,7 +22,9 @@ import React, { useCallback, useState } from 'react'
 import { View, StyleSheet } from 'react-native'
 import type { LayoutChangeEvent } from 'react-native'
 
-import { useMotionOverlayBoxes } from '../../data/use-motion.js'
+import { useMotionOverlayBoxes, type MotionOverlayBox } from '../../data/use-motion.js'
+import { usePlaybackSlice, type PlaybackOverlayStore } from '../../playback-overlay/playback-overlay-store.js'
+import type { MotionRegionBox } from '../../playback-overlay/playback-overlay-source.js'
 import { useTheme } from '../../theme/theme-provider.js'
 import { useStreamAspect } from '../../live/stream-aspect.js'
 import { pictureRectIn, placeNormalizedBox } from './overlay/picture-box.js'
@@ -36,6 +38,9 @@ export interface MotionRegionsOverlayProps {
   readonly deviceId: number
   /** Mount + subscribe only while true. */
   readonly enabled: boolean
+  /** Recorded playback: draw the stored regions of the episode at the playback
+   *  time instead of subscribing to the live frames. */
+  readonly playbackStore?: PlaybackOverlayStore
 }
 
 interface BoxSize {
@@ -57,10 +62,40 @@ export function alphaHex(alpha: number): string {
     .padStart(2, '0')
 }
 
-export function MotionRegionsOverlay({ deviceId, enabled }: MotionRegionsOverlayProps) {
+const NO_STORED: readonly MotionRegionBox[] = []
+
+function storedRegions(frame: { readonly availability: string; readonly motionRegions?: readonly MotionRegionBox[] }): readonly MotionRegionBox[] {
+  return frame.motionRegions ?? NO_STORED
+}
+
+/** The same overlay over the recorded picture: the regions the hub stored for
+ *  the motion episode under the playhead. A range with no stored regions draws
+ *  nothing. */
+function PlaybackMotionRegions({ deviceId, store }: { readonly deviceId: number; readonly store: PlaybackOverlayStore }) {
+  const stored = usePlaybackSlice(store, storedRegions, Object.is)
+  const regions = React.useMemo<readonly MotionOverlayBox[]>(
+    () => stored.map((r) => ({ ...r, intensity: 0, filtered: true })),
+    [stored],
+  )
+  return <RegionBoxes deviceId={deviceId} regions={regions} />
+}
+
+function LiveMotionRegions({ deviceId, enabled }: { readonly deviceId: number; readonly enabled: boolean }) {
+  const regions = useMotionOverlayBoxes(deviceId, enabled)
+  return <RegionBoxes deviceId={deviceId} regions={regions} />
+}
+
+export function MotionRegionsOverlay({ deviceId, enabled, playbackStore }: MotionRegionsOverlayProps) {
+  return playbackStore !== undefined ? (
+    <PlaybackMotionRegions deviceId={deviceId} store={playbackStore} />
+  ) : (
+    <LiveMotionRegions deviceId={deviceId} enabled={enabled} />
+  )
+}
+
+function RegionBoxes({ deviceId, regions }: { readonly deviceId: number; readonly regions: readonly MotionOverlayBox[] }) {
   const { colors } = useTheme()
   const [box, setBox] = useState<BoxSize>({ width: 0, height: 0 })
-  const regions = useMotionOverlayBoxes(deviceId, enabled)
   // The player letterboxes a stream that is not the box's shape: regions are
   // placed on the picture, never on the bands (`picture-box.ts`).
   const aspect = useStreamAspect(deviceId)

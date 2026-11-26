@@ -49,6 +49,12 @@ describe('buildGridEmbedConfig', () => {
     expect(buildGridEmbedConfig(base).showBadges).toBe(true)
   })
 
+  it('carries the grid motion layer only when set (a wall without it draws no motion)', () => {
+    expect(buildGridEmbedConfig(base).showMotion).toBeUndefined()
+    expect(buildGridEmbedConfig({ ...base, showMotion: false }).showMotion).toBeUndefined()
+    expect(buildGridEmbedConfig({ ...base, showMotion: true }).showMotion).toBe(true)
+  })
+
   it('includes showBoxes only when set (config stays identical otherwise)', () => {
     expect(buildGridEmbedConfig(base).showBoxes).toBeUndefined()
     expect(buildGridEmbedConfig({ ...base, showBoxes: false }).showBoxes).toBeUndefined()

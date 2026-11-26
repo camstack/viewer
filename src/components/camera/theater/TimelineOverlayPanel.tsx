@@ -146,6 +146,7 @@ const PICTURE_ROWS: readonly ViewOptionRow[] = [
 const FADE_ICON: Readonly<Record<FadeableOverlay, LucideIcon>> = {
   cameraName: Tag,
   doorbell: BellRing,
+  motionBadge: Activity,
   audioMeter: AudioLines,
   stats: Activity,
   occupancy: Users,
@@ -155,6 +156,7 @@ const FADE_ICON: Readonly<Record<FadeableOverlay, LucideIcon>> = {
 const FADE_LABEL: Readonly<Record<FadeableOverlay, string>> = {
   cameraName: 'v2.overlay.cameraName',
   doorbell: 'v2.overlay.doorbell',
+  motionBadge: 'v2.overlay.motionBadge',
   audioMeter: 'v2.cameraMenu.audioLevel',
   stats: 'v2.cameraMenu.streamStats',
   occupancy: 'v2.overlay.occupancy',
@@ -255,13 +257,15 @@ export function OverlaySettingsSections({
           state at all for the parked objects, which therefore rode the object
           switch (default OFF, so a fresh install never drew a parked car).
           Which chips appear is the shared list's answer, never a local
-          `context === 'grid-cell'` test: on the wall the detector layers are
-          the grid's and only motion stays per camera. */}
-      <OverlayLayersRow
-        layers={visibleLayers(context)}
-        selected={config.layers}
-        onToggle={(layer) => onChange(toggleLayer(config, layer))}
-      />
+          `context === 'grid-cell'` test: on the wall every layer is the grid's,
+          so a grid cell offers none. */}
+      {visibleLayers(context).length > 0 ? (
+        <OverlayLayersRow
+          layers={visibleLayers(context)}
+          selected={config.layers}
+          onToggle={(layer) => onChange(toggleLayer(config, layer))}
+        />
+      ) : null}
 
       {/* The highlight border: the switch AND its triggers, never apart. */}
       {shows('highlightBorder') ? (
@@ -329,6 +333,15 @@ export function OverlaySettingsSections({
               onValueChange={() => patch({ doorbell: !config.doorbell })}
             />
           ) : null}
+          {hasDoorbell && config.doorbell ? (
+            <PanelPositionRow
+              icon={BellRing}
+              label={t('v2.overlay.doorbellCorner')}
+              value={config.doorbellAnchor}
+              allowOff={false}
+              onChange={(next) => place('doorbell', next)}
+            />
+          ) : null}
           {shows('deviceInfo') ? (
             <PanelPositionRow
               icon={BatteryFull}
@@ -361,6 +374,12 @@ export function OverlaySettingsSections({
             label={t('v2.overlay.cameraName')}
             value={config.cameraName}
             onChange={(next) => place('cameraName', next)}
+          />
+          <PanelPositionRow
+            icon={Activity}
+            label={t('v2.overlay.motionBadge')}
+            value={config.motionBadge}
+            onChange={(next) => place('motionBadge', next)}
           />
           <PanelPositionRow
             icon={Gamepad2}

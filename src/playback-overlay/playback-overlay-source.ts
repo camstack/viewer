@@ -5,8 +5,9 @@
  * One pure source behind the existing overlay components: detection boxes from
  * each track's `positions[]` interpolated at the playback time, occupancy as
  * the tracks alive at that time, the motion badge from the merged spans of
- * those tracks, and an audio level that is ALWAYS null here (no stored level
- * exists; a player-side tap may supply one, a fake never does).
+ * those tracks (or, when the hub answered, the stored motion EPISODES), and the
+ * audio level read from the stored device-history series
+ * ({@link AUDIO_LEVEL_HISTORY_KEY}).
  *
  * D315: a range whose tracks were pruned is UNKNOWN, never "no detections" —
  * {@link resolveCoverage} is the one place that tells the two apart, and
@@ -51,6 +52,43 @@ export interface MotionEpisode {
   readonly end: number
 }
 
+/** One stored audio-level point: the time and the dBFS the hub recorded. */
+export interface AudioPoint {
+  readonly t: number
+  readonly dbfs: number
+}
+
+/** The stored audio level over a window, sorted by time. Absent (null where it
+ *  travels) means the hub did not answer or holds nothing for the window. */
+export interface AudioSeries {
+  readonly points: readonly AudioPoint[]
+}
+
+/** A stored motion region at playback time, normalised to the frame. */
+export interface MotionRegionBox {
+  readonly x: number
+  readonly y: number
+  readonly w: number
+  readonly h: number
+  readonly pixelCount: number
+}
+
+/** One stored motion episode (`pipelineAnalytics.getMotionEvents`). */
+export interface StoredMotionEpisode extends MotionEpisode {
+  readonly regions: readonly MotionRegionBox[]
+}
+
+/** The device-history series the hub keeps the audio level in. */
+export const AUDIO_LEVEL_HISTORY_KEY = 'addon:pipeline-analytics/audio-level'
+/** How long a stored level is held past its point: the raw step is ~10 s, so a
+ *  point answers the next step and a half, and nothing beyond (a hole is
+ *  unknown, not the last value forever). A rollup bucket answers its own width. */
+export const AUDIO_HOLD_MS = 15_000
+/** Widest rollup bucket a point may stand for (1 h). */
+export const AUDIO_ROLLUP_HOLD_MS = 3_600_000
+/** A motion row without a duration still lasts this long on screen. */
+export const MOTION_TAIL_MS = 2_000
+
 export type PlaybackOverlayFrame =
   | { readonly availability: 'unknown' }
   | {
@@ -58,8 +96,11 @@ export type PlaybackOverlayFrame =
       readonly boxes: readonly DetectionBox[]
       readonly occupancy: readonly OccupancyCount[]
       readonly motion: boolean
-      /** Null = no level available; the meter stays hidden. */
+      /** Null = no level available; the meter stays hidden. Never 0. */
       readonly audioDbfs: number | null
+      /** Stored motion regions of the episode at this time (empty = none
+       *  stored; the regions layer draws nothing). */
+      readonly motionRegions: readonly MotionRegionBox[]
     }
 
 export type Coverage = 'known' | 'unknown'
@@ -67,6 +108,11 @@ export type Coverage = 'known' | 'unknown'
 export interface PlaybackOverlaySourceData {
   readonly tracks: readonly OverlayTrack[]
   readonly coverage: Coverage
+  /** The stored audio level; null = unanswered or empty (unknown, never 0). */
+  readonly audio?: AudioSeries | null
+  /** The stored motion episodes; null = unanswered (motion then falls back to
+   *  the tracks' spans). An empty list is a real answer: no motion. */
+  readonly motion?: readonly StoredMotionEpisode[] | null
 }
 
 /** A hole in `positions[]` wider than this is not bridged by interpolation. */
@@ -239,6 +285,91 @@ export function motionEpisodes(tracks: readonly OverlayTrack[]): readonly Motion
   return out
 }
 
+/**
+ * `deviceHistory.query` answer → the audio series. A malformed answer, a query
+ * that returned no point, and a point without a value all yield null/skip — the
+ * caller treats null as UNKNOWN, never as silence (D315, D393).
+ */
+export function parseAudioSeries(raw: unknown): AudioSeries | null {
+  if (!isRecord(raw) || !Array.isArray(raw.series)) return null
+  const first = raw.series.find(isRecord)
+  if (first === undefined || !Array.isArray(first.points)) return null
+  const points: AudioPoint[] = []
+  for (const p of first.points) {
+    if (!isRecord(p)) continue
+    const t = num(p.t)
+    const dbfs = num(p.last) ?? num(p.mean)
+    if (t === null || dbfs === null) continue
+    points.push({ t, dbfs })
+  }
+  if (points.length === 0) return null
+  return { points: points.sort((a, b) => a.t - b.t) }
+}
+
+/** The level at `t`: the latest point at or before it, held for
+ *  {@link AUDIO_HOLD_MS}; null across a hole or with no series. */
+export function audioAt(series: AudioSeries | null | undefined, t: number): number | null {
+  if (series === null || series === undefined) return null
+  let lo = 0
+  let hi = series.points.length - 1
+  let found = -1
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1
+    if ((series.points[mid]?.t ?? Infinity) <= t) {
+      found = mid
+      lo = mid + 1
+    } else hi = mid - 1
+  }
+  const point = series.points[found]
+  if (point === undefined) return null
+  const next = series.points[found + 1]
+  // A rollup bucket stands for its own width: the gap to the next point, up to
+  // an hour. A raw step is held a little past itself.
+  const span = next === undefined ? AUDIO_HOLD_MS : Math.min(AUDIO_ROLLUP_HOLD_MS, Math.max(AUDIO_HOLD_MS, next.t - point.t))
+  return t - point.t <= span ? point.dbfs : null
+}
+
+function parseMotionRegions(row: Record<string, unknown>): readonly MotionRegionBox[] {
+  const w = num(row.frameWidth)
+  const h = num(row.frameHeight)
+  if (w === null || h === null || !(w > 0) || !(h > 0) || !Array.isArray(row.regions)) return []
+  const out: MotionRegionBox[] = []
+  for (const r of row.regions) {
+    if (!isRecord(r) || !isRecord(r.bbox)) continue
+    const x = num(r.bbox.x)
+    const y = num(r.bbox.y)
+    const bw = num(r.bbox.w)
+    const bh = num(r.bbox.h)
+    if (x === null || y === null || bw === null || bh === null || !(bw > 0) || !(bh > 0)) continue
+    out.push({ x: x / w, y: y / h, w: bw / w, h: bh / h, pixelCount: num(r.pixelCount) ?? 0 })
+  }
+  return out
+}
+
+/**
+ * `getMotionEvents` rows → episodes. A row is one EPISODE (`durationMs` = first
+ * to last rising edge; null = still open → runs to `nowMs`; absent = a legacy
+ * row, which lasts its last stored edge). Never read an absent duration as an
+ * open episode. Null when the answer is not a list.
+ */
+export function parseMotionEvents(raw: unknown, nowMs: number): readonly StoredMotionEpisode[] | null {
+  if (!Array.isArray(raw)) return null
+  const out: StoredMotionEpisode[] = []
+  for (const row of raw) {
+    if (!isRecord(row)) continue
+    const start = num(row.timestamp)
+    if (start === null) continue
+    const edges = Array.isArray(row.edges) ? row.edges.map(num).filter((e): e is number => e !== null) : []
+    const lastEdge = edges.length > 0 ? Math.max(...edges) : 0
+    const end =
+      row.durationMs === null
+        ? Math.max(nowMs, start + MOTION_TAIL_MS)
+        : start + (num(row.durationMs) ?? lastEdge) + MOTION_TAIL_MS
+    out.push({ start, end, regions: parseMotionRegions(row) })
+  }
+  return out.sort((a, b) => a.start - b.start)
+}
+
 export interface CoverageSignal {
   /** The window read hit its row limit: rows past it were never seen, so the
    *  range cannot be called known. */
@@ -267,13 +398,19 @@ export function resolveCoverage(signal: CoverageSignal): Coverage {
 /** Everything the overlays draw at playback time `t`. */
 export function frameAt(source: PlaybackOverlaySourceData, t: number): PlaybackOverlayFrame {
   if (source.coverage === 'unknown') return { availability: 'unknown' }
-  const motion = motionEpisodes(source.tracks).some((e) => t >= e.start && t <= e.end)
+  const stored = source.motion ?? null
+  const active = stored?.find((e) => t >= e.start && t <= e.end)
+  // The hub's motion episodes are the truth when it answered; a failed read
+  // falls back to the tracks' spans, which is what drew before.
+  const motion =
+    stored !== null ? active !== undefined : motionEpisodes(source.tracks).some((e) => t >= e.start && t <= e.end)
   return {
     availability: 'known',
     boxes: boxesAt(source.tracks, t),
     occupancy: occupancyAt(source.tracks, t),
     motion,
-    audioDbfs: null,
+    audioDbfs: audioAt(source.audio, t),
+    motionRegions: active?.regions ?? NO_REGIONS,
   }
 }
 
@@ -293,6 +430,8 @@ export interface PlaybackGates {
   readonly boxes: boolean
   readonly border: boolean
   readonly occupancy: boolean
+  /** The motion pill, border and regions follow either source too. */
+  readonly motion: boolean
   /** Playback never shows a meter without a real level. */
   readonly audioMeter: boolean
 }
@@ -308,9 +447,12 @@ export function resolvePlaybackGates(input: PlaybackGateInput): PlaybackGates {
     boxes: shown,
     border: shown,
     occupancy: shown,
+    motion: shown,
     audioMeter: liveOverlays || (fromPlayback && input.audioDbfs !== null),
   }
 }
+
+const NO_REGIONS: readonly MotionRegionBox[] = []
 
 export const NO_OCCUPANCY: readonly OccupancyCount[] = []
 

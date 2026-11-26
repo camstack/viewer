@@ -18,6 +18,7 @@ import { useControlsTransitions } from '../../../theme/motion.js'
 import { AudioLevelMeter } from '../AudioLevelMeter.js'
 import { DeviceInfoOverlay } from '../DeviceInfoOverlay.js'
 import { DoorbellBadge } from '../DoorbellBadge.js'
+import { MotionBadge } from '../MotionBadge.js'
 import { LiveViewersBadge } from '../LiveViewersBadge.js'
 import { OccupancyBadge } from '../OccupancyBadge.js'
 import { StreamStatsOverlay } from '../StreamStatsOverlay.js'
@@ -35,6 +36,8 @@ import { useReadoutEntries } from './OverlayReadouts.js'
  *  the stats panel whatever the transport; a tile only while it plays). */
 export interface OverlayGates {
   readonly audioMeter: boolean
+  /** Motion right now (live, lingered) or at the playback time. */
+  readonly motion: boolean
   readonly occupancy: boolean
   readonly stats: boolean
   readonly viewers: boolean
@@ -136,9 +139,9 @@ export function OverlayLayer({
           return <LiveViewersBadge deviceId={deviceId} enabled={gates.viewers} />
         case 'deviceInfo':
           return <DeviceInfoOverlay />
+        case 'motionBadge':
+          return gates.motion ? <MotionBadge /> : null
         default:
-          // The motion pill is the cameras list's and the embed's; a live
-          // stream draws the border and the regions instead.
           return null
       }
     }

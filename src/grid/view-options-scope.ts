@@ -158,14 +158,10 @@ export const GRID_ROW_OWNER = {
   // One set for the wall: a grid where every tile could draw a different amount
   // of detector output is a wall nobody can read at a glance.
   detectionLayers: 'bar',
-  // Per camera: only some cameras are worth watching the raw motion of, and the
-  // tile ALREADY draws the regions for the ones that are, from that camera's own
-  // document. The bar has no write path to N camera documents, so promoting this
-  // to the wall would mean either inventing one (the "one picture, two
-  // documents" bug this module exists to end) or silently dropping a capability
-  // that ships today. Compactness is bought elsewhere: the panel renders the
-  // visible layers as ONE chip row whichever rows they came from.
-  motionLayer: 'cell',
+  // One motion policy for the wall (planning#745): a grid follows the GRID's
+  // settings, never each camera's own document. The motion layer — regions,
+  // pill and border — is the grid document's, next to the detector layers.
+  motionLayer: 'bar',
   // One border policy for the wall — the bar owns the master switch AND the
   // triggers, because "which camera just lit up" only means something if every
   // tile lights up for the same reason.
@@ -241,8 +237,8 @@ export function barRowsInGroup(group: ViewOptionGroup): readonly GridBarRow[] {
  * The operator asked for ONE multi-selector offering motion / objects /
  * discarded / stationary, and that is what every surface renders. But "one
  * control" is a rendering decision and "one owner" is a persistence decision,
- * and they are not the same decision: on the wall the detector layers are the
- * grid's and the motion layer is still each camera's. Splitting the rows here
+ * and they are not the same decision: on the wall every layer is the grid's, in
+ * one document, while the record keeps one row per chip. Splitting the rows here
  * lets the panel ask {@link visibleLayers} for its chips and stay honest about
  * which document each chip writes.
  */
@@ -254,7 +250,7 @@ export const LAYER_ROW = {
 } as const satisfies Readonly<Record<OverlayLayer, ViewOptionRow>>
 
 /** The layers the PER-CAMERA surface offers in this context, in display order:
- *  all four in the single view, motion alone in a grid cell. */
+ *  all four in the single view, none in a grid cell (the bar owns them). */
 export function visibleLayers(context: ViewOptionsContext): readonly OverlayLayer[] {
   return OVERLAY_LAYERS.filter((layer) => isRowVisible(LAYER_ROW[layer], context))
 }

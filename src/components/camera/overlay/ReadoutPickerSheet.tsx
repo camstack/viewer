@@ -109,13 +109,6 @@ export const ReadoutPickerSheet = memo(function ReadoutPickerSheet({
       </View>
 
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.list}>
-        {target.deviceId === cameraDeviceId ? (
-          <FieldRow
-            label={t('v2.overlay.audioDbfs')}
-            caption="dBFS"
-            onPress={() => onPin({ kind: 'audioDbfs' }, t('v2.overlay.audioDbfs'), 'dBFS', 1)}
-          />
-        ) : null}
         {filteredFields.length === 0 ? (
           <Text style={[styles.hint, { color: colors.foregroundSubtle }]}>
             {t('v2.overlay.noFields')}

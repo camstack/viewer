@@ -70,6 +70,8 @@ interface GridLiveEmbedProps {
   readonly activeOnly?: boolean
   /** Live detection bounding-box overlay on every tile (session toggle). */
   readonly showBoxes?: boolean
+  /** The grid's motion layer (a grid setting). */
+  readonly showMotion?: boolean
   /** Device ids that support PTZ → tiles show an in-tile PTZ button. */
   readonly ptzIds?: readonly number[]
   /** Per-device indicators (motion regions, motion pill, audio meter,
@@ -120,6 +122,7 @@ export function GridLiveEmbed({
   highlight,
   activeOnly,
   showBoxes,
+  showMotion,
   ptzIds,
   overlays,
   onTileTap,
@@ -191,6 +194,7 @@ export function GridLiveEmbed({
             highlight,
             activeOnly,
             showBoxes,
+            showMotion,
             audioOnIds,
             pausedIds,
             ptzIds,
@@ -256,6 +260,9 @@ export function GridLiveEmbed({
   useEffect(() => {
     webViewRef.current?.injectJavaScript(gridCommandScript({ kind: 'setShowBoxes', value: showBoxes ?? false }))
   }, [showBoxes])
+  useEffect(() => {
+    webViewRef.current?.injectJavaScript(gridCommandScript({ kind: 'setShowMotion', value: showMotion ?? false }))
+  }, [showMotion])
   // Per-device indicators. Keyed by the SERIALISED map, not its identity: the
   // host rebuilds it from the prefs store on every render, and re-injecting an
   // identical map on each one would cross the bridge for nothing.
@@ -494,17 +501,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     overflow: 'hidden',
-    backgroundColor: '#000',
+    backgroundColor: '#000', // ui-check-ok: video letterbox, black by definition in both themes
   },
   web: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#000', // ui-check-ok: video letterbox, black by definition in both themes
   },
   overlay: {
     ...StyleSheet.absoluteFill,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#000',
+    backgroundColor: '#000', // ui-check-ok: video letterbox, black by definition in both themes
   },
   center: {
     flex: 1,

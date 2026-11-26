@@ -8,7 +8,7 @@
 import type { GridQuality, GridLayout, ResolvedGridOptions, GridHighlightSettings } from '../store/grid-store.js'
 import type { HighlightAppearance } from '../store/settings-store.js'
 import { DEFAULT_OVERLAY_SIZE, type OverlaySize } from '../components/camera/overlay/overlay-size.js'
-import { hasLayer, type OverlayConfig } from '../components/camera/overlay/overlay-config.js'
+import { type OverlayConfig } from '../components/camera/overlay/overlay-config.js'
 import type { OverlayAnchor, OverlayPosition } from '../components/camera/overlay/overlay-position.js'
 import type { GridCellSpan } from './embed-messages.js'
 import type { TileLabelsEmbedConfig } from './tile-labels.js'
@@ -77,8 +77,6 @@ export function tileOverlayFor(
   size: OverlaySize = DEFAULT_OVERLAY_SIZE,
 ): TileOverlayEmbedConfig | null {
   const config: TileOverlayEmbedConfig = {
-    ...(hasLayer(overlay, 'motion') ? { motionBoxes: true } : {}),
-    ...(overlay.motionBadge !== 'off' ? { motionBadge: overlay.motionBadge } : {}),
     ...(overlay.audioMeter !== 'off' ? { audioMeter: overlay.audioMeter } : {}),
     ...(overlay.occupancy !== 'off' ? { occupancy: overlay.occupancy } : {}),
     ...(overlay.stats !== 'off' ? { stats: true, statsAt: overlay.stats } : {}),
@@ -126,6 +124,8 @@ export interface GridEmbedConfig {
   readonly activeOnly?: boolean
   /** Live detection bounding-box overlay on every tile (session toggle). */
   readonly showBoxes?: boolean
+  /** The grid's motion layer: motion regions on every tile (a grid setting). */
+  readonly showMotion?: boolean
   readonly audioOnIds?: readonly number[]
   readonly pausedIds?: readonly number[]
   readonly ptzIds?: readonly number[]
@@ -172,6 +172,8 @@ export interface BuildGridEmbedConfigInput {
   readonly activeOnly?: boolean
   /** Live detection bounding-box overlay on every tile (session toggle). */
   readonly showBoxes?: boolean
+  /** The grid's motion layer: motion regions on every tile (a grid setting). */
+  readonly showMotion?: boolean
   readonly audioOnIds?: readonly number[]
   readonly pausedIds?: readonly number[]
   /** Device ids that support PTZ (host knows from camera features) → tiles show
@@ -206,6 +208,7 @@ export function buildGridEmbedConfig(input: BuildGridEmbedConfigInput): GridEmbe
     ...(input.highlight ? { highlight: input.highlight } : {}),
     ...(input.activeOnly ? { activeOnly: true } : {}),
     ...(input.showBoxes ? { showBoxes: true } : {}),
+    ...(input.showMotion ? { showMotion: true } : {}),
     ...(input.audioOnIds && input.audioOnIds.length > 0 ? { audioOnIds: [...input.audioOnIds] } : {}),
     ...(input.pausedIds && input.pausedIds.length > 0 ? { pausedIds: [...input.pausedIds] } : {}),
     ...(input.ptzIds && input.ptzIds.length > 0 ? { ptzIds: [...input.ptzIds] } : {}),

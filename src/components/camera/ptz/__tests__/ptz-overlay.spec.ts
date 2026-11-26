@@ -48,7 +48,7 @@ function mountDiscs(ptzToggle?: { open: boolean; onToggle: () => void }) {
         layer: {
           deviceId: 1,
           config: OVERLAY_DEFAULTS,
-          gates: { audioMeter: false, occupancy: false, stats: false, viewers: false, readouts: false, doorbell: false },
+          gates: { audioMeter: false, motion: false, occupancy: false, stats: false, viewers: false, readouts: false, doorbell: false },
           deviceInfo: 'off' as const,
           getStats: () => Promise.resolve(null),
         },

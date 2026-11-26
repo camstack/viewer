@@ -2972,8 +2972,12 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
             {/* Motion REGIONS under the detection boxes — "where did the
                 picture change" beneath "what is it". Drawn first so a detection
                 box always reads on top of the area that triggered it. */}
-            {motionRegionsOn && liveOverlaysVisible ? (
-              <MotionRegionsOverlay deviceId={deviceId} enabled={motionRegionsOn} />
+            {motionRegionsOn && (liveOverlaysVisible || playbackOverlaysVisible) ? (
+              <MotionRegionsOverlay
+                deviceId={deviceId}
+                enabled={motionRegionsOn}
+                playbackStore={playbackOverlaysVisible ? playbackStore : undefined}
+              />
             ) : null}
             <PlaybackOverlayDriver
               store={playbackStore}
@@ -3039,10 +3043,11 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
             </View>
           ) : null}
 
-          {/* Per-camera highlight border — NATIVE player only (the WebView embed
-              draws its own; a native border is occluded by its video layer).
-              Color/thickness from the global highlight appearance settings. */}
-          {highlightType && !useWebViewPlayer && gates.border && overlay.highlightBorder ? (
+          {/* Per-camera highlight border — the native player always; the WebView
+              embed (iOS) draws its OWN on the live edge, so there this one draws
+              only over RECORDED playback, where the embed's highlight is gated
+              off. Color/thickness from the global highlight appearance settings. */}
+          {highlightType && (!useWebViewPlayer || playbackOverlaysVisible) && gates.border && overlay.highlightBorder ? (
             <View
               pointerEvents="none"
               style={[
@@ -3099,6 +3104,7 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
                 : undefined,
               gates: {
                 audioMeter: gates.audioMeter,
+                motion: playbackOverlaysVisible ? playbackMotion : liveOverlaysVisible && motionActive,
                 readouts: liveOverlaysVisible && status.isLive,
                 viewers: liveOverlaysVisible && status.isLive,
                 occupancy: gates.occupancy,
