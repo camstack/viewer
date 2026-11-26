@@ -31,6 +31,22 @@ export interface WhatsNewEntry {
 // i18n-ok: release notes carry their own `en` + `it` text per entry (typed, held by whats-new.spec.ts)
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.737',
+    date: '2026-11-26',
+    notes: {
+      en: [
+        'Your avatar, top left, opens the menu; account, server switch and sign-out sit at its bottom.',
+        'Auto quality shows the profile it picked next to play, live and recorded.',
+        'The fullscreen button hides when the picture already fills the window.',
+      ],
+      it: [
+        'Il tuo avatar, in alto a sinistra, apre il menu; account, cambio server ed esci sono in fondo.',
+        'La qualità Auto mostra il profilo scelto accanto al play, in diretta e in registrato.',
+        'Il pulsante schermo intero sparisce quando l’immagine riempie già la finestra.',
+      ],
+    },
+  },
+  {
     version: '1.0.736',
     date: '2026-11-25',
     notes: {
