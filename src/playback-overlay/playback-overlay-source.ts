@@ -160,6 +160,7 @@ function boxOf(track: OverlayTrack, s: TrackSample): DetectionBox | null {
   return {
     label: track.className,
     score: s.score ?? 0,
+    ...(s.score === undefined ? { noScore: true as const } : {}),
     x1: s.x / f.w,
     y1: s.y / f.h,
     x2: (s.x + s.w) / f.w,
@@ -239,6 +240,9 @@ export function motionEpisodes(tracks: readonly OverlayTrack[]): readonly Motion
 }
 
 export interface CoverageSignal {
+  /** The window read hit its row limit: rows past it were never seen, so the
+   *  range cannot be called known. */
+  readonly truncated?: boolean
   /** The window read answered (not loading, not failed). */
   readonly answered: boolean
   readonly windowTracks: number
@@ -255,6 +259,7 @@ export interface CoverageSignal {
  */
 export function resolveCoverage(signal: CoverageSignal): Coverage {
   if (!signal.answered) return 'unknown'
+  if (signal.truncated === true) return 'unknown'
   if (signal.windowTracks > 0) return 'known'
   return signal.probeTracks > 0 ? 'known' : 'unknown'
 }
@@ -270,4 +275,45 @@ export function frameAt(source: PlaybackOverlaySourceData, t: number): PlaybackO
     motion,
     audioDbfs: null,
   }
+}
+
+export interface PlaybackGateInput {
+  readonly isLive: boolean
+  readonly paused: boolean
+  readonly availability: PlaybackOverlayFrame['availability']
+  readonly audioDbfs: number | null
+}
+
+export interface PlaybackGates {
+  /** The live edge, playing: the live feeds draw. */
+  readonly liveOverlays: boolean
+  /** Recorded playback with a known range: the stored-track source draws. */
+  readonly fromPlayback: boolean
+  /** Boxes, highlight border and occupancy follow either source. */
+  readonly boxes: boolean
+  readonly border: boolean
+  readonly occupancy: boolean
+  /** Playback never shows a meter without a real level. */
+  readonly audioMeter: boolean
+}
+
+/** Which source an overlay draws from: live, stored tracks, or nothing. */
+export function resolvePlaybackGates(input: PlaybackGateInput): PlaybackGates {
+  const liveOverlays = input.isLive && !input.paused
+  const fromPlayback = !input.isLive && input.availability === 'known'
+  const shown = liveOverlays || fromPlayback
+  return {
+    liveOverlays,
+    fromPlayback,
+    boxes: shown,
+    border: shown,
+    occupancy: shown,
+    audioMeter: liveOverlays || (fromPlayback && input.audioDbfs !== null),
+  }
+}
+
+export const NO_OCCUPANCY: readonly OccupancyCount[] = []
+
+export function sameOccupancy(a: readonly OccupancyCount[], b: readonly OccupancyCount[]): boolean {
+  return a.length === b.length && a.every((c, i) => c.className === b[i]?.className && c.count === b[i]?.count)
 }

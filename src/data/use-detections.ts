@@ -67,6 +67,9 @@ export interface DetectionBox {
   readonly name?: string
   /** True for synthesized/real detail boxes (face/plate) — inner boxes. */
   readonly detail?: boolean
+  /** A stored position carried no score (recorded playback): the tag names the
+   *  class only. Live boxes never set this. */
+  readonly noScore?: true
 }
 
 export interface DetectionState {

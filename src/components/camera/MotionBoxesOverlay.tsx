@@ -25,6 +25,11 @@
 import React, { useState } from 'react'
 import { View, Text, StyleSheet, type LayoutChangeEvent } from 'react-native'
 import { useDetections, type DetectionBox } from '../../data/use-detections.js'
+import {
+  createPlaybackOverlayStore,
+  usePlaybackSlice,
+  type PlaybackOverlayStore,
+} from '../../playback-overlay/playback-overlay-store.js'
 import { useTheme } from '../../theme/theme-provider.js'
 import { RADIUS } from '../../theme/tokens.js'
 import { useKindPaint } from '../../../shared/palette.js'
@@ -36,9 +41,22 @@ export interface MotionBoxesOverlayProps {
   readonly deviceId: number
   /** Gated by the overlay's `objects` layer. */
   readonly enabled: boolean
-  /** Recorded playback: the boxes of the playback time, from stored tracks.
-   *  When given, the live detection feed is not subscribed. */
-  readonly playbackBoxes?: readonly DetectionBox[]
+  /** Recorded playback: the store holding the boxes of the playback time, from
+   *  stored tracks. When given, the live detection feed is not subscribed. */
+  readonly playbackStore?: PlaybackOverlayStore
+}
+
+const NO_STORE = createPlaybackOverlayStore()
+const NO_BOXES: readonly DetectionBox[] = []
+
+function sameBoxes(a: readonly DetectionBox[], b: readonly DetectionBox[]): boolean {
+  return (
+    a.length === b.length &&
+    a.every((x, i) => {
+      const y = b[i]
+      return y !== undefined && x.label === y.label && x.x1 === y.x1 && x.y1 === y.y1 && x.x2 === y.x2 && x.y2 === y.y2
+    })
+  )
 }
 
 interface Size {
@@ -46,10 +64,15 @@ interface Size {
   readonly height: number
 }
 
-export function MotionBoxesOverlay({ deviceId, enabled, playbackBoxes }: MotionBoxesOverlayProps) {
+export function MotionBoxesOverlay({ deviceId, enabled, playbackStore }: MotionBoxesOverlayProps) {
   const { colors } = useTheme()
-  const live = useDetections(deviceId, enabled && playbackBoxes === undefined)
-  const boxes = playbackBoxes ?? live.boxes
+  const live = useDetections(deviceId, enabled && playbackStore === undefined)
+  const stored = usePlaybackSlice(
+    playbackStore ?? NO_STORE,
+    (f) => (f.availability === 'known' ? f.boxes : NO_BOXES),
+    sameBoxes,
+  )
+  const boxes = playbackStore === undefined ? live.boxes : stored
   // `box.label` is the raw detection class (taxonomy) — resolved below.
   // `box.name`, when present, is the enrichment identity/plate and is already
   // shown VERBATIM; it must never go through the resolver.
@@ -75,8 +98,8 @@ export function MotionBoxesOverlay({ deviceId, enabled, playbackBoxes }: MotionB
 
             const color = paint(box.label)
             // A stored position without a score names the class only; a
-            // percentage here would be made up.
-            const pct = box.score > 0 ? ` ${Math.round(box.score * 100)}%` : ''
+            // percentage there would be made up. A live 0 stays "0%".
+            const pct = box.noScore === true ? '' : ` ${Math.round(box.score * 100)}%`
             const text =
               box.name !== undefined
                 ? `${box.name}${pct}`

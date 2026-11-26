@@ -113,6 +113,9 @@ describe('pruned range is UNKNOWN, never "no detections"', () => {
   it('a window with tracks is known', () => {
     expect(resolveCoverage({ answered: true, windowTracks: 3, probeTracks: 0 })).toBe('known')
   })
+  it('a truncated read is unknown', () => {
+    expect(resolveCoverage({ answered: true, windowTracks: 500, probeTracks: 1, truncated: true })).toBe('unknown')
+  })
   it('an unanswered or failed read is unknown', () => {
     expect(resolveCoverage({ answered: false, windowTracks: 0, probeTracks: 0 })).toBe('unknown')
   })
