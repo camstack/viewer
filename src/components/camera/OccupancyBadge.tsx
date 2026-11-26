@@ -20,7 +20,7 @@ import { CircleParking } from '../../lib/icons.js'
 import { useTheme } from '../../theme/theme-provider.js'
 import { SPACING, RADIUS } from '../../theme/tokens.js'
 import { useCurrentOccupancy } from '../../data/use-occupancy.js'
-import { occupancyClassCounts } from '../../data/occupancy.js'
+import { occupancyClassCounts, type OccupancyClassCount } from '../../data/occupancy.js'
 import { useEventKindResolver } from '../../data/use-event-kind-resolver.js'
 import { useKindPaint } from '../../../shared/palette.js'
 import { useScaledPx, useStyleScaler } from './overlay/OverlayFrame.js'
@@ -32,18 +32,21 @@ interface OccupancyBadgeProps {
   readonly deviceId: number
   /** Mount + poll only while true (the caller gates this to the live edge). */
   readonly enabled: boolean
+  /** Recorded playback: the tracks alive at the playback time. When given, the
+   *  live snapshot is not polled and no parked chip is drawn (not stored). */
+  readonly playbackCounts?: readonly OccupancyClassCount[]
 }
 
 /** Live occupancy strip. Empty (renders nothing) with no occupancy. */
-export function OccupancyBadge({ deviceId, enabled }: OccupancyBadgeProps) {
+export function OccupancyBadge({ deviceId, enabled, playbackCounts }: OccupancyBadgeProps) {
   const { colors } = useTheme()
   const sx = useStyleScaler()
   const px = useScaledPx()
   const resolver = useEventKindResolver([deviceId])
   const paint = useKindPaint()
-  const { data: snapshot = null } = useCurrentOccupancy(deviceId, enabled)
-  const counts = occupancyClassCounts(snapshot)
-  const parked = snapshot?.stationaryCount ?? 0
+  const { data: snapshot = null } = useCurrentOccupancy(deviceId, enabled && playbackCounts === undefined)
+  const counts = playbackCounts ?? occupancyClassCounts(snapshot)
+  const parked = playbackCounts === undefined ? (snapshot?.stationaryCount ?? 0) : 0
   if (!enabled || (counts.length === 0 && parked === 0)) return null
 
   const chips = counts.slice(0, MAX_CHIPS)

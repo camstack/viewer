@@ -49,6 +49,10 @@ interface AudioLevelMeterProps {
    *  GRID TILE needs: a tap there toggles the tile's own controls, and a meter
    *  that opened a position picker over a 200pt cell would steal it. */
   readonly onPress?: () => void
+  /** Recorded playback: the level heard at the playback time. When given, the
+   *  live audio feed is not subscribed. The caller mounts the meter only when
+   *  it has a real level. */
+  readonly playbackDbfs?: number
 }
 
 /** The pill's flex container style for an orientation. */
@@ -63,12 +67,13 @@ function meterContainerStyle(orientation: AudioMeterOrientation): ViewStyle {
   return { flexDirection: 'row', alignItems: 'flex-end', gap: 3 }
 }
 
-export function AudioLevelMeter({ deviceId, position, onPress }: AudioLevelMeterProps) {
+export function AudioLevelMeter({ deviceId, position, onPress, playbackDbfs }: AudioLevelMeterProps) {
   const { t } = useTranslation()
   const { colors } = useTheme()
   const sx = useStyleScaler()
   const placed = position !== 'off'
-  const dbfs = useAudioLevel(deviceId, placed)
+  const liveDbfs = useAudioLevel(deviceId, placed && playbackDbfs === undefined)
+  const dbfs = playbackDbfs ?? liveDbfs
   const level = dbfsToLevel(dbfs)
   const orientation = meterOrientation(position)
   /** Read-only host (a grid tile): draw the pill, take no touches. */

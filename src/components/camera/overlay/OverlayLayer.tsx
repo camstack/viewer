@@ -21,6 +21,7 @@ import { DoorbellBadge } from '../DoorbellBadge.js'
 import { LiveViewersBadge } from '../LiveViewersBadge.js'
 import { OccupancyBadge } from '../OccupancyBadge.js'
 import { StreamStatsOverlay } from '../StreamStatsOverlay.js'
+import type { OccupancyClassCount } from '../../../data/occupancy.js'
 import type { StreamStats } from '../../../live/live-view-types.js'
 import type { DiscClusters } from '../OverlayDiscGroup.js'
 import { isOverlayShown, type OverlayConfig, type OverlayItemId } from './overlay-config.js'
@@ -41,10 +42,19 @@ export interface OverlayGates {
   readonly doorbell: boolean
 }
 
+/** What recorded playback feeds the live overlays (`PlaybackOverlaySource`).
+ *  Absent = the live feeds. */
+export interface OverlayPlayback {
+  readonly occupancy: readonly OccupancyClassCount[]
+  readonly audioDbfs: number | null
+}
+
 export interface OverlayLayerProps {
   readonly deviceId: number
   readonly config: OverlayConfig
   readonly gates: OverlayGates
+  /** Recorded playback's data for the occupancy badge and the audio meter. */
+  readonly playback?: OverlayPlayback
   /** The auto-hiding controls are showing — what every `fade` flag follows. A
    *  host without auto-hiding controls passes `true`: nothing fades. */
   readonly controlsVisible: boolean
@@ -80,6 +90,7 @@ export function OverlayLayer({
   deviceId,
   config,
   gates,
+  playback,
   controlsVisible,
   hasDoorbell = false,
   deviceInfo,
@@ -110,10 +121,15 @@ export function OverlayLayer({
           return <DoorbellBadge deviceId={deviceId} enabled={gates.doorbell} />
         case 'audioMeter':
           return gates.audioMeter ? (
-            <AudioLevelMeter deviceId={deviceId} position={config.audioMeter} onPress={onPressAudioMeter} />
+            <AudioLevelMeter
+              deviceId={deviceId}
+              position={config.audioMeter}
+              onPress={onPressAudioMeter}
+              playbackDbfs={playback?.audioDbfs ?? undefined}
+            />
           ) : null
         case 'occupancy':
-          return <OccupancyBadge deviceId={deviceId} enabled={gates.occupancy} />
+          return <OccupancyBadge deviceId={deviceId} enabled={gates.occupancy} playbackCounts={playback?.occupancy} />
         case 'stats':
           return gates.stats ? <StreamStatsOverlay getStats={getStats} compact={statsCompact} /> : null
         case 'viewers':
@@ -140,6 +156,7 @@ export function OverlayLayer({
     name,
     controls,
     gates,
+    playback,
     deviceId,
     getStats,
     statsCompact,

@@ -192,6 +192,7 @@ import {
   type LiveStreamGateInput,
 } from '../live/battery-stream-gate.js'
 import { useStreamAspect } from '../live/stream-aspect.js'
+import { usePlaybackOverlay } from '../playback-overlay/use-playback-overlay.js'
 import { MotionBoxesOverlay } from '../components/camera/MotionBoxesOverlay.js'
 import { StationaryBoxesOverlay } from '../components/camera/StationaryBoxesOverlay.js'
 import { MotionRegionsOverlay } from '../components/camera/MotionRegionsOverlay.js'
@@ -2669,6 +2670,21 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
   // frame under them is historical, so drawing live boxes/flash over it is wrong.
   // Mirrors the OccupancyBadge gate (`status.isLive && !paused`).
   const liveOverlaysVisible = status.isLive && !paused
+  // RECORDED playback: the same overlays, filled from the tracks the hub
+  // stored (`PlaybackOverlaySource`). A range the hub no longer holds tracks
+  // for answers `unknown` and draws nothing — never "no detections".
+  const playbackFrame = usePlaybackOverlay({
+    deviceId,
+    enabled: !status.isLive,
+    playhead: playback.state.playhead,
+    seekTarget: playback.state.seekTarget,
+    seekAnchor: playback.state.seekAnchor,
+    scrubbing: playback.state.mode === 'seeking',
+    paused: recPaused,
+    rate: speed,
+  })
+  const playbackKnown = playbackFrame.availability === 'known' ? playbackFrame : null
+  const playbackOverlaysVisible = playbackKnown !== null
   // The robot moves only with its monitor open: the drive overlay is drawn
   // over a picture that is PLAYING on the live edge — the player's own report,
   // not a flag of this screen's — never over a poster, a paused edge or a
@@ -2678,7 +2694,11 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
   // An unconditional `true` kept getStatus ticking during recorded/scrub on
   // the same socket as the feeder. Shared with the grid tile + card.
   const motionActive = useMotionHighlight(deviceId, liveOverlaysVisible)
-  const highlightType = detActive
+  const highlightType = playbackOverlaysVisible
+    ? playbackKnown.motion && cameraHighlight.motion
+      ? 'motion'
+      : null
+    : detActive
     ? 'detection'
     : audioActive || audioPreview
       ? 'audio'
@@ -2930,8 +2950,12 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
             {motionRegionsOn && liveOverlaysVisible ? (
               <MotionRegionsOverlay deviceId={deviceId} enabled={motionRegionsOn} />
             ) : null}
-            {detectionBoxesOn && liveOverlaysVisible ? (
-              <MotionBoxesOverlay deviceId={deviceId} enabled={detectionBoxesOn} />
+            {detectionBoxesOn && (liveOverlaysVisible || playbackOverlaysVisible) ? (
+              <MotionBoxesOverlay
+                deviceId={deviceId}
+                enabled={detectionBoxesOn}
+                playbackBoxes={playbackKnown?.boxes}
+              />
             ) : null}
             {/* The PARKED objects — a layer of their own since 2026-08-18.
                 Drawn under the discarded ghosts and over the live boxes: a
@@ -2980,7 +3004,7 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
           {/* Per-camera highlight border — NATIVE player only (the WebView embed
               draws its own; a native border is occluded by its video layer).
               Color/thickness from the global highlight appearance settings. */}
-          {highlightType && !useWebViewPlayer && liveOverlaysVisible && overlay.highlightBorder ? (
+          {highlightType && !useWebViewPlayer && (liveOverlaysVisible || playbackOverlaysVisible) && overlay.highlightBorder ? (
             <View
               pointerEvents="none"
               style={[
@@ -3032,11 +3056,15 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
               hasDoorbell,
               deviceInfo: deviceInfoPosition,
               getStats,
+              playback:
+                playbackKnown === null
+                  ? undefined
+                  : { occupancy: playbackKnown.occupancy, audioDbfs: playbackKnown.audioDbfs },
               gates: {
-                audioMeter: liveOverlaysVisible,
+                audioMeter: liveOverlaysVisible || (playbackKnown !== null && playbackKnown.audioDbfs !== null),
                 readouts: liveOverlaysVisible && status.isLive,
                 viewers: liveOverlaysVisible && status.isLive,
-                occupancy: status.isLive && !paused,
+                occupancy: (status.isLive && !paused) || playbackOverlaysVisible,
                 stats: true,
                 doorbell: doorbellBadgeEnabled({ hasDoorbell, switchedOn: overlay.doorbell, overlaysVisible: liveOverlaysVisible }),
               },

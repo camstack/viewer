@@ -24,7 +24,7 @@
  */
 import React, { useState } from 'react'
 import { View, Text, StyleSheet, type LayoutChangeEvent } from 'react-native'
-import { useDetections } from '../../data/use-detections.js'
+import { useDetections, type DetectionBox } from '../../data/use-detections.js'
 import { useTheme } from '../../theme/theme-provider.js'
 import { RADIUS } from '../../theme/tokens.js'
 import { useKindPaint } from '../../../shared/palette.js'
@@ -36,6 +36,9 @@ export interface MotionBoxesOverlayProps {
   readonly deviceId: number
   /** Gated by the overlay's `objects` layer. */
   readonly enabled: boolean
+  /** Recorded playback: the boxes of the playback time, from stored tracks.
+   *  When given, the live detection feed is not subscribed. */
+  readonly playbackBoxes?: readonly DetectionBox[]
 }
 
 interface Size {
@@ -43,9 +46,10 @@ interface Size {
   readonly height: number
 }
 
-export function MotionBoxesOverlay({ deviceId, enabled }: MotionBoxesOverlayProps) {
+export function MotionBoxesOverlay({ deviceId, enabled, playbackBoxes }: MotionBoxesOverlayProps) {
   const { colors } = useTheme()
-  const { boxes } = useDetections(deviceId, enabled)
+  const live = useDetections(deviceId, enabled && playbackBoxes === undefined)
+  const boxes = playbackBoxes ?? live.boxes
   // `box.label` is the raw detection class (taxonomy) — resolved below.
   // `box.name`, when present, is the enrichment identity/plate and is already
   // shown VERBATIM; it must never go through the resolver.
@@ -70,11 +74,13 @@ export function MotionBoxesOverlay({ deviceId, enabled }: MotionBoxesOverlayProp
             if (width <= 0 || height <= 0) return null
 
             const color = paint(box.label)
-            const pct = Math.round(box.score * 100)
+            // A stored position without a score names the class only; a
+            // percentage here would be made up.
+            const pct = box.score > 0 ? ` ${Math.round(box.score * 100)}%` : ''
             const text =
               box.name !== undefined
-                ? `${box.name} ${pct}%`
-                : `${resolver.resolveLabel(box.label)} ${pct}%`
+                ? `${box.name}${pct}`
+                : `${resolver.resolveLabel(box.label)}${pct}`
             // No guaranteed tracking id; index keeps keys stable per frame.
             const key = `${box.label}-${i}`
 
