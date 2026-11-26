@@ -31,6 +31,14 @@ export interface WhatsNewEntry {
 // i18n-ok: release notes carry their own `en` + `it` text per entry (typed, held by whats-new.spec.ts)
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.739',
+    date: '2026-11-26',
+    notes: {
+      en: ['Recorded playback shows detection boxes, motion, occupancy and audio level.'],
+      it: ['La riproduzione registrata mostra riquadri, movimento, occupazione e livello audio.'],
+    },
+  },
+  {
     version: '1.0.738',
     date: '2026-11-26',
     notes: {
