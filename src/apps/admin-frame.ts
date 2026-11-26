@@ -8,6 +8,8 @@
  * handed over; a viewer that is NOT on the hub's origin cannot frame it (the hub
  * answers `frame-ancestors 'self'`) and opens a tab instead.
  */
+import type { AppEntry } from '@camstack/types'
+
 import { sameHubOrigin } from '../connection/hub-origin.js'
 
 /** What the Admin app renders as. */
@@ -42,6 +44,27 @@ export function trimBase(baseUrl: string): string {
 
 export function adminRootUrl(baseUrl: string): string {
   return `${trimBase(baseUrl)}/`
+}
+
+/** Where the admin SPA serves an addon page: `/addon/:pagePath`. */
+export const ADDON_PAGE_MOUNT = '/addon'
+
+/** What to frame for an app entry: the hub-relative path and how the frame signs in. */
+export interface FrameTarget {
+  readonly path: string
+  readonly auth: 'handoff' | 'session-cookie'
+  /** A handoff lands on the admin root: the page the frame must be sent to once it says `ready`. */
+  readonly openAfterHandoff: string | null
+}
+
+/** The frame an entry is shown in, or `null` for an entry the shell draws itself (`native`). */
+export function frameTargetOf(entry: AppEntry): FrameTarget | null {
+  if (entry.kind === 'web') return { path: entry.path, auth: entry.auth, openAfterHandoff: null }
+  if (entry.kind === 'addon-page') {
+    const path = `${ADDON_PAGE_MOUNT}/${encodeURIComponent(entry.pageId)}`
+    return { path, auth: 'handoff', openAfterHandoff: path }
+  }
+  return null
 }
 
 export function planAdminFrame(input: AdminFrameInput): AdminFramePlan {

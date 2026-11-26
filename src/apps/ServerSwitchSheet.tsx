@@ -2,7 +2,8 @@
  * ServerSwitchSheet — the saved servers, the current one first and ticked; a tap
  * on another switches to it (or sends you to sign in when that server needs it).
  * Opened from the drawer's bottom block, the one place a server is switched; the
- * drawer closes with the tap, whatever the outcome.
+ * drawer closes with the tap, whatever the outcome. A full-page loader names the
+ * target until the outcome; a failure clears it and says why.
  */
 import React from 'react'
 import { Pressable, View } from 'react-native'
@@ -14,7 +15,7 @@ import { MenuRow } from '../components/ui/MenuRow.js'
 import { PickerSheet, PickerSheetButton } from '../components/ui/PickerSheet.js'
 import { serverDisplayName } from '../connection/hub-origin.js'
 import { serverLabelOf } from '../connection/server-name.js'
-import { useConfirm } from '../components/ui/confirm.js'
+import { useConfirm, useNotice } from '../components/ui/confirm.js'
 import { Check, Plus, Server, Trash2, X } from '../lib/icons.js'
 import { orderServers } from '../navigation/user-menu.js'
 import { useTheme } from '../theme/theme-provider.js'
@@ -31,19 +32,30 @@ export function ServerSwitchSheet({ onClose }: ServerSwitchSheetProps): React.JS
   const router = useRouter()
   const { servers, server, switchServer, removeServer } = useServer()
   const confirm = useConfirm()
+  const notice = useNotice()
   const setDrawerOpen = useAppStore((s) => s.setDrawerOpen)
+  const setServerSwitch = useAppStore((s) => s.setServerSwitch)
 
   const labelOf = (saved: (typeof servers)[number]): string =>
     saved.name !== undefined ? serverLabelOf(saved) : saved.label !== '' ? saved.label : serverDisplayName(saved.serverUrl)
 
-  const switchTo = (id: string, serverUrl: string): void => {
+  const switchTo = (saved: (typeof servers)[number]): void => {
+    const id = saved.id
     onClose()
     setDrawerOpen(false)
     if (id === server?.id) return
-    void switchServer(id).then((outcome) => {
-      if (outcome.status === 'needs-login') router.push({ pathname: '/add-server', params: { url: serverUrl } })
-      else if (outcome.status === 'switched') router.replace('/cameras')
-    })
+    // The sheet is closed with the tap: the cover lives in the store and stays until the outcome.
+    setServerSwitch({ name: labelOf(saved) })
+    void switchServer(id)
+      .then((outcome) => {
+        if (outcome.status === 'needs-login') router.push({ pathname: '/add-server', params: { url: saved.serverUrl } })
+        else if (outcome.status === 'switched') router.replace('/cameras')
+        else if (outcome.status === 'unknown-server') notice({ title: t('v2.servers.switchFailed'), message: t('v2.servers.switchUnknown') })
+      })
+      .catch((e: unknown) => {
+        notice({ title: t('v2.servers.switchFailed'), message: e instanceof Error ? e.message : String(e) })
+      })
+      .finally(() => setServerSwitch(null))
   }
 
   const addServer = (): void => {
@@ -84,7 +96,7 @@ export function ServerSwitchSheet({ onClose }: ServerSwitchSheetProps): React.JS
                 icon={Server}
                 label={labelOf(saved)}
                 selected={current}
-                onPress={() => switchTo(saved.id, saved.serverUrl)}
+                onPress={() => switchTo(saved)}
                 trailing={current ? <Check size={16} color={colors.primary} /> : null}
               />
             </View>

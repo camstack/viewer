@@ -3786,6 +3786,8 @@
       "removeActiveConfirmBody": "È il server attivo: verrai disconnesso. Gli altri server restano collegati.",
       "remove_cta": "Rimuovi",
       "switchFailed": "Impossibile cambiare server",
+      "switching": "Passaggio a {{name}}…",
+      "switchUnknown": "Questo server non è più salvato su questo dispositivo.",
       "savedTitle": "Server salvati"
     },
     "connect": {
@@ -4219,7 +4221,8 @@
       "searchNothing": "Nessun risultato",
       "searching": "Ricerca…",
       "searchFailed": "Ricerca non disponibile",
-      "unavailable": "Le app non sono disponibili al momento."
+      "unavailable": "Le app non sono disponibili al momento.",
+      "loading": "Caricamento app…"
     },
     "recordMenu": {
       "open": "Azioni di registrazione",

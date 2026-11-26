@@ -92,4 +92,19 @@ describe('the drawer model', () => {
     const model = buildDrawerModel({ catalog: answered(a, b), activeAppId: null, translate })
     expect(model.apps.map((x) => x.id)).toEqual(['b', 'a'])
   })
+
+  it('the active app is named for the selector row', () => {
+    const model = buildDrawerModel({ catalog: answered(hosted, embedded), activeAppId: 'other', translate })
+    expect(model.activeApp).toMatchObject({ id: 'other', label: 'OTHER', selected: true })
+    expect(buildDrawerModel({ catalog: { status: 'pending' }, activeAppId: 'other', translate }).activeApp).toBeNull()
+  })
+
+  it('a nav of one page named like the app itself is not drawn (the selector already says it)', () => {
+    const selfNav = [{ id: 'main', label: null, items: [{ id: 'home', label: L('apps.self', 'SELF'), icon: 'wrench', path: '/' }] }]
+    const self = app('self', { nav: selfNav })
+    expect(buildDrawerModel({ catalog: answered(hosted, self), activeAppId: 'self', translate }).nav).toEqual([])
+    // A single page with another name stays.
+    const named = app('self', { nav: [{ ...selfNav[0], items: [{ ...selfNav[0].items[0], label: L('x', 'Overview') }] }] })
+    expect(buildDrawerModel({ catalog: answered(hosted, named), activeAppId: 'self', translate }).nav).toHaveLength(1)
+  })
 })

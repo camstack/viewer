@@ -21,6 +21,7 @@ import { launchResolvable, offeredLaunchPreferences, resolveLaunchApp } from './
 import { useAppStore } from './app-store.js'
 import { AppDrawer } from './AppDrawer.js'
 import { EmbeddedApp } from './EmbeddedApp.js'
+import { ServerSwitchLoader } from './ServerSwitchLoader.js'
 
 export function AppHost(): React.JSX.Element {
   const { colors } = useTheme()
@@ -80,6 +81,7 @@ export function AppHost(): React.JSX.Element {
         </View>
       ) : null}
       <AppDrawer />
+      <ServerSwitchLoader />
     </>
   )
 }

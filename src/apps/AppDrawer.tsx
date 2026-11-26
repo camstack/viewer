@@ -1,7 +1,7 @@
 /**
  * AppDrawer — THE drawer: one overlay, the same on a phone and on the web.
- * Top to bottom: the route badge, the shared search, the
- * APPS the hub offered (the active one ticked), the active app's NAV, its
+ * Top to bottom: the route badge, the shared search, the app selector (the
+ * active app; a tap lists the apps the hub offered), the active app's NAV, its
  * Settings (only when it declares them) and sign-out. The bottom block shows who is
  * signed in, the current server and, with two or more saved, the server switch.
  *
@@ -32,7 +32,7 @@ import { useAppCatalog } from '../data/use-apps.js'
 import { useDrawerSearch } from '../data/use-drawer-search.js'
 import { useMe } from '../data/use-me.js'
 import { hapticTap } from '../lib/haptics.js'
-import { Check, LogOut, Plug, Server, Settings, User, Video, X } from '../lib/icons.js'
+import { ChevronsUpDown, Layers, LogOut, Plug, Server, Settings, User, Video, X } from '../lib/icons.js'
 import { settingsNavigation, settingsTab } from '../navigation/nav-items.js'
 import { UserAvatar } from '../navigation/UserAvatar.js'
 import { useTheme } from '../theme/theme-provider.js'
@@ -47,6 +47,7 @@ import { findApp, hostedAppOf } from './app-catalog.js'
 import { LaunchPreferenceSheet } from './LaunchPreferenceSheet.js'
 import { launchValueLabel } from './launch-choices.js'
 import { ACCOUNT_PATH } from '../screens/account/AccountScreen.js'
+import { AppSelectorSheet } from './AppSelectorSheet.js'
 import { ServerSwitchSheet } from './ServerSwitchSheet.js'
 
 const PANEL_MAX_WIDTH = 320
@@ -74,6 +75,7 @@ export function AppDrawer(): React.JSX.Element | null {
   const [query, setQuery] = useState('')
   const [switching, setSwitching] = useState(false)
   const [launching, setLaunching] = useState(false)
+  const [pickingApp, setPickingApp] = useState(false)
 
   const translate = useMemo(() => (label: AppLabel): string => t(label.key, { defaultValue: label.fallback }), [t])
   const model = useMemo(
@@ -99,6 +101,7 @@ export function AppDrawer(): React.JSX.Element | null {
       setQuery('')
       setSwitching(false)
       setLaunching(false)
+      setPickingApp(false)
     }
   }, [open])
 
@@ -115,6 +118,7 @@ export function AppDrawer(): React.JSX.Element | null {
 
   const goApp = (id: string): void => {
     hapticTap()
+    setPickingApp(false)
     if (id === model.activeId) {
       close()
       return
@@ -196,6 +200,17 @@ export function AppDrawer(): React.JSX.Element | null {
 
         <PickerSearchRow testID="drawer-search" search={{ value: query, onChange: setQuery, placeholder: t('v2.apps.searchPlaceholder'), autoFocus: searchFocus }} />
 
+        {searching ? null : (
+          <MenuRow
+            testID="drawer-app-selector"
+            icon={model.activeApp !== null ? appIconFor(model.activeApp.icon) : Layers}
+            label={model.activeApp !== null ? model.activeApp.label : t(model.appsState === 'pending' ? 'v2.apps.loading' : 'v2.apps.unavailable')}
+            disabled={model.activeApp === null}
+            onPress={() => setPickingApp(true)}
+            trailing={model.activeApp !== null ? <ChevronsUpDown size={16} color={colors.foregroundSubtle} /> : null}
+          />
+        )}
+
         <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
           {searching ? (
             <SearchResults
@@ -208,22 +223,6 @@ export function AppDrawer(): React.JSX.Element | null {
             />
           ) : (
             <>
-              <Text style={[styles.section, { color: colors.foregroundSubtle }]}>{t('v2.apps.apps')}</Text>
-              {model.appsState === 'unknown' ? (
-                <Text style={[styles.note, { color: colors.foregroundMuted }]}>{t('v2.apps.unavailable')}</Text>
-              ) : null}
-              {model.apps.map((app) => (
-                <MenuRow
-                  key={app.id}
-                  testID={`drawer-app-${app.id}`}
-                  icon={appIconFor(app.icon)}
-                  label={app.label}
-                  selected={app.selected}
-                  onPress={() => goApp(app.id)}
-                  trailing={app.selected ? <Check size={16} color={colors.primary} /> : null}
-                />
-              ))}
-
               {model.nav.map((section) => (
                 <View key={section.id}>
                   {section.label !== null ? (
@@ -293,6 +292,7 @@ export function AppDrawer(): React.JSX.Element | null {
         </View>
       </View>
       {switching ? <ServerSwitchSheet onClose={() => setSwitching(false)} /> : null}
+      {pickingApp ? <AppSelectorSheet apps={model.apps} onPick={goApp} onClose={() => setPickingApp(false)} /> : null}
       {launching ? <LaunchPreferenceSheet onClose={() => setLaunching(false)} /> : null}
     </View>
   )

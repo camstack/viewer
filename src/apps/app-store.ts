@@ -65,6 +65,8 @@ interface AppSwitcherState extends PersistedAppSwitcher {
   /** True once the launch resolution decided what opens first. */
   readonly launchSettled: boolean
   readonly drawerOpen: boolean
+  /** The server being switched to, while `switchServer` runs: a full-page loader names it. */
+  readonly serverSwitch: { readonly name: string } | null
   /** The drawer was opened from the top bar's search field: its search takes focus. */
   readonly drawerSearchFocus: boolean
   /** The path the embedded app last reported, to tick its nav item. */
@@ -76,6 +78,7 @@ interface AppSwitcherState extends PersistedAppSwitcher {
   settleLaunch: (app: AppId) => void
   setLaunchPreference: (preference: LaunchPreference) => void
   setDrawerOpen: (open: boolean) => void
+  setServerSwitch: (target: { readonly name: string } | null) => void
   /** Open the drawer with its search focused (the wide top bar's search field). */
   openDrawerSearch: () => void
   setFramePath: (path: string | null) => void
@@ -96,6 +99,7 @@ export const useAppStore = create<AppSwitcherState>((set, get) => ({
   entryPath: null,
   launchSettled: false,
   drawerOpen: false,
+  serverSwitch: null,
   drawerSearchFocus: false,
   framePath: null,
   hydrate: async () => {
@@ -121,6 +125,7 @@ export const useAppStore = create<AppSwitcherState>((set, get) => ({
     persist({ lastApp: get().lastApp, launchPreference })
   },
   setDrawerOpen: (drawerOpen) => set({ drawerOpen, drawerSearchFocus: false }),
+  setServerSwitch: (serverSwitch) => set({ serverSwitch }),
   openDrawerSearch: () => set({ drawerOpen: true, drawerSearchFocus: true }),
   setFramePath: (framePath) => set({ framePath }),
   clearEntryPath: () => set({ entryPath: null }),

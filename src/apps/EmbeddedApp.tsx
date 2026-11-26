@@ -14,7 +14,7 @@
  * message is ignored. The nav the drawer shows is the app's declaration
  * (`apps.listApps`), not something the page sends.
  */
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Linking, Platform, Pressable, StyleSheet, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 
@@ -31,6 +31,7 @@ import { SPACING } from '../theme/tokens.js'
 import {
   EMBEDDED_BY_VIEWER_SCRIPT,
   HANDOFF_LANDING,
+  frameTargetOf,
   handoffUrl,
   parseHandoffPath,
   planAdminFrame,
@@ -66,7 +67,7 @@ export function EmbeddedApp({ info, title }: EmbeddedAppProps): React.JSX.Elemen
   const { t } = useTranslation()
   const { colors, mode } = useTheme()
   const { refetch: refetchApps } = useAppCatalog()
-  const entry = info.app.entry.kind === 'web' ? info.app.entry : null
+  const entry = useMemo(() => frameTargetOf(info.app.entry), [info.app.entry])
   const { controller } = useConnection()
   const liveBase = useLiveHubUrl()
   const channel = useRouteChannel()
@@ -76,6 +77,7 @@ export function EmbeddedApp({ info, title }: EmbeddedAppProps): React.JSX.Elemen
   const [loaded, setLoaded] = useState<Loaded>({ status: 'minting' })
   const [note, setNote] = useState<string | null>(null)
   const generation = useRef(0)
+  const openedPage = useRef(false)
 
   const frameInput = useCallback(
     (base: string): Parameters<typeof planAdminFrame>[0] => ({
@@ -142,7 +144,13 @@ export function EmbeddedApp({ info, title }: EmbeddedAppProps): React.JSX.Elemen
       switch (event.kind) {
         case 'ready': {
           hello()
-          const wanted = store.entryPath
+          // A handoff lands on the admin root: an addon page is reached by navigating once, after the first `ready`.
+          const pageToOpen =
+            !openedPage.current && plan?.kind === 'webview-handoff' && entry?.openAfterHandoff != null && event.path !== entry.openAfterHandoff
+              ? entry.openAfterHandoff
+              : null
+          openedPage.current = true
+          const wanted = store.entryPath ?? pageToOpen
           if (wanted !== null) {
             bridgeChannel.send(navigateMessage(wanted))
             store.clearEntryPath()
@@ -161,7 +169,7 @@ export function EmbeddedApp({ info, title }: EmbeddedAppProps): React.JSX.Elemen
           break
       }
     },
-    [hello, refetchApps],
+    [hello, refetchApps, plan, entry],
   )
 
   const offer = loaded.status === 'ready' && liveBase !== null && shouldOfferLocalSwitch(loaded.local, nowLocal, loaded.base, liveBase)

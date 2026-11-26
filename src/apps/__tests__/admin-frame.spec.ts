@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   EMBEDDED_BY_VIEWER_SCRIPT,
+  frameTargetOf,
   handoffUrl,
   parseHandoffPath,
   planAdminFrame,
@@ -73,5 +74,25 @@ describe('offering the faster route', () => {
     expect(shouldOfferLocalSwitch(true, true, 'http://192.168.1.2', 'http://192.168.1.2')).toBe(false)
     expect(shouldOfferLocalSwitch(false, false, 'https://remote', 'https://remote')).toBe(false)
     expect(shouldOfferLocalSwitch(true, false, 'http://192.168.1.2', 'https://remote')).toBe(false)
+  })
+})
+
+describe('an addon-page app entry', () => {
+  it('is framed at the admin SPA addon route, signed in by a handoff', () => {
+    const target = frameTargetOf({ kind: 'addon-page', pageId: 'homematic-ccu' })
+    expect(target).toEqual({ path: '/addon/homematic-ccu', auth: 'handoff', openAfterHandoff: '/addon/homematic-ccu' })
+    if (target === null) throw new Error('no target')
+    expect(planAdminFrame({ os: 'ios', baseUrl: 'http://hub', pageOrigin: null, path: target.path, auth: target.auth })).toEqual({
+      kind: 'webview-handoff',
+    })
+    expect(planAdminFrame({ os: 'web', baseUrl: 'http://hub', pageOrigin: 'http://hub', path: target.path, auth: target.auth })).toEqual({
+      kind: 'iframe',
+      src: 'http://hub/addon/homematic-ccu',
+    })
+  })
+
+  it('a web entry keeps its own path; a native entry is not framed', () => {
+    expect(frameTargetOf({ kind: 'web', path: '/x', auth: 'session-cookie' })).toEqual({ path: '/x', auth: 'session-cookie', openAfterHandoff: null })
+    expect(frameTargetOf({ kind: 'native', route: '/cameras' })).toBeNull()
   })
 })

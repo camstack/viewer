@@ -1,7 +1,7 @@
 /**
  * drawer-model — what the one app drawer draws, as pure rules (D1096).
  *
- * Everything comes from the apps the hub listed: the APPS rows, the active app's
+ * Everything comes from the apps the hub listed: the app selector's rows, the active app's
  * NAV and its Settings. No app id is spelled here. The Viewer's own tabs stay in
  * its bar or rail, so the hosted app publishes an empty nav. A claim of absence
  * is made only from a list that answered (D315): pending and a failed read draw
@@ -41,7 +41,10 @@ export interface DrawerSettings {
 
 export interface DrawerModel {
   readonly appsState: AppCatalog['status']
+  /** Every offered app: the selector sheet lists them, the drawer body does not. */
   readonly apps: readonly DrawerApp[]
+  /** The active app, for the selector row; `null` while the list has not answered. */
+  readonly activeApp: DrawerApp | null
   /** The active app's id once the list answered; `null` while it is not known. */
   readonly activeId: string | null
   readonly nav: readonly DrawerNavSection[]
@@ -80,8 +83,10 @@ export function buildDrawerModel({ catalog, activeAppId, translate }: DrawerInpu
         }))
       : []
 
+  const activeApp = apps.find((app) => app.selected) ?? null
+
   const hostedIsActive = active === null ? activeAppId === null : hostedAppOf(catalog)?.app.id === active.app.id
-  const nav: readonly DrawerNavSection[] =
+  const navAll: readonly DrawerNavSection[] =
     active === null || hostedIsActive
       ? []
       : active.app.nav
@@ -91,6 +96,9 @@ export function buildDrawerModel({ catalog, activeAppId, translate }: DrawerInpu
             items: section.items.map((item) => ({ id: item.id, label: translate(item.label), icon: item.icon, path: item.path })),
           }))
           .filter((section) => section.items.length > 0)
+  // An app that publishes one page named like itself would draw the selector's name twice.
+  const onlyItem = navAll.length === 1 && navAll[0]?.items.length === 1 ? navAll[0].items[0] : undefined
+  const nav: readonly DrawerNavSection[] = onlyItem !== undefined && activeApp !== null && onlyItem.label === activeApp.label ? [] : navAll
 
   // Settings belong to the active app and only when it declares them. While the
   // list has not answered the shell is still its own host: its Settings stay
@@ -104,5 +112,5 @@ export function buildDrawerModel({ catalog, activeAppId, translate }: DrawerInpu
     settings = { label: translate(SETTINGS_LABEL), path: '/settings' }
   }
 
-  return { appsState: catalog.status, apps, activeId, nav, settings }
+  return { appsState: catalog.status, apps, activeApp, activeId, nav, settings }
 }

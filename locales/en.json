@@ -3786,6 +3786,8 @@
       "removeActiveConfirmBody": "This is the active server: you will be signed out of it. The other servers keep their sign-in.",
       "remove_cta": "Remove",
       "switchFailed": "Could not switch server",
+      "switching": "Switching to {{name}}…",
+      "switchUnknown": "That server is no longer saved on this device.",
       "savedTitle": "Saved servers"
     },
     "connect": {
@@ -4219,7 +4221,8 @@
       "searchNothing": "Nothing found",
       "searching": "Searching…",
       "searchFailed": "Search is unavailable",
-      "unavailable": "Apps are unavailable right now."
+      "unavailable": "Apps are unavailable right now.",
+      "loading": "Loading apps…"
     },
     "recordMenu": {
       "open": "Recording actions",

@@ -14,6 +14,7 @@ import { setTestPlatform } from '../../testing/platform-control.js'
 import { routerCalls } from '../../testing/native-stubs/expo-router.js'
 import { useAppStore } from '../app-store.js'
 import { AppDrawer } from '../AppDrawer.js'
+import { ServerSwitchLoader } from '../ServerSwitchLoader.js'
 import { HomeBar } from '../../navigation/HomeBar.js'
 
 vi.mock('../../connection/ConnectionProvider.js', async () =>
@@ -35,7 +36,7 @@ const APP_X = {
   },
 }
 
-type Outcome = { status: 'switched' } | { status: 'needs-login' }
+type Outcome = { status: 'switched' } | { status: 'needs-login' } | { status: 'unknown-server' }
 const switchServer = vi.fn((_id: string): Promise<Outcome> => Promise.resolve({ status: 'switched' }))
 const removeServer = vi.fn(() => Promise.resolve())
 const signOut = vi.fn(() => Promise.resolve({ ok: true }))
@@ -96,6 +97,44 @@ describe('the drawer bottom with several servers', () => {
     fireEvent.click(view.getByTestId('server-switch-a'))
     expect(switchServer).not.toHaveBeenCalled()
     expect(useAppStore.getState().drawerOpen).toBe(false)
+  })
+})
+
+describe('the server switch loader', () => {
+  const mountBoth = () => mountScreen(React.createElement(React.Fragment, null, React.createElement(AppDrawer), React.createElement(ServerSwitchLoader)))
+
+  it('covers the page with the target name while the switch runs, and clears when it settles', async () => {
+    let settle: (o: Outcome) => void = () => undefined
+    switchServer.mockReturnValue(new Promise<Outcome>((resolve) => (settle = resolve)))
+    const view = mountBoth()
+    openList(view)
+    fireEvent.click(view.getByTestId('server-switch-b'))
+    await waitFor(() => expect(view.getByTestId('server-switch-loader').textContent).toContain('Office'))
+    expect(useAppStore.getState().drawerOpen).toBe(false)
+    settle({ status: 'switched' })
+    await waitFor(() => expect(view.queryByTestId('server-switch-loader')).toBeNull())
+    expect(routerCalls()).toContainEqual({ kind: 'replace', target: '/cameras' })
+  })
+
+  it('a failed switch clears the loader and says why', async () => {
+    setTestPlatform('web')
+    switchServer.mockResolvedValue({ status: 'unknown-server' })
+    const view = mountBoth()
+    openList(view)
+    fireEvent.click(view.getByTestId('server-switch-b'))
+    expect(await screen.findByText('Could not switch server')).toBeTruthy()
+    expect(view.queryByTestId('server-switch-loader')).toBeNull()
+    expect(useAppStore.getState().serverSwitch).toBeNull()
+  })
+
+  it('a rejected switch clears the loader as well', async () => {
+    setTestPlatform('web')
+    switchServer.mockRejectedValue(new Error('offline'))
+    const view = mountBoth()
+    openList(view)
+    fireEvent.click(view.getByTestId('server-switch-b'))
+    expect(await screen.findByText('offline')).toBeTruthy()
+    expect(useAppStore.getState().serverSwitch).toBeNull()
   })
 })
 
