@@ -125,21 +125,6 @@ describe('Stream defaults and Timeline are two sections of the Viewing segment',
  * belongs to the section below it is how an operator ends up hunting for a
  * knob in the wrong place.
  */
-describe('the Servers section names who is signed in', () => {
-  it('renders the session user from useMe, with the role the hub confirmed', () => {
-    const src = read('src/screens/account/AccountScreen.tsx')
-    expect(src).toContain('useMe')
-    const open = src.indexOf('<ServersSection')
-    expect(open, 'no <ServersSection> in Settings').toBeGreaterThan(-1)
-    const block = src.slice(open, src.indexOf('<TokensSection', open))
-    expect(block).toContain("t('v2.settings.roleAdmin')")
-    expect(block).toContain("t('v2.settings.roleViewer')")
-    expect(block).toContain('me.username')
-    const servers = read('src/screens/settings/ServersSection.tsx')
-    expect(servers).toContain("label={t('v2.settings.account')} value={accountValue}")
-  })
-})
-
 describe('grid defaults merged into highlight appearance', () => {
   it('has no Grid-defaults section', () => {
     expect(SETTINGS()).not.toContain("t('v2.settings.gridDefaults')")
@@ -250,9 +235,11 @@ describe('the four segments', () => {
 
   it('the Account screen owns the moved sections, and the old sign-in route is an alias that redirects', () => {
     const src = read('src/screens/account/AccountScreen.tsx')
-    for (const mark of ['<ServersSection', '<ThisDeviceSection', '<TokensSection', '<PasskeysSection', '<ActiveSessionsSection collapsible']) {
+    for (const mark of ['<ThisDeviceSection', '<TokensSection', '<PasskeysSection', '<ActiveSessionsSection collapsible']) {
       expect(src, `Account lost ${mark}`).toContain(mark)
     }
+    expect(src, 'Account has no Servers section: servers live in the drawer').not.toContain('ServersSection')
+    expect(existsSync(join(ROOT, 'src/screens/settings/ServersSection.tsx'))).toBe(false)
     expect(existsSync(join(ROOT, 'app/(app)/account.tsx'))).toBe(true)
     expect(read('app/(app)/settings/sign-in.tsx')).toContain('href="/account"')
   })

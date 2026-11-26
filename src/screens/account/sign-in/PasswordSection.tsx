@@ -11,7 +11,7 @@ import { Row } from '../../../components/ui/Row.js'
 import { useNotice } from '../../../components/ui/confirm.js'
 import { useChangePassword } from '../../../data/use-sign-in-methods.js'
 import { MIN_PASSWORD_LENGTH, passwordFormProblem } from '../../../data/sign-in-methods.js'
-import { Field, Panel, PanelText } from './form-parts.js'
+import { Field, Panel, PanelText } from '../../settings/sign-in/form-parts.js'
 import { Button } from '../../../components/ui/Button.js'
 
 export function PasswordSection() {

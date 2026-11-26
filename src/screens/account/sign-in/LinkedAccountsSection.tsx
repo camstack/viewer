@@ -21,7 +21,7 @@ import { authSelfKey, useLinkedAccounts, useUnlinkAccount } from '../../../data/
 import { providersToLink, type LinkedAccount } from '../../../data/sign-in-methods.js'
 import type { LinkOutcome } from '../../../auth/web-link-popup.js'
 import { useLinkFlow } from './use-link-flow.js'
-import { useReauth } from './ReauthSheet.js'
+import { useReauth } from '../../settings/sign-in/ReauthSheet.js'
 import { EmptyState, ErrorState } from '../../../components/ui/EmptyState.js'
 
 export function LinkedAccountsSection() {

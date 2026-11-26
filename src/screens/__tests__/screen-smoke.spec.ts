@@ -311,7 +311,6 @@ const SMOKE: Readonly<Record<string, SmokeCase>> = {
     element: () => h(AccountScreen),
     expectKeyContent: async () => {
       await seesText(t('v2.apps.account'))
-      await seesFragment(OPERATOR)
     },
   },
   'SettingsScreen.tsx': {

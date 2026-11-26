@@ -25,7 +25,7 @@ import {
 } from '../../../data/use-sign-in-methods.js'
 import type { PasskeyEntry } from '../../../data/sign-in-methods.js'
 import { usePasskeyEnrolment } from './use-passkey-enrolment.js'
-import { useReauth } from './ReauthSheet.js'
+import { useReauth } from '../../settings/sign-in/ReauthSheet.js'
 import { EmptyState, ErrorState } from '../../../components/ui/EmptyState.js'
 
 export function PasskeysSection() {

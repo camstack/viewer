@@ -3,19 +3,13 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { orderServers, showServerList, userInitial, userMenuEntries } from '../user-menu.js'
+import { orderServers, userInitial, userMenuEntries } from '../user-menu.js'
 import { navItems, registeredTabs } from '../nav-items.js'
 
 const SRC = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..')
 const read = (relative: string): string => readFileSync(path.join(SRC, relative), 'utf8')
 
 describe('the account menu', () => {
-  it('lists the servers inline only when there are at least two', () => {
-    expect(showServerList(0)).toBe(false)
-    expect(showServerList(1)).toBe(false)
-    expect(showServerList(2)).toBe(true)
-  })
-
   it('offers Settings then Sign out, and never "Add server" or a Switch button', () => {
     expect(userMenuEntries()).toEqual(['settings', 'signOut'])
   })
@@ -32,8 +26,6 @@ describe('the account menu', () => {
   })
 
   it('the component gates the list on the rule and switches through the existing switchServer', () => {
-    expect(read('apps/drawer-model.ts')).toContain('showServerList(serverCount)')
-    expect(read('apps/AppDrawer.tsx')).toContain('showServerList(servers.length)')
     expect(read('apps/ServerSwitchSheet.tsx')).toContain('switchServer(id)')
   })
 })

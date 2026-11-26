@@ -35,7 +35,6 @@ import { hapticTap } from '../lib/haptics.js'
 import { Check, LogOut, Plug, Server, Settings, User, Video, X } from '../lib/icons.js'
 import { settingsNavigation, settingsTab } from '../navigation/nav-items.js'
 import { UserAvatar } from '../navigation/UserAvatar.js'
-import { showServerList } from '../navigation/user-menu.js'
 import { useTheme } from '../theme/theme-provider.js'
 import { BACKDROP_ALPHA, SPACING, withAlpha } from '../theme/tokens.js'
 import { navSearchEntries, searchAll, type NavSearchEntry } from './app-search.js'
@@ -61,7 +60,7 @@ export function AppDrawer(): React.JSX.Element | null {
   const pathname = usePathname()
   const insets = useSafeAreaInsets()
   const { width } = useWindowDimensions()
-  const { servers, server, signOut } = useServer()
+  const { server, signOut } = useServer()
   const { data: me } = useMe()
   const { catalog } = useAppCatalog()
   const local = isLocalRouteChannel(useRouteChannel())
@@ -78,8 +77,8 @@ export function AppDrawer(): React.JSX.Element | null {
 
   const translate = useMemo(() => (label: AppLabel): string => t(label.key, { defaultValue: label.fallback }), [t])
   const model = useMemo(
-    () => buildDrawerModel({ catalog, activeAppId: active.appId, translate, serverCount: servers.length }),
-    [catalog, active.appId, translate, servers.length],
+    () => buildDrawerModel({ catalog, activeAppId: active.appId, translate }),
+    [catalog, active.appId, translate],
   )
   const navEntries = useMemo(() => navSearchEntries(catalog, translate), [catalog, translate])
   const data = useDrawerSearch(query, open)
@@ -247,23 +246,23 @@ export function AppDrawer(): React.JSX.Element | null {
         </ScrollView>
 
         <View style={[styles.footer, { borderTopColor: colors.borderSubtle }]}>
-          <View style={styles.account} testID="drawer-account">
-            <UserAvatar name={me?.username ?? null} />
-            <View style={styles.headerText}>
-              <Text style={[styles.name, { color: colors.foreground }]} numberOfLines={1} testID="drawer-account-name">
-                {me?.username ?? t('v2.settings.accountUnknown')}
-              </Text>
-              {serverName !== '' ? (
-                <Text style={[styles.sub, { color: colors.foregroundMuted }]} numberOfLines={1} testID="drawer-account-server">
-                  {serverName}
+          <View testID="drawer-user-block">
+            <View style={styles.account} testID="drawer-account">
+              <UserAvatar name={me?.username ?? null} />
+              <View style={styles.headerText}>
+                <Text style={[styles.name, { color: colors.foreground }]} numberOfLines={1} testID="drawer-account-name">
+                  {me?.username ?? t('v2.settings.accountUnknown')}
                 </Text>
-              ) : null}
+                {serverName !== '' ? (
+                  <Text style={[styles.sub, { color: colors.foregroundMuted }]} numberOfLines={1} testID="drawer-account-server">
+                    {serverName}
+                  </Text>
+                ) : null}
+              </View>
             </View>
+            <MenuRow testID="drawer-account-link" icon={User} label={t('v2.apps.account')} onPress={goAccount} />
           </View>
-          <MenuRow testID="drawer-account-link" icon={User} label={t('v2.apps.account')} onPress={goAccount} />
-          {showServerList(servers.length) ? (
-            <MenuRow testID="drawer-switch-server" icon={Server} label={t('v2.apps.switchServer')} onPress={() => setSwitching(true)} />
-          ) : null}
+          <MenuRow testID="drawer-switch-server" icon={Server} label={t('v2.userMenu.servers')} onPress={() => setSwitching(true)} />
           {model.settings !== null ? (
             <MenuRow
               testID="drawer-settings"

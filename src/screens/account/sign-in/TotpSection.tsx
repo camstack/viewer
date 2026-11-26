@@ -24,9 +24,9 @@ import { useTheme } from '../../../theme/theme-provider.js'
 import { RADIUS, SPACING } from '../../../theme/tokens.js'
 import { useConfirmTotp, useDisableTotp, useSetupTotp, useTotpStatus } from '../../../data/use-sign-in-methods.js'
 import { TOTP_CODE_LENGTH, groupSecret, normalizeTotpCode, type TotpEnrollment } from '../../../data/sign-in-methods.js'
-import { Field, Panel, PanelText } from './form-parts.js'
+import { Field, Panel, PanelText } from '../../settings/sign-in/form-parts.js'
 import { qrPath } from './qr-path.js'
-import { useReauth } from './ReauthSheet.js'
+import { useReauth } from '../../settings/sign-in/ReauthSheet.js'
 import { Button } from '../../../components/ui/Button.js'
 
 const QR_SIZE_PT = 184

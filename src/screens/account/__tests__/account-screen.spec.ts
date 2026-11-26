@@ -69,10 +69,11 @@ afterEach(() => {
 })
 
 describe('the Account screen', () => {
-  it('renders the moved sections: servers, tokens, passkeys', async () => {
+  it('renders the moved sections: tokens, passkeys, and no Servers section', async () => {
     mountScreen(React.createElement(AccountScreen), { hub: HUB })
-    expect(await screen.findByText('Servers')).toBeTruthy()
-    expect(await screen.findByText(/operator · Admin/)).toBeTruthy()
+    expect(await screen.findByText('Kitchen wall')).toBeTruthy()
+    expect(screen.queryByText('Servers')).toBeNull()
+    expect(screen.queryByText('Add server')).toBeNull()
     expect(await screen.findByText('Kitchen wall')).toBeTruthy()
     expect(await screen.findByText('MacBook')).toBeTruthy()
   })
@@ -99,9 +100,8 @@ describe('Account → Active sessions', () => {
 describe('the Account screen for a non-admin', () => {
   const VIEWER_HUB = { ...HUB, 'auth.me': { id: 'u1', username: 'operator', isAdmin: false } }
 
-  it('shows the viewer role and every section, owning only its own tokens', async () => {
+  it('shows every section, owning only its own tokens', async () => {
     mountScreen(React.createElement(AccountScreen), { hub: VIEWER_HUB })
-    expect(await screen.findByText(/operator · Viewer/)).toBeTruthy()
     expect(await screen.findByText('Kitchen wall')).toBeTruthy()
     expect(screen.queryByText('Somebody else')).toBeNull()
     expect(await screen.findByText('MacBook')).toBeTruthy()

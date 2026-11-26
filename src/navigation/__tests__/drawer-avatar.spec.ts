@@ -50,6 +50,14 @@ describe('the drawer bottom', () => {
     expect(view.getByTestId('drawer-account-name')).toBeTruthy()
   })
 
+  it('the Account entry sits inside the user block, with the user name', () => {
+    useAppStore.getState().setDrawerOpen(true)
+    const view = mountScreen(React.createElement(AppDrawer))
+    const block = view.getByTestId('drawer-user-block')
+    expect(block.contains(view.getByTestId('drawer-account'))).toBe(true)
+    expect(block.contains(view.getByTestId('drawer-account-link'))).toBe(true)
+  })
+
   it('has an Account entry that opens /account (planning#716 P2) and closes the drawer', () => {
     resetRouterStub()
     useAppStore.getState().setDrawerOpen(true)
@@ -59,10 +67,10 @@ describe('the drawer bottom', () => {
     expect(useAppStore.getState().drawerOpen).toBe(false)
   })
 
-  it('keeps the switch out when there is a single server (a control with one option is not rendered)', () => {
+  it('keeps the servers row with a single server: its sheet is the only way to add one', () => {
     useAppStore.getState().setDrawerOpen(true)
     const view = mountScreen(React.createElement(AppDrawer))
-    expect(view.queryByTestId('drawer-switch-server')).toBeNull()
+    expect(view.getByTestId('drawer-switch-server')).toBeTruthy()
   })
 })
 

@@ -9,7 +9,6 @@
  */
 import type { AppInfo, AppLabel } from '@camstack/types'
 
-import { showServerList } from '../navigation/user-menu.js'
 import { hostedAppOf, orderApps, type AppCatalog } from './app-catalog.js'
 import type { AppId } from './app-launch.js'
 
@@ -47,7 +46,6 @@ export interface DrawerModel {
   readonly activeId: string | null
   readonly nav: readonly DrawerNavSection[]
   readonly settings: DrawerSettings | null
-  readonly servers: boolean
 }
 
 export interface DrawerInput {
@@ -55,7 +53,6 @@ export interface DrawerInput {
   /** The app on screen; `null` is the app the shell hosts itself. */
   readonly activeAppId: AppId
   readonly translate: Translate
-  readonly serverCount: number
 }
 
 /** The label of the shell's own Settings when the hub did not send one. */
@@ -70,7 +67,7 @@ function activeOf(catalog: AppCatalog, activeAppId: AppId): AppInfo | null {
   return hostedAppOf(catalog)
 }
 
-export function buildDrawerModel({ catalog, activeAppId, translate, serverCount }: DrawerInput): DrawerModel {
+export function buildDrawerModel({ catalog, activeAppId, translate }: DrawerInput): DrawerModel {
   const active = activeOf(catalog, activeAppId)
   const activeId = active?.app.id ?? null
   const apps: readonly DrawerApp[] =
@@ -107,5 +104,5 @@ export function buildDrawerModel({ catalog, activeAppId, translate, serverCount 
     settings = { label: translate(SETTINGS_LABEL), path: '/settings' }
   }
 
-  return { appsState: catalog.status, apps, activeId, nav, settings, servers: showServerList(serverCount) }
+  return { appsState: catalog.status, apps, activeId, nav, settings }
 }

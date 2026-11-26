@@ -6,10 +6,11 @@
  * with the tap, whatever the outcome. "Open at launch" lives in the same block.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react'
 import React from 'react'
 
 import { mountScreen } from '../../testing/mount.js'
+import { setTestPlatform } from '../../testing/platform-control.js'
 import { routerCalls } from '../../testing/native-stubs/expo-router.js'
 import { useAppStore } from '../app-store.js'
 import { AppDrawer } from '../AppDrawer.js'
@@ -36,6 +37,7 @@ const APP_X = {
 
 type Outcome = { status: 'switched' } | { status: 'needs-login' }
 const switchServer = vi.fn((_id: string): Promise<Outcome> => Promise.resolve({ status: 'switched' }))
+const removeServer = vi.fn(() => Promise.resolve())
 const signOut = vi.fn(() => Promise.resolve({ ok: true }))
 const SAVED = [
   { id: 'a', label: 'Home', serverUrl: 'http://a.test', lastUsedAt: 2 },
@@ -46,17 +48,21 @@ vi.mock('../../app/ServerProvider.js', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../../app/ServerProvider.js')>()
   return {
     ...actual,
-    useServer: () => ({ ...actual.useServer(), servers: SAVED, server: SAVED[0], switchServer, signOut }),
+    useServer: () => ({ ...actual.useServer(), servers: SAVED, server: SAVED[0], switchServer, removeServer, signOut }),
   }
 })
 
 beforeEach(() => {
   switchServer.mockReset()
   signOut.mockClear()
+  removeServer.mockClear()
   switchServer.mockResolvedValue({ status: 'switched' })
   useAppStore.getState().setDrawerOpen(true)
 })
-afterEach(cleanup)
+afterEach(() => {
+  cleanup()
+  setTestPlatform('ios')
+})
 
 const openList = (view: ReturnType<typeof mountScreen>): void => {
   fireEvent.click(view.getByTestId('drawer-switch-server'))
@@ -90,6 +96,26 @@ describe('the drawer bottom with several servers', () => {
     fireEvent.click(view.getByTestId('server-switch-a'))
     expect(switchServer).not.toHaveBeenCalled()
     expect(useAppStore.getState().drawerOpen).toBe(false)
+  })
+})
+
+describe('the server sheet adds and removes servers', () => {
+  it('Add server opens the login for a new url and closes the drawer', () => {
+    const view = mountScreen(React.createElement(AppDrawer))
+    openList(view)
+    fireEvent.click(view.getByTestId('server-add'))
+    expect(routerCalls()).toContainEqual({ kind: 'push', target: '/add-server' })
+    expect(useAppStore.getState().drawerOpen).toBe(false)
+  })
+
+  it('the trash icon asks for confirmation, then removes only that server', async () => {
+    setTestPlatform('web')
+    const view = mountScreen(React.createElement(AppDrawer))
+    openList(view)
+    fireEvent.click(view.getByTestId('server-remove-b'))
+    expect(removeServer).not.toHaveBeenCalled()
+    fireEvent.click(await screen.findByText('Remove'))
+    await waitFor(() => expect(removeServer).toHaveBeenCalledWith('b'))
   })
 })
 

@@ -11,7 +11,7 @@ import React from 'react'
 import { mountScreen } from '../../../testing/mount.js'
 import { hubCalls } from '../../../testing/hub-stub.js'
 import { setTestPlatform, type TestPlatformOS } from '../../../testing/platform-control.js'
-import { AccountScreen } from '../../account/AccountScreen.js'
+import { AccountScreen } from '../AccountScreen.js'
 
 vi.mock('../../../connection/ConnectionProvider.js', async () =>
   (await import('../../../testing/connection-stub.js')).connectionStubModule(),
