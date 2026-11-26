@@ -115,7 +115,7 @@ export async function readPlaybackWindow(
         key: AUDIO_LEVEL_HISTORY_KEY,
         from: block - OVERLAY_PREFETCH_MS - AUDIO_HOLD_MS,
         to: until,
-        resolution: 'raw',
+        resolution: 'auto',
       },
       soft,
     ),

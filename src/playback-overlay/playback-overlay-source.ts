@@ -62,6 +62,8 @@ export interface AudioPoint {
  *  travels) means the hub did not answer or holds nothing for the window. */
 export interface AudioSeries {
   readonly points: readonly AudioPoint[]
+  /** How long one point stands for (the answered resolution's bucket width). */
+  readonly holdMs: number
 }
 
 /** A stored motion region at playback time, normalised to the frame. */
@@ -84,8 +86,18 @@ export const AUDIO_LEVEL_HISTORY_KEY = 'addon:pipeline-analytics/audio-level'
  *  point answers the next step and a half, and nothing beyond (a hole is
  *  unknown, not the last value forever). A rollup bucket answers its own width. */
 export const AUDIO_HOLD_MS = 15_000
-/** Widest rollup bucket a point may stand for (1 h). */
-export const AUDIO_ROLLUP_HOLD_MS = 3_600_000
+/** How long a point of each answered resolution stands for: its bucket width.
+ *  An answer that names no known resolution is read as raw. */
+export const AUDIO_HOLD_BY_RESOLUTION: Readonly<Record<string, number>> = {
+  raw: AUDIO_HOLD_MS,
+  '5m': 300_000,
+  '1h': 3_600_000,
+  '1d': 86_400_000,
+}
+/** An open motion episode (no duration stored) is never drawn longer than this
+ *  past its start: a recorder crash can leave one open for ever, and it would
+ *  otherwise show motion at every later playback time. */
+export const MOTION_OPEN_MAX_MS = 10 * 60_000
 /** A motion row without a duration still lasts this long on screen. */
 export const MOTION_TAIL_MS = 2_000
 
@@ -303,11 +315,12 @@ export function parseAudioSeries(raw: unknown): AudioSeries | null {
     points.push({ t, dbfs })
   }
   if (points.length === 0) return null
-  return { points: points.sort((a, b) => a.t - b.t) }
+  const holdMs = (typeof raw.resolution === 'string' ? AUDIO_HOLD_BY_RESOLUTION[raw.resolution] : undefined) ?? AUDIO_HOLD_MS
+  return { points: points.sort((a, b) => a.t - b.t), holdMs }
 }
 
 /** The level at `t`: the latest point at or before it, held for
- *  {@link AUDIO_HOLD_MS}; null across a hole or with no series. */
+ *  the answered resolution's bucket ({@link AUDIO_HOLD_BY_RESOLUTION}); null across a hole or with no series. */
 export function audioAt(series: AudioSeries | null | undefined, t: number): number | null {
   if (series === null || series === undefined) return null
   let lo = 0
@@ -322,11 +335,9 @@ export function audioAt(series: AudioSeries | null | undefined, t: number): numb
   }
   const point = series.points[found]
   if (point === undefined) return null
-  const next = series.points[found + 1]
-  // A rollup bucket stands for its own width: the gap to the next point, up to
-  // an hour. A raw step is held a little past itself.
-  const span = next === undefined ? AUDIO_HOLD_MS : Math.min(AUDIO_ROLLUP_HOLD_MS, Math.max(AUDIO_HOLD_MS, next.t - point.t))
-  return t - point.t <= span ? point.dbfs : null
+  // A point stands for its bucket; the next point, when closer, takes over
+  // by itself (the search picks the latest point at or before t).
+  return t - point.t <= series.holdMs ? point.dbfs : null
 }
 
 function parseMotionRegions(row: Record<string, unknown>): readonly MotionRegionBox[] {
@@ -348,26 +359,30 @@ function parseMotionRegions(row: Record<string, unknown>): readonly MotionRegion
 
 /**
  * `getMotionEvents` rows → episodes. A row is one EPISODE (`durationMs` = first
- * to last rising edge; null = still open → runs to `nowMs`; absent = a legacy
+ * to last rising edge; null = still open → runs to the next row's start, at most {@link MOTION_OPEN_MAX_MS}; absent = a legacy
  * row, which lasts its last stored edge). Never read an absent duration as an
  * open episode. Null when the answer is not a list.
  */
 export function parseMotionEvents(raw: unknown, nowMs: number): readonly StoredMotionEpisode[] | null {
   if (!Array.isArray(raw)) return null
-  const out: StoredMotionEpisode[] = []
+  const rows: { start: number; open: boolean; end: number; regions: readonly MotionRegionBox[] }[] = []
   for (const row of raw) {
     if (!isRecord(row)) continue
     const start = num(row.timestamp)
     if (start === null) continue
     const edges = Array.isArray(row.edges) ? row.edges.map(num).filter((e): e is number => e !== null) : []
     const lastEdge = edges.length > 0 ? Math.max(...edges) : 0
-    const end =
-      row.durationMs === null
-        ? Math.max(nowMs, start + MOTION_TAIL_MS)
-        : start + (num(row.durationMs) ?? lastEdge) + MOTION_TAIL_MS
-    out.push({ start, end, regions: parseMotionRegions(row) })
+    const open = row.durationMs === null
+    const end = open ? start + MOTION_TAIL_MS : start + (num(row.durationMs) ?? lastEdge) + MOTION_TAIL_MS
+    rows.push({ start, open, end, regions: parseMotionRegions(row) })
   }
-  return out.sort((a, b) => a.start - b.start)
+  rows.sort((a, b) => a.start - b.start)
+  return rows.map((r, i) => {
+    if (!r.open) return { start: r.start, end: r.end, regions: r.regions }
+    const nextStart = rows[i + 1]?.start
+    const cap = Math.min(nowMs, r.start + MOTION_OPEN_MAX_MS, nextStart ?? Infinity)
+    return { start: r.start, end: Math.max(cap, r.start), regions: r.regions }
+  })
 }
 
 export interface CoverageSignal {

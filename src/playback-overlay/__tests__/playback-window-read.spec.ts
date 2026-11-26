@@ -138,10 +138,10 @@ describe('readPlaybackWindow — audio and motion reads (planning#745)', () => {
     }
   }
 
-  it('queries the stored audio series raw, and the motion episodes, for the window', async () => {
+  it('queries the stored audio series at the auto resolution (raw points are kept only days), and the motion episodes, for the window', async () => {
     const read = await readPlaybackWindow(hubWith({ audio: { series: [{ points: [{ t: block, last: -33, mean: -33, min: -40, max: -30, samples: 1 }] }] }, motion: [{ timestamp: block + 1_000, durationMs: 3_000 }] }), 7, block)
     const hist = calls.find((c) => c.path === 'deviceHistory.query')
-    expect(hist?.input).toMatchObject({ deviceId: 7, key: 'addon:pipeline-analytics/audio-level', resolution: 'raw' })
+    expect(hist?.input).toMatchObject({ deviceId: 7, key: 'addon:pipeline-analytics/audio-level', resolution: 'auto' })
     expect(calls.some((c) => c.path === 'getMotionEvents' && c.input.deviceId === 7)).toBe(true)
     expect(read.audio?.points).toHaveLength(1)
     expect(read.motion).toHaveLength(1)

@@ -7,6 +7,7 @@ import {
   resolveCoverage,
   parseAudioSeries,
   audioAt,
+  MOTION_OPEN_MAX_MS,
   parseMotionEvents,
   AUDIO_LEVEL_HISTORY_KEY,
   type OverlayTrack,
@@ -168,6 +169,19 @@ describe('stored audio level', () => {
     expect(audioAt(series, 112_000)).toBe(-30)
   })
 
+  it('a 5m-resolution answer holds a bucket for its width, not as a hole', () => {
+    const rolled = parseAudioSeries({
+      resolution: '5m',
+      series: [{ points: [{ t: 0, last: null, mean: -42 }, { t: 600_000, last: -35, mean: -36 }] }],
+    })
+    expect(audioAt(rolled, 200_000)).toBe(-42)
+    expect(audioAt(rolled, 599_000)).toBeNull()
+    expect(audioAt(rolled, 650_000)).toBe(-35)
+    expect(audioAt(rolled, 600_000 + 301_000)).toBeNull()
+    // the same gap read as raw is a hole
+    expect(audioAt(parseAudioSeries({ series: [{ points: [{ t: 0, mean: -42 }] }] }), 200_000)).toBeNull()
+  })
+
   it('falls back to the mean when a point has no last value', () => {
     expect(audioAt(parseAudioSeries(answer), 121_000)).toBe(-40)
   })
@@ -230,6 +244,19 @@ describe('stored motion episodes', () => {
     expect(open?.end).toBeGreaterThanOrEqual(90_000)
     const [legacy] = parseMotionEvents([row(50_000, undefined)], 90_000) ?? []
     expect(legacy?.end).toBeLessThan(60_000)
+  })
+
+  it('an open episode ends where the next row starts', () => {
+    const rows = [row(50_000, null), row(80_000, 1_000)]
+    const motion = parseMotionEvents(rows, 10_000_000)
+    expect(motion?.[0]?.end).toBe(80_000)
+    const at = frameAt({ tracks: [], coverage: 'known', motion }, 85_000)
+    expect(at.availability === 'known' && at.motion).toBe(false)
+  })
+
+  it('a lone open episode far in the past is capped, never run to now', () => {
+    const [open] = parseMotionEvents([row(50_000, null)], 50_000 + 24 * 3_600_000) ?? []
+    expect(open?.end).toBe(50_000 + MOTION_OPEN_MAX_MS)
   })
 
   it('not a list = unknown', () => {
