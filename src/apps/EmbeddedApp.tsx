@@ -43,6 +43,7 @@ import { AppFrame } from './AppFrame.js'
 import { AppTopStrip } from './AppTopStrip.js'
 import { BRIDGE_FORWARDER_SCRIPT } from './app-frame-types.js'
 import { useAppStore } from './app-store.js'
+import { createReadyNavigator } from './ready-navigation.js'
 import { bridgeChannel } from './bridge-channel.js'
 import { helloMessage, interpretAppMessage, navigateMessage, themeMessage } from './bridge-host.js'
 
@@ -77,7 +78,7 @@ export function EmbeddedApp({ info, title }: EmbeddedAppProps): React.JSX.Elemen
   const [loaded, setLoaded] = useState<Loaded>({ status: 'minting' })
   const [note, setNote] = useState<string | null>(null)
   const generation = useRef(0)
-  const openedPage = useRef(false)
+  const readyNavigator = useRef(createReadyNavigator()).current
 
   const frameInput = useCallback(
     (base: string): Parameters<typeof planAdminFrame>[0] => ({
@@ -93,6 +94,7 @@ export function EmbeddedApp({ info, title }: EmbeddedAppProps): React.JSX.Elemen
   const load = useCallback(
     async (base: string, local: boolean): Promise<void> => {
       const mine = ++generation.current
+      readyNavigator.reset()
       setLoaded({ status: 'minting' })
       const framePlan = planAdminFrame(frameInput(base))
       if (framePlan.kind !== 'webview-handoff') {
@@ -112,7 +114,7 @@ export function EmbeddedApp({ info, title }: EmbeddedAppProps): React.JSX.Elemen
         if (mine === generation.current) setLoaded({ status: 'failed' })
       }
     },
-    [controller, frameInput],
+    [controller, frameInput, readyNavigator],
   )
 
   // First load, once the race has named a base. A later route change does NOT reload.
@@ -144,13 +146,12 @@ export function EmbeddedApp({ info, title }: EmbeddedAppProps): React.JSX.Elemen
       switch (event.kind) {
         case 'ready': {
           hello()
-          // A handoff lands on the admin root: an addon page is reached by navigating once, after the first `ready`.
-          const pageToOpen =
-            !openedPage.current && plan?.kind === 'webview-handoff' && entry?.openAfterHandoff != null && event.path !== entry.openAfterHandoff
-              ? entry.openAfterHandoff
-              : null
-          openedPage.current = true
-          const wanted = store.entryPath ?? pageToOpen
+          const wanted = readyNavigator.onReady({
+            planKind: plan?.kind ?? null,
+            target: entry,
+            entryPath: store.entryPath,
+            reportedPath: event.path,
+          })
           if (wanted !== null) {
             bridgeChannel.send(navigateMessage(wanted))
             store.clearEntryPath()
@@ -169,7 +170,7 @@ export function EmbeddedApp({ info, title }: EmbeddedAppProps): React.JSX.Elemen
           break
       }
     },
-    [hello, refetchApps, plan, entry],
+    [hello, refetchApps, plan, entry, readyNavigator],
   )
 
   const offer = loaded.status === 'ready' && liveBase !== null && shouldOfferLocalSwitch(loaded.local, nowLocal, loaded.base, liveBase)

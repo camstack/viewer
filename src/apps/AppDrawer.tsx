@@ -204,10 +204,15 @@ export function AppDrawer(): React.JSX.Element | null {
           <MenuRow
             testID="drawer-app-selector"
             icon={model.activeApp !== null ? appIconFor(model.activeApp.icon) : Layers}
-            label={model.activeApp !== null ? model.activeApp.label : t(model.appsState === 'pending' ? 'v2.apps.loading' : 'v2.apps.unavailable')}
-            disabled={model.activeApp === null}
+            label={
+              model.activeApp !== null
+                ? model.activeApp.label
+                : t(model.appsState === 'pending' ? 'v2.apps.loading' : model.appsState === 'unknown' ? 'v2.apps.unavailable' : 'v2.apps.apps')
+            }
+            // An ANSWERED list without the active app still opens the sheet: another app can be picked (D315).
+            disabled={model.appsState !== 'answered'}
             onPress={() => setPickingApp(true)}
-            trailing={model.activeApp !== null ? <ChevronsUpDown size={16} color={colors.foregroundSubtle} /> : null}
+            trailing={model.appsState === 'answered' ? <ChevronsUpDown size={16} color={colors.foregroundSubtle} /> : null}
           />
         )}
 

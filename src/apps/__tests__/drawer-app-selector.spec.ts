@@ -83,4 +83,13 @@ describe('the app selector', () => {
     fireEvent.click(row)
     expect(view.queryByTestId('app-selector-sheet')).toBeNull()
   })
+
+  it('an answered list without the active app keeps the sheet openable (D315)', async () => {
+    useAppStore.getState().open({ appId: 'gone' })
+    useAppStore.getState().setDrawerOpen(true)
+    const view = mountScreen(React.createElement(AppDrawer), { hub: { 'apps.listApps': [TOOLS] } })
+    await waitFor(() => expect(view.getByTestId('drawer-app-selector').textContent).toBe('Apps'))
+    fireEvent.click(view.getByTestId('drawer-app-selector'))
+    expect(view.getByTestId('app-selector-sheet')).toBeTruthy()
+  })
 })

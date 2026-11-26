@@ -116,6 +116,27 @@ describe('the server switch loader', () => {
     expect(routerCalls()).toContainEqual({ kind: 'replace', target: '/cameras' })
   })
 
+  it('needs-login clears the loader and opens the login', async () => {
+    switchServer.mockResolvedValue({ status: 'needs-login' })
+    const view = mountBoth()
+    openList(view)
+    fireEvent.click(view.getByTestId('server-switch-b'))
+    await waitFor(() =>
+      expect(routerCalls()).toContainEqual({ kind: 'push', target: { pathname: '/add-server', params: { url: 'http://b.test' } } }),
+    )
+    expect(view.queryByTestId('server-switch-loader')).toBeNull()
+    expect(useAppStore.getState().serverSwitch).toBeNull()
+  })
+
+  it('a tap on the current server shows no loader and switches nothing', () => {
+    const view = mountBoth()
+    openList(view)
+    fireEvent.click(view.getByTestId('server-switch-a'))
+    expect(view.queryByTestId('server-switch-loader')).toBeNull()
+    expect(useAppStore.getState().serverSwitch).toBeNull()
+    expect(switchServer).not.toHaveBeenCalled()
+  })
+
   it('a failed switch clears the loader and says why', async () => {
     setTestPlatform('web')
     switchServer.mockResolvedValue({ status: 'unknown-server' })
