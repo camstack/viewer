@@ -31,6 +31,20 @@ export interface WhatsNewEntry {
 // i18n-ok: release notes carry their own `en` + `it` text per entry (typed, held by whats-new.spec.ts)
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.738',
+    date: '2026-11-26',
+    notes: {
+      en: [
+        'Account now holds your certificate, tokens, sessions, passkeys and this device.',
+        'Add and remove servers from the menu’s server sheet.',
+      ],
+      it: [
+        'Account ora contiene certificato, token, sessioni, passkey e questo dispositivo.',
+        'Aggiungi e rimuovi server dal pannello server del menu.',
+      ],
+    },
+  },
+  {
     version: '1.0.737',
     date: '2026-11-26',
     notes: {
