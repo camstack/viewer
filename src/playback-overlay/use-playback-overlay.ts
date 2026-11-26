@@ -23,7 +23,7 @@ import {
   OVERLAY_WINDOW_MS,
   frameFromWindow,
   readPlaybackWindow,
-  windowCovers,
+  keepPreviousWindow,
   windowStartFor,
   type WindowRead,
 } from './playback-window-read.js'
@@ -114,8 +114,7 @@ export function usePlaybackOverlay(input: PlaybackOverlayInput): PlaybackOverlay
     retry: 1,
     // Across a block boundary the previous window keeps drawing while it still
     // covers `t` (the next one is read early); a seek away drops it.
-    placeholderData: (previous) =>
-      previous !== undefined && t !== null && windowCovers(previous, t) ? previous : undefined,
+    placeholderData: (previous) => keepPreviousWindow(previous, deviceId, t),
     queryFn: async () => {
       const system = controller.getSystem()
       const client = system?.trpcClient

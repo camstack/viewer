@@ -30,6 +30,8 @@ export const OVERLAY_PREFETCH_MS = 10_000
 export const WINDOW_TRACK_LIMIT = 500
 
 export interface WindowRead {
+  /** The camera this window belongs to. */
+  readonly deviceId: number
   readonly validFrom: number
   readonly validTo: number
   readonly tracks: readonly OverlayTrack[]
@@ -45,6 +47,18 @@ export function windowStartFor(t: number): number {
 
 export function windowCovers(read: WindowRead, t: number): boolean {
   return t >= read.validFrom && t <= read.validTo
+}
+
+/** The previous window may stand in while the next loads only for the SAME
+ *  camera and only while it still covers `t`. */
+export function keepPreviousWindow(
+  previous: WindowRead | undefined,
+  deviceId: number,
+  t: number | null,
+): WindowRead | undefined {
+  return previous !== undefined && t !== null && previous.deviceId === deviceId && windowCovers(previous, t)
+    ? previous
+    : undefined
 }
 
 function rows(raw: unknown): readonly unknown[] {
@@ -78,6 +92,7 @@ export async function readPlaybackWindow(
   ])
   const windowRows = rows(windowRaw)
   return {
+    deviceId,
     validFrom: block - OVERLAY_PREFETCH_MS,
     validTo: until,
     tracks: normalizeTracks(windowRows),

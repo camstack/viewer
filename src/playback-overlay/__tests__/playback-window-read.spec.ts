@@ -5,6 +5,7 @@ import {
   OVERLAY_WINDOW_MS,
   WINDOW_TRACK_LIMIT,
   frameFromWindow,
+  keepPreviousWindow,
   readPlaybackWindow,
   windowCovers,
   windowStartFor,
@@ -95,5 +96,17 @@ describe('window blocks', () => {
     expect(windowStartFor(t)).toBe(block + OVERLAY_WINDOW_MS)
     expect(windowCovers(prev, t)).toBe(true)
     expect(windowCovers(prev, block + OVERLAY_WINDOW_MS + 1)).toBe(false)
+  })
+})
+
+describe('the previous window as a placeholder', () => {
+  it('stands in for the same camera while it covers t', async () => {
+    const a = await readPlaybackWindow(hub([]), 1, block)
+    expect(keepPreviousWindow(a, 1, T)).toBe(a)
+  })
+  it('never crosses to another camera, even when t is covered', async () => {
+    const a = await readPlaybackWindow(hub([row('x', T - 5_000, T + 5_000)]), 1, block)
+    expect(windowCovers(a, T)).toBe(true)
+    expect(keepPreviousWindow(a, 2, T)).toBeUndefined()
   })
 })
