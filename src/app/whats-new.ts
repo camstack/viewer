@@ -38,11 +38,13 @@ export const WHATS_NEW: readonly WhatsNewEntry[] = [
         'Apps are picked from one selector row in the menu.',
         'Addon pages open as apps inside the viewer.',
         'Switching server shows a full-page loader.',
+        'Rotating the phone no longer leaves the player half black or the timeline cut.',
       ],
       it: [
         'Le app si scelgono da una riga di selezione nel menu.',
         'Le pagine degli addon si aprono come app dentro il viewer.',
         'Il cambio server mostra un caricamento a tutto schermo.',
+        'Ruotando il telefono il player non resta mezzo nero né la timeline tagliata.',
       ],
     },
   },
