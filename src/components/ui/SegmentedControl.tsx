@@ -67,7 +67,7 @@ export function SegmentedControl<T extends string>({
           : { backgroundColor: colors.background, borderColor: colors.border, borderWidth: 1 }),
       }}
     >
-      {glass ? <MenuGlassFill radius={RADIUS.lg} /> : null}
+      {glass ? <MenuGlassFill radius={RADIUS.lg} opaque={false} /> : null}
       {glass && trackWidth > 0 ? (
         <SlidingGlassPill
           target={pill}

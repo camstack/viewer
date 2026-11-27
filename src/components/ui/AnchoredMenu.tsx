@@ -6,12 +6,10 @@
  * Transparent scrim: a dimmed overlay reads as a page-level modal, which
  * is the thing this exists to replace.
  *
- * The card is GLASS (2026-10-21, operator): the same `GlassSurface` as the tab
- * bar — its `bar` wash, dense enough to read a list over a busy grid — so
+ * The card is the tab bar's `bar` tone, OPAQUE (2026-11-27, operator; it was
+ * translucent glass from 2026-10-21): nothing behind a menu shows through, so
  * every menu in the app (the `⋯` menus, the Library filter / sort menus, the
- * select dropdowns, the account and activity popovers) is one material. Its
- * fallbacks are the surface's own: blur before iOS 26 and on the web, a
- * translucent solid on Android, opaque under Reduce Transparency.
+ * select dropdowns, the account and activity popovers) is one material.
  */
 import React, { useEffect, useMemo } from 'react'
 // ui-check-ok: the kit anchored menu owns its Modal, like SheetModal (pre-existing)

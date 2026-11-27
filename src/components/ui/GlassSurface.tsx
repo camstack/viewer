@@ -62,6 +62,13 @@ export interface GlassSurfaceProps extends Pick<ViewProps, 'testID' | 'pointerEv
    * were drawn as bare glyphs over the picture (operator, 2026-10-23).
    */
   readonly dense?: boolean
+  /**
+   * No see-through: the surface is the palette tone of its variant at full
+   * opacity, drawn the same way on every platform (no native glass, no blur).
+   * Menus and popovers use it so what sits behind them never shows through
+   * (operator, 2026-11-27).
+   */
+  readonly opaque?: boolean
 }
 
 export function GlassSurface({
@@ -75,6 +82,7 @@ export function GlassSurface({
   contentStyle,
   shadow = true,
   dense = false,
+  opaque = false,
   testID,
   pointerEvents,
   onLayout,
@@ -87,7 +95,7 @@ export function GlassSurface({
     nativeGlass: hasNativeGlass(),
   })
   const NativeGlass = glassMode === 'glass' ? NATIVE_GLASS_VIEW : null
-  const effective: GlassMode = glassMode === 'glass' && NativeGlass == null ? 'blur' : glassMode
+  const effective: GlassMode = opaque ? 'solid' : glassMode === 'glass' && NativeGlass == null ? 'blur' : glassMode
 
   const look = useMemo(() => {
     const shadowColor = theme === 'dark' ? colors.background : colors.foreground
@@ -103,8 +111,9 @@ export function GlassSurface({
         ? colors[GLASS.bar.tone[theme]]
         : colors.backgroundElevated
       : (bar ?? withAlpha(colors.backgroundElevated, GLASS.solidAlpha))
-    return { dropShadow, hairline, fill, solid, bar }
-  }, [colors, theme, effective, reduced, variant])
+    const opaqueFill = variant === 'bar' ? colors[GLASS.bar.tone[theme]] : colors.backgroundElevated
+    return { dropShadow, hairline, fill, solid: opaque ? opaqueFill : solid, bar }
+  }, [colors, theme, effective, reduced, variant, opaque])
 
   // `flexGrow` lets a surface given a definite box (absoluteFill behind a row of
   // controls) fill it; an auto-sized pill is unaffected.

@@ -7,7 +7,7 @@
  *
  * `style` is LAYOUT (position, size, padding, gap); the look is the glass's.
  * The fallbacks are the surface's own: blur before iOS 26 and on the web, a
- * translucent solid on Android, opaque under Reduce Transparency.
+ * opaque everywhere (operator, 2026-11-27).
  */
 import React from 'react'
 import { StyleSheet, View, type StyleProp, type ViewProps, type ViewStyle } from 'react-native'
@@ -27,8 +27,15 @@ export interface GlassPanelProps
 }
 
 /** The glass layer itself, for a container that is not a plain View (an animated menu card). */
-export function MenuGlassFill({ radius = RADIUS.lg }: { readonly radius?: number }): React.JSX.Element {
-  return <GlassSurface fill radius={radius} variant="bar" shadow={false} dense pointerEvents="none" />
+export function MenuGlassFill({
+  radius = RADIUS.lg,
+  opaque = true,
+}: {
+  readonly radius?: number
+  /** Menus and popovers are opaque; the tab-level segmented track keeps the glass. */
+  readonly opaque?: boolean
+}): React.JSX.Element {
+  return <GlassSurface fill radius={radius} variant="bar" shadow={false} dense opaque={opaque} pointerEvents="none" />
 }
 
 export function GlassPanel({ children, style, radius = RADIUS.lg, ...rest }: GlassPanelProps): React.JSX.Element {

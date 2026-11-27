@@ -78,7 +78,7 @@ export function CamerasFab({
             pointerEvents="box-none"
           >
             {/* radius xl — not pill; a pill on a short column reads as an oval. */}
-            <GlassSurface variant="bar" radius={RADIUS.xl} contentStyle={styles.menuSurface}>
+            <GlassSurface variant="bar" opaque radius={RADIUS.xl} contentStyle={styles.menuSurface}>
               {menuItems.map(({ key, icon: Icon, label, onPress }) => (
                 <Pressable
                   key={key}
