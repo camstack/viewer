@@ -177,6 +177,21 @@ export const SPACING = { xs: 2, sm: 4, md: 8, lg: 12, xl: 16, '2xl': 24, '3xl': 
 export const SCREEN_GUTTER = SPACING.xl
 
 /**
+ * Control and icon sizes for compact panels (the overlay settings panel).
+ * `md` is the drawn size every control in such a panel uses; `lg` is the
+ * minimum HIT area (44 pt, the platform touch floor) a control reaches through
+ * `controlHitSlop`, so a 34 pt swatch stays easy to hit without growing.
+ */
+export const CONTROL = { sm: 28, md: 34, lg: 44 } as const
+export const ICON = { sm: 14, md: 16, lg: 18 } as const
+
+/** The `hitSlop` that lifts a control drawn at `size` to the `CONTROL.lg` hit area. */
+export function controlHitSlop(size: number): { top: number; bottom: number; left: number; right: number } {
+  const slop = Math.max(0, Math.ceil((CONTROL.lg - size) / 2))
+  return { top: slop, bottom: slop, left: slop, right: slop }
+}
+
+/**
  * Liquid-glass surfaces (`GlassSurface`). Alphas are fractions applied to a
  * palette colour with {@link withAlpha}; nothing here is a colour of its own, so
  * the glass follows the theme key for key and the web CSS needs no new token.

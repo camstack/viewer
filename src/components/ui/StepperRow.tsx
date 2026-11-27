@@ -3,7 +3,7 @@ import { Pressable, Text, View } from 'react-native'
 import { Minus, Plus, type LucideIcon } from '../../lib/icons.js'
 import { hapticTap } from '../../lib/haptics.js'
 import { useTheme } from '../../theme/theme-provider.js'
-import { SPACING, RADIUS } from '../../theme/tokens.js'
+import { SPACING, RADIUS, CONTROL, ICON, controlHitSlop } from '../../theme/tokens.js'
 
 interface StepperRowProps {
   /** Primary label on the left. */
@@ -52,9 +52,10 @@ export function StepperRow({
       accessibilityRole="button"
       disabled={!enabled}
       onPress={() => { hapticTap(); onPress() }}
+      hitSlop={controlHitSlop(CONTROL.md)}
       style={{
-        width: 34,
-        height: 34,
+        width: CONTROL.md,
+        height: CONTROL.md,
         alignItems: 'center',
         justifyContent: 'center',
         borderRadius: RADIUS.md,
@@ -64,7 +65,7 @@ export function StepperRow({
         opacity: enabled ? 1 : 0.4,
       }}
     >
-      <ButtonIcon size={16} color={colors.foreground} />
+      <ButtonIcon size={ICON.md} color={colors.foreground} />
     </Pressable>
   )
 

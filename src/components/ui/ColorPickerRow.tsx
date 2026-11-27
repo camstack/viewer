@@ -6,7 +6,7 @@ import React from 'react'
 import { View, Text, Pressable, StyleSheet } from 'react-native'
 import { Check, type LucideIcon } from '../../lib/icons.js'
 import { useTheme } from '../../theme/theme-provider.js'
-import { SPACING, RADIUS } from '../../theme/tokens.js'
+import { SPACING, RADIUS, CONTROL, ICON, TYPOGRAPHY, controlHitSlop } from '../../theme/tokens.js'
 
 /** Preset palette offered for highlight colors. */
 export const COLOR_PRESETS: readonly string[] = [
@@ -28,7 +28,7 @@ export function ColorPickerRow({
   return (
     <View style={styles.row}>
       <View style={styles.labelRow}>
-        {Icon ? <Icon size={18} color={colors.foregroundMuted} /> : null}
+        {Icon ? <Icon size={ICON.md} color={colors.foregroundMuted} /> : null}
         <Text style={[styles.label, { color: colors.foreground }]}>{label}</Text>
       </View>
       <View style={styles.swatches}>
@@ -38,12 +38,13 @@ export function ColorPickerRow({
             <Pressable
               key={c}
               onPress={() => onChange(c)}
+              hitSlop={controlHitSlop(CONTROL.md)}
               accessibilityRole="button"
               accessibilityState={{ selected: active }}
               style={{
-                width: 28,
-                height: 28,
-                borderRadius: 14,
+                width: CONTROL.md,
+                height: CONTROL.md,
+                borderRadius: CONTROL.md / 2,
                 backgroundColor: c,
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -51,7 +52,7 @@ export function ColorPickerRow({
                 borderColor: active ? colors.foreground : colors.border,
               }}
             >
-              {active ? <Check size={14} color={c.toLowerCase() === '#ffffff' ? '#000' : '#fff'} /> : null}
+              {active ? <Check size={ICON.sm} color={c.toLowerCase() === '#ffffff' ? '#000' : '#fff'} /> : null}
             </Pressable>
           )
         })}
@@ -74,11 +75,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: SPACING.md,
   },
-  label: { fontSize: 14, fontWeight: '500' },
+  label: { fontSize: TYPOGRAPHY.size.md, fontWeight: TYPOGRAPHY.weight.regular },
   swatches: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: SPACING.sm,
+    gap: SPACING.md,
     borderRadius: RADIUS.md,
   },
 })

@@ -16,7 +16,7 @@ import React from 'react'
 import { View, Text, Switch, StyleSheet } from 'react-native' // ui-check-ok: compact panel switch — ToggleRow's card paddings do not fit a popover
 import { type LucideIcon } from '../../lib/icons.js'
 import { useTheme } from '../../theme/theme-provider.js'
-import { SPACING } from '../../theme/tokens.js'
+import { CONTROL, ICON, SPACING, TYPOGRAPHY } from '../../theme/tokens.js'
 
 /** Compact icon + label + switch row used inside floating panels/dialogs.
  *  (Distinct from `ui/ToggleRow`, whose card paddings/hairline don't fit a
@@ -36,7 +36,7 @@ export function PanelToggleRow({
   const { colors } = useTheme()
   return (
     <View style={styles.row}>
-      <Icon size={18} color={value ? colors.primary : colors.foregroundMuted} />
+      <Icon size={ICON.md} color={value ? colors.primary : colors.foregroundMuted} />
       <Text style={[styles.label, { color: colors.foreground }]}>{label}</Text>
       <Switch
         value={value}
@@ -75,7 +75,7 @@ export function ActivationRow({
     <View>
       {alwaysOn ? (
         <View style={styles.row}>
-          <Icon size={18} color={colors.primary} />
+          <Icon size={ICON.md} color={colors.primary} />
           <Text style={[styles.label, { color: colors.foreground }]}>{label}</Text>
         </View>
       ) : (
@@ -93,8 +93,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: SPACING.md,
-    paddingVertical: SPACING.sm,
+    minHeight: CONTROL.lg,
   },
-  label: { flex: 1, fontSize: 14, fontWeight: '500' },
+  label: { flex: 1, fontSize: TYPOGRAPHY.size.md, fontWeight: TYPOGRAPHY.weight.regular },
   settings: { paddingLeft: SPACING.xl + SPACING.sm },
 })

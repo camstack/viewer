@@ -82,7 +82,7 @@ import { CheckboxRow } from '../../ui/CheckboxRow.js'
 import { OVERLAY_STEP_MAX, OVERLAY_STEP_MIN } from '../overlay/overlay-size.js'
 
 import { useTheme } from '../../../theme/theme-provider.js'
-import { SPACING } from '../../../theme/tokens.js'
+import { CONTROL, ICON, SPACING, TYPOGRAPHY, controlHitSlop } from '../../../theme/tokens.js'
 import { HighlightTriggerRows } from '../HighlightTriggerRows.js'
 import { useHighlightGlobalRows } from '../../../hooks/use-highlight-settings.js'
 import { ActivationRow } from '../ActivationRow.js'
@@ -422,7 +422,6 @@ export function OverlaySettingsSections({
               if (position === 'off') return
               onChange(patchReadout(config, r.id, { corner: position }))
             }}
-            cellSize={22}
           />
           {context === 'single' ? (
             <Pressable
@@ -430,12 +429,13 @@ export function OverlaySettingsSections({
               accessibilityState={{ checked: r.fade === true }}
               accessibilityLabel={t('v2.overlay.fadeReadout')}
               onPress={() => onChange(patchReadout(config, r.id, { fade: r.fade !== true }))}
+              hitSlop={controlHitSlop(CONTROL.md)}
               style={styles.removeBtn}
             >
               {r.fade === true ? (
-                <EyeOff size={16} color={colors.primary} />
+                <EyeOff size={ICON.md} color={colors.primary} />
               ) : (
-                <Eye size={16} color={colors.foregroundMuted} />
+                <Eye size={ICON.md} color={colors.foregroundMuted} />
               )}
             </Pressable>
           ) : null}
@@ -443,9 +443,10 @@ export function OverlaySettingsSections({
             accessibilityRole="button"
             accessibilityLabel={t('v2.overlay.removeReadout')}
             onPress={() => onChange(removeReadout(config, r.id))}
-            style={styles.removeBtn}
+            hitSlop={controlHitSlop(CONTROL.md)}
+              style={styles.removeBtn}
           >
-            <X size={16} color={colors.foregroundMuted} />
+            <X size={ICON.md} color={colors.foregroundMuted} />
           </Pressable>
         </View>
       ))}
@@ -455,7 +456,7 @@ export function OverlaySettingsSections({
         onPress={() => setPickerOpen(true)}
         style={styles.addRow}
       >
-        <Plus size={18} color={colors.primary} />
+        <Plus size={ICON.md} color={colors.primary} />
         <Text style={[styles.addLabel, { color: colors.primary }]}>
           {t('v2.overlay.addReadout')}
         </Text>
@@ -553,10 +554,10 @@ const styles = StyleSheet.create({
   placementRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: SPACING.md, paddingVertical: SPACING.xs },
   // Content-sized (flexShrink, not flex:1): the position picker stretches into
   // the leftover width and MEASURES it to choose grid vs drop-down.
-  placementLabel: { flexShrink: 1, fontSize: 14, fontWeight: '500' },
-  readoutRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, paddingVertical: 2 },
-  readoutLabel: { flexShrink: 1, fontSize: 13, fontWeight: '500' },
-  removeBtn: { padding: 4 },
-  addRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, paddingVertical: SPACING.sm },
-  addLabel: { fontSize: 14, fontWeight: '600' },
+  placementLabel: { flexShrink: 1, fontSize: TYPOGRAPHY.size.md, fontWeight: TYPOGRAPHY.weight.regular },
+  readoutRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, minHeight: CONTROL.lg },
+  readoutLabel: { flexShrink: 1, fontSize: TYPOGRAPHY.size.md, fontWeight: TYPOGRAPHY.weight.regular },
+  removeBtn: { width: CONTROL.md, height: CONTROL.md, alignItems: 'center', justifyContent: 'center' },
+  addRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, minHeight: CONTROL.lg },
+  addLabel: { fontSize: TYPOGRAPHY.size.md, fontWeight: TYPOGRAPHY.weight.medium },
 })

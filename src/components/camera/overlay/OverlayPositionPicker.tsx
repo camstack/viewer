@@ -30,7 +30,7 @@ import { EyeOff, ChevronsUpDown } from '../../../lib/icons.js'
 import { useTranslation } from 'react-i18next'
 
 import { useTheme } from '../../../theme/theme-provider.js'
-import { SPACING, RADIUS } from '../../../theme/tokens.js'
+import { SPACING, RADIUS, CONTROL, ICON, TYPOGRAPHY, controlHitSlop } from '../../../theme/tokens.js'
 import { AnchoredDropdown } from '../../ui/AnchoredDropdown.js'
 import type { AnchorRect } from '../../ui/dropdown-placement.js'
 import {
@@ -59,7 +59,7 @@ export function OverlayPositionPicker({
   value,
   onChange,
   allowOff = false,
-  cellSize = 28,
+  cellSize = CONTROL.md,
   variant = 'dropdown',
 }: OverlayPositionPickerProps): React.JSX.Element {
   const { t } = useTranslation()
@@ -132,6 +132,7 @@ function GridCell({ position, active, inert, size, onPress, label }: GridCellPro
       accessibilityState={{ selected: active }}
       accessibilityLabel={label}
       onPress={onPress}
+      hitSlop={controlHitSlop(size)}
       style={[
         styles.cell,
         {
@@ -143,7 +144,7 @@ function GridCell({ position, active, inert, size, onPress, label }: GridCellPro
       ]}
     >
       {position === 'off' ? (
-        <EyeOff size={14} color={active ? colors.primaryForeground : colors.foregroundSubtle} />
+        <EyeOff size={ICON.sm} color={active ? colors.primaryForeground : colors.foregroundSubtle} />
       ) : (
         <View
           style={[
@@ -187,12 +188,13 @@ function PositionDropdown({ value, onChange, allowOff }: PositionDropdownProps):
               setOpen(true)
             })
           }}
+          hitSlop={controlHitSlop(CONTROL.md)}
           style={[styles.trigger, { borderColor: colors.border }]}
         >
           <Text style={[styles.triggerText, { color: colors.primary }]} numberOfLines={1}>
             {positionLabel(t, value)}
           </Text>
-          <ChevronsUpDown size={14} color={colors.foregroundSubtle} />
+          <ChevronsUpDown size={ICON.md} color={colors.foregroundSubtle} />
         </Pressable>
       </View>
       <AnchoredDropdown
@@ -227,9 +229,9 @@ const styles = StyleSheet.create({
     gap: SPACING.xs,
     borderWidth: StyleSheet.hairlineWidth,
     borderRadius: RADIUS.md,
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: SPACING.xs,
+    paddingHorizontal: SPACING.md,
+    minHeight: CONTROL.md,
     maxWidth: '100%',
   },
-  triggerText: { fontSize: 13, fontWeight: '600', flexShrink: 1 },
+  triggerText: { fontSize: TYPOGRAPHY.size.md, fontWeight: TYPOGRAPHY.weight.medium, flexShrink: 1 },
 })
