@@ -33,6 +33,7 @@
  * own answer. `CamerasDisplaySheet` already refuses per-frame overlays on the
  * camera list for exactly this multiplication.
  */
+import { matchesDetectionClass } from '../store/highlight-classes.js'
 import { useDetections } from './use-detections.js'
 import { useMotionHighlight } from './use-motion.js'
 import { useAudioActive } from './use-audio.js'
@@ -97,9 +98,7 @@ export function useReelHighlightTrigger(
     enabled &&
     demand.detection &&
     detState.boxes.some(
-      (b) =>
-        highlight.detectionClasses.length === 0 ||
-        highlight.detectionClasses.includes(b.label),
+      (b) => matchesDetectionClass(highlight.detectionClasses, b.label),
     )
   const detActive = useHeld(detMatch, highlight.detectionHoldSec * 1000)
 

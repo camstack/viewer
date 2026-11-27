@@ -202,6 +202,7 @@ import { MotionRegionsOverlay } from '../components/camera/MotionRegionsOverlay.
 import { DiscardedBoxesOverlay } from '../components/camera/DiscardedBoxesOverlay.js'
 import { AudioMeterPicker } from '../components/camera/AudioLevelMeter.js'
 import { useSettingsStore } from '../store/settings-store.js'
+import { matchesDetectionClass } from '../store/highlight-classes.js'
 import type { OverlayPosition } from '../components/camera/overlay/overlay-position.js'
 import { ZoneDrawOverlay } from '../components/camera/ZoneDrawOverlay.js'
 import { highlightBorderEnabled } from '../components/camera/overlay/highlight-border.js'
@@ -547,9 +548,9 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
   const detMatch =
     cameraHighlight.detection &&
     detState.boxes.some(
-      (b) => cameraHighlight.detectionClasses.length === 0 || cameraHighlight.detectionClasses.includes(b.label),
+      (b) => matchesDetectionClass(cameraHighlight.detectionClasses, b.label),
     )
-  const detActive = useHeld(detMatch, cameraHighlight.detectionHoldSec * 1000)
+  const detActive = useHeld(detMatch, settings.grid.detectionHoldSec * 1000)
   const audioRaw = useAudioActive(deviceId, useWebViewPlayer ? 'off' : cameraHighlight.audio, cameraHighlight.audioDb)
   const audioActive = useHeld(
     cameraHighlight.audio !== 'off' && audioRaw,
@@ -585,10 +586,11 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
       enabled: highlightBorderEnabled(cameraHighlight),
       ...cameraHighlight,
       audioHoldSec: AUDIO_HIGHLIGHT_HOLD_SEC,
+      detectionHoldSec: settings.grid.detectionHoldSec,
       appearance: settings.highlight,
       motionHoldSec: settings.grid.motionHoldSec,
     }),
-    [cameraHighlight, settings.highlight, settings.grid.motionHoldSec],
+    [cameraHighlight, settings.highlight, settings.grid.motionHoldSec, settings.grid.detectionHoldSec],
   )
 
   // LIVE pause. Deliberately NOT a plain `useState(false)`: mounting `LiveView`

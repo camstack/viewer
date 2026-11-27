@@ -522,10 +522,11 @@ export function GridViewScreen({ gridId, adhocCameraIds, originDeviceId = null }
     () => ({
       enabled: highlightOn,
       ...wallHighlight(highlightSettings, layers),
+      detectionHoldSec: settings.grid.detectionHoldSec,
       appearance: settings.highlight,
       motionHoldSec: settings.grid.motionHoldSec,
     }),
-    [highlightOn, highlightSettings, layers, settings.highlight, settings.grid.motionHoldSec],
+    [highlightOn, highlightSettings, layers, settings.highlight, settings.grid.motionHoldSec, settings.grid.detectionHoldSec],
   )
 
   // Ad-hoc grids have no builder to edit — the action is hidden entirely.

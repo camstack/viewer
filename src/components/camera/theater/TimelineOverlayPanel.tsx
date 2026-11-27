@@ -411,48 +411,48 @@ export function OverlaySettingsSections({
       ) : null}
       {config.readouts.map((r) => (
         <React.Fragment key={r.id}>
-        <View style={styles.readoutRow}>
-          <Text style={[styles.readoutLabel, { color: colors.foreground }]} numberOfLines={1}>
-            {r.label}
-          </Text>
-          <OverlayPositionPicker
-            value={r.corner}
-            onChange={(position) => {
-              if (position === 'off') return
-              onChange(patchReadout(config, r.id, { corner: position }))
-            }}
-          />
-          {context === 'single' ? (
+          <View style={styles.readoutRow}>
+            <Text style={[styles.readoutLabel, { color: colors.foreground }]} numberOfLines={1}>
+              {r.label}
+            </Text>
+            <OverlayPositionPicker
+              value={r.corner}
+              onChange={(position) => {
+                if (position === 'off') return
+                onChange(patchReadout(config, r.id, { corner: position }))
+              }}
+            />
+            {context === 'single' ? (
+              <Pressable
+                accessibilityRole="switch"
+                accessibilityState={{ checked: r.fade === true }}
+                accessibilityLabel={t('v2.overlay.fadeReadout')}
+                onPress={() => onChange(patchReadout(config, r.id, { fade: r.fade !== true }))}
+                hitSlop={controlHitSlop(CONTROL.md)}
+              style={styles.removeBtn}
+              >
+                {r.fade === true ? (
+                  <EyeOff size={ICON.md} color={colors.primary} />
+                ) : (
+                  <Eye size={ICON.md} color={colors.foregroundMuted} />
+                )}
+              </Pressable>
+            ) : null}
             <Pressable
-              accessibilityRole="switch"
-              accessibilityState={{ checked: r.fade === true }}
-              accessibilityLabel={t('v2.overlay.fadeReadout')}
-              onPress={() => onChange(patchReadout(config, r.id, { fade: r.fade !== true }))}
+              accessibilityRole="button"
+              accessibilityLabel={t('v2.overlay.removeReadout')}
+              onPress={() => onChange(removeReadout(config, r.id))}
               hitSlop={controlHitSlop(CONTROL.md)}
               style={styles.removeBtn}
             >
-              {r.fade === true ? (
-                <EyeOff size={ICON.md} color={colors.primary} />
-              ) : (
-                <Eye size={ICON.md} color={colors.foregroundMuted} />
-              )}
+              <X size={ICON.md} color={colors.foregroundMuted} />
             </Pressable>
-          ) : null}
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={t('v2.overlay.removeReadout')}
-            onPress={() => onChange(removeReadout(config, r.id))}
-            hitSlop={controlHitSlop(CONTROL.md)}
-              style={styles.removeBtn}
-          >
-            <X size={ICON.md} color={colors.foregroundMuted} />
-          </Pressable>
-        </View>
-        <CheckboxRow
-          label={t('v2.overlay.showReadoutLabel')}
-          value={r.showLabel !== false}
-          onValueChange={(v) => onChange(patchReadout(config, r.id, { showLabel: v }))}
-        />
+          </View>
+          <CheckboxRow
+            label={t('v2.overlay.showReadoutLabel')}
+            value={r.showLabel !== false}
+            onValueChange={(v) => onChange(patchReadout(config, r.id, { showLabel: v }))}
+          />
         </React.Fragment>
       ))}
 

@@ -154,7 +154,7 @@ function ShareDialogBody({ grid, local, onClose }: ShareDialogBodyProps) {
         audioDb: triggers.audioDb,
         audioHoldSec: triggers.audioHoldSec,
         detection: triggers.detection,
-        detectionHoldSec: triggers.detectionHoldSec,
+        detectionHoldSec: settings.grid.detectionHoldSec,
         detectionClasses: [...triggers.detectionClasses],
         appearance: { ...settings.highlight },
       }

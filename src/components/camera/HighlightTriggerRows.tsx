@@ -38,14 +38,18 @@ import {
   dbfsForAudioUi,
   type AudioHighlightLevel,
 } from './audio-level.js'
+import { classesFromEditor } from '../../store/highlight-classes.js'
 import type { GridHighlightSettings, GridClusterLabelMode } from '../../store/grid-store.js'
 
 export interface HighlightTriggerRowsProps {
   readonly highlight: GridHighlightSettings
   readonly onSetHighlight: (patch: Partial<GridHighlightSettings>) => void
+  /** The detection hold row. Off by default: the hold is a GLOBAL setting
+   *  (Settings → Viewing); only the reel, which has its own document, shows it. */
+  readonly ownHold?: boolean
 }
 
-export function HighlightTriggerRows({ highlight, onSetHighlight }: HighlightTriggerRowsProps) {
+export function HighlightTriggerRows({ highlight, onSetHighlight, ownHold = false }: HighlightTriggerRowsProps) {
   const { t } = useTranslation()
 
   // The audio trigger is a SWITCH with its level behind it — the same shape as
@@ -106,15 +110,24 @@ export function HighlightTriggerRows({ highlight, onSetHighlight }: HighlightTri
       >
         <HighlightClassChips
           selected={highlight.detectionClasses}
-          onChange={(next) => onSetHighlight({ detectionClasses: next })}
+          onChange={(next) =>
+            // Nothing ticked turns detection off; every class ticked is stored as "any".
+            onSetHighlight(
+              next.length === 0
+                ? { detection: false, detectionClasses: [] }
+                : { detectionClasses: classesFromEditor(next) },
+            )
+          }
         />
-        <SelectRow
-          icon={Box}
-          label={t('v2.gridBuilder.highlightHold')}
-          options={holdOptions}
-          value={highlight.detectionHoldSec}
-          onChange={(v) => onSetHighlight({ detectionHoldSec: v })}
-        />
+        {ownHold ? (
+          <SelectRow
+            icon={Box}
+            label={t('v2.gridBuilder.highlightHold')}
+            options={holdOptions}
+            value={highlight.detectionHoldSec}
+            onChange={(v) => onSetHighlight({ detectionHoldSec: v })}
+          />
+        ) : null}
       </ActivationRow>
     </>
   )

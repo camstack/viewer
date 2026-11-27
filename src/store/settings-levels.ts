@@ -28,7 +28,7 @@ export type SettingsLevels = {
 }
 
 export const SETTINGS_LEVELS: SettingsLevels = {
-  grid: { motionHoldSec: 'account' },
+  grid: { motionHoldSec: 'account', detectionHoldSec: 'account' },
   stream: {
     audioOnOpen: 'account',
     reopenLastCamera: 'account',

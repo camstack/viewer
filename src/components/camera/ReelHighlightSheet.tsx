@@ -76,7 +76,7 @@ export const ReelHighlightSheet = memo(function ReelHighlightSheet({
               exist — that is the point of it being shared with the
               camera-detail overlay panel, the grid menu and the grid share
               dialog. */}
-          <HighlightTriggerRows highlight={highlight} onSetHighlight={setHighlight} />
+          <HighlightTriggerRows highlight={highlight} onSetHighlight={setHighlight} ownHold />
         </Section>
         <Pressable
           onPress={reset}

@@ -1,7 +1,8 @@
 /**
  * HighlightClassChips — multiselect of detection macro classes for the highlight
- * settings (grid wall menu, grid builder, camera menu). Empty selection = any
- * class. Classes come from @camstack/types (`DETECTION_MACRO_CLASSES`).
+ * settings (grid wall menu, grid builder, camera menu). The stored empty list
+ * (= any class) shows as every class ticked; the caller maps the edit back
+ * (`highlight-classes.ts`). Classes come from @camstack/types (`DETECTION_MACRO_CLASSES`).
  *
  * Drawn as the Library's ONE picker idiom — the checkbox list of the filter
  * menus (`SectionMultiselect`) — so choosing which classes light a wall reads
@@ -12,6 +13,7 @@ import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { SectionMultiselect } from '../events/EventKindTree.js'
 import { DETECTION_MACRO_CLASSES } from '../../store/grid-store.js'
+import { classesForEditor } from '../../store/highlight-classes.js'
 
 type MacroClass = (typeof DETECTION_MACRO_CLASSES)[number]
 
@@ -31,10 +33,12 @@ export function HighlightClassChips({
   readonly onChange: (next: string[]) => void
 }) {
   const { t } = useTranslation()
+  // The stored empty list means "any class": shown as every class ticked.
+  const ticked = classesForEditor(selected)
   const toggle = (key: string): void => {
     const cls = DETECTION_MACRO_CLASSES.find((c) => c === key)
     if (cls === undefined) return
-    onChange(selected.includes(cls) ? selected.filter((c) => c !== cls) : [...selected, cls])
+    onChange(ticked.includes(cls) ? ticked.filter((c) => c !== cls) : [...ticked, cls])
   }
   return (
     <SectionMultiselect
@@ -43,7 +47,7 @@ export function HighlightClassChips({
       items={DETECTION_MACRO_CLASSES.map((cls) => ({
         key: cls,
         label: t(LABEL_KEY[cls]),
-        selected: selected.includes(cls),
+        selected: ticked.includes(cls),
       }))}
       onToggle={toggle}
     />

@@ -302,10 +302,11 @@ export function formatLiveValue(
 ): string {
   if (value === null) return '—'
   if (typeof value === 'boolean') return value ? opts.onLabel : opts.offLabel
-  if (typeof value === 'string' && opts.stateText !== undefined) return opts.stateText(value)
   const base =
     typeof value === 'number' && opts.precision !== undefined
       ? value.toFixed(opts.precision)
-      : String(value)
+      : typeof value === 'string' && opts.stateText !== undefined
+        ? opts.stateText(value)
+        : String(value)
   return opts.unit ? `${base} ${opts.unit}` : base
 }

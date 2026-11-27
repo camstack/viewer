@@ -94,6 +94,9 @@ export interface GridDefaults {
    *  active regardless). 0 = clear the instant motion ends. Applied to every
    *  motion indicator (grid tile / card / detail) via `useMotionHighlight`. */
   readonly motionHoldSec: number
+  /** Detection-highlight linger, in seconds — global, like the colours: the
+   *  border keeps drawing this long after the last matching detection. */
+  readonly detectionHoldSec: number
 }
 
 /** Single-camera / stream-open defaults (consumed by the camera detail feature). */
@@ -441,6 +444,7 @@ export function clampColumns(value: number): number {
 export const DEFAULTS: AppSettings = Object.freeze({
   grid: Object.freeze({
     motionHoldSec: 3,
+    detectionHoldSec: 3,
   }) as GridDefaults,
   stream: Object.freeze({
     // `last-selected` since 2026-09-15, at the operator's request. Sound was
@@ -520,7 +524,7 @@ export function setGridDefaultEntry<K extends keyof GridDefaults>(
   value: GridDefaults[K],
 ): AppSettings {
   const next =
-    key === 'motionHoldSec'
+    key === 'motionHoldSec' || key === 'detectionHoldSec'
       ? (clampMotionHoldSec(value as number) as GridDefaults[K])
       : value
   return { ...settings, grid: { ...settings.grid, [key]: next } }
@@ -779,6 +783,7 @@ export function parseSettings(raw: string | null): AppSettings {
   return {
     grid: {
       motionHoldSec: clampMotionHoldSec(num(grid.motionHoldSec, DEFAULTS.grid.motionHoldSec)),
+      detectionHoldSec: clampMotionHoldSec(num(grid.detectionHoldSec, DEFAULTS.grid.detectionHoldSec)),
     },
     stream: {
       // Reads a mode, a legacy boolean, or nothing at all — see

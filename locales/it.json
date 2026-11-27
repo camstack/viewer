@@ -765,6 +765,7 @@
       "motionHold": "Persistenza evidenziazione movimento",
       "motionHoldHint": "Mantieni accesa l'evidenziazione del movimento su una tile per questo tempo dopo che il movimento si ferma.",
       "motionHoldOff": "Off",
+      "detectionHold": "Persistenza evidenziazione rilevamento",
       "streamQuality": "Qualità stream",
       "streamDefaults": "Impostazioni stream",
       "playOnOpen": "Riproduci all'apertura",

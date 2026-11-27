@@ -230,6 +230,13 @@ export function ViewingSegment() {
           options={motionHoldOptions}
           value={settings.grid.motionHoldSec}
           onChange={(v) => setGridDefault('motionHoldSec', v)}
+        />
+        <SelectRow
+          icon={Box}
+          label={t('v2.settings.detectionHold')}
+          options={motionHoldOptions}
+          value={settings.grid.detectionHoldSec}
+          onChange={(v) => setGridDefault('detectionHoldSec', v)}
           last
         />
       </Section>

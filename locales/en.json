@@ -765,6 +765,7 @@
       "motionHold": "Motion highlight linger",
       "motionHoldHint": "Keep a tile's motion highlight lit this long after motion stops.",
       "motionHoldOff": "Off",
+      "detectionHold": "Detection highlight linger",
       "streamQuality": "Stream quality",
       "streamDefaults": "Stream defaults",
       "playOnOpen": "Play on open",

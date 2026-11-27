@@ -49,6 +49,7 @@ describe('string values go through the state dictionary', () => {
     const stateText = (w: string): string => translateStateWord(w, 'it')
     expect(formatLiveValue('closed', { ...labels, stateText })).toBe('Chiuso')
     expect(formatLiveValue('closed', labels)).toBe('closed')
+    expect(formatLiveValue('open', { ...labels, unit: 'x', stateText })).toBe('Aperto x')
     expect(formatLiveValue(21.456, { ...labels, precision: 1, unit: '°C', stateText })).toBe('21.5 °C')
   })
 })
