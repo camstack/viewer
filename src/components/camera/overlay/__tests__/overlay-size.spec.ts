@@ -163,3 +163,13 @@ describe('per-overlay size step', () => {
     expect(parseSizeStep(Number.NaN)).toBe(0)
   })
 })
+
+describe('step floor (#749)', () => {
+  it('-3 on the smallest main size draws at exactly 0.5, never below', () => {
+    expect(stepScale(OVERLAY_SIZE_MIN_SCALE.small, -3)).toBe(0.5)
+    expect(stepScale(OVERLAY_SIZE_MIN_SCALE.small, -1)).toBe(0.5)
+  })
+  it('a step up is not floored', () => {
+    expect(stepScale(2, 3)).toBeGreaterThan(2)
+  })
+})

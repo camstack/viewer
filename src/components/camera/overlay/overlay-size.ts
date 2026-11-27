@@ -78,10 +78,15 @@ export function clampSizeStep(step: number): number {
   return Math.min(OVERLAY_STEP_MAX, Math.max(OVERLAY_STEP_MIN, step))
 }
 
+/** A stepped-down overlay never draws below this multiplier (half its normal size). */
+export const OVERLAY_STEP_MIN_SCALE = 0.5
+
 /** The multiplier an overlay at `step` draws with, given the main multiplier. */
 export function stepScale(mainScale: number, step: number): number {
   const s = clampSizeStep(step)
-  return s === 0 ? mainScale : Math.round(mainScale * OVERLAY_STEP_FACTOR ** s * 1000) / 1000
+  if (s === 0) return mainScale
+  const scaled = Math.round(mainScale * OVERLAY_STEP_FACTOR ** s * 1000) / 1000
+  return s < 0 ? Math.max(OVERLAY_STEP_MIN_SCALE, scaled) : scaled
 }
 
 /** The stream aspect every CamStack surface lays out for. */
