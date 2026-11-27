@@ -134,11 +134,11 @@ export type GridAudioHighlightMode = 'off' | 'sensor' | 'level'
  *  sub label, else the macro. */
 export type GridClusterLabelMode = 'icon' | 'text'
 
-/** The highlight triggers in the shape every renderer and editor shares. The
- *  stored document is global (`AppSettings.highlight`, resolved by
- *  `highlight-global.ts`). A tile gets a colored border when one of the enabled
- *  triggers fires (priority in the embed: detection > audio > motion). The
- *  master on/off is a transient session toggle in the control bar. */
+/** Per-grid highlight settings — applied to EVERY camera in the grid (the
+ *  grid-mode counterpart of V1's per-camera highlight). A camera's tile gets a
+ *  colored border when one of the enabled triggers fires (priority in the embed:
+ *  detection > audio > motion). The master on/off is a transient session toggle
+ *  in the control bar, NOT stored here. */
 export interface GridHighlightSettings {
   /** Border on hardware/ML motion. */
   readonly motion: boolean
@@ -158,8 +158,12 @@ export interface GridHighlightSettings {
   readonly clusterLabel: GridClusterLabelMode
 }
 
-/** Default highlight triggers (motion-only, like a sane starting point; inert
- *  until the bar's highlight toggle turns it on). */
+/** Selectable detection macro classes (from @camstack/types `MacroClass` —
+ *  first-level + detail). Empty selection means "any class". */
+export const DETECTION_MACRO_CLASSES = ['person', 'vehicle', 'animal', 'face', 'plate'] as const
+
+/** Default per-grid highlight settings (motion-only, like a sane starting point;
+ *  inert until the bar's highlight toggle turns it on). */
 export const GRID_HIGHLIGHT_DEFAULTS: GridHighlightSettings = {
   motion: true,
   audio: 'off',
@@ -200,6 +204,8 @@ export interface Grid {
   readonly hiddenCameraIds?: readonly number[]
   /** Optional per-grid display preferences (name overlay, layout, overlays). */
   readonly options?: GridOptions
+  /** Optional per-grid highlight settings (motion/audio/detection triggers). */
+  readonly highlight?: GridHighlightSettings
 }
 
 /** A grid as it travels through export/import: the persistable fields minus the
@@ -440,6 +446,15 @@ export function accountGridsOf(grids: readonly Grid[], serverId: string): readon
   })
 }
 
+/** Replace a grid's highlight settings (no-op for an unknown id). */
+export function setGridHighlightEntry(
+  grids: readonly Grid[],
+  id: string,
+  highlight: GridHighlightSettings,
+): readonly Grid[] {
+  return grids.map((g) => (g.id === id ? { ...g, highlight } : g))
+}
+
 /** Remove a grid by id. */
 export function deleteGridEntry(grids: readonly Grid[], id: string): readonly Grid[] {
   return grids.filter((g) => g.id !== id)
@@ -452,16 +467,10 @@ export function parseGrids(raw: string | null): readonly Grid[] {
   try {
     const data: unknown = JSON.parse(raw)
     if (!Array.isArray(data)) return []
-    // The per-grid `highlight` this replaced is global now: dropped on read.
-    return data.filter(isGrid).map(withoutLegacyHighlight)
+    return data.filter(isGrid)
   } catch {
     return []
   }
-}
-
-function withoutLegacyHighlight(grid: Grid): Grid {
-  const { highlight: _legacy, ...rest }: Grid & { readonly highlight?: unknown } = grid
-  return rest
 }
 
 function isGrid(value: unknown): value is Grid {
@@ -561,6 +570,8 @@ interface GridState {
   setGridCameraHidden: (id: string, cameraId: number, hidden: boolean) => void
   /** Merge per-grid display options. */
   setGridOptions: (id: string, patch: GridOptions) => void
+  /** Replace per-grid highlight settings. */
+  setGridHighlight: (id: string, highlight: GridHighlightSettings) => void
   deleteGrid: (id: string) => void
   /** Append parsed grids (each gets a fresh id and `serverId`'s hub) — used by JSON import. */
   importGrids: (grids: readonly ImportedGrid[], serverId: string) => void
@@ -642,6 +653,12 @@ export const useGridStore = create<GridState>((set, get) => ({
 
   setGridOptions: (id, patch) => {
     const grids = setGridOptionsEntry(get().grids, id, patch)
+    set({ grids })
+    persist(grids)
+  },
+
+  setGridHighlight: (id, highlight) => {
+    const grids = setGridHighlightEntry(get().grids, id, highlight)
     set({ grids })
     persist(grids)
   },

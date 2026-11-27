@@ -24,6 +24,7 @@
 import { create } from 'zustand'
 import { log } from '../lib/logger.js'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { GRID_HIGHLIGHT_DEFAULTS, type GridHighlightSettings } from './grid-store.js'
 import {
   EMPTY_ACCESSORY_PREFS,
   isEmptyAccessoryPrefs,
@@ -41,6 +42,10 @@ export interface CameraPref {
   readonly localName?: string
   /** When true, the camera is excluded from the default list. */
   readonly hidden?: boolean
+  /** Per-camera highlight settings for the single (detail) view. Shares the grid
+   *  highlight shape; in detail the triggers themselves are the enablement (no
+   *  separate master toggle). */
+  readonly highlight?: GridHighlightSettings
   /**
    * Which ONE of this camera's clip sources the clip surface reads
    * (`analytics`, `native:reolink:onboard`, …). Open vocabulary: the hub owns
@@ -132,6 +137,7 @@ function mergePref(
   const next: {
     localName?: string
     hidden?: boolean
+    highlight?: GridHighlightSettings
     clipProvider?: string
     recordingProvider?: string
     accessories?: CameraAccessoryPrefs
@@ -140,6 +146,7 @@ function mergePref(
     next.localName = merged.localName
   }
   if (merged.hidden === true) next.hidden = true
+  if (merged.highlight) next.highlight = merged.highlight
   if (typeof merged.clipProvider === 'string' && merged.clipProvider.length > 0) {
     next.clipProvider = merged.clipProvider
   }
@@ -177,6 +184,15 @@ export function setHiddenEntry(
   hidden: boolean,
 ): AppCameraPrefs {
   return mergePref(prefs, id, { hidden: hidden ? true : undefined })
+}
+
+/** Replace a camera's per-camera highlight settings. */
+export function setCameraHighlightEntry(
+  prefs: AppCameraPrefs,
+  id: number,
+  highlight: GridHighlightSettings,
+): AppCameraPrefs {
+  return mergePref(prefs, id, { highlight })
 }
 
 /**
@@ -254,12 +270,34 @@ export function setOrderEntry(prefs: AppCameraPrefs, ids: readonly number[]): Ap
 
 // ── Parsing / validation at the storage boundary ──────────────────────────────
 
+/** Parse a stored highlight blob into a complete settings object (defaults fill
+ *  any missing/invalid field), or undefined when it's not an object. */
+function parseHighlight(raw: unknown): GridHighlightSettings | undefined {
+  if (typeof raw !== 'object' || raw === null) return undefined
+  const r = raw as Record<string, unknown>
+  const audio = r.audio === 'sensor' || r.audio === 'level' ? r.audio : 'off'
+  return {
+    motion: r.motion === true,
+    audio,
+    audioDb: typeof r.audioDb === 'number' ? r.audioDb : GRID_HIGHLIGHT_DEFAULTS.audioDb,
+    audioHoldSec: typeof r.audioHoldSec === 'number' ? r.audioHoldSec : GRID_HIGHLIGHT_DEFAULTS.audioHoldSec,
+    detection: r.detection === true,
+    detectionHoldSec:
+      typeof r.detectionHoldSec === 'number' ? r.detectionHoldSec : GRID_HIGHLIGHT_DEFAULTS.detectionHoldSec,
+    detectionClasses: Array.isArray(r.detectionClasses)
+      ? r.detectionClasses.filter((c): c is string => typeof c === 'string')
+      : [],
+    clusterLabel: r.clusterLabel === 'text' ? 'text' : GRID_HIGHLIGHT_DEFAULTS.clusterLabel,
+  }
+}
+
 function parsePref(raw: unknown): CameraPref | null {
   if (typeof raw !== 'object' || raw === null) return null
   const r = raw as Record<string, unknown>
   const next: {
     localName?: string
     hidden?: boolean
+    highlight?: GridHighlightSettings
     clipProvider?: string
     recordingProvider?: string
     accessories?: CameraAccessoryPrefs
@@ -268,6 +306,8 @@ function parsePref(raw: unknown): CameraPref | null {
     next.localName = r.localName.trim()
   }
   if (r.hidden === true) next.hidden = true
+  const highlight = parseHighlight(r.highlight)
+  if (highlight) next.highlight = highlight
   if (typeof r.clipProvider === 'string' && r.clipProvider.trim().length > 0) {
     next.clipProvider = r.clipProvider.trim()
   }
@@ -329,6 +369,7 @@ interface CameraPrefsState {
   hydrate: () => Promise<void>
   setLocalName: (id: number, name: string) => void
   setHidden: (id: number, hidden: boolean) => void
+  setCameraHighlight: (id: number, highlight: GridHighlightSettings) => void
   /** Choose which ONE of this camera's clip sources the clip surface reads.
    *  `undefined` clears the pick back to the default (CamStack). */
   setCameraClipProvider: (id: number, sourceId: string | undefined) => void
@@ -408,6 +449,12 @@ export const useCameraPrefsStore = create<CameraPrefsState>((set, get) => ({
 
   updateCameraAccessories: (id, update) => {
     const prefs = updateCameraAccessoriesEntry(get().prefs, id, update)
+    set({ prefs })
+    persist(prefs)
+  },
+
+  setCameraHighlight: (id, highlight) => {
+    const prefs = setCameraHighlightEntry(get().prefs, id, highlight)
     set({ prefs })
     persist(prefs)
   },

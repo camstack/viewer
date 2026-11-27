@@ -1,22 +1,26 @@
 /**
- * HighlightClassChips — multiselect of detection classes for the highlight
- * settings. On the global highlight the selection IS the detection switch
- * (empty = off); the reel and share surfaces read an empty selection as any
- * class. The vocabulary is `HIGHLIGHT_DETECTION_CLASSES` (the detector's macro
- * labels from `@camstack/types/client`, plus face and plate).
+ * HighlightClassChips — multiselect of detection macro classes for the highlight
+ * settings (grid wall menu, grid builder, camera menu). Empty selection = any
+ * class. Classes come from @camstack/types (`DETECTION_MACRO_CLASSES`).
  *
  * Drawn as the Library's ONE picker idiom — the checkbox list of the filter
  * menus (`SectionMultiselect`) — so choosing which classes light a wall reads
  * exactly like choosing which classes filter a page (operator, 2026-10-21).
+ * This file is the class vocabulary, nothing more.
  */
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { SectionMultiselect } from '../events/EventKindTree.js'
-import { HIGHLIGHT_DETECTION_CLASSES } from '../../store/highlight-global.js'
+import { DETECTION_MACRO_CLASSES } from '../../store/grid-store.js'
 
-/** The label key of a class; a class this build has no word for shows as is. */
-function labelOf(cls: string, t: (key: string) => string): string {
-  return t(`v2.library.macroClass.${cls}`)
+type MacroClass = (typeof DETECTION_MACRO_CLASSES)[number]
+
+const LABEL_KEY: Readonly<Record<MacroClass, string>> = {
+  person: 'v2.library.macroClass.person',
+  vehicle: 'v2.library.macroClass.vehicle',
+  animal: 'v2.library.macroClass.animal',
+  face: 'v2.library.macroClass.face',
+  plate: 'v2.library.macroClass.plate',
 }
 
 export function HighlightClassChips({
@@ -28,7 +32,7 @@ export function HighlightClassChips({
 }) {
   const { t } = useTranslation()
   const toggle = (key: string): void => {
-    const cls = HIGHLIGHT_DETECTION_CLASSES.find((c) => c === key)
+    const cls = DETECTION_MACRO_CLASSES.find((c) => c === key)
     if (cls === undefined) return
     onChange(selected.includes(cls) ? selected.filter((c) => c !== cls) : [...selected, cls])
   }
@@ -36,9 +40,9 @@ export function HighlightClassChips({
     <SectionMultiselect
       title={t('v2.events.classes')}
       emptyLabel={t('v2.events.all')}
-      items={HIGHLIGHT_DETECTION_CLASSES.map((cls) => ({
+      items={DETECTION_MACRO_CLASSES.map((cls) => ({
         key: cls,
-        label: labelOf(cls, t),
+        label: t(LABEL_KEY[cls]),
         selected: selected.includes(cls),
       }))}
       onToggle={toggle}

@@ -140,7 +140,7 @@ function PanelBody({ panel, cameraName, hasPtz, onSelect, onClose }: PanelBodyPr
  * `grid/view-options-scope`.
  */
 function CellViewOptions({ deviceId }: { readonly deviceId: number }): React.JSX.Element {
-  const viewOptions = useCameraViewOptions()
+  const viewOptions = useCameraViewOptions(deviceId)
   return (
     <CameraViewOptionsSurface
       deviceId={deviceId}

@@ -30,7 +30,6 @@
  * blank on first paint.
  */
 import { useOverlayConfig } from '../hooks/use-camera-view-options.js'
-import { useHighlightSettings } from '../hooks/use-highlight-settings.js'
 import React, { useEffect, useMemo, useState } from 'react'
 import {
   View,
@@ -80,10 +79,13 @@ import { computeGridLayout } from '../grid/auto-layout.js'
 import {
   useGridStore,
   resolveGridOptions,
+  withHighlightDefaults,
   setGridOptionsEntry,
+  setGridHighlightEntry,
   type Grid,
   type GridOptions,
   type GridLayout,
+  type GridHighlightSettings,
   findServerGrid,
 } from '../store/grid-store.js'
 import { useActiveServerId } from '../store/server-scope.js'
@@ -142,6 +144,7 @@ export function GridViewScreen({ gridId, adhocCameraIds, originDeviceId = null }
   const hydrate = useGridStore((s) => s.hydrate)
   const hydrated = useGridStore((s) => s.hydrated)
   const setGridOptions = useGridStore((s) => s.setGridOptions)
+  const setGridHighlight = useGridStore((s) => s.setGridHighlight)
   // A wall's LAYOUT, SOUND and TIER are device settings (`grid-local-store`):
   // they never travel with the account, so a tablet signed in as the same
   // user keeps its own.
@@ -191,6 +194,10 @@ export function GridViewScreen({ gridId, adhocCameraIds, originDeviceId = null }
   const updateGridOptions = (patch: GridOptions): void => {
     if (gridId === null) applyAdhocEdit((all) => setGridOptionsEntry(all, ADHOC_GRID_ID, patch))
     else setGridOptions(gridId, patch)
+  }
+  const updateGridHighlight = (highlight: GridHighlightSettings): void => {
+    if (gridId === null) applyAdhocEdit((all) => setGridHighlightEntry(all, ADHOC_GRID_ID, highlight))
+    else setGridHighlight(gridId, highlight)
   }
   const updateGridAudioInitial = (deviceId: number, on: boolean): void => {
     if (gridId === null) setAdhocLocal((prev) => withGridAudioInitial(prev, deviceId, on))
@@ -504,10 +511,10 @@ export function GridViewScreen({ gridId, adhocCameraIds, originDeviceId = null }
     [wallCameras.length, box.width, box.height, options.layout],
   )
 
-  // The GLOBAL highlight document (one for every camera and wall) — edited live
-  // from the bar's runtime menu; writes go through the settings store so they
-  // survive close/reopen and show the same on every surface.
-  const { highlight: highlightSettings, setHighlight: setHighlightSettings } = useHighlightSettings()
+  // Persisted per-grid highlight triggers (defaults filled) — edited live from
+  // the bar's runtime menu; writes go through the store so they survive
+  // close/reopen (the same object the builder used to edit).
+  const highlightSettings = useMemo(() => withHighlightDefaults(grid?.highlight), [grid?.highlight])
 
   // Highlight config for the embed: per-grid triggers + the bar's master toggle.
   // Memoized so the embed only re-injects when something actually changes.
@@ -561,7 +568,7 @@ export function GridViewScreen({ gridId, adhocCameraIds, originDeviceId = null }
       highlightOn={highlightOn}
       onToggleHighlight={() => updateGridOptions({ highlightOn: !highlightOn })}
       highlightSettings={highlightSettings}
-      onSetHighlightSettings={setHighlightSettings}
+      onSetHighlightSettings={(patch) => updateGridHighlight({ ...highlightSettings, ...patch })}
       layers={layers}
       onToggleLayer={(layer) =>
         updateGridOptions({

@@ -10,10 +10,11 @@
  * ## Scope: ONE object for the whole reel, not one per camera
  *
  * The operator said *«settings comuni su quella griglia»*, and the surface
- * forces the same answer. The camera pictures and walls share the GLOBAL
- * highlight document (`useHighlightSettings`); the reel keeps its own object
- * rather than borrow it, because changing the border of a picture would
- * silently restyle the reel underneath it.
+ * forces the same answer. The camera-detail PICTURE has a highlight object, but
+ * it is per-camera (`useCameraViewOptions(deviceId)`), and the reel draws many
+ * cameras — there is no "the" camera whose settings it could borrow. Sharing
+ * would also mean that changing the border of the picture silently restyles the
+ * reel underneath it.
  *
  * So the reel owns ONE global object, in its own small persisted store
  * (`reel-highlight-store.ts`) — the shape `reel-filter-store.ts` already uses
@@ -21,9 +22,9 @@
  *
  * Two homes were rejected for structural reasons, not taste:
  *
- *  - **`grid-store`**, because a grid entry is keyed to a real persisted grid
- *    and a reel entry would be silently dropped, which is the worst kind of
- *    storage bug.
+ *  - **`grid-store`**, because `setGridHighlightEntry` is keyed to a real
+ *    persisted grid and is documented as a "no-op for an unknown id" — a reel
+ *    entry would be silently dropped, which is the worst kind of storage bug.
  *  - **`settings-store`**, beside `settings.cameraList`, which is otherwise
  *    exactly the right neighbour (what one surface draws over its thumbnails,
  *    global). It cannot go there: `grid-store` imports `settings-store`, so

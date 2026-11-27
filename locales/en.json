@@ -3129,8 +3129,7 @@
         "vehicle": "Vehicle",
         "animal": "Animal",
         "face": "Face",
-        "plate": "Plate",
-        "package": "Package"
+        "plate": "Plate"
       },
       "noImage": "No image",
       "displayOptions": "Display",

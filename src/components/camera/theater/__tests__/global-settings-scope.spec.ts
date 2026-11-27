@@ -26,9 +26,9 @@ describe('global timeline presentation is edited in Settings, not in a camera pa
     expect(src).not.toContain('showClass')
   })
 
-  it('the menu keeps the cluster-label mode', () => {
-    // `clusterLabel` lives in the GLOBAL highlight document (planning#751) and
-    // is edited where the timeline is configured. Read on the SURFACE since
+  it('the menu keeps the per-camera cluster-label mode', () => {
+    // `clusterLabel` lives in the PER-CAMERA highlight document — scoped, so it
+    // stays where the camera is configured. Read on the SURFACE since
     // 2026-08-13: the menu's content moved there when a grid cell became its
     // second host, and the theater panel is now only the frame around it.
     const src = read('components/camera/CameraViewOptionsSurface.tsx')

@@ -30,6 +30,7 @@ import { useTheme } from '../../theme/theme-provider.js'
 import { SPACING, RADIUS } from '../../theme/tokens.js'
 import {
   resolveGridOptions,
+  withHighlightDefaults,
   visibleGridCameraIds,
   type Grid,
   type GridHighlightSettings,
@@ -53,7 +54,6 @@ import { KeyboardAwareScrollView } from '../ui/KeyboardInset.js'
 import { ShareTokenPanel, type ShareTokenChoice } from '../tokens/ShareTokenPanel.js'
 import { ShareSnippet } from '../tokens/ShareSnippet.js'
 import { PanelText } from '../../screens/settings/sign-in/form-parts.js'
-import { resolveHighlight } from '../../store/highlight-global.js'
 import { HighlightTriggerRows, PanelToggleRow } from '../camera/HighlightTriggerRows.js'
 import { QUALITY_ORDER, qualityLabelKey } from '../camera/stream-quality-labels.js'
 import { Button } from '../ui/Button.js'
@@ -118,7 +118,7 @@ function ShareDialogBody({ grid, local, onClose }: ShareDialogBodyProps) {
   const [showBoxes, setShowBoxes] = useState(seed.layers.includes('objects'))
   const [highlightOn, setHighlightOn] = useState(seed.highlightOn)
   const [triggers, setTriggers] = useState<GridHighlightSettings>(() =>
-    resolveHighlight(settings.highlight),
+    withHighlightDefaults(grid.highlight),
   )
   const [format, setFormat] = useState<SnippetFormat>('link')
   const [tokenChoice, setTokenChoice] = useState<ShareTokenChoice | null>(null)

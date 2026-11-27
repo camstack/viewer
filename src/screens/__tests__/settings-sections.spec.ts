@@ -130,23 +130,22 @@ describe('grid defaults merged into highlight appearance', () => {
     expect(SETTINGS()).not.toContain("t('v2.settings.gridDefaults')")
   })
 
-  it('keeps the border thickness in Highlight appearance', () => {
+  it('keeps the motion-hold row, inside Highlight appearance', () => {
     const block = sectionBlock(VIEWING(), 'v2.settings.highlightAppearance')
-    expect(block).toContain("t('v2.settings.highlightThickness')")
+    expect(block).toContain("t('v2.settings.motionHold')")
+    expect(block).toContain("setGridDefault('motionHoldSec'")
   })
 
-  // The colours and the motion hold sit WITH their trigger now (planning#751):
-  // one global setting per highlight type, edited in the overlay panel.
-  it('the trigger rows carry each colour and the motion hold, writing the global document', () => {
-    const rows = readFileSync(
-      join(__dirname, '../../components/camera/HighlightTriggerRows.tsx'),
-      'utf8',
-    )
-    for (const key of ['highlightMotionColor', 'highlightAudioColor', 'highlightDetectionColor']) {
-      expect(rows, key).toContain(`t('v2.settings.${key}')`)
+  it('still offers every highlight row it had before the merge', () => {
+    const block = sectionBlock(VIEWING(), 'v2.settings.highlightAppearance')
+    for (const key of [
+      'highlightMotionColor',
+      'highlightAudioColor',
+      'highlightDetectionColor',
+      'highlightThickness',
+    ]) {
+      expect(block, key).toContain(`t('v2.settings.${key}')`)
     }
-    expect(rows).toContain('global.onMotionHold')
-    expect(VIEWING()).not.toContain("t('v2.settings.highlightMotionColor')")
   })
 })
 

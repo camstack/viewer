@@ -38,21 +38,7 @@ export const SETTINGS_LEVELS: SettingsLevels = {
     toolbarDensity: 'device',
     landscapeTimeline: 'device',
   },
-  highlight: {
-    motionColor: 'account',
-    audioColor: 'account',
-    detectionColor: 'account',
-    thickness: 'account',
-    motion: 'account',
-    audio: 'account',
-    audioDb: 'account',
-    audioHoldSec: 'account',
-    detectionClasses: 'account',
-    detectionHoldSec: 'account',
-    clusterLabel: 'account',
-    // A migration stamp travels with the fields it stamps.
-    rev: 'account',
-  },
+  highlight: { motionColor: 'account', audioColor: 'account', detectionColor: 'account', thickness: 'account' },
   clusters: { gapPercent: 'account', showClass: 'account', cardWidthFraction: 'device' },
   events: {
     reelThumbSize: 'device',

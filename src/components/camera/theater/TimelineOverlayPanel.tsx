@@ -84,7 +84,6 @@ import { OVERLAY_STEP_MAX, OVERLAY_STEP_MIN } from '../overlay/overlay-size.js'
 import { useTheme } from '../../../theme/theme-provider.js'
 import { CONTROL, ICON, SPACING, TYPOGRAPHY, controlHitSlop } from '../../../theme/tokens.js'
 import { HighlightTriggerRows } from '../HighlightTriggerRows.js'
-import { useHighlightGlobalRows } from '../../../hooks/use-highlight-settings.js'
 import { ActivationRow } from '../ActivationRow.js'
 import { OverlayPositionPicker } from '../overlay/OverlayPositionPicker.js'
 import type { LucideIcon } from '../../../lib/icons.js'
@@ -159,7 +158,6 @@ export function OverlaySettingsSections({
   const { colors } = useTheme()
   const deviceInfo = useSettingsStore((s) => s.settings.deviceInfo)
   const setDeviceInfo = useSettingsStore((s) => s.setDeviceInfo)
-  const globalRows = useHighlightGlobalRows()
   const [pickerOpen, setPickerOpen] = useState(false)
   // One question per row, answered by the shared list — never by a local
   // `context === 'grid-cell'` test, which is how two menus diverge.
@@ -261,7 +259,7 @@ export function OverlaySettingsSections({
           <Text style={[styles.section, { color: colors.foregroundMuted }]}>
             {t('v2.overlay.highlightBorder')}
           </Text>
-          <HighlightTriggerRows highlight={highlight} onSetHighlight={onSetHighlight} global={globalRows} />
+          <HighlightTriggerRows highlight={highlight} onSetHighlight={onSetHighlight} />
         </>
       ) : null}
 

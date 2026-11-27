@@ -31,9 +31,6 @@ import { Zap, Volume2, Box, Tag } from '../../lib/icons.js'
 import { ActivationRow, PanelToggleRow } from './ActivationRow.js'
 import { SelectRow, type SelectOption } from '../ui/SelectRow.js'
 import { HighlightClassChips } from '../grid/HighlightClassChips.js'
-import { ColorPickerRow } from '../ui/ColorPickerRow.js'
-import { MOTION_HOLD_SECONDS } from '../../store/settings-store.js'
-import type { HighlightGlobalRows } from '../../hooks/use-highlight-settings.js'
 import {
   AUDIO_HIGHLIGHT_HOLD_SEC,
   AUDIO_HIGHLIGHT_LEVEL_ORDER,
@@ -46,10 +43,9 @@ import type { GridHighlightSettings, GridClusterLabelMode } from '../../store/gr
 export interface HighlightTriggerRowsProps {
   readonly highlight: GridHighlightSettings
   readonly onSetHighlight: (patch: Partial<GridHighlightSettings>) => void
-  readonly global?: HighlightGlobalRows
 }
 
-export function HighlightTriggerRows({ highlight, onSetHighlight, global }: HighlightTriggerRowsProps) {
+export function HighlightTriggerRows({ highlight, onSetHighlight }: HighlightTriggerRowsProps) {
   const { t } = useTranslation()
 
   // The audio trigger is a SWITCH with its level behind it — the same shape as
@@ -79,11 +75,6 @@ export function HighlightTriggerRows({ highlight, onSetHighlight, global }: High
       audioHoldSec: AUDIO_HIGHLIGHT_HOLD_SEC,
     })
   const holdOptions: readonly SelectOption<number>[] = [2, 3, 5, 8].map((v) => ({ value: v, label: `${v}s` }))
-  // Motion linger: 0 reads as "Off" (clear the instant motion ends).
-  const motionHoldOptions: readonly SelectOption<number>[] = MOTION_HOLD_SECONDS.map((v) => ({
-    value: v,
-    label: v === 0 ? t('v2.settings.motionHoldOff') : t('v2.settings.secondsValue', { count: v }),
-  }))
 
   return (
     <>
@@ -92,25 +83,7 @@ export function HighlightTriggerRows({ highlight, onSetHighlight, global }: High
         label={t('v2.gridBuilder.highlightMotion')}
         on={highlight.motion}
         onToggle={() => onSetHighlight({ motion: !highlight.motion })}
-      >
-        {global ? (
-          <>
-            <ColorPickerRow
-              icon={Zap}
-              label={t('v2.settings.highlightMotionColor')}
-              value={global.appearance.motionColor}
-              onChange={(c) => global.onPatchAppearance({ motionColor: c })}
-            />
-            <SelectRow
-              icon={Zap}
-              label={t('v2.gridBuilder.highlightHold')}
-              options={motionHoldOptions}
-              value={global.motionHoldSec}
-              onChange={global.onMotionHold}
-            />
-          </>
-        ) : null}
-      </ActivationRow>
+      />
       <ActivationRow
         icon={Volume2}
         label={t('v2.gridBuilder.highlightAudio')}
@@ -124,14 +97,6 @@ export function HighlightTriggerRows({ highlight, onSetHighlight, global }: High
           value={audioLevel}
           onChange={(ui) => setAudio(true, ui)}
         />
-        {global ? (
-          <ColorPickerRow
-            icon={Volume2}
-            label={t('v2.settings.highlightAudioColor')}
-            value={global.appearance.audioColor}
-            onChange={(c) => global.onPatchAppearance({ audioColor: c })}
-          />
-        ) : null}
       </ActivationRow>
       <ActivationRow
         icon={Box}
@@ -150,14 +115,6 @@ export function HighlightTriggerRows({ highlight, onSetHighlight, global }: High
           value={highlight.detectionHoldSec}
           onChange={(v) => onSetHighlight({ detectionHoldSec: v })}
         />
-        {global ? (
-          <ColorPickerRow
-            icon={Box}
-            label={t('v2.settings.highlightDetectionColor')}
-            value={global.appearance.detectionColor}
-            onChange={(c) => global.onPatchAppearance({ detectionColor: c })}
-          />
-        ) : null}
       </ActivationRow>
     </>
   )

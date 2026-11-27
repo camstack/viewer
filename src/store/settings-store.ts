@@ -194,37 +194,16 @@ export interface CameraListOverlaySettings {
   readonly occupancy: OverlayPosition
 }
 
-/**
- * The GLOBAL highlight document — one for every camera, grid and wall (the
- * per-camera and per-grid copies it replaced are gone, planning#751): which
- * triggers light the border, each trigger's colour and hold, and one shared
- * thickness. Applied to the grid embed borders AND the single-camera detail
- * border.
- */
+/** Global highlight appearance — the border color per trigger type + a shared
+ *  thickness. Applied to the grid embed borders AND the single-camera detail
+ *  border. (V1 had per-type color + thickness; we keep per-type color + one
+ *  shared thickness.) */
 export interface HighlightAppearance {
   readonly motionColor: string
   readonly audioColor: string
   readonly detectionColor: string
   /** Border width in px (1–8). */
   readonly thickness: number
-  /** Border on hardware/ML motion. */
-  readonly motion: boolean
-  /** Audio trigger: off | presence | dBFS level. */
-  readonly audio: 'off' | 'sensor' | 'level'
-  /** dBFS threshold for `audio: 'level'` (negative). */
-  readonly audioDb: number
-  /** Keep the audio highlight this many seconds after it drops. */
-  readonly audioHoldSec: number
-  /** Macro classes that light the detection highlight. EMPTY = detection is
-   *  OFF — the label selection IS the switch (no separate "any" state). */
-  readonly detectionClasses: readonly string[]
-  /** Keep the detection highlight this many seconds after it drops. */
-  readonly detectionHoldSec: number
-  /** How a timeline cluster labels its kinds (icon glyph vs text). */
-  readonly clusterLabel: 'icon' | 'text'
-  /** Migration stamp: 0 = the per-camera highlight has not been folded into
-   *  this document yet (`highlight-global.ts`). */
-  readonly rev: number
 }
 
 /** Cluster display preferences for the theater timeline event sequence.
@@ -488,14 +467,6 @@ export const DEFAULTS: AppSettings = Object.freeze({
     audioColor: '#3B82F6', // ui-check-ok: default value of a user-picked colour
     detectionColor: '#22C55E', // ui-check-ok: default value of a user-picked colour
     thickness: 3,
-    motion: true,
-    audio: 'off',
-    audioDb: -30,
-    audioHoldSec: 5,
-    detectionClasses: Object.freeze([]) as readonly string[],
-    detectionHoldSec: 3,
-    clusterLabel: 'icon',
-    rev: 0,
   }) as HighlightAppearance,
   clusters: Object.freeze({
     gapPercent: 10,
@@ -562,15 +533,6 @@ export function setStreamDefaultEntry<K extends keyof StreamDefaults>(
   value: StreamDefaults[K],
 ): AppSettings {
   return { ...settings, stream: { ...settings.stream, [key]: value } }
-}
-
-/** Patch several `HighlightAppearance` fields at once (clamps thickness). */
-export function patchHighlightEntry(
-  settings: AppSettings,
-  patch: Partial<HighlightAppearance>,
-): AppSettings {
-  const next = { ...settings.highlight, ...patch }
-  return { ...settings, highlight: { ...next, thickness: clampThickness(next.thickness) } }
 }
 
 export const THICKNESS_MIN = 1
@@ -845,19 +807,6 @@ export function parseSettings(raw: string | null): AppSettings {
       audioColor: color(highlight.audioColor, DEFAULTS.highlight.audioColor),
       detectionColor: color(highlight.detectionColor, DEFAULTS.highlight.detectionColor),
       thickness: clampThickness(num(highlight.thickness, DEFAULTS.highlight.thickness)),
-      motion: bool(highlight.motion, DEFAULTS.highlight.motion),
-      audio:
-        highlight.audio === 'sensor' || highlight.audio === 'level' || highlight.audio === 'off'
-          ? highlight.audio
-          : DEFAULTS.highlight.audio,
-      audioDb: num(highlight.audioDb, DEFAULTS.highlight.audioDb),
-      audioHoldSec: num(highlight.audioHoldSec, DEFAULTS.highlight.audioHoldSec),
-      detectionClasses: Array.isArray(highlight.detectionClasses)
-        ? highlight.detectionClasses.filter((c): c is string => typeof c === 'string')
-        : [],
-      detectionHoldSec: num(highlight.detectionHoldSec, DEFAULTS.highlight.detectionHoldSec),
-      clusterLabel: highlight.clusterLabel === 'text' ? 'text' : 'icon',
-      rev: num(highlight.rev, DEFAULTS.highlight.rev),
     },
     clusters: {
       gapPercent: num(clusters.gapPercent, DEFAULTS.clusters.gapPercent),
@@ -965,8 +914,6 @@ interface SettingsState {
   setGridDefault: <K extends keyof GridDefaults>(key: K, value: GridDefaults[K]) => void
   setStreamDefault: <K extends keyof StreamDefaults>(key: K, value: StreamDefaults[K]) => void
   setHighlightAppearance: <K extends keyof HighlightAppearance>(key: K, value: HighlightAppearance[K]) => void
-  /** Patch several highlight fields in one write. */
-  patchHighlight: (patch: Partial<HighlightAppearance>) => void
   setCluster: <K extends keyof ClusterPreferences>(key: K, value: ClusterPreferences[K]) => void
   setEvents: <K extends keyof EventsPreferences>(key: K, value: EventsPreferences[K]) => void
   setReview: <K extends keyof ReviewPagePreferences>(key: K, value: ReviewPagePreferences[K]) => void
@@ -1052,12 +999,6 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
 
   setHighlightAppearance: (key, value) => {
     const settings = setHighlightAppearanceEntry(get().settings, key, value)
-    set({ settings })
-    persist(settings)
-  },
-
-  patchHighlight: (patch) => {
-    const settings = patchHighlightEntry(get().settings, patch)
     set({ settings })
     persist(settings)
   },

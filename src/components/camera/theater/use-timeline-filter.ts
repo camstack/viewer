@@ -27,9 +27,9 @@ import {
 } from './mock-data.js'
 import { useEventKinds } from '../../../data/use-event-kinds.js'
 import { classToMacroMap, type EventKindDescriptor } from '../../../data/event-kinds.js'
-import { useSettingsStore } from '../../../store/settings-store.js'
+import { useCameraPrefsStore } from '../../../store/camera-prefs-store.js'
 import { useCameraLocalStore } from '../../../store/camera-local-store.js'
-import type { GridHighlightSettings } from '../../../store/grid-store.js'
+import { withHighlightDefaults, type GridHighlightSettings } from '../../../store/grid-store.js'
 
 export interface TimelineFilterState {
   /** The selected motion/audio kinds (a full set ⟺ "all"). */
@@ -64,21 +64,21 @@ export function useTimelineFilter(
 ): TimelineFilterState {
   // The filter is EPHEMERAL (camera-local, memory only): narrowing the
   // timeline is an investigation, not a preference. The cluster label mode
-  // rides the global highlight document, an account setting.
+  // rides the camera's highlight, an account setting (camera-prefs).
   const storedTimelineKinds = useCameraLocalStore((s) => s.local.byId[deviceId]?.timelineKinds)
   const storedTimelineClasses = useCameraLocalStore((s) => s.local.byId[deviceId]?.timelineClasses)
-  const clusterLabelMode = useSettingsStore((s) => s.settings.highlight.clusterLabel)
+  const storedHighlight = useCameraPrefsStore((s) => s.prefs.byId[deviceId]?.highlight)
   const setCameraTimelineKinds = useCameraLocalStore((s) => s.setCameraTimelineKinds)
   const setCameraTimelineClasses = useCameraLocalStore((s) => s.setCameraTimelineClasses)
   const toggleCameraTimelineKind = useCameraLocalStore((s) => s.toggleCameraTimelineKind)
   const toggleCameraTimelineClass = useCameraLocalStore((s) => s.toggleCameraTimelineClass)
-  const hydrateSettings = useSettingsStore((s) => s.hydrate)
+  const hydratePrefs = useCameraPrefsStore((s) => s.hydrate)
   const hydrateLocal = useCameraLocalStore((s) => s.hydrate)
 
   useEffect(() => {
-    void hydrateSettings()
+    void hydratePrefs()
     void hydrateLocal()
-  }, [hydrateSettings, hydrateLocal])
+  }, [hydratePrefs, hydrateLocal])
 
   const filter = useMemo<ActivityFilter>(
     () => new Set<TimelineBarKind>(storedTimelineKinds ?? ALL_BAR_KINDS),
@@ -93,6 +93,11 @@ export function useTimelineFilter(
 
   const eventKinds = useEventKinds(kindDeviceIds ?? [deviceId])
   const classToMacro = useMemo(() => classToMacroMap(eventKinds.data ?? []), [eventKinds.data])
+
+  const clusterLabelMode = useMemo(
+    () => withHighlightDefaults(storedHighlight).clusterLabel,
+    [storedHighlight],
+  )
 
   const onReset = useCallback(() => {
     setCameraTimelineKinds(deviceId, [...ALL_BAR_KINDS])
