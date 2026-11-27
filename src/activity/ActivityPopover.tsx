@@ -22,7 +22,15 @@ import { SPACING } from '../theme/tokens.js'
 import { POPOVER_MIN_WIDTH } from '../navigation/popover-metrics.js'
 import { useActivityStore } from './activity-instance.js'
 import { hasFinishedJobs } from './activity-jobs.js'
-import { cancelRefusalKey, hubJobClear, mergeActivity, type DisplayItem, type HubJobItem } from './hub-jobs-model.js'
+import {
+  ackFromList,
+  cancelRefusalKey,
+  hubJobClear,
+  isFinishedHubJob,
+  mergeActivity,
+  type DisplayItem,
+  type HubJobItem,
+} from './hub-jobs-model.js'
 import { useHubActivity } from './use-hub-activity.js'
 import { useHubJobActions } from '../data/use-hub-jobs.js'
 import { activityPopoverSize } from './activity-popover-size.js'
@@ -46,6 +54,8 @@ export function ActivityPopover({ visible, onClose, anchor, menuAlign }: Activit
   const dismiss = useActivityStore((s) => s.dismiss)
   const dismissFinished = useActivityStore((s) => s.dismissFinished)
   const markSeen = useActivityStore((s) => s.markSeen)
+  const ackHub = useActivityStore((s) => s.ackHub)
+  const forgetHubJobs = useActivityStore((s) => s.forgetHubJobs)
   const collect = useActivityCollect()
   const { hub, listFailed } = useHubActivity(visible)
   const hubActions = useHubJobActions()
@@ -55,14 +65,26 @@ export function ActivityPopover({ visible, onClose, anchor, menuAlign }: Activit
     if (visible) markSeen()
   }, [visible, items, markSeen])
 
+  // The hub has no "seen" call: what was shown is remembered on this device, at
+  // the moment the device list clears its own badge — and again as it updates.
+  useEffect(() => {
+    if (visible && hub !== null) ackHub(ackFromList(hub))
+  }, [visible, hub, ackHub])
+
   const listed = useMemo(() => mergeActivity(items, hub), [items, hub])
-  const canClearFinished = useMemo(() => hasFinishedJobs(items), [items])
+  const finishedHub = useMemo(() => (hub ?? []).filter(isFinishedHubJob), [hub])
+  const canClearFinished = useMemo(
+    () => hasFinishedJobs(items) || finishedHub.length > 0,
+    [items, finishedHub],
+  )
   // A hub job is cancelled (the producer may refuse, and the refusal is named)
   // or, once finished, hidden from this user's list.
   const clearHubJob = useCallback(
     async (job: HubJobItem): Promise<void> => {
       const action = hubJobClear(job)
       if (action === 'dismiss') {
+        // The device's twin of an export goes with it, or its row would come back.
+        forgetHubJobs([job])
         await hubActions.dismiss(job.jobId)
         return
       }
@@ -73,8 +95,14 @@ export function ActivityPopover({ visible, onClose, anchor, menuAlign }: Activit
         }
       }
     },
-    [hubActions, notice, t],
+    [hubActions, forgetHubJobs, notice, t],
   )
+  // "Clear finished": the device's finished jobs and the hub's.
+  const clearFinished = useCallback((): void => {
+    dismissFinished()
+    forgetHubJobs(finishedHub)
+    void Promise.all(finishedHub.map((job) => hubActions.dismiss(job.jobId)))
+  }, [dismissFinished, forgetHubJobs, finishedHub, hubActions])
   const onOpenResult = useCallback(
     async (job: HubJobItem): Promise<void> => {
       const url = await hubActions.resultUrl(job.jobId)
@@ -142,7 +170,7 @@ export function ActivityPopover({ visible, onClose, anchor, menuAlign }: Activit
         <Text style={[styles.heading, { color: colors.foreground }]}>{t('v2.activity.title')}</Text>
         <View style={styles.headerActions}>
           {canClearFinished ? (
-            <Pressable onPress={dismissFinished} hitSlop={8} accessibilityRole="button">
+            <Pressable onPress={clearFinished} hitSlop={8} accessibilityRole="button">
               <Text style={[styles.clear, { color: colors.primary }]}>{t('v2.activity.clearFinished')}</Text>
             </Pressable>
           ) : null}

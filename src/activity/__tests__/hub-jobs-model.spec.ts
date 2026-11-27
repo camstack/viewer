@@ -1,10 +1,20 @@
 import { describe, it, expect } from 'vitest'
 
 import type { ExportRecord } from '../../data/use-exports.js'
-import { exportItemFrom, type ActivityList } from '../activity-model.js'
+import { exportItemFrom, snapshotItemFrom, type ActivityList } from '../activity-model.js'
+import { createActivityStore, type ActivityKv } from '../activity-store.js'
 import { orderForDisplay, queuedJob, startJob } from '../activity-jobs.js'
 import {
+  ackFromList,
   cancelRefusalKey,
+  HUB_LIST_POLL_MS,
+  HUB_SUMMARY_ACTIVE_POLL_MS,
+  HUB_SUMMARY_IDLE_POLL_MS,
+  hubFromList,
+  hubListWanted,
+  listPollMs,
+  NO_ACK,
+  summaryPollMs,
   hubJobClear,
   hubUnseenFinished,
   mergeActivity,
@@ -184,5 +194,127 @@ describe('row actions', () => {
     expect(cancelRefusalKey('producer-unreachable')).toBe('v2.activity.cancelRefused.producerUnreachable')
     expect(cancelRefusalKey(null)).toBe('v2.activity.cancelRefused.unknown')
     expect(cancelRefusalKey('made-up')).toBe('v2.activity.cancelRefused.unknown')
+  })
+})
+
+describe('the order of the device items is exactly orderForDisplay', () => {
+  const snap = (uid: string, createdAt: number): ActivityList[number] =>
+    snapshotItemFrom({ uid, deviceId: 1, cameraName: 'Door', atMs: 1, fileUri: 'file:///a.jpg', mime: 'image/jpeg', now: createdAt })
+
+  it('keeps the store order of the rest even when it differs from createdAt (fails if re-sorted)', () => {
+    const local: ActivityList = [snap('a', 100), snap('b', 300), snap('c', 200)]
+    expect(mergeActivity(local, null).map((e) => e.id)).toEqual(['snapshot:a', 'snapshot:b', 'snapshot:c'])
+    expect(mergeActivity(local, []).map((e) => e.id)).toEqual(['snapshot:a', 'snapshot:b', 'snapshot:c'])
+    const withHub = mergeActivity(local, [hubJob({ jobId: 'h', state: 'done', createdAt: 250 })])
+    expect(withHub.map((e) => e.id).filter((id) => id.startsWith('snapshot:'))).toEqual([
+      'snapshot:a',
+      'snapshot:b',
+      'snapshot:c',
+    ])
+  })
+})
+
+describe('a retired export is not brought back to life by its hub job', () => {
+  it('keeps the device row that says expired and leaves the hub job out', () => {
+    const local: ActivityList = [exportItemFrom(exportRecord('e1', 'expired'), 'Door', 100)]
+    const hub = [hubJob({ jobId: 'j', state: 'done', subject: { entity: { kind: 'export', id: 'e1' } } })]
+    const merged = mergeActivity(local, hub)
+    expect(merged.map((e) => e.id)).toEqual(['export:e1'])
+  })
+})
+
+describe('what the operator has seen of the hub finished jobs', () => {
+  const finished = (id: string, finishedAt: number): HubJobItem =>
+    hubJob({ jobId: id, state: 'done', createdAt: 1, finishedAt })
+
+  it('is the newest finish and the count of the finished jobs shown', () => {
+    expect(ackFromList([finished('a', 10), finished('b', 30), hubJob({ jobId: 'r', state: 'running' })])).toEqual({ at: 30, count: 2 })
+    expect(ackFromList([])).toEqual(NO_ACK)
+  })
+
+  it('puts the dot out after opening and lights it again for a later finish', () => {
+    const summary = { running: 0, unseenFinished: 2 }
+    expect(hubUnseenFinished(summary)).toBe(2)
+    const ack = ackFromList([finished('a', 10), finished('b', 30)])
+    expect(hubUnseenFinished(summary, ack)).toBe(0)
+    expect(hubUnseenFinished({ running: 0, unseenFinished: 3 }, ack)).toBe(1)
+    // a dismissal on the hub lowers the total below what was seen: never negative
+    expect(hubUnseenFinished({ running: 0, unseenFinished: 1 }, ack)).toBe(0)
+    expect(hubUnseenFinished({ running: 0, unseenFinished: null }, ack)).toBe(0)
+  })
+})
+
+describe('the store', () => {
+  const memoryKv = (): ActivityKv & { readonly data: Map<string, string> } => {
+    const data = new Map<string, string>()
+    return {
+      data,
+      getItem: (k) => Promise.resolve(data.get(k) ?? null),
+      setItem: (k, v) => {
+        data.set(k, v)
+        return Promise.resolve()
+      },
+    }
+  }
+  const flush = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 0))
+
+  it('remembers the acknowledgement per server across a restart', async () => {
+    const kv = memoryKv()
+    const first = createActivityStore(kv)
+    await first.getState().bind('s1')
+    first.getState().ackHub({ at: 30, count: 2 })
+    await flush()
+    const second = createActivityStore(kv)
+    await second.getState().bind('s1')
+    expect(second.getState().hubAck).toEqual({ at: 30, count: 2 })
+    await second.getState().bind('s2')
+    expect(second.getState().hubAck).toEqual(NO_ACK)
+  })
+
+  it('drops the device twin of a dismissed hub export job, so its row does not come back', async () => {
+    const store = createActivityStore(memoryKv())
+    await store.getState().bind('s1')
+    store.getState().add(exportItemFrom(exportRecord('e1'), 'Door', 100))
+    store.getState().add(exportItemFrom(exportRecord('e2'), 'Gate', 90))
+    store.getState().forgetHubJobs([hubJob({ jobId: 'j', state: 'done', subject: { entity: { kind: 'export', id: 'e1' } } })])
+    // with the popover closed the hub list is unknown (null): the twin must still be gone
+    expect(mergeActivity(store.getState().items, null).map((e) => e.id)).toEqual(['export:e2'])
+  })
+})
+
+describe('the polling contract', () => {
+  const cached = [hubJob()]
+
+  it('does not ask for the list while idle with the popover closed', () => {
+    expect(hubListWanted(false, { running: 0, unseenFinished: 3 })).toBe(false)
+    expect(hubListWanted(false, null)).toBe(false)
+    expect(hubListWanted(true, null)).toBe(true)
+    expect(hubListWanted(false, { running: 1, unseenFinished: 0 })).toBe(true)
+  })
+
+  it('reads the list as unknown when not wanted, even with a cached value', () => {
+    expect(hubFromList(false, cached)).toBeNull()
+    expect(hubFromList(true, cached)).toBe(cached)
+    expect(hubFromList(true, undefined)).toBeNull()
+  })
+
+  it('stops polling a hub with no jobs capability, and polls faster while a job runs', () => {
+    expect(summaryPollMs(null)).toBe(false)
+    expect(listPollMs(null)).toBe(false)
+    expect(summaryPollMs(undefined)).toBe(HUB_SUMMARY_IDLE_POLL_MS)
+    expect(summaryPollMs({ running: 0, unseenFinished: 0 })).toBe(HUB_SUMMARY_IDLE_POLL_MS)
+    expect(summaryPollMs({ running: 1, unseenFinished: null })).toBe(HUB_SUMMARY_ACTIVE_POLL_MS)
+    expect(listPollMs([])).toBe(HUB_LIST_POLL_MS)
+  })
+})
+
+describe('wiring', () => {
+  it('"Clear finished" also dismisses the hub finished jobs, and opening acknowledges them', async () => {
+    const { readFileSync } = await import('node:fs')
+    const { join } = await import('node:path')
+    const popover = readFileSync(join(process.cwd(), 'src/activity/ActivityPopover.tsx'), 'utf8')
+    expect(popover).toContain('finishedHub.map((job) => hubActions.dismiss(job.jobId))')
+    expect(popover).toContain('onPress={clearFinished}')
+    expect(popover).toContain('ackHub(ackFromList(hub))')
   })
 })

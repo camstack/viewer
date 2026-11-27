@@ -53,12 +53,14 @@ export const ActivityButton = memo(function ActivityButton({ menuAlign = 'end', 
   const progress = useMemo(() => mergedProgress(items, hub, summary), [items, hub, summary])
   const running = useMemo(() => runningCount(items, hub, summary), [items, hub, summary])
   // An unmeasured hub count (`null`) adds nothing; it is never a crash or a zero claim.
-  const unseen = unseenFinishedCount(items) + hubUnseenFinished(summary)
+  const hubAck = useActivityStore((s) => s.hubAck)
+  const hubUnseen = hubUnseenFinished(summary, hubAck)
+  const unseen = unseenFinishedCount(items) + hubUnseen
   // In the bar only while there is something to look at; kept while its own
   // popover is open so clearing the last row does not pull the anchor away.
   const present = useMemo(
-    () => hasUndismissedItems(items) || running > 0 || hubUnseenFinished(summary) > 0,
-    [items, running, summary],
+    () => hasUndismissedItems(items) || running > 0 || hubUnseen > 0,
+    [items, running, hubUnseen],
   )
   // A new running activity is the acknowledgement of a download: the button
   // bounces and a ring spreads from it.

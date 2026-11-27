@@ -18,6 +18,7 @@
  */
 import type { JobState } from '@camstack/types'
 
+import { orderForDisplay } from './activity-jobs.js'
 import {
   combineProgress,
   isListed,
@@ -55,6 +56,8 @@ export interface HubJobItem {
   readonly progress: HubJobProgress | null
   readonly cancellable: boolean
   readonly createdAt: number
+  /** When the job reached a final state; `null` while it runs. */
+  readonly finishedAt: number | null
   /** The hub export this job is about, when it is one. */
   readonly exportId: string | null
 }
@@ -120,6 +123,7 @@ export function parseHubJob(raw: unknown): HubJobItem | null {
     progress: parseProgress(raw['progress']),
     cancellable: raw['cancellable'] === true,
     createdAt,
+    finishedAt: typeof raw['finishedAt'] === 'number' ? raw['finishedAt'] : null,
     exportId: exportIdFrom(raw['subject']),
   }
 }
@@ -195,42 +199,141 @@ export function cancelRefusalKey(reason: unknown): string {
 
 // ── Merge ────────────────────────────────────────────────────────────────────
 
-/** Local rows whose export the hub already reports as a job drop out: the hub job wins. */
-function withoutReportedExports(list: ActivityList, hub: readonly HubJobItem[]): ActivityList {
-  const reported = new Set(hub.flatMap((job) => (job.exportId === null ? [] : [job.exportId])))
-  if (reported.size === 0) return list
-  return list.filter((item) => !(item.kind === 'export' && reported.has(item.exportId)))
+function isRetiredExport(item: ActivityItem): boolean {
+  return item.kind === 'export' && (item.state === 'expired' || item.state === 'deleted')
+}
+
+export interface Reconciled {
+  readonly local: ActivityList
+  readonly hub: readonly HubJobItem[]
+}
+
+/**
+ * One row per export. The hub job wins over its device twin — except where the
+ * twin is already retired (expired / deleted): the file is gone, so the device
+ * row keeps saying so and the hub job, which would offer a Download, is left out.
+ */
+export function reconcileTwins(local: ActivityList, hub: readonly HubJobItem[]): Reconciled {
+  const retired = new Set(
+    local.flatMap((item) => (item.kind === 'export' && isRetiredExport(item) ? [item.exportId] : [])),
+  )
+  const hubKept = hub.filter((job) => job.exportId === null || !retired.has(job.exportId))
+  const reported = new Set(hubKept.flatMap((job) => (job.exportId === null ? [] : [job.exportId])))
+  const localKept =
+    reported.size === 0
+      ? local
+      : local.filter((item) => !(item.kind === 'export' && reported.has(item.exportId)))
+  return { local: localKept, hub: hubKept }
 }
 
 const RUNNING = 0
 const QUEUED = 1
 const REST = 2
 
-function rank(item: DisplayItem): number {
-  if (item.kind === 'hub-job') {
-    return item.state === 'running' ? RUNNING : item.state === 'queued' ? QUEUED : REST
-  }
+function hubRank(job: HubJobItem): number {
+  return job.state === 'running' ? RUNNING : job.state === 'queued' ? QUEUED : REST
+}
+
+function localRank(item: ActivityItem): number {
   if (item.kind !== 'job') return REST
   return item.state === 'running' ? RUNNING : item.state === 'queued' ? QUEUED : REST
 }
 
+/** Interleave two sequences, each already in its own order, by `first`; ties take the device's. */
+function interleave(
+  device: readonly DisplayItem[],
+  hub: readonly HubJobItem[],
+  hubFirst: (hubItem: HubJobItem, deviceItem: DisplayItem) => boolean,
+): DisplayItem[] {
+  const out: DisplayItem[] = []
+  let d = 0
+  let h = 0
+  for (;;) {
+    const deviceItem = device[d]
+    const hubItem = hub[h]
+    if (hubItem !== undefined && (deviceItem === undefined || hubFirst(hubItem, deviceItem))) {
+      out.push(hubItem)
+      h += 1
+    } else if (deviceItem !== undefined) {
+      out.push(deviceItem)
+      d += 1
+    } else {
+      break
+    }
+  }
+  return out
+}
+
 /**
  * The Activity list as shown: the device's visible items plus the hub's jobs.
+ *
+ * The device's items keep EXACTLY the order `orderForDisplay` gives them (the
+ * store's order for everything that is not a running / queued job — never
+ * re-sorted); hub jobs fall into the same three groups (running, queued oldest
+ * first, the rest newest first) and are placed among them by creation time.
  * `hub === null` (unknown) leaves the device's items alone.
  */
 export function mergeActivity(
   local: ActivityList,
   hub: readonly HubJobItem[] | null,
 ): readonly DisplayItem[] {
-  const visible = local.filter(isListed)
-  const items: readonly DisplayItem[] =
-    hub === null ? visible : [...withoutReportedExports(visible, hub), ...hub]
-  // Array.prototype.sort is stable: ties keep their order.
-  return [...items].sort((a, b) => {
-    const byRank = rank(a) - rank(b)
-    if (byRank !== 0) return byRank
-    return rank(a) === QUEUED ? a.createdAt - b.createdAt : b.createdAt - a.createdAt
+  const ordered = orderForDisplay(local)
+  if (hub === null) return ordered
+  const twins = reconcileTwins(local.filter(isListed), hub)
+  const kept = new Set(twins.local)
+  const device = ordered.filter((item) => kept.has(item))
+  const group = (rank: number): { d: readonly DisplayItem[]; h: HubJobItem[] } => ({
+    d: device.filter((item) => localRank(item) === rank),
+    h: twins.hub.filter((job) => hubRank(job) === rank).sort((a, b) => (rank === QUEUED ? a.createdAt - b.createdAt : b.createdAt - a.createdAt)),
   })
+  const running = group(RUNNING)
+  const queued = group(QUEUED)
+  const rest = group(REST)
+  const newerFirst = (hubItem: HubJobItem, deviceItem: DisplayItem): boolean => hubItem.createdAt > deviceItem.createdAt
+  const olderFirst = (hubItem: HubJobItem, deviceItem: DisplayItem): boolean => hubItem.createdAt < deviceItem.createdAt
+  return [
+    ...interleave(running.d, running.h, newerFirst),
+    ...interleave(queued.d, queued.h, olderFirst),
+    ...interleave(rest.d, rest.h, newerFirst),
+  ]
+}
+
+// ── What is asked for, and what is believed ──────────────────────────────────
+
+/** The full list is read only while the popover is open or the hub says a job runs. */
+export function hubListWanted(open: boolean, summary: HubJobsSummary | null): boolean {
+  return open || (summary?.running ?? 0) > 0
+}
+
+/** Summary cadence: idle, and while a hub job runs. */
+export const HUB_SUMMARY_IDLE_POLL_MS = 30_000
+export const HUB_SUMMARY_ACTIVE_POLL_MS = 5_000
+/** List cadence while it is wanted. */
+export const HUB_LIST_POLL_MS = 4_000
+
+/**
+ * How often to ask again. `null` is a hub with no `jobs` capability — a real
+ * answer, so asking stops (`false`); `undefined` is not yet asked.
+ */
+export function summaryPollMs(data: HubJobsSummary | null | undefined): number | false {
+  if (data === null) return false
+  return (data?.running ?? 0) > 0 ? HUB_SUMMARY_ACTIVE_POLL_MS : HUB_SUMMARY_IDLE_POLL_MS
+}
+
+export function listPollMs(data: readonly HubJobItem[] | null | undefined): number | false {
+  return data === null ? false : HUB_LIST_POLL_MS
+}
+
+/**
+ * The list as believed: only while it is wanted. A value cached from an earlier
+ * fetch is not evidence once nobody is polling it (a stale "running" must not
+ * outlive the poll that would have corrected it), so it reads as unknown.
+ */
+export function hubFromList(
+  wanted: boolean,
+  cached: readonly HubJobItem[] | null | undefined,
+): readonly HubJobItem[] | null {
+  return wanted ? (cached ?? null) : null
 }
 
 // ── Counts ───────────────────────────────────────────────────────────────────
@@ -248,15 +351,50 @@ export function runningCount(
 ): number {
   const visible = local.filter(isListed)
   if (hub !== null) {
-    const localRunning = withoutReportedExports(visible, hub).filter(isRunning).length
-    return localRunning + hub.filter(isHubJobActive).length
+    const twins = reconcileTwins(visible, hub)
+    return twins.local.filter(isRunning).length + twins.hub.filter(isHubJobActive).length
   }
   return visible.filter(isRunning).length + (summary?.running ?? 0)
 }
 
-/** Finished hub jobs not yet dismissed. A `null` summary (or measurement) counts nothing. */
-export function hubUnseenFinished(summary: HubJobsSummary | null): number {
-  return summary?.unseenFinished ?? 0
+/**
+ * What the operator has looked at: the newest finish among the finished hub
+ * jobs they were shown, and how many there were. The hub has no "seen" call —
+ * `unseenFinished` is only "finished and not dismissed" — so this is kept on
+ * the device, per server.
+ */
+export interface HubAck {
+  readonly at: number
+  readonly count: number
+}
+
+export const NO_ACK: HubAck = { at: 0, count: 0 }
+
+export function isFinishedHubJob(job: HubJobItem): boolean {
+  return !isHubJobActive(job)
+}
+
+/** The acknowledgement for a list the operator is looking at. */
+export function ackFromList(hub: readonly HubJobItem[]): HubAck {
+  const finished = hub.filter(isFinishedHubJob)
+  return {
+    at: finished.reduce((newest, job) => Math.max(newest, job.finishedAt ?? job.createdAt), 0),
+    count: finished.length,
+  }
+}
+
+export function sameAck(a: HubAck, b: HubAck): boolean {
+  return a.at === b.at && a.count === b.count
+}
+
+/**
+ * Finished hub jobs not yet looked at. A `null` summary (or measurement) counts
+ * nothing; what was acknowledged is taken off the hub's total, so opening the
+ * popover puts the dot out and a job that finishes afterwards lights it again.
+ */
+export function hubUnseenFinished(summary: HubJobsSummary | null, ack: HubAck = NO_ACK): number {
+  const total = summary?.unseenFinished ?? 0
+  return Math.max(0, total - ack.count)
 }
 
 /** The ring's reading for device and hub work together. */
@@ -268,9 +406,10 @@ export function mergedProgress(
   const visible = local.filter(isListed)
   const running = runningCount(local, hub, summary)
   if (hub === null) return combineProgress(running, knownPercents(visible))
-  const hubKnown = hub.filter(isHubJobActive).flatMap((job) => {
+  const twins = reconcileTwins(visible, hub)
+  const hubKnown = twins.hub.filter(isHubJobActive).flatMap((job) => {
     const pct = hubProgressPercent(job)
     return pct === null ? [] : [pct]
   })
-  return combineProgress(running, [...knownPercents(withoutReportedExports(visible, hub)), ...hubKnown])
+  return combineProgress(running, [...knownPercents(twins.local), ...hubKnown])
 }

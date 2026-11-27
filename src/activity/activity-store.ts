@@ -58,6 +58,8 @@ import {
   startJob,
 } from './activity-jobs.js'
 import type { ExportRecord } from '../data/use-exports.js'
+import { isRecord } from '../data/cap-query.js'
+import { NO_ACK, sameAck, type HubAck, type HubJobItem } from './hub-jobs-model.js'
 
 /** The slice of a key-value store the list needs. */
 export interface ActivityKv {
@@ -127,11 +129,33 @@ export interface ActivityState {
   dismiss: (id: string) => void
   /** Hide every finished job. */
   dismissFinished: () => void
+  /** What the operator has seen of the hub's finished jobs (device-level, per server). */
+  readonly hubAck: HubAck
+  ackHub: (ack: HubAck) => void
+  /** Hub jobs were dismissed: their device twin (the same export) must not come back. */
+  forgetHubJobs: (jobs: readonly HubJobItem[]) => void
   /** The app's own update, from its source; `null` removes the row. Device-level. */
   setAppUpdate: (draft: AppUpdateDraft | null) => void
 }
 
 export type ActivityStore = UseBoundStore<StoreApi<ActivityState>>
+
+/** The storage key of one server's hub acknowledgement. */
+export function hubAckStorageKey(serverId: string): string {
+  return `camstack.activity.hub-ack.v1.${serverId}`
+}
+
+function parseAck(raw: string | null): HubAck {
+  if (raw === null) return NO_ACK
+  try {
+    const parsed: unknown = JSON.parse(raw)
+    if (!isRecord(parsed)) return NO_ACK
+    const { at, count } = parsed
+    return typeof at === 'number' && typeof count === 'number' ? { at, count } : NO_ACK
+  } catch {
+    return NO_ACK
+  }
+}
 
 export function createActivityStore(kv: ActivityKv, clock: ActivityClock = systemClock): ActivityStore {
   // Storage is best-effort: the app works without it, so neither a rejected
@@ -150,6 +174,14 @@ export function createActivityStore(kv: ActivityKv, clock: ActivityClock = syste
   const read = async (serverId: string): Promise<string | null> => {
     try {
       return await kv.getItem(activityStorageKey(serverId))
+    } catch {
+      return null
+    }
+  }
+
+  const readAck = async (serverId: string): Promise<string | null> => {
+    try {
+      return await kv.getItem(hubAckStorageKey(serverId))
     } catch {
       return null
     }
@@ -206,6 +238,7 @@ export function createActivityStore(kv: ActivityKv, clock: ActivityClock = syste
       serverId: null,
       items: [],
       hydrated: false,
+      hubAck: NO_ACK,
       bind: async (serverId) => {
         if (get().serverId === serverId && get().hydrated) return
         // A job queued under another server cannot be run from this list.
@@ -214,16 +247,17 @@ export function createActivityStore(kv: ActivityKv, clock: ActivityClock = syste
         // The app update is about the device, so it follows a switch.
         const pending =
           get().serverId === serverId ? get().items : get().items.filter((item) => item.kind === 'app-update')
-        set({ serverId, items: pending, hydrated: false })
+        set({ serverId, items: pending, hydrated: false, hubAck: NO_ACK })
         if (serverId === null) return
         const raw = await read(serverId)
+        const ackRaw = await readAck(serverId)
         // A later bind (a quick server switch) wins; this answer is stale.
         if (get().serverId !== serverId) return
         // Only the STORED list is stale: a job enqueued while it was being read
         // is live and keeps its place in the queue.
         const stored = interruptStaleJobs(parseActivity(raw), clock.now())
         const merged = get().items.reduce<ActivityList>((acc, item) => addItem(acc, item), stored)
-        set({ items: merged, hydrated: true })
+        set({ items: merged, hydrated: true, hubAck: parseAck(ackRaw) })
         persist(serverId, merged)
       },
       add: (item) => commit(addItem(get().items, item)),
@@ -260,6 +294,24 @@ export function createActivityStore(kv: ActivityKv, clock: ActivityClock = syste
         waiting?.onCancel?.()
       },
       dismissFinished: () => update(dismissFinishedJobs),
+      ackHub: (ack) => {
+        if (sameAck(ack, get().hubAck)) return
+        set({ hubAck: ack })
+        const { serverId } = get()
+        if (serverId === null) return
+        void (async (): Promise<void> => {
+          try {
+            await kv.setItem(hubAckStorageKey(serverId), JSON.stringify(ack))
+          } catch {
+            // Best effort, like the list.
+          }
+        })()
+      },
+      forgetHubJobs: (jobs) => {
+        const twins = new Set(jobs.flatMap((job) => (job.exportId === null ? [] : [`export:${job.exportId}`])))
+        if (twins.size === 0) return
+        update((list) => list.filter((item) => !twins.has(item.id)))
+      },
       setAppUpdate: (draft) => update((list) => upsertAppUpdate(list, draft, clock.now())),
     }
   })

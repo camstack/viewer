@@ -78,6 +78,7 @@ export const STORAGE_KEY_LEVELS: readonly StorageKeyLevel[] = [
   { key: 'v2.hubLoginBounced', match: 'exact', level: 'device', what: 'hub login bounce flag (web session)' },
   { key: 'camstack.runtime.exit-marker.v1', match: 'exact', level: 'device', what: 'last runtime exit' },
   { key: 'camstack.activity.v1.', match: 'prefix', level: 'device', what: 'per-server activity list' },
+  { key: 'camstack.activity.hub-ack.v1.', match: 'prefix', level: 'device', what: 'per-server: the hub finished jobs already looked at' },
   { key: 'v2.cache.cameras.', match: 'prefix', level: 'device', what: 'camera list cache' },
   { key: '@camstack/v2/cache/', match: 'prefix', level: 'device', what: 'data cache' },
   { key: '@camstack/v2/snapshot/', match: 'prefix', level: 'device', what: 'snapshot cache' },

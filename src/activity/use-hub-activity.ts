@@ -9,22 +9,21 @@
  * "running" must not outlive the poll that would have corrected it.
  */
 import { useHubJobsList, useHubJobsSummary } from '../data/use-hub-jobs.js'
-import type { HubJobItem, HubJobsSummary } from './hub-jobs-model.js'
+import { hubFromList, hubListWanted, type HubJobItem, type HubJobsSummary } from './hub-jobs-model.js'
 
 export interface HubActivity {
   /** `null` = unknown (not asked, or not answered) — never "no jobs". */
   readonly hub: readonly HubJobItem[] | null
   /** `null` = unknown. */
   readonly summary: HubJobsSummary | null
-  /** The list was asked for and did not answer. */
+  /** The list was asked for and the call failed (a hub with no `jobs` capability is not a failure). */
   readonly listFailed: boolean
 }
 
 export function useHubActivity(open: boolean): HubActivity {
   const summaryQuery = useHubJobsSummary()
   const summary = summaryQuery.data ?? null
-  const wanted = open || (summary?.running ?? 0) > 0
+  const wanted = hubListWanted(open, summary)
   const list = useHubJobsList(wanted)
-  const hub = wanted ? (list.data ?? null) : null
-  return { hub, summary, listFailed: wanted && !list.isLoading && hub === null }
+  return { hub: hubFromList(wanted, list.data), summary, listFailed: wanted && list.isError }
 }

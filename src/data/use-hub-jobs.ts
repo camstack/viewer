@@ -3,9 +3,11 @@
  * ledger of long-running work). The caller sees their own jobs, an admin all of
  * them; the hub enforces that, nothing here filters.
  *
- * An unanswered query is UNKNOWN, never empty: both reads resolve `null` when
- * the hub did not answer (or has no `jobs` capability yet), and callers must
- * not fold that into "no jobs". The list is only fetched while it is wanted
+ * An unanswered query is UNKNOWN, never empty. Both reads call with `rethrow`:
+ * a hub that has no `jobs` capability answers `null` (a real answer — polling
+ * stops there), a failed or timed-out call throws (the query errors and is
+ * retried at its cadence). Callers never fold either into "no jobs". The list
+ * is only fetched while it is wanted
  * (the popover is open, or the summary says something runs); the summary is a
  * cheap read at a modest interval, faster while a job runs.
  */
@@ -14,20 +16,17 @@ import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tan
 
 import { useConnection } from '../connection/ConnectionProvider.js'
 import {
+  listPollMs,
   parseHubJobs,
   parseHubSummary,
+  summaryPollMs,
   type HubJobItem,
   type HubJobsSummary,
 } from '../activity/hub-jobs-model.js'
-import { capMutate, capQuery, isRecord } from './cap-query.js'
+import { capMutate, capQuery, isCapClient, isRecord } from './cap-query.js'
 
 const JOBS_KEY = ['v2', 'hub-jobs'] as const
 
-/** Summary cadence: idle, and while a hub job runs. */
-export const HUB_SUMMARY_IDLE_POLL_MS = 30_000
-export const HUB_SUMMARY_ACTIVE_POLL_MS = 5_000
-/** List cadence while it is wanted. */
-export const HUB_LIST_POLL_MS = 4_000
 /** Rows the popover asks for. */
 const LIST_LIMIT = 50
 
@@ -38,13 +37,16 @@ export function useHubJobsSummary(): UseQueryResult<HubJobsSummary | null> {
     queryKey: [...JOBS_KEY, 'summary'],
     enabled: state === 'connected',
     staleTime: 5_000,
-    refetchInterval: (query) =>
-      (query.state.data?.running ?? 0) > 0 ? HUB_SUMMARY_ACTIVE_POLL_MS : HUB_SUMMARY_IDLE_POLL_MS,
+    // `null` = this hub has no `jobs` capability: nothing to poll for.
+    refetchInterval: (query) => summaryPollMs(query.state.data),
     queryFn: async () => {
-      const system = controller.getSystem()
-      if (!system) return null
-      const raw = await capQuery(system.trpcClient as Record<string, unknown>, 'jobs', 'getSummary', {})
-      return parseHubSummary(raw)
+      const client = controller.getSystem()?.trpcClient
+      if (!isCapClient(client)) return null
+      const raw = await capQuery(client, 'jobs', 'getSummary', {}, { rethrow: true })
+      if (raw === null) return null
+      const summary = parseHubSummary(raw)
+      if (summary === null) throw new Error('jobs.getSummary answered an unreadable summary')
+      return summary
     },
   })
 }
@@ -59,15 +61,21 @@ export function useHubJobsList(wanted: boolean): UseQueryResult<readonly HubJobI
     queryKey: [...JOBS_KEY, 'list'],
     enabled: state === 'connected' && wanted,
     staleTime: 2_000,
-    refetchInterval: HUB_LIST_POLL_MS,
+    refetchInterval: (query) => listPollMs(query.state.data),
     queryFn: async () => {
-      const system = controller.getSystem()
-      if (!system) return null
-      const raw = await capQuery(system.trpcClient as Record<string, unknown>, 'jobs', 'list', {
-        includeDismissed: false,
-        limit: LIST_LIMIT,
-      })
-      return parseHubJobs(raw)
+      const client = controller.getSystem()?.trpcClient
+      if (!isCapClient(client)) return null
+      const raw = await capQuery(
+        client,
+        'jobs',
+        'list',
+        { includeDismissed: false, limit: LIST_LIMIT },
+        { rethrow: true },
+      )
+      if (raw === null) return null
+      const jobs = parseHubJobs(raw)
+      if (jobs === null) throw new Error('jobs.list answered an unreadable list')
+      return jobs
     },
   })
 }
@@ -96,10 +104,8 @@ export function useHubJobActions(): HubJobActions {
 
   const cancelMutation = useMutation({
     mutationFn: async (jobId: string): Promise<CancelAnswer> => {
-      const system = controller.getSystem()
-      const raw = system
-        ? await capMutate(system.trpcClient as Record<string, unknown>, 'jobs', 'cancel', { jobId })
-        : null
+      const client = controller.getSystem()?.trpcClient
+      const raw = isCapClient(client) ? await capMutate(client, 'jobs', 'cancel', { jobId }) : null
       if (!isRecord(raw)) return { accepted: false, reason: null }
       return { accepted: raw.accepted === true, reason: raw.reason }
     },
@@ -107,10 +113,8 @@ export function useHubJobActions(): HubJobActions {
   })
   const dismissMutation = useMutation({
     mutationFn: async (jobId: string): Promise<boolean> => {
-      const system = controller.getSystem()
-      const raw = system
-        ? await capMutate(system.trpcClient as Record<string, unknown>, 'jobs', 'dismiss', { jobId })
-        : null
+      const client = controller.getSystem()?.trpcClient
+      const raw = isCapClient(client) ? await capMutate(client, 'jobs', 'dismiss', { jobId }) : null
       return isRecord(raw) && raw.dismissed === true
     },
     onSettled: refresh,
@@ -119,8 +123,9 @@ export function useHubJobActions(): HubJobActions {
   const resultUrl = useCallback(
     async (jobId: string): Promise<string | null> => {
       const system = controller.getSystem()
-      if (!system) return null
-      const raw = await capQuery(system.trpcClient as Record<string, unknown>, 'jobs', 'collect', { jobId })
+      const client = system?.trpcClient
+      if (!system || !isCapClient(client)) return null
+      const raw = await capQuery(client, 'jobs', 'collect', { jobId })
       if (!isRecord(raw) || typeof raw.href !== 'string' || raw.href.length === 0) return null
       const href = raw.href
       if (href.startsWith('http://') || href.startsWith('https://')) return href
