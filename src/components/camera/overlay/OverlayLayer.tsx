@@ -147,7 +147,6 @@ export function OverlayLayer({
       }
     }
     const named = stackItems({ ...config, readouts: [] }, { hasDoorbell, deviceInfo })
-      .filter((item) => isOverlayShown(config, item.id, controlsVisible))
       .filter((item) => item.id !== 'cameraName' || name !== undefined)
       .filter((item) => (item.id !== 'controlsLeft' && item.id !== 'controlsRight') || controls !== undefined)
       .map((item) => {
@@ -155,6 +154,9 @@ export function OverlayLayer({
         const node = nodeFor(item.id)
         return {
           ...item,
+          // A faded overlay stays MOUNTED (its data hooks keep subscribing);
+          // only its drawing is dropped by the stack.
+          hidden: !isOverlayShown(config, item.id, controlsVisible),
           node: step === 0 || node === null ? node : <OverlayStepScale step={step}>{node}</OverlayStepScale>,
         }
       })

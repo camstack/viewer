@@ -160,10 +160,10 @@ export function useReadoutEntries({
       !enabled
         ? []
         : readoutsForCamera(config.readouts, deviceId)
-            .filter((r) => isOverlayShown(config, `readout:${r.id}`, controlsVisible))
             .map((r) => ({
               id: `readout:${r.id}` as const,
               anchor: r.corner,
+              hidden: !isOverlayShown(config, `readout:${r.id}`, controlsVisible),
               node: <ReadoutChip label={r.label} value={valueFor(r)} />,
             })),
     [enabled, config, deviceId, controlsVisible, valueFor],

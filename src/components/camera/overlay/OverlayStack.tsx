@@ -1,9 +1,9 @@
 /**
  * OverlayStack — lays the overlays of a stream out in their anchors' stacks.
  *
- * Takes the overlays that are DRAWN (the caller has already dropped the ones
- * a `fade` flag hides) and renders one stack per anchor, in the container's
- * coordinate space. The rules — order, direction, budgets — are the pure
+ * Takes the overlays of a stream (the ones a `fade` flag hides are flagged
+ * `hidden`: kept mounted so their data keeps flowing, never laid out or drawn)
+ * and renders one stack per anchor, in the container's coordinate space. The rules — order, direction, budgets — are the pure
  * `overlay-stack.ts`; this component only turns them into views. It never
  * takes a touch itself (`box-none`): the picture's gestures reach through it,
  * and a node that wants touches (the control groups) takes them.
@@ -20,6 +20,9 @@ export interface OverlayStackEntry {
   readonly id: OverlayItemId
   readonly anchor: OverlayAnchor
   readonly node: React.ReactNode
+  /** Faded out: not laid out and not drawn, but still MOUNTED so its data
+   *  hooks keep receiving — hiding is visual only. */
+  readonly hidden?: boolean
 }
 
 export interface OverlayStackProps {
@@ -42,7 +45,11 @@ export function OverlayStack({ entries, userOrder, edgePad }: OverlayStackProps)
     [edgePad?.top, edgePad?.bottom, edgePad?.left, edgePad?.right],
   )
   const stacks = useMemo(
-    () => buildStacks(entries.map(({ id, anchor }) => ({ id, anchor })), userOrder),
+    () =>
+      buildStacks(
+        entries.filter((e) => e.hidden !== true).map(({ id, anchor }) => ({ id, anchor })),
+        userOrder,
+      ),
     [entries, userOrder],
   )
   const occupied = useMemo(() => new Set(stacks.map((s) => s.anchor)), [stacks])
@@ -55,6 +62,17 @@ export function OverlayStack({ entries, userOrder, edgePad }: OverlayStackProps)
           ))}
         </View>
       ))}
+      {entries
+        .filter((e) => e.hidden === true)
+        .map((e) => (
+          <View key={e.id} style={styles.hidden} pointerEvents="none">
+            {e.node}
+          </View>
+        ))}
     </View>
   )
 }
+
+const styles = StyleSheet.create({
+  hidden: { display: 'none' },
+})
