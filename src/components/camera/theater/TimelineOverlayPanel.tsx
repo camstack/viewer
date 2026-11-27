@@ -412,7 +412,8 @@ export function OverlaySettingsSections({
         </Text>
       ) : null}
       {config.readouts.map((r) => (
-        <View key={r.id} style={styles.readoutRow}>
+        <React.Fragment key={r.id}>
+        <View style={styles.readoutRow}>
           <Text style={[styles.readoutLabel, { color: colors.foreground }]} numberOfLines={1}>
             {r.label}
           </Text>
@@ -449,6 +450,12 @@ export function OverlaySettingsSections({
             <X size={ICON.md} color={colors.foregroundMuted} />
           </Pressable>
         </View>
+        <CheckboxRow
+          label={t('v2.overlay.showReadoutLabel')}
+          value={r.showLabel !== false}
+          onValueChange={(v) => onChange(patchReadout(config, r.id, { showLabel: v }))}
+        />
+        </React.Fragment>
       ))}
 
       <Pressable

@@ -29,6 +29,7 @@ import {
   type OverlayConfig,
   type OverlayReadout,
 } from './overlay-config.js'
+import { translateStateWord } from '../../../lib/state-label.js'
 import { useStyleScaler } from './OverlayFrame.js'
 import type { OverlayStackEntry } from './OverlayStack.js'
 import { useTheme } from '../../../theme/theme-provider.js'
@@ -99,14 +100,23 @@ function DeviceFieldsProbe({
   return null
 }
 
-function ReadoutChip({ label, value }: { readonly label: string; readonly value: string }) {
+function ReadoutChip({
+  label,
+  value,
+}: {
+  /** Null = the value alone (`showLabel` off). */
+  readonly label: string | null
+  readonly value: string
+}) {
   const { colors } = useTheme()
   const sx = useStyleScaler()
   return (
     <View style={[sx(styles.chip), { backgroundColor: `${colors.background}8C` }]} pointerEvents="none">
-      <Text style={[sx(styles.chipLabel), { color: colors.foregroundMuted }]} numberOfLines={1}>
-        {label}
-      </Text>
+      {label !== null ? (
+        <Text style={[sx(styles.chipLabel), { color: colors.foregroundMuted }]} numberOfLines={1}>
+          {label}
+        </Text>
+      ) : null}
       <Text style={[sx(styles.chipValue), { color: colors.foreground }]} numberOfLines={1}>
         {value}
       </Text>
@@ -127,7 +137,7 @@ export function useReadoutEntries({
   readonly entries: readonly OverlayStackEntry[]
   readonly probes: React.ReactNode
 } {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const deviceIds = useMemo(() => readoutDeviceIds(config, deviceId), [config, deviceId])
   const [byDevice, setByDevice] = React.useState<Readonly<Record<number, readonly DeviceLiveField[]>>>(
     {},
@@ -142,9 +152,10 @@ export function useReadoutEntries({
       const fields = source === null ? [] : (byDevice[source] ?? [])
       const match = matchDeviceLiveField(fields, r.source.sectionId, r.source.fieldKey)
       if (!match) return '—'
-      const opts: { precision?: number; unit?: string; onLabel: string; offLabel: string } = {
+      const opts: Parameters<typeof formatLiveValue>[1] & { precision?: number; unit?: string } = {
         onLabel: t('v2.common.on'),
         offLabel: t('v2.common.off'),
+        stateText: (word) => translateStateWord(word, i18n.language),
       }
       const precision = r.precision ?? match.precision
       if (precision !== undefined) opts.precision = precision
@@ -152,7 +163,7 @@ export function useReadoutEntries({
       if (unit !== undefined) opts.unit = unit
       return formatLiveValue(match.value, opts)
     },
-    [byDevice, deviceId, t],
+    [byDevice, deviceId, t, i18n.language],
   )
 
   const entries = useMemo<readonly OverlayStackEntry[]>(
@@ -164,7 +175,7 @@ export function useReadoutEntries({
               id: `readout:${r.id}` as const,
               anchor: r.corner,
               hidden: !isOverlayShown(config, `readout:${r.id}`, controlsVisible),
-              node: <ReadoutChip label={r.label} value={valueFor(r)} />,
+              node: <ReadoutChip label={r.showLabel === false ? null : r.label} value={valueFor(r)} />,
             })),
     [enabled, config, deviceId, controlsVisible, valueFor],
   )

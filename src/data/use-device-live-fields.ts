@@ -291,10 +291,18 @@ export function useDeviceLiveFields(
  */
 export function formatLiveValue(
   value: string | number | boolean | null,
-  opts: { readonly precision?: number; readonly unit?: string; readonly onLabel: string; readonly offLabel: string },
+  opts: {
+    readonly precision?: number
+    readonly unit?: string
+    readonly onLabel: string
+    readonly offLabel: string
+    /** Translates a state word (`open`, `locked`); absent = shown as stored. */
+    readonly stateText?: (word: string) => string
+  },
 ): string {
   if (value === null) return '—'
   if (typeof value === 'boolean') return value ? opts.onLabel : opts.offLabel
+  if (typeof value === 'string' && opts.stateText !== undefined) return opts.stateText(value)
   const base =
     typeof value === 'number' && opts.precision !== undefined
       ? value.toFixed(opts.precision)

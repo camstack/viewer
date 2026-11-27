@@ -20,3 +20,16 @@ export function stateLabelLocale(language: string | undefined): StateLabelLocale
 export function stateLabelFor(key: string, language: string | undefined): string {
   return stateLabel(key, stateLabelLocale(language))
 }
+
+/**
+ * A live string value in the viewer's language when it is a state word the
+ * dictionary knows (`open` → `Aperto`); any other text comes back untouched,
+ * so free text such as a model name is never reworded.
+ */
+export function translateStateWord(word: string, language: string | undefined): string {
+  const key = word.trim().toLowerCase()
+  const en = stateLabel(key, 'en')
+  const it = stateLabel(key, 'it')
+  if (en === it) return word
+  return stateLabelLocale(language) === 'it' ? it : en
+}

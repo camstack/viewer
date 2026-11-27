@@ -90,6 +90,9 @@ export interface OverlayReadout {
   readonly corner: OverlayAnchor
   /** Hide with the auto-hiding controls. Absent = false. */
   readonly fade?: boolean
+  /** Write the sensor's name next to the value. Absent = true; `false` draws
+   *  the value alone (planning#751). */
+  readonly showLabel?: boolean
   /** The camera a `deviceField` readout was pinned on: it shows only on that
    *  camera's stream. Absent = every stream (audio level, `cameraField`). */
   readonly scope?: number
@@ -528,6 +531,7 @@ function normaliseReadout(raw: unknown): OverlayReadout | null {
     precision?: number
     corner: OverlayAnchor
     fade?: boolean
+    showLabel?: boolean
     scope?: number
   } = {
     id: typeof raw.id === 'string' && raw.id.length > 0 ? raw.id : readoutId(source),
@@ -537,6 +541,7 @@ function normaliseReadout(raw: unknown): OverlayReadout | null {
   }
   if (typeof raw.unit === 'string' && raw.unit.length > 0) readout.unit = raw.unit
   if (raw.fade === true) readout.fade = true
+  if (raw.showLabel === false) readout.showLabel = false
   if (source.kind === 'deviceField' && typeof raw.scope === 'number' && Number.isFinite(raw.scope)) {
     readout.scope = raw.scope
   }

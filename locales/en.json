@@ -3342,6 +3342,7 @@
       "controlsLeft": "Left controls",
       "controlsRight": "Right controls",
       "fadeReadout": "Hide with the controls",
+      "showReadoutLabel": "Show the sensor name",
       "motionBadge": "Motion badge",
       "position": "Position",
       "size": "Size",
