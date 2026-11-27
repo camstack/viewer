@@ -31,6 +31,28 @@ export interface WhatsNewEntry {
 // i18n-ok: release notes carry their own `en` + `it` text per entry (typed, held by whats-new.spec.ts)
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.742',
+    date: '2026-11-27',
+    notes: {
+      en: [
+        'Hub jobs appear in the Activity list, marked with a hub chip.',
+        'Apps open on their own page instead of the admin Logs page.',
+        'Switching server keeps the app open when the new server has it.',
+        'The app drawer separates app choice, navigation and footer.',
+        'Menus and popovers are opaque.',
+        'Recorded playback time follows the frame on screen.',
+      ],
+      it: [
+        "I job dell'hub compaiono nella lista Attività, con un chip hub.",
+        'Le app si aprono sulla loro pagina invece che sui Log dell\'admin.',
+        "Cambiando server resta aperta la stessa app, se il server ce l'ha.",
+        'Il drawer delle app separa scelta app, navigazione e footer.',
+        'Menu e popover sono opachi.',
+        "Il tempo della registrazione segue il frame mostrato.",
+      ],
+    },
+  },
+  {
     version: '1.0.741',
     date: '2026-11-27',
     notes: {
