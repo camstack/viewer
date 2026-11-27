@@ -9,7 +9,7 @@
  * does not leave a dot behind it.
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 
 import { AnchoredMenu } from '../components/ui/AnchoredMenu.js'
@@ -21,8 +21,10 @@ import { useTheme } from '../theme/theme-provider.js'
 import { SPACING } from '../theme/tokens.js'
 import { POPOVER_MIN_WIDTH } from '../navigation/popover-metrics.js'
 import { useActivityStore } from './activity-instance.js'
-import type { ActivityItem } from './activity-model.js'
-import { hasFinishedJobs, orderForDisplay } from './activity-jobs.js'
+import { hasFinishedJobs } from './activity-jobs.js'
+import { cancelRefusalKey, hubJobClear, mergeActivity, type DisplayItem, type HubJobItem } from './hub-jobs-model.js'
+import { useHubActivity } from './use-hub-activity.js'
+import { useHubJobActions } from '../data/use-hub-jobs.js'
 import { activityPopoverSize } from './activity-popover-size.js'
 import { ActivityRow } from './ActivityRow.js'
 import { restartForUpdate } from './app-update-activity.js'
@@ -45,21 +47,58 @@ export function ActivityPopover({ visible, onClose, anchor, menuAlign }: Activit
   const dismissFinished = useActivityStore((s) => s.dismissFinished)
   const markSeen = useActivityStore((s) => s.markSeen)
   const collect = useActivityCollect()
+  const { hub, listFailed } = useHubActivity(visible)
+  const hubActions = useHubJobActions()
 
   // Seen while open: on open, and again whenever the list changes under it.
   useEffect(() => {
     if (visible) markSeen()
   }, [visible, items, markSeen])
 
-  const listed = useMemo(() => orderForDisplay(items), [items])
+  const listed = useMemo(() => mergeActivity(items, hub), [items, hub])
   const canClearFinished = useMemo(() => hasFinishedJobs(items), [items])
+  // A hub job is cancelled (the producer may refuse, and the refusal is named)
+  // or, once finished, hidden from this user's list.
+  const clearHubJob = useCallback(
+    async (job: HubJobItem): Promise<void> => {
+      const action = hubJobClear(job)
+      if (action === 'dismiss') {
+        await hubActions.dismiss(job.jobId)
+        return
+      }
+      if (action === 'cancel') {
+        const answer = await hubActions.cancel(job.jobId)
+        if (!answer.accepted) {
+          notice({ title: t('v2.activity.cancelRefused.title'), message: t(cancelRefusalKey(answer.reason)) })
+        }
+      }
+    },
+    [hubActions, notice, t],
+  )
+  const onOpenResult = useCallback(
+    async (job: HubJobItem): Promise<void> => {
+      const url = await hubActions.resultUrl(job.jobId)
+      if (url === null) {
+        notice({ title: t('v2.activity.openResult'), message: t('v2.activity.noResult') })
+        return
+      }
+      await Linking.openURL(url)
+    },
+    [hubActions, notice, t],
+  )
+
   // A job is cleared (finished: hidden, queued: cancelled); a file is removed.
   const clearItem = useCallback(
     (id: string): void => {
+      const hubJob = listed.find((entry): entry is HubJobItem => entry.kind === 'hub-job' && entry.id === id)
+      if (hubJob !== undefined) {
+        void clearHubJob(hubJob)
+        return
+      }
       if (items.some((item) => item.id === id && (item.kind === 'job' || item.kind === 'app-update'))) dismiss(id)
       else remove(id)
     },
-    [items, dismiss, remove],
+    [items, listed, dismiss, remove, clearHubJob],
   )
 
   // One timestamp per render of the list: "today" must not flip row by row.
@@ -70,13 +109,13 @@ export function ActivityPopover({ visible, onClose, anchor, menuAlign }: Activit
     [notice, t],
   )
   const onDownload = useCallback(
-    async (item: ActivityItem): Promise<void> => {
+    async (item: DisplayItem): Promise<void> => {
       if (!(await collect.download(item))) failed()
     },
     [collect, failed],
   )
   const onShare = useCallback(
-    async (item: ActivityItem): Promise<void> => {
+    async (item: DisplayItem): Promise<void> => {
       if (!(await collect.share(item))) failed()
     },
     [collect, failed],
@@ -112,7 +151,13 @@ export function ActivityPopover({ visible, onClose, anchor, menuAlign }: Activit
           </Pressable>
         </View>
       </View>
-      {listed.length === 0 ? (
+      {listed.length === 0 && listFailed ? (
+        // The hub did not answer: say so. "Nothing here yet" would claim the hub has no jobs.
+        <View style={styles.empty}>
+          <Activity size={22} color={colors.foregroundSubtle} />
+          <Text style={[styles.emptyTitle, { color: colors.foreground }]}>{t('v2.activity.hubUnknown')}</Text>
+        </View>
+      ) : listed.length === 0 ? (
         <View style={styles.empty}>
           <Activity size={22} color={colors.foregroundSubtle} />
           <Text style={[styles.emptyTitle, { color: colors.foreground }]}>{t('v2.activity.empty')}</Text>
@@ -125,8 +170,11 @@ export function ActivityPopover({ visible, onClose, anchor, menuAlign }: Activit
           onContentSizeChange={(_w, h) => setMeasuredBody(h)}
           nestedScrollEnabled
         >
+          {listFailed ? (
+            <Text style={[styles.hubNote, { color: colors.foregroundMuted }]}>{t('v2.activity.hubUnknown')}</Text>
+          ) : null}
           {listed.map((item) => (
-            <ActivityRow key={item.id} item={item} nowMs={nowMs} onDownload={onDownload} onShare={onShare} onRemove={clearItem} onRestart={restartForUpdate} />
+            <ActivityRow key={item.id} item={item} nowMs={nowMs} onDownload={onDownload} onShare={onShare} onRemove={clearItem} onRestart={restartForUpdate} onOpenResult={onOpenResult} />
           ))}
         </ScrollView>
       )}
@@ -148,5 +196,6 @@ const styles = StyleSheet.create({
   list: { paddingHorizontal: SPACING.lg, paddingBottom: SPACING.lg, gap: SPACING.md },
   empty: { alignItems: 'center', justifyContent: 'center', gap: SPACING.md, paddingHorizontal: SPACING['2xl'], paddingVertical: SPACING['2xl'] },
   emptyTitle: { fontSize: 15, fontWeight: '600' },
+  hubNote: { fontSize: 12, paddingHorizontal: SPACING.xs },
   emptyHint: { fontSize: 13, textAlign: 'center' },
 })

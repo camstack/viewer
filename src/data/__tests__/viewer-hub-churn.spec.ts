@@ -28,6 +28,9 @@
  *  8. Theater `listTracks` live tail at `RECONCILE_MS` (event-backed).
  *  9. Theater heatmap `events.getEvents` at `RECONCILE_MS` (event-backed).
  * 10. Stationary overlay follows `pipeline-analytics.stationary-changed`.
+ *     `jobs.getSummary` (30 s idle, 5 s while a hub job runs) and `jobs.list`
+ *     (4 s, only while the Activity popover is open or a hub job runs) —
+ *     `use-hub-jobs.ts`; an idle app never polls the list.
  * 11. `networkQuality.reportClientStats` on adaptive WebRTC (interval from
  *     session config; no-ops if unset).
  * 12. Derived `libx264` 640×360 (broker CPU, not hub-main) — viewer quality
@@ -127,6 +130,7 @@ describe('no new numeric refetchInterval under 60s in src/data without listing i
       'use-snapshot-links.ts',
       'use-notification-center.ts',
       'use-exports.ts',
+      'use-hub-jobs.ts',
       'use-occupancy.ts',
       'use-snapshot.ts',
       'use-timeline-activity.ts',

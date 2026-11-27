@@ -4185,10 +4185,28 @@
         "running": "Running",
         "runningCount": "Running {{count}}",
         "done": "Done",
-        "interrupted": "Interrupted — the app was closed before it finished"
+        "interrupted": "Interrupted — the app was closed before it finished",
+        "cancelled": "Cancelled"
       },
       "cancel": "Cancel",
-      "clearFinished": "Clear finished"
+      "clearFinished": "Clear finished",
+      "hubChip": "hub",
+      "hubUnknown": "Hub activity could not be loaded.",
+      "openResult": "Open result",
+      "noResult": "This job has no result to open.",
+      "cancelRefused": {
+        "title": "Could not cancel",
+        "unknown": "The job could not be cancelled.",
+        "notFound": "This job no longer exists.",
+        "notCancellable": "This job cannot be cancelled.",
+        "terminal": "This job has already finished.",
+        "notAllowed": "You are not allowed to cancel this job.",
+        "producerRefused": "The task refused to stop right now.",
+        "producerUnreachable": "The component running this job did not answer."
+      },
+      "hubKind": {
+        "adoption": "Device adoption"
+      }
     },
     "userMenu": {
       "settings": "Settings",

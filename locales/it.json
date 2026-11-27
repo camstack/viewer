@@ -4185,10 +4185,28 @@
         "running": "In corso",
         "runningCount": "In corso {{count}}",
         "done": "Fatto",
-        "interrupted": "Interrotta — l'app è stata chiusa prima della fine"
+        "interrupted": "Interrotta — l'app è stata chiusa prima della fine",
+        "cancelled": "Annullato"
       },
       "cancel": "Annulla",
-      "clearFinished": "Svuota completate"
+      "clearFinished": "Svuota completate",
+      "hubChip": "hub",
+      "hubUnknown": "Impossibile caricare l'attività dell'hub.",
+      "openResult": "Apri risultato",
+      "noResult": "Questo lavoro non ha un risultato da aprire.",
+      "cancelRefused": {
+        "title": "Annullamento non riuscito",
+        "unknown": "Non è stato possibile annullare il lavoro.",
+        "notFound": "Questo lavoro non esiste più.",
+        "notCancellable": "Questo lavoro non può essere annullato.",
+        "terminal": "Questo lavoro è già terminato.",
+        "notAllowed": "Non hai il permesso di annullare questo lavoro.",
+        "producerRefused": "L'operazione non può essere interrotta ora.",
+        "producerUnreachable": "Il componente che esegue il lavoro non ha risposto."
+      },
+      "hubKind": {
+        "adoption": "Adozione dispositivo"
+      }
     },
     "userMenu": {
       "settings": "Impostazioni",

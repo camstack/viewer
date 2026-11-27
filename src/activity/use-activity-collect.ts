@@ -13,12 +13,12 @@ import { useServer } from '../app/ServerProvider.js'
 import { useMediaDownload } from '../components/media/use-media-download.js'
 import { useResolveDownloadUrl } from '../data/use-exports.js'
 import { saveFile, shareFile } from '../lib/share-file.js'
-import type { ActivityItem } from './activity-model.js'
+import type { DisplayItem } from './hub-jobs-model.js'
 
 export interface ActivityCollect {
   /** Both resolve `true` when the file reached the operator. */
-  readonly download: (item: ActivityItem) => Promise<boolean>
-  readonly share: (item: ActivityItem) => Promise<boolean>
+  readonly download: (item: DisplayItem) => Promise<boolean>
+  readonly share: (item: DisplayItem) => Promise<boolean>
 }
 
 export function useActivityCollect(): ActivityCollect {
@@ -67,8 +67,9 @@ export function useActivityCollect(): ActivityCollect {
   )
 
   const download = useCallback(
-    async (item: ActivityItem): Promise<boolean> => {
+    async (item: DisplayItem): Promise<boolean> => {
       if (item.kind === 'job' || item.kind === 'app-update') return false
+      if (item.kind === 'hub-job') return item.exportId === null ? false : downloadExport(item.exportId)
       if (item.kind === 'export') return downloadExport(item.exportId)
       return saveFile({ uri: item.fileUri, mime: item.mime, fileName: `snapshot-${item.createdAt}.jpg` })
     },
@@ -76,8 +77,9 @@ export function useActivityCollect(): ActivityCollect {
   )
 
   const share = useCallback(
-    async (item: ActivityItem): Promise<boolean> => {
+    async (item: DisplayItem): Promise<boolean> => {
       if (item.kind === 'job' || item.kind === 'app-update') return false
+      if (item.kind === 'hub-job') return item.exportId === null ? false : shareExport(item.exportId)
       if (item.kind === 'export') return shareExport(item.exportId)
       return shareFile({ uri: item.fileUri, mime: item.mime, fileName: `snapshot-${item.createdAt}.jpg` })
     },

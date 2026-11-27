@@ -280,9 +280,12 @@ export type OverallProgress =
   | { readonly kind: 'known'; readonly running: number; readonly fraction: number }
 
 export function overallProgress(list: ActivityList): OverallProgress {
-  const running = list.filter(isRunning)
-  if (running.length === 0) return { kind: 'idle' }
-  const known = running.flatMap((item) => {
+  return combineProgress(list.filter(isRunning).length, knownPercents(list))
+}
+
+/** The known 0..100 fractions of the running items (an unknown one is left out, never `0`). */
+export function knownPercents(list: ActivityList): readonly number[] {
+  return list.filter(isRunning).flatMap((item) => {
     if (item.kind === 'export') return item.progressPct !== null ? [item.progressPct] : []
     if (item.kind === 'job' && item.progress !== null && item.progress.total > 0) {
       return [(item.progress.done / item.progress.total) * 100]
@@ -290,9 +293,14 @@ export function overallProgress(list: ActivityList): OverallProgress {
     if (item.kind === 'app-update' && item.progress !== null) return [item.progress * 100]
     return []
   })
-  if (known.length === 0) return { kind: 'indeterminate', running: running.length }
+}
+
+/** The ring's reading for `running` items of which these fractions are known. */
+export function combineProgress(running: number, known: readonly number[]): OverallProgress {
+  if (running === 0) return { kind: 'idle' }
+  if (known.length === 0) return { kind: 'indeterminate', running }
   const mean = known.reduce((sum, pct) => sum + pct, 0) / known.length
-  return { kind: 'known', running: running.length, fraction: Math.min(1, Math.max(0, mean / 100)) }
+  return { kind: 'known', running, fraction: Math.min(1, Math.max(0, mean / 100)) }
 }
 
 /** Finished items the operator has not opened since they finished. */

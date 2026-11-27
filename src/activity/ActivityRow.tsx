@@ -7,12 +7,15 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View, type LayoutChange
 import { useTranslation } from 'react-i18next'
 import type { Translate } from '../data/export-format.js'
 
+import { Badge } from '../components/ui/Badge.js'
 import { ProgressStrip } from '../components/ui/ProgressStrip.js'
 import { useDateLocale } from '../lib/date-locale.js'
 import {
+  Activity,
   Camera,
   Clapperboard,
   Download,
+  ExternalLink,
   RefreshCw,
   Share2,
   Sparkles,
@@ -24,9 +27,11 @@ import {
 import { progressFrom } from '../lib/progress.js'
 import { useTheme } from '../theme/theme-provider.js'
 import { RADIUS, SPACING, TABULAR } from '../theme/tokens.js'
-import type { ActivityItem, JobKind } from './activity-model.js'
+import type { JobKind } from './activity-model.js'
+import { hubJobClear, type DisplayItem, type HubJobItem } from './hub-jobs-model.js'
 import {
   canCollect,
+  canOpenResult,
   exportDurationLabel,
   jobCountLabel,
   appUpdateFailureReason,
@@ -38,13 +43,15 @@ import {
 } from './activity-present.js'
 
 export interface ActivityRowProps {
-  readonly item: ActivityItem
+  readonly item: DisplayItem
   readonly nowMs: number
-  readonly onDownload: (item: ActivityItem) => Promise<void>
-  readonly onShare: (item: ActivityItem) => Promise<void>
+  readonly onDownload: (item: DisplayItem) => Promise<void>
+  readonly onShare: (item: DisplayItem) => Promise<void>
   readonly onRemove: (id: string) => void
   /** "Restart now" on a ready app update. */
   readonly onRestart: () => Promise<void>
+  /** "Open result" on a finished hub job that is not an export. */
+  readonly onOpenResult: (item: HubJobItem) => Promise<void>
 }
 
 const JOB_ICON: Readonly<Record<JobKind, LucideIcon>> = {
@@ -58,7 +65,8 @@ const JOB_ICON: Readonly<Record<JobKind, LucideIcon>> = {
   'plate-delete': Trash2,
 }
 
-function iconFor(item: ActivityItem): LucideIcon {
+function iconFor(item: DisplayItem): LucideIcon {
+  if (item.kind === 'hub-job') return Activity
   if (item.kind === 'job') return JOB_ICON[item.jobKind]
   if (item.kind === 'app-update') return Download
   return item.kind === 'snapshot' ? Camera : Clapperboard
@@ -75,11 +83,12 @@ export const ActivityRow = memo(function ActivityRow({
   onShare,
   onRemove,
   onRestart,
+  onOpenResult,
 }: ActivityRowProps): React.JSX.Element {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { colors } = useTheme()
   const locale = useDateLocale()
-  const [busy, setBusy] = useState<'download' | 'share' | 'restart' | null>(null)
+  const [busy, setBusy] = useState<'download' | 'share' | 'restart' | 'open' | null>(null)
   const [stripWidth, setStripWidth] = useState(0)
 
   const state = rowState(item)
@@ -87,11 +96,16 @@ export const ActivityRow = memo(function ActivityRow({
   const percent = progressPercent(item)
   const KindIcon = iconFor(item)
   const duration = exportDurationLabel(item)
-  const title = item.kind === 'app-update' ? t('v2.activity.appUpdate.title') : rowTitle(item)
+  const title =
+    item.kind === 'app-update'
+      ? t('v2.activity.appUpdate.title')
+      : item.kind === 'hub-job'
+        ? hubTitle(item, t, i18n.exists.bind(i18n))
+        : rowTitle(item)
   const updateFailure = appUpdateFailureReason(item)
   const jobFailure = jobFailureReason(item)
   // A running job cannot be cleared; a queued one is cancelled by the same X.
-  const removable = state !== 'running'
+  const removable = item.kind === 'hub-job' ? hubJobClear(item) !== null : state !== 'running'
 
   const stateColor =
     state === 'failed'
@@ -102,16 +116,19 @@ export const ActivityRow = memo(function ActivityRow({
   const stateText = stateLabel(item, state, percent, t)
 
   const run = useCallback(
-    async (kind: 'download' | 'share' | 'restart'): Promise<void> => {
+    async (kind: 'download' | 'share' | 'restart' | 'open'): Promise<void> => {
       setBusy(kind)
       try {
         if (kind === 'restart') await onRestart()
+        else if (kind === 'open') {
+          if (item.kind === 'hub-job') await onOpenResult(item)
+        }
         else await (kind === 'download' ? onDownload(item) : onShare(item))
       } finally {
         setBusy(null)
       }
     },
-    [item, onDownload, onShare, onRestart],
+    [item, onDownload, onShare, onRestart, onOpenResult],
   )
 
   const onStripLayout = useCallback((e: LayoutChangeEvent): void => {
@@ -128,15 +145,20 @@ export const ActivityRow = memo(function ActivityRow({
           <KindIcon size={18} color={colors.foregroundMuted} />
         </View>
         <View style={styles.titles}>
-          <Text style={[styles.title, { color: colors.foreground }]} numberOfLines={1}>
-            {title}
-          </Text>
+          <View style={styles.titleLine}>
+            <Text style={[styles.title, styles.titleText, { color: colors.foreground }]} numberOfLines={1}>
+              {title}
+            </Text>
+            {item.kind === 'hub-job' ? (
+              <Badge label={t('v2.activity.hubChip')} tone="neutral" look="outline" size="sm" />
+            ) : null}
+          </View>
           <Text style={[styles.sub, TABULAR, { color: colors.foregroundMuted }]} numberOfLines={1}>
             {whenLabel(item, nowMs, locale)}
             {duration !== null ? ` · ${duration}` : ''}
           </Text>
           {/* Its own line: beside the time it squeezed the duration to "1:…". */}
-          <Text style={[styles.state, { color: stateColor }]} numberOfLines={item.kind === 'job' ? 2 : 1}>
+          <Text style={[styles.state, { color: stateColor }]} numberOfLines={item.kind === 'job' || item.kind === 'hub-job' ? 2 : 1}>
             {stateText}
           </Text>
         </View>
@@ -195,6 +217,19 @@ export const ActivityRow = memo(function ActivityRow({
         </View>
       ) : null}
 
+      {canOpenResult(item) ? (
+        <View style={styles.actions}>
+          <ActionButton
+            label={t('v2.activity.openResult')}
+            busy={busy === 'open'}
+            disabled={busy !== null}
+            onPress={() => void run('open')}
+            icon={<ExternalLink size={ACTION_ICON} color={colors.primaryForeground} />}
+            filled
+          />
+        </View>
+      ) : null}
+
       {canCollect(item) ? (
         <View style={styles.actions}>
           <ActionButton
@@ -218,18 +253,23 @@ export const ActivityRow = memo(function ActivityRow({
   )
 })
 
-function removeLabel(item: ActivityItem, state: ReturnType<typeof rowState>, t: Translate): string {
+function removeLabel(item: DisplayItem, state: ReturnType<typeof rowState>, t: Translate): string {
+  if (item.kind === 'hub-job') return hubJobClear(item) === 'cancel' ? t('v2.activity.cancel') : t('v2.activity.remove')
   if (item.kind === 'app-update') return t('v2.updates.later')
   return state === 'queued' && item.kind === 'job' ? t('v2.activity.cancel') : t('v2.activity.remove')
 }
 
 /** The state line: a job says how far it is or what it did; a file says where it stands. */
 function stateLabel(
-  item: ActivityItem,
+  item: DisplayItem,
   state: ReturnType<typeof rowState>,
   percent: number | null,
   t: Translate,
 ): string {
+  if (item.kind === 'hub-job' && item.state === 'running') {
+    const count = jobCountLabel(item)
+    return count === null ? t('v2.activity.state.running') : t('v2.activity.state.runningCount', { count })
+  }
   if (item.kind === 'job') {
     if (item.state === 'running') {
       const count = jobCountLabel(item)
@@ -301,6 +341,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   titles: { flex: 1, minWidth: 0, gap: 2 },
+  titleLine: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md },
+  titleText: { flexShrink: 1 },
   title: { fontSize: 15, fontWeight: '600' },
   sub: { fontSize: 12 },
   state: { fontSize: 12, fontWeight: '600' },
@@ -322,3 +364,9 @@ const styles = StyleSheet.create({
   actionText: { fontSize: 13, fontWeight: '600' },
   dim: { opacity: 0.5 },
 })
+
+/** The producer's own title when this catalogue knows its key, else the job kind's label, else the raw kind. */
+function hubTitle(item: HubJobItem, t: Translate, exists: (key: string) => boolean): string {
+  if (item.titleKey !== '' && exists(item.titleKey)) return t(item.titleKey, item.titleParams)
+  return t(`v2.activity.hubKind.${item.jobKind.replaceAll('.', '_')}`, { defaultValue: item.jobKind })
+}

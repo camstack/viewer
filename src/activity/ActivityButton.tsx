@@ -17,7 +17,9 @@ import { useReducedMotion } from '../theme/motion.js'
 import { useTheme } from '../theme/theme-provider.js'
 import { TABULAR } from '../theme/tokens.js'
 import { useActivityStore } from './activity-instance.js'
-import { hasUndismissedItems, overallProgress, unseenFinishedCount } from './activity-model.js'
+import { hasUndismissedItems, unseenFinishedCount } from './activity-model.js'
+import { hubUnseenFinished, mergedProgress, runningCount } from './hub-jobs-model.js'
+import { useHubActivity } from './use-hub-activity.js'
 import { START_PULSE_MS, useActivityStartPulse } from './activity-start-pulse.js'
 import { ActivityRing } from './ActivityRing.js'
 import { ActivityPopover } from './ActivityPopover.js'
@@ -46,12 +48,18 @@ export const ActivityButton = memo(function ActivityButton({ menuAlign = 'end', 
   const anchorRef = useRef<View>(null)
   const [anchor, setAnchor] = useState<AnchorRect | null>(null)
 
-  const progress = useMemo(() => overallProgress(items), [items])
-  const unseen = useMemo(() => unseenFinishedCount(items), [items])
-  const running = progress.kind === 'idle' ? 0 : progress.running
+  const { hub, summary } = useHubActivity(open)
+  // Device and hub work together: the ring and the badge count both.
+  const progress = useMemo(() => mergedProgress(items, hub, summary), [items, hub, summary])
+  const running = useMemo(() => runningCount(items, hub, summary), [items, hub, summary])
+  // An unmeasured hub count (`null`) adds nothing; it is never a crash or a zero claim.
+  const unseen = unseenFinishedCount(items) + hubUnseenFinished(summary)
   // In the bar only while there is something to look at; kept while its own
   // popover is open so clearing the last row does not pull the anchor away.
-  const present = useMemo(() => hasUndismissedItems(items), [items])
+  const present = useMemo(
+    () => hasUndismissedItems(items) || running > 0 || hubUnseenFinished(summary) > 0,
+    [items, running, summary],
+  )
   // A new running activity is the acknowledgement of a download: the button
   // bounces and a ring spreads from it.
   const pulsing = useActivityStartPulse(items)
