@@ -36,6 +36,7 @@ import { useTranslation } from 'react-i18next'
 import { BatteryFull, Zap } from '../../lib/icons.js'
 import { useTheme } from '../../theme/theme-provider.js'
 import { SPACING } from '../../theme/tokens.js'
+import { useHighlightGlobalRows } from '../../hooks/use-highlight-settings.js'
 import { ClusterLabelRow, HighlightTriggerRows, PanelToggleRow } from '../camera/HighlightTriggerRows.js'
 import { OverlayPositionPicker } from '../camera/overlay/OverlayPositionPicker.js'
 import type { GridHighlightSettings } from '../../store/grid-store.js'
@@ -76,6 +77,7 @@ export function GridMenuPanel({
   const { colors } = useTheme()
   const deviceInfo = useSettingsStore((s) => s.settings.deviceInfo)
   const setDeviceInfo = useSettingsStore((s) => s.setDeviceInfo)
+  const globalRows = useHighlightGlobalRows()
 
   // TOTAL over the bar's rows: a row that moves to the bar has no entry here
   // until someone draws it, which is the compile error that replaces the
@@ -101,7 +103,7 @@ export function GridMenuPanel({
             their own, or the border and the reasons it lights drift apart
             again (they did once, and the trigger rows "did nothing"). */}
         {highlightOn ? (
-          <HighlightTriggerRows highlight={highlight} onSetHighlight={onSetHighlight} />
+          <HighlightTriggerRows highlight={highlight} onSetHighlight={onSetHighlight} global={globalRows} />
         ) : null}
       </>
     ),

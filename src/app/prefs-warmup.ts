@@ -32,6 +32,7 @@ import { useCameraLocalStore } from '../store/camera-local-store.js'
 import { useGridLocalStore } from '../store/grid-local-store.js'
 import { useDeviceSettingsStore } from '../store/device-settings-store.js'
 import { useSettingsStore } from '../store/settings-store.js'
+import { runHighlightMigrationOnce } from '../store/highlight-migration.js'
 import { useLanguageStore } from '../store/language-store.js'
 import { useReelFilterStore } from '../store/reel-filter-store.js'
 import { useReelHighlightStore } from '../store/reel-highlight-store.js'
@@ -57,7 +58,9 @@ void useLastCameraStore.getState().hydrate()
 // cache is read as soon as a hub is bound, so the account sync finds every
 // namespace ready on its first exchange instead of waiting for the screen that
 // happens to use it.
-void useSettingsStore.getState().hydrate()
+// The one-time fold of the old per-camera highlight into the global document
+// (`store/highlight-migration.ts`) runs once the account half is bound.
+void useSettingsStore.getState().hydrate().then(runHighlightMigrationOnce)
 void useLanguageStore.getState().hydrate()
 void useReelFilterStore.getState().hydrate()
 void useReelHighlightStore.getState().hydrate()

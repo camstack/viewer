@@ -96,17 +96,17 @@ describe('grid settings survive a reopen', () => {
     })
   })
 
-  it('the highlight triggers survive', async () => {
-    const id = useGridStore.getState().createGrid('Vialetto', 'Grid', 'hub-a')
-    useGridStore.getState().setGridCameras(id, [7, 9])
-    useGridStore
-      .getState()
-      .setGridHighlight(id, withHighlightDefaults({ motion: false, detection: true, detectionClasses: ['person'] }))
-    await flush()
-
+  it('a per-grid highlight an older build stored is dropped on read (the document is global now)', async () => {
+    disk.set(
+      GRIDS_STORAGE_KEY,
+      JSON.stringify([
+        { id: 'old', name: 'Vecchia', cameraIds: [1], highlight: { motion: false, detection: true } },
+      ]),
+    )
     await reopenApp()
-    const grid = useGridStore.getState().grids.find((g) => g.id === id)
-    expect(grid?.highlight).toMatchObject({ motion: false, detection: true, detectionClasses: ['person'] })
+    const grid = useGridStore.getState().grids.find((g) => g.id === 'old')
+    expect(grid).toBeDefined()
+    expect(grid).not.toHaveProperty('highlight')
   })
 
   it('a grid persisted before the view keys existed still parses (forward-compat)', async () => {

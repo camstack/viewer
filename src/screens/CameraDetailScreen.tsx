@@ -539,7 +539,7 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
     setOverlay: onSetOverlay,
     highlight: cameraHighlight,
     setHighlight: onSetCameraHighlight,
-  } = useCameraViewOptions(deviceId)
+  } = useCameraViewOptions()
 
   // For the WebView player the embed computes + draws highlight itself (same
   // solution as the grid), so skip the native detection/audio subscriptions here.

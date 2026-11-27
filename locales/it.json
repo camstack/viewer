@@ -3129,7 +3129,8 @@
         "vehicle": "Veicolo",
         "animal": "Animale",
         "face": "Volto",
-        "plate": "Targa"
+        "plate": "Targa",
+        "package": "Pacco"
       },
       "noImage": "Nessuna immagine",
       "displayOptions": "Aspetto",

@@ -18,13 +18,12 @@ import React from 'react'
 import { Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { router } from 'expo-router'
-import { Box, Camera, History, Layers, List, Maximize2, PanelBottom, Volume2, Zap } from '../../lib/icons.js'
+import { Camera, History, Layers, List, Maximize2, PanelBottom, Volume2 } from '../../lib/icons.js'
 import { Section } from '../../components/ui/Section.js'
 import { Row } from '../../components/ui/Row.js'
 import { ToggleRow } from '../../components/ui/ToggleRow.js'
 import { SelectRow, type SelectOption } from '../../components/ui/SelectRow.js'
 import { SegmentedControl } from '../../components/ui/SegmentedControl.js'
-import { ColorPickerRow } from '../../components/ui/ColorPickerRow.js'
 import { AUDIO_ON_OPEN_MODES, type AudioOnOpenMode } from '../../live/audio-on-open.js'
 import {
   TOOLBAR_DENSITY_FACTOR,
@@ -34,7 +33,6 @@ import { useSettings } from '../../data/use-settings.js'
 import { useDeviceSettingsStore } from '../../store/device-settings-store.js'
 import { OVERLAY_SIZES, type OverlaySize } from '../../components/camera/overlay/overlay-size.js'
 import {
-  MOTION_HOLD_SECONDS,
   matchTimelineDensityPreset,
   TIMELINE_DENSITY_PRESETS,
   TIMELINE_DENSITY_PRESET_ORDER,
@@ -54,7 +52,7 @@ const THICKNESS_PX = [1, 2, 3, 4, 6, 8] as const
 export function ViewingSegment() {
   const { t } = useTranslation()
   const { colors } = useTheme()
-  const { settings, setGridDefault, setStreamDefault, setHighlightAppearance, setCluster } = useSettings()
+  const { settings, setStreamDefault, setHighlightAppearance, setCluster } = useSettings()
 
   // A DEVICE setting — never part of the account settings.
   const overlaySize = useDeviceSettingsStore((st) => st.settings.overlaySize)
@@ -81,12 +79,6 @@ export function ViewingSegment() {
     value: m,
     label: t(`v2.settings.audioOnOpenMode.${m}`),
     detail: t(`v2.settings.audioOnOpenModeHint.${m}`),
-  }))
-
-  // Motion-highlight linger: 0 reads as "Off" (clear the instant motion ends).
-  const motionHoldOptions: readonly SelectOption<number>[] = MOTION_HOLD_SECONDS.map((s) => ({
-    value: s,
-    label: s === 0 ? t('v2.settings.motionHoldOff') : t('v2.settings.secondsValue', { count: s }),
   }))
 
   const densityPreset = matchTimelineDensityPreset(settings.clusters)
@@ -197,39 +189,12 @@ export function ViewingSegment() {
       </Section>
 
       <Section title={t('v2.settings.highlightAppearance')}>
-        <ColorPickerRow
-          icon={Zap}
-          label={t('v2.settings.highlightMotionColor')}
-          value={settings.highlight.motionColor}
-          onChange={(c) => setHighlightAppearance('motionColor', c)}
-        />
-        <ColorPickerRow
-          icon={Volume2}
-          label={t('v2.settings.highlightAudioColor')}
-          value={settings.highlight.audioColor}
-          onChange={(c) => setHighlightAppearance('audioColor', c)}
-        />
-        <ColorPickerRow
-          icon={Box}
-          label={t('v2.settings.highlightDetectionColor')}
-          value={settings.highlight.detectionColor}
-          onChange={(c) => setHighlightAppearance('detectionColor', c)}
-        />
         <SelectRow
           icon={Maximize2}
           label={t('v2.settings.highlightThickness')}
           options={thicknessOptions}
           value={settings.highlight.thickness}
           onChange={(v) => setHighlightAppearance('thickness', v)}
-        />
-        {/* It describes the HIGHLIGHT, and was never wall-only — it drives
-            useMotionHighlight everywhere. */}
-        <SelectRow
-          icon={Zap}
-          label={t('v2.settings.motionHold')}
-          options={motionHoldOptions}
-          value={settings.grid.motionHoldSec}
-          onChange={(v) => setGridDefault('motionHoldSec', v)}
           last
         />
       </Section>
