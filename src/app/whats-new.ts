@@ -31,6 +31,24 @@ export interface WhatsNewEntry {
 // i18n-ok: release notes carry their own `en` + `it` text per entry (typed, held by whats-new.spec.ts)
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.743',
+    date: '2026-11-27',
+    notes: {
+      en: [
+        'Highlight colours, thickness and hold times are set once in Settings → Viewing.',
+        'Each camera and grid picks its own highlight switch, audio level and classes.',
+        'Hiding the overlay keeps its state when you show it again.',
+        'Overlay panel controls are larger and easier to tap.',
+      ],
+      it: [
+        'Colori, spessore e durate dell\'evidenziazione in Impostazioni → Visione.',
+        'Ogni camera e griglia sceglie attivazione, livello audio e classi.',
+        'Nascondere l\'overlay ne conserva lo stato quando lo riapri.',
+        'I controlli del pannello overlay sono più grandi e facili da toccare.',
+      ],
+    },
+  },
+  {
     version: '1.0.742',
     date: '2026-11-27',
     notes: {
