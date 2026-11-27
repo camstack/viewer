@@ -105,4 +105,28 @@ describe('placeAnchoredDropdown', () => {
     expect(placed.maxHeight).toBeLessThan(WINDOW.height)
     expect(placed.top + placed.maxHeight).toBeLessThanOrEqual(WINDOW.height - 8)
   })
+
+  it('ignores preferredPlacement=above when the trigger sits at the top (no zero-height card)', () => {
+    const placed = placeAnchoredDropdown({
+      trigger: { x: 340, y: 4.5, width: 38, height: 38 },
+      menuSize: { width: 320, height: 300 },
+      windowSize: WINDOW,
+      align: 'end',
+      preferredPlacement: 'above',
+    })
+    expect(placed.placement).toBe('below')
+    expect(placed.maxHeight).toBeGreaterThan(200)
+    expect(placed.top).toBe(4.5 + 38 + 4)
+  })
+
+  it('ignores preferredPlacement=below when the trigger sits at the bottom', () => {
+    const placed = placeAnchoredDropdown({
+      trigger: { x: 40, y: 800, width: 38, height: 38 },
+      menuSize: { width: 320, height: 300 },
+      windowSize: WINDOW,
+      preferredPlacement: 'below',
+    })
+    expect(placed.placement).toBe('above')
+    expect(placed.maxHeight).toBeGreaterThan(200)
+  })
 })

@@ -41,7 +41,8 @@ export interface PlaceAnchoredDropdownInput {
   readonly align?: DropdownAlign
   /**
    * Force a side when the caller already knows geometry (a footer chip has
-   * nowhere below it). Absent ⟺ pick by available space, as before.
+   * nowhere below it). Absent ⟺ pick by available space, as before. A side
+   * with no room for the menu is ignored: the other side is used.
    */
   readonly preferredPlacement?: DropdownPlacement
 }
@@ -57,6 +58,8 @@ export const DROPDOWN_GAP = 4
 export const DROPDOWN_PADDING = 8
 /** The side inset — `SCREEN_GUTTER` (tokens.ts), kept literal so this file stays RN-free. */
 export const DROPDOWN_GUTTER = 16
+/** Least room (px) a forced side must offer to stand; below it the card would have no height. */
+const MIN_FORCED_ROOM = 16
 
 export function placeAnchoredDropdown(input: PlaceAnchoredDropdownInput): PlacedDropdown {
   const gap = input.gap ?? DROPDOWN_GAP
@@ -67,9 +70,14 @@ export function placeAnchoredDropdown(input: PlaceAnchoredDropdownInput): Placed
 
   const spaceBelow = windowSize.height - (trigger.y + trigger.height) - padding
   const spaceAbove = trigger.y - padding
+  const automatic: DropdownPlacement =
+    spaceBelow >= Math.min(menuSize.height, 120) || spaceBelow >= spaceAbove ? 'below' : 'above'
+  // A forced side is honoured only while it can show the menu: a trigger in
+  // the header has no room "above" and would get a zero-height card.
+  const preferred = input.preferredPlacement
+  const preferredRoom = preferred === 'above' ? spaceAbove - gap : spaceBelow - gap
   const placement: DropdownPlacement =
-    input.preferredPlacement ??
-    (spaceBelow >= Math.min(menuSize.height, 120) || spaceBelow >= spaceAbove ? 'below' : 'above')
+    preferred !== undefined && preferredRoom >= MIN_FORCED_ROOM ? preferred : automatic
 
   const maxHeight =
     placement === 'below'

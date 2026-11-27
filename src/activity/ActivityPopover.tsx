@@ -166,7 +166,7 @@ export function ActivityPopover({ visible, onClose, anchor, menuAlign }: Activit
       onRequestClose={onClose}
       anchor={anchor}
       align={menuAlign}
-      preferredPlacement="above"
+      preferredPlacement={anchor !== null && anchor.y > height / 2 ? 'above' : 'below'}
       minWidth={POPOVER_MIN_WIDTH}
       estimatedHeight={sheetHeight}
     >
