@@ -708,7 +708,11 @@ export function setSizeStep(config: OverlayConfig, id: SizedOverlay, step: numbe
 
 /** The size step of a stack item: 0 (Auto) for anything without one. */
 export function sizeStepOf(config: OverlayConfig, id: OverlayItemId): number {
-  return (SIZED_OVERLAYS as readonly string[]).includes(id) ? config.sizeStep[id as SizedOverlay] : 0
+  return isSizedOverlay(id) ? config.sizeStep[id] : 0
+}
+
+export function isSizedOverlay(id: string): id is SizedOverlay {
+  return SIZED_OVERLAYS.some((k) => k === id)
 }
 
 /** Set one overlay's `fade` flag. Returns a NEW config. */

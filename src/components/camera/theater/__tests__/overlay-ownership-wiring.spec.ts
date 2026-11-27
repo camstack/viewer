@@ -100,7 +100,8 @@ describe('position choices go through ONE picker, inline, never cycled', () => {
     // overlay stack, live and in playback); the stream stats joined on 2026-10-07 (it was a bare switch), the live
     // viewers count on 2026-10-14.
     const src = read('components/camera/theater/TimelineOverlayPanel.tsx')
-    const rows = src.match(/<OverlayItemRow\n/g) ?? []
+    // One `item="<id>"` prop per placeable overlay, whatever the formatting.
+    const rows = src.match(/<OverlayItemRow[^>]*?\bitem="\w+"/g) ?? []
     // audio, occupancy, stats, viewers, doorbell, device info + camera name,
     // the motion pill and the two control groups: one `OverlayItemRow` each,
     // itself an `ActivationRow`.

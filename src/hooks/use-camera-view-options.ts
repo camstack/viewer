@@ -25,7 +25,7 @@ import {
 import { useOverlayConfigStore } from '../store/overlay-config-store.js'
 import type { OverlayConfig } from '../components/camera/overlay/overlay-config.js'
 import { type GridHighlightSettings } from '../store/grid-store.js'
-import { resolveTriggers, settleMasterOff } from '../components/camera/overlay/highlight-border.js'
+import { migrateMasterOff, resolveTriggers } from '../components/camera/overlay/highlight-border.js'
 
 /** The resolved (defaults-filled) configuration of one camera's menu. */
 export interface ResolvedCameraViewOptions {
@@ -95,14 +95,16 @@ export function useCameraViewOptions(deviceId: number): CameraViewOptionsBinding
   // its triggers silenced once, on every camera that stored them (planning#749).
   const prefsHydrated = useCameraPrefsStore((s) => s.hydrated)
   useEffect(() => {
-    const settled = settleMasterOff(overlay)
-    if (settled === null || !prefsHydrated) return
+    if (!prefsHydrated) return
     const store = useCameraPrefsStore.getState()
-    for (const [id, pref] of Object.entries(store.prefs.byId)) {
-      if (pref.highlight === undefined) continue
-      store.setCameraHighlight(Number(id), { ...pref.highlight, ...settled.triggerPatch })
+    const stored: Record<number, GridHighlightSettings | undefined> = {}
+    for (const [id, pref] of Object.entries(store.prefs.byId)) stored[Number(id)] = pref.highlight
+    const migration = migrateMasterOff(overlay, stored)
+    if (migration === null) return
+    for (const [id, highlight] of Object.entries(migration.highlights)) {
+      store.setCameraHighlight(Number(id), highlight)
     }
-    setOverlay(settled.overlay)
+    setOverlay(migration.overlay)
   }, [overlay, prefsHydrated, setOverlay])
 
   const setHighlight = useCallback(

@@ -61,3 +61,33 @@ export function settleMasterOff(config: OverlayConfig): MasterOffSettlement | nu
     triggerPatch: ALL_TRIGGERS_OFF,
   }
 }
+
+/** The pieces of a camera's stored prefs the migration touches. */
+export type StoredHighlights = Readonly<Record<number, Partial<GridHighlightSettings> | undefined>>
+
+export interface MasterOffMigration {
+  readonly overlay: OverlayConfig
+  /** The new triggers of every camera that stored some (others are untouched). */
+  readonly highlights: Readonly<Record<number, GridHighlightSettings>>
+}
+
+/**
+ * The whole master-off migration as one pure step: every stored camera's
+ * triggers go off (levels, holds, classes and any other field are kept), and
+ * the document trades its one-shot flag for the permanent default. `null` when
+ * there is nothing to do — so a second run, and a master-on document, are
+ * no-ops.
+ */
+export function migrateMasterOff(
+  config: OverlayConfig,
+  stored: StoredHighlights,
+): MasterOffMigration | null {
+  const settled = settleMasterOff(config)
+  if (settled === null) return null
+  const highlights: Record<number, GridHighlightSettings> = {}
+  for (const [id, h] of Object.entries(stored)) {
+    if (h === undefined) continue
+    highlights[Number(id)] = { ...withHighlightDefaults(h), ...settled.triggerPatch }
+  }
+  return { overlay: settled.overlay, highlights }
+}
