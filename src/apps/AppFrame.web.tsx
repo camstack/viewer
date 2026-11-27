@@ -42,7 +42,7 @@ export function AppFrame({ uri, reloadKey, testID, onAppMessage, onFrameLoad }: 
         key: reloadKey,
         ref: frame,
         src: uri,
-        title: 'CamStack',
+        title: 'Dominevo',
         onLoad: () => onFrameLoad?.(),
         style: { flex: 1, width: '100%', height: '100%', border: 0 },
       })}

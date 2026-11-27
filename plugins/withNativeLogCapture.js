@@ -74,7 +74,7 @@ function withNativeLogAndroid(config) {
     "android",
     (cfg) => {
       const projectRoot = cfg.modRequest.projectRoot;
-      const androidPackage = cfg.android?.package || "com.apocaliss92.camstack.dev";
+      const androidPackage = cfg.android?.package || "app.dominevo.viewer.dev";
       const packagePath = androidPackage.replace(/\./g, "/");
       const destDir = path.join(
         projectRoot,

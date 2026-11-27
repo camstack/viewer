@@ -1,6 +1,6 @@
 {
-  "short_name": "CamStack",
-  "name": "CamStack Viewer",
+  "short_name": "Dominevo",
+  "name": "Dominevo",
   "id": "/viewer/camstack/",
   "start_url": "/viewer/camstack/",
   "scope": "/viewer/camstack/",

@@ -316,7 +316,7 @@ describe('Account → Sign-in methods', () => {
     act(() => {
       fireEvent.click(screen.getByText('Active sessions'))
     })
-    expect(await screen.findByText('CamStack app on iOS')).toBeTruthy()
+    expect(await screen.findByText('Dominevo app on iOS')).toBeTruthy()
     expect(screen.getByText(/This device/)).toBeTruthy()
     expect(screen.getByText('Safari on macOS')).toBeTruthy()
     // Only the other device has its own Sign out.

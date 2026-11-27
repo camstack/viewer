@@ -152,15 +152,15 @@ describe('the manifest template is one app, under the mount prefix', () => {
  * and equal — for the hosted PWA and the hub-embedded build alike (both
  * render these same templates).
  */
-describe('the web app is called CamStack Viewer everywhere', () => {
+describe('the web app is called Dominevo everywhere', () => {
   const shell = read('public/index.template.html')
   const manifest = parseManifest(read('public/manifest.template.json'))
 
   it('titles the document with the manifest name', () => {
-    expect(shell).toContain('<title>CamStack Viewer</title>')
+    expect(shell).toContain('<title>Dominevo</title>')
     expect(shell).not.toContain('%WEB_TITLE%')
-    expect(manifest.name).toBe('CamStack Viewer')
-    expect(manifest.short_name).toBe('CamStack')
+    expect(manifest.name).toBe('Dominevo')
+    expect(manifest.short_name).toBe('Dominevo')
   })
 })
 

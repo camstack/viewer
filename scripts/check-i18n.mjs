@@ -80,6 +80,7 @@ const I18N_DEFAULT_KEYS = new Set(['fallback', 'fallbackLabel', 'defaultValue'])
  */
 export const PINNED_TEXT = new Map([
   ['CamStack', 'product name'],
+  ['Dominevo', 'product name'],
   ['CamStack Viewer', 'product name'],
   ['CamStack desktop', 'product name of the desktop app'],
   ['HH:MM', 'time-of-day format, written the same in both languages'],

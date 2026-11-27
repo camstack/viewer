@@ -1,7 +1,7 @@
 {
   "name": "camstack",
   "main": "index.js",
-  "version": "1.0.743",
+  "version": "0.1.0",
   "scripts": {
     "start": "expo start",
     "start:dev": "expo start --dev-client",
@@ -90,6 +90,7 @@
     "date-fns": "^4.4.0",
     "events": "^3.3.0",
     "expo": "~57.0.31",
+    "expo-alternate-app-icons": "11.0.0",
     "expo-battery": "~57.0.3",
     "expo-blur": "~57.0.3",
     "expo-camera": "~57.0.6",

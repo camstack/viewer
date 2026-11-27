@@ -54,7 +54,6 @@
     "production": {
       "ios": {
         "appleId": "developer@example.com",
-        "ascAppId": "6759228132",
         "appleTeamId": "C3F24V5NS5"
       },
       "android": {}

@@ -31,6 +31,14 @@ export interface WhatsNewEntry {
 // i18n-ok: release notes carry their own `en` + `it` text per entry (typed, held by whats-new.spec.ts)
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '0.1.0',
+    date: '2026-11-28',
+    notes: {
+      en: ['New name and icon: Dominevo.'],
+      it: ['Nuovo nome e icona: Dominevo.'],
+    },
+  },
+  {
     version: '1.0.743',
     date: '2026-11-27',
     notes: {

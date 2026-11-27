@@ -1,6 +1,6 @@
 /*
  * Regenerate app icons from a single square source image.
- * Based on zentik-notifier/scripts/regen-icons.js
+  * The brand kit PNGs are the committed source of truth; this script is the fallback that rebuilds them from logoV2 (its android foreground/monochrome are plain resizes, not the kit's cut-out versions).
  *
  * Source: assets/logos/logoV2/Icon-iOS-Default-1024x1024@1x.png
  * Run: npm run regen:icons
@@ -30,8 +30,8 @@ const targets = [
 // PWA icons for web manifest (public/ is copied to dist on export)
 const pwaSizes = [72, 96, 128, 144, 152, 192, 384, 512];
 
-// Android adaptive icon background: solid color #E6F4FE (from app.config)
-const ANDROID_BG_COLOR = "#E6F4FE";
+// Android adaptive icon background: solid Dominevo stone (matches app.config adaptiveIcon)
+const ANDROID_BG_COLOR = "#292524";
 
 async function ensureDirFor(filePath) {
   const dir = path.dirname(filePath);

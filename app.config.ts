@@ -3,8 +3,9 @@ import type { ConfigContext, ExpoConfig } from "expo/config";
 // Set APP_VARIANT in .env (development | preview | production)
 const { name, bundleIdentifier } = require("./config-shared");
 const { getWebMountPrefix } = require("./config-web-base.js");
+const { ALTERNATE_ICONS } = require("./config-alternate-icons.js");
 
-const scheme = process.env.APP_VARIANT === "development" ? "camstack.dev" : "camstack";
+const scheme = process.env.APP_VARIANT === "development" ? "dominevo.dev" : "dominevo";
 
 // Web mount prefix: "/" = standalone (app at root); "<base>/camstack/" under
 // EXPO_PUBLIC_WEB_BASE_PATH (External hub, HA ingress, the hub's /viewer). The SAME
@@ -12,10 +13,16 @@ const scheme = process.env.APP_VARIANT === "development" ? "camstack.dev" : "cam
 // serves under and what the manifest names cannot drift apart again.
 const webMountPrefix: string = getWebMountPrefix();
 
+// TODO(operator, planning#757): the universal-link host of the Dominevo app is
+// dominevo.app; the hub-side apple-app-site-association / assetlinks for it are
+// later work. Until then the links point at no host that serves them, so
+// associated domains and Android autoVerify are declared but cannot verify.
+const LINK_HOST = "dominevo.app";
+
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name,
-  slug: "camstack",
+  slug: "dominevo",
   // ONE source of truth for the app version: package.json. It used to be
   // duplicated here, and on 2026-07-29 the two silently diverged — four OTA
   // bumps (v1.0.200 → v1.0.203) moved package.json and left this literal at
@@ -25,8 +32,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   version: require("./package.json").version,
   // Deliberately NOT derived: `runtimeVersion` is the OTA compatibility pin and
   // must stay FIXED across OTA bumps (it moves only on a native release).
-  runtimeVersion: "1.0.643",
+  runtimeVersion: "0.1.0",
   orientation: "default",
+  // The PNG stays the web/Android launcher source; iOS takes the Icon Composer
+  // bundle through `ios.icon`.
   icon: "./assets/images/icon.png",
   scheme,
   userInterfaceStyle: "automatic",
@@ -34,18 +43,19 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     supportsTablet: true,
     bitcode: false,
     bundleIdentifier,
+    icon: "./app.icon",
     appleTeamId: process.env.EXPO_APPLE_TEAM_ID ?? "C3F24V5NS5",
     buildNumber: "20",
-    associatedDomains: ["applinks:camstack.zentik.app"],
+    associatedDomains: [`applinks:${LINK_HOST}`],
     infoPlist: {
       UIBackgroundModes: ["audio"],
       ITSAppUsesNonExemptEncryption: false,
       // The grid embed runs in a WKWebView; talk-back captures the mic via
       // getUserMedia inside the WebView, which requires this usage string.
       NSMicrophoneUsageDescription:
-        "CamStack uses the microphone for two-way talk to your cameras.",
+        "Dominevo uses the microphone for two-way talk to your cameras.",
       NSLocalNetworkUsageDescription:
-        "CamStack uses the local network to reach your hub on Wi-Fi without going through the internet.",
+        "Dominevo uses the local network to reach your hub on Wi-Fi without going through the internet.",
       NSAppTransportSecurity: {
         // LAN HTTP sibling (Network → Local access). Remove when a
         // publicly-trusted LAN name ships (option D).
@@ -55,7 +65,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   android: {
     adaptiveIcon: {
-      backgroundColor: "#e67e22",
+      backgroundColor: "#292524",
       foregroundImage: "./assets/images/android-icon-foreground.png",
       backgroundImage: "./assets/images/android-icon-background.png",
       monochromeImage: "./assets/images/android-icon-monochrome.png",
@@ -80,7 +90,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         data: [
           {
             scheme: "https",
-            host: "camstack.zentik.app",
+            host: LINK_HOST,
             pathPrefix: "/",
           },
         ],
@@ -89,10 +99,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ],
   },
   web: {
-    // The browser/PWA name. Native keeps `name` (CamStack); the web shell and
+    // The browser/PWA name. Native keeps `name` (Dominevo); the web shell and
     // manifest spell this literally too (public/*.template.*).
-    name: "CamStack Viewer",
-    shortName: "CamStack",
+    name: "Dominevo",
+    shortName: "Dominevo",
     output: "single",
     favicon: "./assets/images/favicon.png",
   },
@@ -125,7 +135,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       "expo-camera",
       {
         cameraPermission:
-          "CamStack uses the camera to scan the QR code that links this device to your hub.",
+          "Dominevo uses the camera to scan the QR code that links this device to your hub.",
         microphonePermission: false,
         recordAudioAndroid: false,
       },
@@ -139,6 +149,21 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     // LAN HTTP. Not `android.usesCleartextTraffic` — that key is not on
     // ExpoConfig.Android and fails `tsc --noEmit` (viewer CI typecheck).
     "./plugins/withCleartextTraffic",
+    // Alternate launcher icons (iOS + Android); the list lives in
+    // config-alternate-icons.js, the runtime switch in src/lib/app-icon.ts.
+    [
+      "expo-alternate-app-icons",
+      ALTERNATE_ICONS.map(
+        (icon: { name: string; file: string; background: string }) => ({
+          name: icon.name,
+          ios: `./assets/alternate-icons/${icon.file}`,
+          android: {
+            foregroundImage: `./assets/alternate-icons/${icon.file}`,
+            backgroundColor: icon.background,
+          },
+        }),
+      ),
+    ],
   ],
   experiments: {
     typedRoutes: true,
@@ -154,12 +179,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     // (ServerProvider etc.) — without this pin the route tree silently becomes
     // src/app and every screen 404s to Unmatched Route (OTA 1.0.154/155 bug).
     router: { root: "app" },
-    eas: {
-      projectId: "8fb06894-6375-41ff-959f-1a22a03dbd73",
-    },
+    // TODO(operator, planning#757): Dominevo is a NEW store app. Create its EAS
+    // project (`eas init`), then add `extra.eas.projectId` and `updates.url`
+    // here — the old CamStack project id must not be reused.
+    // TODO(operator, planning#757): eas.json submit.production.ios has no
+    // `ascAppId` until the new App Store Connect app exists; add it then.
   },
-  updates: {
-    url: "https://u.expo.dev/8fb06894-6375-41ff-959f-1a22a03dbd73",
-  },
-  owner: "zentik-notifier",
+  // The new Expo organization for the Dominevo app (planning#757).
+  owner: "dominevo",
 });

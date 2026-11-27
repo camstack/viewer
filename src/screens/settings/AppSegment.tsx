@@ -146,7 +146,7 @@ function AboutSection() {
   return (
     <>
       <Section title={t('v2.settings.aboutUpdates')}>
-        <Row icon={Info} label={t('v2.settings.app')} value="CamStack Viewer" />
+        <Row icon={Info} label={t('v2.settings.app')} value="Dominevo" />
         <Row label={t('v2.settings.version')} value={versionValue(versionRows, 'app')} />
         {NATIVE_BINARY ? (
           <>

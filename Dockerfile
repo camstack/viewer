@@ -1,4 +1,4 @@
-# CamStack viewer PWA — the hosted site at https://camstack.zentik.app.
+# Dominevo viewer PWA (hosted web export).
 #
 # Stage 1 builds the static web export at base path `/` (EXPO_PUBLIC_WEB_BASE_PATH
 # unset — the hub-embedded `/viewer` build is `npm run build:orchestrator`, a

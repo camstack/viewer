@@ -91,7 +91,7 @@ function withAudioSessionAndroid(config) {
     (cfg) => {
       const projectRoot = cfg.modRequest.projectRoot;
       const androidPackage =
-        cfg.android?.package || "com.apocaliss92.camstack.dev";
+        cfg.android?.package || "app.dominevo.viewer.dev";
       const packagePath = androidPackage.replace(/\./g, "/");
       const destDir = path.join(
         projectRoot,
@@ -157,7 +157,7 @@ function withWebRTCEarlySetup(config) {
     "ios",
     (cfg) => {
       const projectRoot = cfg.modRequest.projectRoot;
-      const appName = cfg.modRequest.projectName || "CamStackDev";
+      const appName = cfg.modRequest.projectName || "DominevoDev";
       const appDelegatePath = path.join(
         projectRoot,
         "ios",

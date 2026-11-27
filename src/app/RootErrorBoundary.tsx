@@ -87,7 +87,7 @@ export class RootErrorBoundary extends React.Component<
     if (!this.state.failed) return this.props.children
     return (
       <View style={styles.root}>
-        <Text style={styles.title}>CamStack</Text>
+        <Text style={styles.title}>Dominevo</Text>
         <Text style={styles.body}>{rootText('v2.rootError.body', ROOT_BODY_EN)}</Text>
         {this.state.detail === null ? null : (
           <Text style={styles.detail} selectable testID="root-error-detail">

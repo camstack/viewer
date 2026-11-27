@@ -1,10 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <!-- CamStack "Stacked Lens" — IDENTICAL to the admin-ui icon, minus the
-       technician wrench badge (the viewer is the operator-facing app). -->
-  <rect x="8" y="28" width="48" height="28" rx="6" fill="#292524"/>
-  <rect x="12" y="16" width="40" height="28" rx="6" fill="#44403c"/>
-  <rect x="16" y="4" width="32" height="28" rx="6" fill="#f59e42"/>
-  <circle cx="32" cy="18" r="8" fill="#0c0a09" opacity="0.3"/>
-  <circle cx="32" cy="18" r="5" fill="#0c0a09" opacity="0.2"/>
-  <circle cx="32" cy="18" r="2.5" fill="#fafaf9" opacity="0.8"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" fill="none"><style>.o{stroke:#44403c}.r{stroke:#1c1917}@media (prefers-color-scheme:dark){.o{stroke:#d6d3d1}.r{stroke:#fafaf9}}</style><defs><linearGradient id="g10" x1="0.2" y1="0" x2="0.8" y2="1"><stop offset="0" stop-color="#f59e42"/><stop offset="1" stop-color="#e67e22"/></linearGradient></defs><path d="M32 5 C44 19 53 29 53 40 a21 21 0 0 1 -42 0 C11 29 20 19 32 5 Z" fill="url(#g10)"/><path d="M36.5 13 C42 20 47 26.5 49.5 33" stroke="#fafaf9" stroke-opacity="0.45" stroke-width="2.4" stroke-linecap="round" fill="none"/><circle cx="32" cy="42" r="11" fill="#1c1917"/><circle cx="32" cy="42" r="5.5" fill="#44403c"/><ellipse class="o" cx="32" cy="41" rx="26" ry="8.2" fill="none" stroke="#44403c" stroke-width="4.6" stroke-linecap="round" transform="rotate(-14 32 41)"/><circle class="r" cx="57.23" cy="34.71" r="5.4" fill="#f59e42" stroke="#1c1917" stroke-width="2.4"/></svg>
