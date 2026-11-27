@@ -20,6 +20,9 @@ beforeEach(async () => {
     framePath: null,
     launchSettled: false,
     drawerOpen: false,
+    serverId: null,
+    carried: null,
+    lastAppByServer: {},
   })
 })
 
@@ -29,11 +32,12 @@ describe('the app switcher store', () => {
   })
 
   it('parses field by field and never throws', () => {
-    expect(parseAppSwitcher(null)).toEqual({ lastApp: null, launchPreference: 'last' })
-    expect(parseAppSwitcher('{nope')).toEqual({ lastApp: null, launchPreference: 'last' })
+    expect(parseAppSwitcher(null)).toEqual({ lastApp: null, launchPreference: 'last', lastAppByServer: {} })
+    expect(parseAppSwitcher('{nope')).toEqual({ lastApp: null, launchPreference: 'last', lastAppByServer: {} })
     expect(parseAppSwitcher(JSON.stringify({ lastApp: 'x', launchPreference: 7 }))).toEqual({
       lastApp: 'x',
       launchPreference: 'last',
+      lastAppByServer: {},
     })
   })
 
@@ -47,7 +51,7 @@ describe('the app switcher store', () => {
     useAppStore.getState().setDrawerOpen(true)
     useAppStore.getState().open({ appId: 'x' }, '/p')
     expect(useAppStore.getState()).toMatchObject({ active: { appId: 'x' }, lastApp: 'x', drawerOpen: false, entryPath: '/p' })
-    expect(await stored()).toEqual({ lastApp: 'x', launchPreference: 'last' })
+    expect(await stored()).toEqual({ lastApp: 'x', launchPreference: 'last', lastAppByServer: {} })
     useAppStore.getState().clearEntryPath()
     expect(useAppStore.getState().entryPath).toBeNull()
   })
@@ -55,7 +59,7 @@ describe('the app switcher store', () => {
   it('opening the shell itself remembers null', async () => {
     useAppStore.getState().open({ appId: 'x' })
     useAppStore.getState().open({ appId: null })
-    expect(await stored()).toEqual({ lastApp: null, launchPreference: 'last' })
+    expect(await stored()).toEqual({ lastApp: null, launchPreference: 'last', lastAppByServer: {} })
   })
 
   it('the launch resolution is spent once and does not touch the remembered app', () => {
@@ -85,5 +89,29 @@ describe('the app switcher store', () => {
     useAppStore.getState().setDrawerOpen(false)
     useAppStore.getState().setDrawerOpen(true)
     expect(useAppStore.getState().drawerSearchFocus).toBe(false)
+  })
+
+  it('opening an app files it under the server in use, and it survives a reload', async () => {
+    useAppStore.getState().setServerId('hub-a')
+    useAppStore.getState().open({ appId: 'x' })
+    useAppStore.getState().setServerId('hub-b')
+    useAppStore.getState().open({ appId: null })
+    expect(useAppStore.getState().lastAppByServer).toEqual({ 'hub-a': 'x', 'hub-b': null })
+    expect(((await stored()) as { lastAppByServer: unknown }).lastAppByServer).toEqual({ 'hub-a': 'x', 'hub-b': null })
+    expect(parseAppSwitcher(JSON.stringify({ lastAppByServer: { 'hub-a': 'x', bad: 7 } })).lastAppByServer).toEqual({ 'hub-a': 'x', bad: null })
+  })
+
+  it('a server switch remembers the app left behind, carries it and reopens the launch resolution', () => {
+    useAppStore.getState().setServerId('hub-a')
+    useAppStore.getState().settleLaunch('x')
+    useAppStore.getState().switchServer('hub-b')
+    const s = useAppStore.getState()
+    expect(s.lastAppByServer).toEqual({ 'hub-a': 'x' })
+    expect(s.carried).toEqual({ appId: 'x' })
+    expect(s.serverId).toBe('hub-b')
+    expect(s.launchSettled).toBe(false)
+    expect(s.active).toEqual({ appId: null })
+    useAppStore.getState().settleLaunch('x')
+    expect(useAppStore.getState().carried).toBeNull()
   })
 })

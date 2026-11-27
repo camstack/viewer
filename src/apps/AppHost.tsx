@@ -17,7 +17,7 @@ import { useServer } from '../app/ServerProvider.js'
 import { useAppCatalog } from '../data/use-apps.js'
 import { useTheme } from '../theme/theme-provider.js'
 import { findApp, isHostedEntry } from './app-catalog.js'
-import { launchResolvable, offeredLaunchPreferences, resolveLaunchApp } from './app-launch.js'
+import { launchResolvable, offeredLaunchPreferences, resolveLaunchApp, resolveSwitchApp, switchResolvable } from './app-launch.js'
 import { useAppStore } from './app-store.js'
 import { AppDrawer } from './AppDrawer.js'
 import { EmbeddedApp } from './EmbeddedApp.js'
@@ -33,6 +33,8 @@ export function AppHost(): React.JSX.Element {
   const preference = useAppStore((s) => s.launchPreference)
   const lastApp = useAppStore((s) => s.lastApp)
   const active = useAppStore((s) => s.active)
+  const carried = useAppStore((s) => s.carried)
+  const lastAppByServer = useAppStore((s) => s.lastAppByServer)
 
   useEffect(() => {
     void useAppStore.getState().hydrate()
@@ -42,17 +44,31 @@ export function AppHost(): React.JSX.Element {
   const serverId = server?.id ?? null
   const previous = useRef(serverId)
   useEffect(() => {
-    if (previous.current !== serverId) {
-      previous.current = serverId
-      useAppStore.getState().resetSession()
-    }
+    if (previous.current === serverId) return
+    const from = previous.current
+    previous.current = serverId
+    const store = useAppStore.getState()
+    // The first connect is not a switch: the launch preference decides.
+    if (from === null || serverId === null) store.setServerId(serverId)
+    else store.switchServer(serverId)
+  }, [serverId])
+  useEffect(() => {
+    useAppStore.getState().setServerId(serverId)
   }, [serverId])
 
-  // Launch resolution: once, when it can be decided.
+  // Launch resolution: once, when it can be decided. After a server switch the same app stays when
+  // the new server offers it, else that server's last app, else the launch default.
   useEffect(() => {
-    if (!hydrated || settled || !launchResolvable(preference, lastApp, catalog)) return
-    useAppStore.getState().settleLaunch(resolveLaunchApp(preference, lastApp, catalog))
-  }, [hydrated, settled, preference, lastApp, catalog])
+    if (!hydrated || settled) return
+    const fallback = resolveLaunchApp(preference, lastApp, catalog)
+    if (carried === null) {
+      if (launchResolvable(preference, lastApp, catalog)) useAppStore.getState().settleLaunch(fallback)
+      return
+    }
+    if (!switchResolvable(carried.appId, catalog)) return
+    const remembered = serverId === null ? undefined : lastAppByServer[serverId]
+    useAppStore.getState().settleLaunch(resolveSwitchApp({ previous: carried.appId, remembered, catalog, fallback }))
+  }, [hydrated, settled, preference, lastApp, catalog, carried, serverId, lastAppByServer])
 
   // A stored preference the hub no longer offers (a legacy bare id) goes back to "last used".
   // Note: a failed listApps at boot settles the launch to the Viewer for the session.

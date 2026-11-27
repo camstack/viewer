@@ -7,7 +7,7 @@
  * opened only once the list ANSWERED and holds it: pending or a failed read is
  * "not known yet", never "not offered" (D315).
  */
-import { hostedAppOf, orderApps, type AppCatalog } from './app-catalog.js'
+import { findApp, hostedAppOf, orderApps, type AppCatalog } from './app-catalog.js'
 
 /** An app id from the `apps` cap, or `null` for the app the shell hosts itself. */
 export type AppId = string | null
@@ -61,4 +61,39 @@ export function resolveLaunchApp(preference: LaunchPreference, lastApp: AppId, c
 export function launchResolvable(preference: LaunchPreference, lastApp: AppId, catalog: AppCatalog): boolean {
   const wanted = wantedOf(preference, lastApp)
   return wanted === null || catalog.status !== 'pending'
+}
+
+/** The last app used on each saved server, by server id: a server switch reopens it. */
+export type LastAppByServer = Readonly<Record<string, AppId>>
+
+/** Whether the catalog offers an app. The shell's own app always is; any other needs an ANSWERED list holding it. */
+function offers(catalog: AppCatalog, appId: AppId): boolean {
+  if (appId === null) return true
+  if (catalog.status !== 'answered') return false
+  return hostedAppOf(catalog)?.app.id === appId || findApp(catalog, appId) !== null
+}
+
+export interface SwitchAppInput {
+  /** The app on screen before the switch. */
+  readonly previous: AppId
+  /** The new server's remembered app; `undefined` when it has no history. */
+  readonly remembered: AppId | undefined
+  readonly catalog: AppCatalog
+  /** What a fresh launch would open (the launch preference). */
+  readonly fallback: AppId
+}
+
+/**
+ * The app to show after a server switch: the same app when the new server offers
+ * it, else the last one used on THAT server, else the launch default.
+ */
+export function resolveSwitchApp({ previous, remembered, catalog, fallback }: SwitchAppInput): AppId {
+  if (offers(catalog, previous)) return resolveApp(previous, catalog)
+  if (remembered !== undefined && offers(catalog, remembered)) return resolveApp(remembered, catalog)
+  return fallback
+}
+
+/** Whether the switch resolution may be spent: an embedded app waits for the new server's list to answer. */
+export function switchResolvable(previous: AppId, catalog: AppCatalog): boolean {
+  return previous === null || catalog.status !== 'pending'
 }

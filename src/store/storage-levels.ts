@@ -47,7 +47,7 @@ export const STORAGE_KEY_LEVELS: readonly StorageKeyLevel[] = [
   // ── device ─────────────────────────────────────────────────────────────────
   { key: '@camstack/v2/settings', match: 'exact', level: 'device', what: 'settings, device half' },
   { key: '@camstack/v2/device-settings', match: 'exact', level: 'device', what: 'debug mode, overlay size' },
-  { key: '@camstack/v2/app-switcher', match: 'exact', level: 'device', what: 'last app used and the open-at-launch choice' },
+  { key: '@camstack/v2/app-switcher', match: 'exact', level: 'device', what: 'last app used (and per server), and the open-at-launch choice' },
   { key: '@camstack/v2/install-id', match: 'exact', level: 'device', what: 'this install\'s id on account writes' },
   { key: '@camstack/v2/grid-local', match: 'exact', level: 'device', what: 'per-grid layout, audio, tier' },
   { key: '@camstack/v2/camera-local', match: 'per-hub', level: 'device', what: 'per-camera tier, audio memory' },

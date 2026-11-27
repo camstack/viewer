@@ -15,6 +15,7 @@ import {
   parseAppId,
   parseLaunchPreference,
   type AppId,
+  type LastAppByServer,
   type LaunchPreference,
 } from './app-launch.js'
 
@@ -28,12 +29,22 @@ export interface ActiveApp {
 export interface PersistedAppSwitcher {
   readonly lastApp: AppId
   readonly launchPreference: LaunchPreference
+  /** The last app used on each server, by server id (a switch reopens it). */
+  readonly lastAppByServer: LastAppByServer
 }
 
 export const APP_SWITCHER_DEFAULTS: PersistedAppSwitcher = Object.freeze({
   lastApp: DEFAULT_APP,
   launchPreference: DEFAULT_LAUNCH_PREFERENCE,
+  lastAppByServer: Object.freeze({}),
 })
+
+function parseLastAppByServer(raw: unknown): LastAppByServer {
+  if (typeof raw !== 'object' || raw === null) return APP_SWITCHER_DEFAULTS.lastAppByServer
+  const out: Record<string, AppId> = {}
+  for (const [serverId, value] of Object.entries(raw)) out[serverId] = parseAppId(value)
+  return out
+}
 
 /** Parse the persisted JSON field by field. Never throws. */
 export function parseAppSwitcher(raw: string | null): PersistedAppSwitcher {
@@ -44,6 +55,7 @@ export function parseAppSwitcher(raw: string | null): PersistedAppSwitcher {
     return {
       lastApp: parseAppId('lastApp' in data ? data.lastApp : undefined),
       launchPreference: parseLaunchPreference('launchPreference' in data ? data.launchPreference : undefined),
+      lastAppByServer: parseLastAppByServer('lastAppByServer' in data ? data.lastAppByServer : undefined),
     }
   } catch {
     return APP_SWITCHER_DEFAULTS
@@ -64,6 +76,10 @@ interface AppSwitcherState extends PersistedAppSwitcher {
   readonly entryPath: string | null
   /** True once the launch resolution decided what opens first. */
   readonly launchSettled: boolean
+  /** The saved server this session talks to; `open` files the app under it. */
+  readonly serverId: string | null
+  /** Set by a server switch: the app that was on screen, which the new server keeps when it offers it. */
+  readonly carried: { readonly appId: AppId } | null
   readonly drawerOpen: boolean
   /** The server being switched to, while `switchServer` runs: a full-page loader names it. */
   readonly serverSwitch: { readonly name: string } | null
@@ -77,6 +93,13 @@ interface AppSwitcherState extends PersistedAppSwitcher {
   /** Spend the launch resolution once (does not touch the remembered app). */
   settleLaunch: (app: AppId) => void
   setLaunchPreference: (preference: LaunchPreference) => void
+  /** The session's server became known (first connect). Not a switch. */
+  setServerId: (serverId: string | null) => void
+  /**
+   * The session moved to another server: remember the app that was on screen under
+   * the old one, carry it to the new one, and let the launch resolution pick.
+   */
+  switchServer: (toServerId: string) => void
   setDrawerOpen: (open: boolean) => void
   setServerSwitch: (target: { readonly name: string } | null) => void
   /** Open the drawer with its search focused (the wide top bar's search field). */
@@ -98,6 +121,8 @@ export const useAppStore = create<AppSwitcherState>((set, get) => ({
   active: { appId: DEFAULT_APP },
   entryPath: null,
   launchSettled: false,
+  serverId: null,
+  carried: null,
   drawerOpen: false,
   serverSwitch: null,
   drawerSearchFocus: false,
@@ -113,16 +138,35 @@ export const useAppStore = create<AppSwitcherState>((set, get) => ({
     set({ ...parseAppSwitcher(raw), hydrated: true })
   },
   open: (app, entryPath) => {
-    set({ active: app, lastApp: app.appId, drawerOpen: false, entryPath: entryPath ?? null, framePath: null })
-    persist({ lastApp: app.appId, launchPreference: get().launchPreference })
+    const { serverId, lastAppByServer, launchPreference } = get()
+    const byServer = serverId === null ? lastAppByServer : { ...lastAppByServer, [serverId]: app.appId }
+    set({ active: app, lastApp: app.appId, lastAppByServer: byServer, drawerOpen: false, entryPath: entryPath ?? null, framePath: null })
+    persist({ lastApp: app.appId, launchPreference, lastAppByServer: byServer })
   },
   settleLaunch: (app) => {
     if (get().launchSettled) return
-    set({ active: { appId: app }, launchSettled: true })
+    set({ active: { appId: app }, launchSettled: true, carried: null })
   },
   setLaunchPreference: (launchPreference) => {
     set({ launchPreference })
-    persist({ lastApp: get().lastApp, launchPreference })
+    persist({ lastApp: get().lastApp, launchPreference, lastAppByServer: get().lastAppByServer })
+  },
+  setServerId: (serverId) => set({ serverId }),
+  switchServer: (toServerId) => {
+    const { serverId, active, lastApp, launchPreference, lastAppByServer } = get()
+    const byServer = serverId === null ? lastAppByServer : { ...lastAppByServer, [serverId]: active.appId }
+    set({
+      serverId: toServerId,
+      lastAppByServer: byServer,
+      carried: { appId: active.appId },
+      active: { appId: DEFAULT_APP },
+      entryPath: null,
+      framePath: null,
+      launchSettled: false,
+      drawerOpen: false,
+      drawerSearchFocus: false,
+    })
+    persist({ lastApp, launchPreference, lastAppByServer: byServer })
   },
   setDrawerOpen: (drawerOpen) => set({ drawerOpen, drawerSearchFocus: false }),
   setServerSwitch: (serverSwitch) => set({ serverSwitch }),
@@ -130,5 +174,5 @@ export const useAppStore = create<AppSwitcherState>((set, get) => ({
   setFramePath: (framePath) => set({ framePath }),
   clearEntryPath: () => set({ entryPath: null }),
   resetSession: () =>
-    set({ active: { appId: DEFAULT_APP }, entryPath: null, framePath: null, launchSettled: false, drawerOpen: false, drawerSearchFocus: false }),
+    set({ active: { appId: DEFAULT_APP }, entryPath: null, framePath: null, launchSettled: false, carried: null, drawerOpen: false, drawerSearchFocus: false }),
 }))

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { parseAppInfos, type AppCatalog } from '../app-catalog.js'
-import { launchResolvable, offeredLaunchPreferences, parseAppId, parseLaunchPreference, resolveApp, resolveLaunchApp } from '../app-launch.js'
+import { launchResolvable, offeredLaunchPreferences, parseAppId, parseLaunchPreference, resolveApp, resolveLaunchApp, resolveSwitchApp, switchResolvable } from '../app-launch.js'
 
 function app(id: string, entry: Record<string, unknown>, order: number): Record<string, unknown> {
   return {
@@ -76,5 +76,34 @@ describe('the launch resolution waits for the list only when it matters', () => 
     expect(launchResolvable('last', 'other', PENDING)).toBe(false)
     expect(launchResolvable('other', null, answered)).toBe(true)
     expect(launchResolvable('other', null, UNKNOWN)).toBe(true)
+  })
+})
+
+describe('the app after a server switch', () => {
+  const pending: AppCatalog = { status: 'pending' }
+  const fallback = 'shell-fallback'
+
+  it('stays on the same app when the new server offers it', () => {
+    expect(resolveSwitchApp({ previous: 'other', remembered: undefined, catalog: answered, fallback })).toBe('other')
+    expect(resolveSwitchApp({ previous: 'other', remembered: 'shell', catalog: answered, fallback })).toBe('other')
+    expect(resolveSwitchApp({ previous: null, remembered: 'other', catalog: answered, fallback })).toBeNull()
+  })
+
+  it('otherwise opens the last app used on THAT server', () => {
+    expect(resolveSwitchApp({ previous: 'gone', remembered: 'other', catalog: answered, fallback })).toBe('other')
+    // A remembered app that server no longer offers does not count.
+    expect(resolveSwitchApp({ previous: 'gone', remembered: 'also-gone', catalog: answered, fallback })).toBe(fallback)
+  })
+
+  it('with no history falls back to the launch default', () => {
+    expect(resolveSwitchApp({ previous: 'gone', remembered: undefined, catalog: answered, fallback })).toBe(fallback)
+    expect(resolveSwitchApp({ previous: 'other', remembered: undefined, catalog: { status: 'unknown' }, fallback })).toBe(fallback)
+  })
+
+  it('an embedded app waits for the new list to answer; the shell does not', () => {
+    expect(switchResolvable('other', pending)).toBe(false)
+    expect(switchResolvable('other', answered)).toBe(true)
+    expect(switchResolvable('other', { status: 'unknown' })).toBe(true)
+    expect(switchResolvable(null, pending)).toBe(true)
   })
 })
