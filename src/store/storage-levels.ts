@@ -54,6 +54,7 @@ export const STORAGE_KEY_LEVELS: readonly StorageKeyLevel[] = [
   { key: 'camstack.camera-favourites.v1', match: 'per-hub', level: 'device', what: 'favourite cameras' },
   { key: '@camstack/v2/last-camera', match: 'per-hub', level: 'device', what: 'the camera last watched' },
   { key: '@camstack/v2/account-sync', match: 'per-hub', level: 'device', what: 'account sync bookkeeping' },
+  { key: '@camstack/v2/detection-hold-seeded', match: 'per-hub', level: 'device', what: 'the one-time seed of the global detection hold from per-camera values' },
   // The Library pages' filter bars, one per section (`library-filters.ts`,
   // `events-filter-store.ts`); per hub because camera ids are.
   { key: 'camstack.v2.library-filter.events', match: 'per-hub', level: 'device', what: 'Events filter bar (cameras, classes, marks)' },

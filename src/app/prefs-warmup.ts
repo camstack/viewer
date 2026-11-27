@@ -32,6 +32,7 @@ import { useCameraLocalStore } from '../store/camera-local-store.js'
 import { useGridLocalStore } from '../store/grid-local-store.js'
 import { useDeviceSettingsStore } from '../store/device-settings-store.js'
 import { useSettingsStore } from '../store/settings-store.js'
+import { watchDetectionHoldSeed } from '../store/detection-hold-seed.js'
 import { useLanguageStore } from '../store/language-store.js'
 import { useReelFilterStore } from '../store/reel-filter-store.js'
 import { useReelHighlightStore } from '../store/reel-highlight-store.js'
@@ -62,3 +63,7 @@ void useLanguageStore.getState().hydrate()
 void useReelFilterStore.getState().hydrate()
 void useReelHighlightStore.getState().hydrate()
 void useEventsFilterStore.getState().hydrate()
+
+// The detection hold went global: seeded once per hub from what each camera and
+// grid stored (`store/detection-hold-seed.ts`).
+watchDetectionHoldSeed()

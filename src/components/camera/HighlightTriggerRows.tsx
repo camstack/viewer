@@ -38,7 +38,7 @@ import {
   dbfsForAudioUi,
   type AudioHighlightLevel,
 } from './audio-level.js'
-import { classesFromEditor } from '../../store/highlight-classes.js'
+import { classesFromEditor } from '../../../shared/highlight-classes.js'
 import type { GridHighlightSettings, GridClusterLabelMode } from '../../store/grid-store.js'
 
 export interface HighlightTriggerRowsProps {

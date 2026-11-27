@@ -3129,6 +3129,7 @@
         "person": "Person",
         "vehicle": "Vehicle",
         "animal": "Animal",
+        "package": "Package",
         "face": "Face",
         "plate": "Plate"
       },

@@ -158,12 +158,6 @@ export interface GridHighlightSettings {
   readonly clusterLabel: GridClusterLabelMode
 }
 
-/** Selectable detection macro classes: the viewer's own list, mirroring
- *  `DETECTION_MACRO_CLASSES` in `@camstack/types` (the detector's macro classes
- *  plus face and plate). That export is not on `/client` yet; a follow-up
- *  switches to it. Empty stored selection means "any class"
- *  (`highlight-classes.ts`). */
-export const DETECTION_MACRO_CLASSES = ['person', 'vehicle', 'animal', 'face', 'plate'] as const
 
 /** Default per-grid highlight settings (motion-only, like a sane starting point;
  *  inert until the bar's highlight toggle turns it on). */

@@ -9,6 +9,7 @@
  * per-device "active until" timestamp. Returns the set of the given deviceIds
  * that are active right now.
  */
+import { matchesDetectionClass } from '../../../shared/highlight-classes'
 import { useEffect, useRef, useState } from 'react'
 import { useLiveEvent } from '@camstack/ui-library'
 import { EventCategory } from '@camstack/types/enums'
@@ -69,7 +70,7 @@ export function useActiveDevices(
     const p = evt.data
     if (!p) return
     const match = p.frame.detections.some(
-      (d) => detectionClasses.length === 0 || detectionClasses.includes(d.macroClass),
+      (d) => matchesDetectionClass(detectionClasses, d.macroClass),
     )
     if (match) bump(p.frame.deviceId, detectionHoldSec * 1000)
   })

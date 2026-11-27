@@ -202,7 +202,7 @@ import { MotionRegionsOverlay } from '../components/camera/MotionRegionsOverlay.
 import { DiscardedBoxesOverlay } from '../components/camera/DiscardedBoxesOverlay.js'
 import { AudioMeterPicker } from '../components/camera/AudioLevelMeter.js'
 import { useSettingsStore } from '../store/settings-store.js'
-import { matchesDetectionClass } from '../store/highlight-classes.js'
+import { matchesDetectionClass } from '../../shared/highlight-classes.js'
 import type { OverlayPosition } from '../components/camera/overlay/overlay-position.js'
 import { ZoneDrawOverlay } from '../components/camera/ZoneDrawOverlay.js'
 import { highlightBorderEnabled } from '../components/camera/overlay/highlight-border.js'

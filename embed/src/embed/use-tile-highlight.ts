@@ -13,6 +13,7 @@
  *     detection in the window; 'level' = window dBFS ≥ threshold; held for
  *     `audioHoldSec`.
  */
+import { matchesDetectionClass } from '../../../shared/highlight-classes'
 import { useEffect, useRef, useState } from 'react'
 import { useDeviceDetections, useLiveEvent } from '@camstack/ui-library'
 import type { System } from '@camstack/sdk'
@@ -98,7 +99,7 @@ export function useTileHighlight(
   useEffect(() => {
     if (!detection) return
     const match = detection.detections.some(
-      (d) => detectionClasses.length === 0 || detectionClasses.includes(d.macroClass),
+      (d) => matchesDetectionClass(detectionClasses, d.macroClass),
     )
     if (match) {
       detUntil.current = Date.now() + detectionHoldSec * 1000

@@ -33,7 +33,7 @@
  * own answer. `CamerasDisplaySheet` already refuses per-frame overlays on the
  * camera list for exactly this multiplication.
  */
-import { matchesDetectionClass } from '../store/highlight-classes.js'
+import { matchesDetectionClass } from '../../shared/highlight-classes.js'
 import { useDetections } from './use-detections.js'
 import { useMotionHighlight } from './use-motion.js'
 import { useAudioActive } from './use-audio.js'

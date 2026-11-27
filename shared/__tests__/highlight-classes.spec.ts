@@ -8,8 +8,9 @@ import {
   classesFromEditor,
   matchesDetectionClass,
 } from '../highlight-classes.js'
-import { DETECTION_MACRO_CLASSES, withHighlightDefaults } from '../grid-store.js'
-import { parseCameraPrefs } from '../camera-prefs-store.js'
+import { HIGHLIGHT_DETECTION_CLASSES as DETECTION_MACRO_CLASSES } from '../highlight-classes.js'
+import { withHighlightDefaults } from '../../src/store/grid-store.js'
+import { parseCameraPrefs } from '../../src/store/camera-prefs-store.js'
 
 describe('stored detection classes ↔ the multiselect', () => {
   it('"detection on, any class" (stored empty) shows every class ticked', () => {
