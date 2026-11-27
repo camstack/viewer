@@ -10,7 +10,7 @@ import { SPACING, RADIUS, CONTROL, ICON, TYPOGRAPHY, controlHitSlop } from '../.
 
 /** Preset palette offered for highlight colors. */
 export const COLOR_PRESETS: readonly string[] = [
-  '#DC2626', '#F97316', '#EAB308', '#22C55E', '#3B82F6', '#8B5CF6', '#FFFFFF',
+  '#DC2626', '#F97316', '#EAB308', '#22C55E', '#3B82F6', '#8B5CF6', '#FFFFFF', // ui-check-ok: stored highlight colour values (user data), not theme colours
 ]
 
 export function ColorPickerRow({
@@ -52,7 +52,7 @@ export function ColorPickerRow({
                 borderColor: active ? colors.foreground : colors.border,
               }}
             >
-              {active ? <Check size={ICON.sm} color={c.toLowerCase() === '#ffffff' ? '#000' : '#fff'} /> : null}
+              {active ? <Check size={ICON.sm} color={c.toLowerCase() === '#ffffff' ? '#000' : '#fff'} /* ui-check-ok: contrast tick on a data swatch, independent of theme */ /> : null}
             </Pressable>
           )
         })}
