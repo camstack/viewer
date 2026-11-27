@@ -6,6 +6,9 @@ import { createActivityStore, type ActivityKv } from '../activity-store.js'
 import { orderForDisplay, queuedJob, startJob } from '../activity-jobs.js'
 import {
   ackFromList,
+  acknowledgeOnOpen,
+  clearFinishedAll,
+  rebaseAck,
   cancelRefusalKey,
   HUB_LIST_POLL_MS,
   HUB_SUMMARY_ACTIVE_POLL_MS,
@@ -308,13 +311,76 @@ describe('the polling contract', () => {
   })
 })
 
-describe('wiring', () => {
-  it('"Clear finished" also dismisses the hub finished jobs, and opening acknowledges them', async () => {
-    const { readFileSync } = await import('node:fs')
-    const { join } = await import('node:path')
-    const popover = readFileSync(join(process.cwd(), 'src/activity/ActivityPopover.tsx'), 'utf8')
-    expect(popover).toContain('finishedHub.map((job) => hubActions.dismiss(job.jobId))')
-    expect(popover).toContain('onPress={clearFinished}')
-    expect(popover).toContain('ackHub(ackFromList(hub))')
+describe('the acknowledgement follows the jobs, not a count', () => {
+  const finished = (id: string, finishedAt: number): HubJobItem =>
+    hubJob({ jobId: id, state: 'done', createdAt: 1, finishedAt })
+
+  it('lights the dot for a new finish after every acknowledged job was dismissed elsewhere', () => {
+    // opened with two finished: acknowledged
+    let ack = ackFromList([finished('a', 10), finished('b', 30)])
+    expect(ack).toEqual({ at: 30, count: 2 })
+    // both dismissed elsewhere: the hub total falls to 0 and the count follows it down
+    ack = rebaseAck({ running: 0, unseenFinished: 0 }, ack)
+    expect(ack).toEqual({ at: 30, count: 0 })
+    // one new job finishes: the summary alone must show it
+    expect(hubUnseenFinished({ running: 0, unseenFinished: 1 }, ack)).toBe(1)
+  })
+
+  it('counts exactly from the list: only jobs that finished after what was seen', () => {
+    const ack = { at: 30, count: 2 }
+    const list = [finished('a', 10), finished('b', 30), finished('c', 40), hubJob({ jobId: 'r', state: 'running' })]
+    expect(hubUnseenFinished(null, ack, list)).toBe(1)
+    expect(hubUnseenFinished(null, ack, [])).toBe(0)
+  })
+
+  it('does not move the acknowledgement when the total is not below it', () => {
+    const ack = { at: 30, count: 2 }
+    expect(rebaseAck({ running: 0, unseenFinished: 2 }, ack)).toBe(ack)
+    expect(rebaseAck({ running: 0, unseenFinished: null }, ack)).toBe(ack)
+    expect(rebaseAck(null, ack)).toBe(ack)
+  })
+})
+
+describe('acknowledging and clearing, as behaviour', () => {
+  const finished = (id: string, finishedAt: number): HubJobItem =>
+    hubJob({ jobId: id, state: 'done', createdAt: 1, finishedAt })
+
+  it('acknowledges the list only when it is open and the list answered', () => {
+    const acks: unknown[] = []
+    const ackHub = (ack: unknown): void => void acks.push(ack)
+    acknowledgeOnOpen(true, null, ackHub)
+    acknowledgeOnOpen(false, [finished('a', 10)], ackHub)
+    expect(acks).toEqual([])
+    acknowledgeOnOpen(true, [finished('a', 10)], ackHub)
+    expect(acks).toEqual([{ at: 10, count: 1 }])
+  })
+
+  it('"Clear finished" dismisses each finished hub job once, resets the acknowledgement, and clears the device jobs', async () => {
+    const calls: string[] = []
+    const hub = [finished('a', 10), finished('b', 20), hubJob({ jobId: 'run', state: 'running' })]
+    await clearFinishedAll(hub, {
+      dismissLocal: () => calls.push('local'),
+      forgetHubJobs: (jobs) => calls.push(`forget:${jobs.map((j) => j.jobId).join(',')}`),
+      dismissHub: (id) => {
+        calls.push(`dismiss:${id}`)
+        return Promise.resolve(true)
+      },
+      ackHub: (ack) => calls.push(`ack:${String(ack.at)}/${String(ack.count)}`),
+    })
+    expect(calls).toEqual(['local', 'forget:a,b', 'ack:0/0', 'dismiss:a', 'dismiss:b'])
+  })
+
+  it('an unknown list dismisses nothing on the hub', async () => {
+    const dismissed: string[] = []
+    await clearFinishedAll(null, {
+      dismissLocal: () => undefined,
+      forgetHubJobs: () => undefined,
+      dismissHub: (id) => {
+        dismissed.push(id)
+        return Promise.resolve(true)
+      },
+      ackHub: () => undefined,
+    })
+    expect(dismissed).toEqual([])
   })
 })

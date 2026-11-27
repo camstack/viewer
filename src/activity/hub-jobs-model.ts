@@ -387,14 +387,64 @@ export function sameAck(a: HubAck, b: HubAck): boolean {
   return a.at === b.at && a.count === b.count
 }
 
+function finishedAtOf(job: HubJobItem): number {
+  return job.finishedAt ?? job.createdAt
+}
+
 /**
  * Finished hub jobs not yet looked at. A `null` summary (or measurement) counts
- * nothing; what was acknowledged is taken off the hub's total, so opening the
- * popover puts the dot out and a job that finishes afterwards lights it again.
+ * nothing. With the list in hand it is exact: the finished jobs that ended
+ * after the newest one the operator was shown (`ack.at`). With only the summary
+ * the hub's total less the acknowledged count stands in (see {@link rebaseAck}).
  */
-export function hubUnseenFinished(summary: HubJobsSummary | null, ack: HubAck = NO_ACK): number {
+export function hubUnseenFinished(
+  summary: HubJobsSummary | null,
+  ack: HubAck = NO_ACK,
+  hub: readonly HubJobItem[] | null = null,
+): number {
+  if (hub !== null) return hub.filter((job) => isFinishedHubJob(job) && finishedAtOf(job) > ack.at).length
   const total = summary?.unseenFinished ?? 0
   return Math.max(0, total - ack.count)
+}
+
+/**
+ * The acknowledged count can only be as large as what the hub still holds: when
+ * the hub's total falls below it (jobs dismissed elsewhere), the count follows
+ * it down, or a later finish would be swallowed by a count that no longer exists.
+ */
+export function rebaseAck(summary: HubJobsSummary | null, ack: HubAck): HubAck {
+  const total = summary?.unseenFinished
+  return typeof total === 'number' && total < ack.count ? { at: ack.at, count: total } : ack
+}
+
+/** The popover is open and the list answered: what it shows is acknowledged. An unknown list acknowledges nothing. */
+export function acknowledgeOnOpen(
+  visible: boolean,
+  hub: readonly HubJobItem[] | null,
+  ackHub: (ack: HubAck) => void,
+): void {
+  if (visible && hub !== null) ackHub(ackFromList(hub))
+}
+
+export interface ClearFinishedActions {
+  /** Hide the device's own finished jobs. */
+  readonly dismissLocal: () => void
+  /** Drop the device twins of these hub export jobs. */
+  readonly forgetHubJobs: (jobs: readonly HubJobItem[]) => void
+  readonly dismissHub: (jobId: string) => Promise<unknown>
+  readonly ackHub: (ack: HubAck) => void
+}
+
+/** "Clear finished": the device's finished jobs and every finished hub job, and the acknowledgement starts over. */
+export async function clearFinishedAll(
+  hub: readonly HubJobItem[] | null,
+  actions: ClearFinishedActions,
+): Promise<void> {
+  const finished = (hub ?? []).filter(isFinishedHubJob)
+  actions.dismissLocal()
+  actions.forgetHubJobs(finished)
+  actions.ackHub(NO_ACK)
+  await Promise.all(finished.map((job) => actions.dismissHub(job.jobId)))
 }
 
 /** The ring's reading for device and hub work together. */

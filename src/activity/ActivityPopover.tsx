@@ -23,7 +23,8 @@ import { POPOVER_MIN_WIDTH } from '../navigation/popover-metrics.js'
 import { useActivityStore } from './activity-instance.js'
 import { hasFinishedJobs } from './activity-jobs.js'
 import {
-  ackFromList,
+  acknowledgeOnOpen,
+  clearFinishedAll,
   cancelRefusalKey,
   hubJobClear,
   isFinishedHubJob,
@@ -68,7 +69,7 @@ export function ActivityPopover({ visible, onClose, anchor, menuAlign }: Activit
   // The hub has no "seen" call: what was shown is remembered on this device, at
   // the moment the device list clears its own badge — and again as it updates.
   useEffect(() => {
-    if (visible && hub !== null) ackHub(ackFromList(hub))
+    acknowledgeOnOpen(visible, hub, ackHub)
   }, [visible, hub, ackHub])
 
   const listed = useMemo(() => mergeActivity(items, hub), [items, hub])
@@ -99,10 +100,13 @@ export function ActivityPopover({ visible, onClose, anchor, menuAlign }: Activit
   )
   // "Clear finished": the device's finished jobs and the hub's.
   const clearFinished = useCallback((): void => {
-    dismissFinished()
-    forgetHubJobs(finishedHub)
-    void Promise.all(finishedHub.map((job) => hubActions.dismiss(job.jobId)))
-  }, [dismissFinished, forgetHubJobs, finishedHub, hubActions])
+    void clearFinishedAll(hub, {
+      dismissLocal: dismissFinished,
+      forgetHubJobs,
+      dismissHub: hubActions.dismiss,
+      ackHub,
+    })
+  }, [hub, dismissFinished, forgetHubJobs, hubActions, ackHub])
   const onOpenResult = useCallback(
     async (job: HubJobItem): Promise<void> => {
       const url = await hubActions.resultUrl(job.jobId)

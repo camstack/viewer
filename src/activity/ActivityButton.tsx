@@ -18,7 +18,7 @@ import { useTheme } from '../theme/theme-provider.js'
 import { TABULAR } from '../theme/tokens.js'
 import { useActivityStore } from './activity-instance.js'
 import { hasUndismissedItems, unseenFinishedCount } from './activity-model.js'
-import { hubUnseenFinished, mergedProgress, runningCount } from './hub-jobs-model.js'
+import { hubUnseenFinished, mergedProgress, rebaseAck, runningCount } from './hub-jobs-model.js'
 import { useHubActivity } from './use-hub-activity.js'
 import { START_PULSE_MS, useActivityStartPulse } from './activity-start-pulse.js'
 import { ActivityRing } from './ActivityRing.js'
@@ -54,7 +54,13 @@ export const ActivityButton = memo(function ActivityButton({ menuAlign = 'end', 
   const running = useMemo(() => runningCount(items, hub, summary), [items, hub, summary])
   // An unmeasured hub count (`null`) adds nothing; it is never a crash or a zero claim.
   const hubAck = useActivityStore((s) => s.hubAck)
-  const hubUnseen = hubUnseenFinished(summary, hubAck)
+  const ackHub = useActivityStore((s) => s.ackHub)
+  // Jobs dismissed elsewhere lower the hub's total: the acknowledged count follows it down.
+  useEffect(() => {
+    const rebased = rebaseAck(summary, hubAck)
+    if (rebased !== hubAck) ackHub(rebased)
+  }, [summary, hubAck, ackHub])
+  const hubUnseen = hubUnseenFinished(summary, hubAck, hub)
   const unseen = unseenFinishedCount(items) + hubUnseen
   // In the bar only while there is something to look at; kept while its own
   // popover is open so clearing the last row does not pull the anchor away.
