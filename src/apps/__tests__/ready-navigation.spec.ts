@@ -75,4 +75,11 @@ describe('where a framed app is sent on ready', () => {
     h.ready(null, '/system/logs')
     expect(h.sent).toEqual(['/addon/homematic-ccu/devices', '/addon/homematic-ccu/devices'])
   })
+
+  it('after arrival, a ready at a different path (the user navigated away) is left alone', () => {
+    const h = harness('webview-handoff', page)
+    h.ready(null, '/addon/homematic-ccu')
+    h.ready(null, '/system/logs')
+    expect(h.sent).toEqual([])
+  })
 })

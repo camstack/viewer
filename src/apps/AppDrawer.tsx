@@ -192,31 +192,31 @@ export function AppDrawer(): React.JSX.Element | null {
       >
         {/* Three sections, three layers: app selection (raised), the app's nav (page), the footer (surface). */}
         <View style={[styles.top, { backgroundColor: colors.backgroundElevated, borderBottomColor: colors.border }]} testID="drawer-section-top">
-        <View style={styles.header}>
-          <View style={styles.spacer} />
-          <Badge size="sm" tone={local ? 'success' : 'warning'} label={t(local ? 'v2.apps.routeLocal' : 'v2.apps.routeRemote')} />
-          <Pressable onPress={close} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('v2.apps.closeMenu')}>
-            <X size={18} color={colors.foregroundMuted} />
-          </Pressable>
-        </View>
+          <View style={styles.header}>
+            <View style={styles.spacer} />
+            <Badge size="sm" tone={local ? 'success' : 'warning'} label={t(local ? 'v2.apps.routeLocal' : 'v2.apps.routeRemote')} />
+            <Pressable onPress={close} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('v2.apps.closeMenu')}>
+              <X size={18} color={colors.foregroundMuted} />
+            </Pressable>
+          </View>
 
-        <PickerSearchRow testID="drawer-search" search={{ value: query, onChange: setQuery, placeholder: t('v2.apps.searchPlaceholder'), autoFocus: searchFocus }} />
+          <PickerSearchRow testID="drawer-search" search={{ value: query, onChange: setQuery, placeholder: t('v2.apps.searchPlaceholder'), autoFocus: searchFocus }} />
 
-        {searching ? null : (
-          <MenuRow
-            testID="drawer-app-selector"
-            icon={model.activeApp !== null ? appIconFor(model.activeApp.icon) : Layers}
-            label={
-              model.activeApp !== null
-                ? model.activeApp.label
-                : t(model.appsState === 'pending' ? 'v2.apps.loading' : model.appsState === 'unknown' ? 'v2.apps.unavailable' : 'v2.apps.apps')
-            }
-            // An ANSWERED list without the active app still opens the sheet: another app can be picked (D315).
-            disabled={model.appsState !== 'answered'}
-            onPress={() => setPickingApp(true)}
-            trailing={model.appsState === 'answered' ? <ChevronsUpDown size={16} color={colors.foregroundSubtle} /> : null}
-          />
-        )}
+          {searching ? null : (
+            <MenuRow
+              testID="drawer-app-selector"
+              icon={model.activeApp !== null ? appIconFor(model.activeApp.icon) : Layers}
+              label={
+                model.activeApp !== null
+                  ? model.activeApp.label
+                  : t(model.appsState === 'pending' ? 'v2.apps.loading' : model.appsState === 'unknown' ? 'v2.apps.unavailable' : 'v2.apps.apps')
+              }
+              // An ANSWERED list without the active app still opens the sheet: another app can be picked (D315).
+              disabled={model.appsState !== 'answered'}
+              onPress={() => setPickingApp(true)}
+              trailing={model.appsState === 'answered' ? <ChevronsUpDown size={16} color={colors.foregroundSubtle} /> : null}
+            />
+          )}
         </View>
 
         <ScrollView

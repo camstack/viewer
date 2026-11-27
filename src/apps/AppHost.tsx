@@ -21,6 +21,7 @@ import { launchResolvable, offeredLaunchPreferences, resolveLaunchApp, resolveSw
 import { useAppStore } from './app-store.js'
 import { AppDrawer } from './AppDrawer.js'
 import { EmbeddedApp } from './EmbeddedApp.js'
+import { applyServerChange } from './server-transition.js'
 import { ServerSwitchLoader } from './ServerSwitchLoader.js'
 
 export function AppHost(): React.JSX.Element {
@@ -44,13 +45,9 @@ export function AppHost(): React.JSX.Element {
   const serverId = server?.id ?? null
   const previous = useRef(serverId)
   useEffect(() => {
-    if (previous.current === serverId) return
     const from = previous.current
     previous.current = serverId
-    const store = useAppStore.getState()
-    // The first connect is not a switch: the launch preference decides.
-    if (from === null || serverId === null) store.setServerId(serverId)
-    else store.switchServer(serverId)
+    applyServerChange(from, serverId)
   }, [serverId])
   useEffect(() => {
     useAppStore.getState().setServerId(serverId)
