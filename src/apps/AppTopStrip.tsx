@@ -1,7 +1,8 @@
 /**
  * AppTopStrip — the one thin strip over a framed app (Admin):
- * [back] [menu] title, where the route is (LOCAL / REMOTE) and a reload. The viewer's
- * own navigation is not drawn here; the drawer is how you leave.
+ * [back] [menu] title, where the route is (LOCAL / REMOTE) and a reload. Back returns to
+ * the previous screen, or to the Cameras tab when there is no history; the drawer reaches
+ * everything else.
  */
 import React from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
