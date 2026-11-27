@@ -179,7 +179,7 @@ export function AppDrawer(): React.JSX.Element | null {
             width: panelWidth,
             paddingTop: insets.top,
             paddingBottom: insets.bottom,
-            backgroundColor: colors.backgroundElevated,
+            backgroundColor: colors.background,
             borderRightColor: colors.border,
           },
         ]}
@@ -190,7 +190,9 @@ export function AppDrawer(): React.JSX.Element | null {
           if (swipeStart.x - e.nativeEvent.pageX > SWIPE_CLOSE_PX) close()
         }}
       >
-        <View style={[styles.header, { borderBottomColor: colors.borderSubtle }]}>
+        {/* Three sections, three layers: app selection (raised), the app's nav (page), the footer (surface). */}
+        <View style={[styles.top, { backgroundColor: colors.backgroundElevated, borderBottomColor: colors.border }]} testID="drawer-section-top">
+        <View style={styles.header}>
           <View style={styles.spacer} />
           <Badge size="sm" tone={local ? 'success' : 'warning'} label={t(local ? 'v2.apps.routeLocal' : 'v2.apps.routeRemote')} />
           <Pressable onPress={close} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('v2.apps.closeMenu')}>
@@ -215,8 +217,14 @@ export function AppDrawer(): React.JSX.Element | null {
             trailing={model.appsState === 'answered' ? <ChevronsUpDown size={16} color={colors.foregroundSubtle} /> : null}
           />
         )}
+        </View>
 
-        <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          style={{ backgroundColor: colors.background }}
+          contentContainerStyle={styles.body}
+          keyboardShouldPersistTaps="handled"
+          testID="drawer-section-nav"
+        >
           {searching ? (
             <SearchResults
               results={results}
@@ -249,7 +257,7 @@ export function AppDrawer(): React.JSX.Element | null {
           )}
         </ScrollView>
 
-        <View style={[styles.footer, { borderTopColor: colors.borderSubtle }]}>
+        <View style={[styles.footer, { backgroundColor: colors.surface, borderTopColor: colors.border }]} testID="drawer-section-footer">
           <View testID="drawer-user-block">
             <View style={styles.account} testID="drawer-account">
               <UserAvatar name={me?.username ?? null} />
@@ -363,8 +371,8 @@ const styles = StyleSheet.create({
     gap: SPACING.md,
     paddingHorizontal: SPACING.xl,
     paddingVertical: SPACING.md,
-    borderBottomWidth: StyleSheet.hairlineWidth,
   },
+  top: { borderBottomWidth: StyleSheet.hairlineWidth },
   headerText: { flex: 1, gap: 2 },
   spacer: { flex: 1 },
   name: { fontSize: 15, fontWeight: '700' },
