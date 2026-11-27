@@ -31,6 +31,20 @@ export interface WhatsNewEntry {
 // i18n-ok: release notes carry their own `en` + `it` text per entry (typed, held by whats-new.spec.ts)
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '1.0.741',
+    date: '2026-11-27',
+    notes: {
+      en: [
+        'Overlays on small cameras no longer shrink below half size.',
+        'Apps have a back button in their top strip.',
+      ],
+      it: [
+        'Gli overlay sulle camere piccole non scendono più sotto metà dimensione.',
+        'Le app hanno un pulsante Indietro nella barra in alto.',
+      ],
+    },
+  },
+  {
     version: '1.0.740',
     date: '2026-11-26',
     notes: {
