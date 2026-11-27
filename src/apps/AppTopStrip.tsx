@@ -1,16 +1,19 @@
 /**
  * AppTopStrip — the one thin strip over a framed app (Admin):
- * [menu] title, where the route is (LOCAL / REMOTE) and a reload. The viewer's
+ * [back] [menu] title, where the route is (LOCAL / REMOTE) and a reload. The viewer's
  * own navigation is not drawn here; the drawer is how you leave.
  */
 import React from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
+import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
+import { HeaderBackButton } from '../components/ScreenHeader.js'
 import { Badge } from '../components/ui/Badge.js'
 import { hapticTap } from '../lib/haptics.js'
 import { Menu, RotateCw } from '../lib/icons.js'
+import { backOrCameras } from '../navigation/back-or-cameras.js'
 import { useTheme } from '../theme/theme-provider.js'
 import { SPACING } from '../theme/tokens.js'
 
@@ -28,6 +31,7 @@ export function AppTopStrip({ title, local, onMenu, onReload }: AppTopStripProps
   const { t } = useTranslation()
   const { colors } = useTheme()
   const insets = useSafeAreaInsets()
+  const router = useRouter()
   return (
     <View
       style={[
@@ -35,6 +39,7 @@ export function AppTopStrip({ title, local, onMenu, onReload }: AppTopStripProps
         { paddingTop: insets.top, height: APP_STRIP_HEIGHT + insets.top, backgroundColor: colors.backgroundElevated, borderBottomColor: colors.border },
       ]}
     >
+      <HeaderBackButton size={32} testID="app-strip-back" onPress={() => backOrCameras(router)} />
       <Pressable
         testID="app-strip-menu"
         onPress={() => {

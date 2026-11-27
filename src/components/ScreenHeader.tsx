@@ -132,9 +132,18 @@ export function HeaderActionCluster({
 /** THE back button: the glass chevron at a header's start — the app bar's,
  *  and the floating one over a grid wall. One call so the size and the label
  *  cannot drift between the three places that draw it. */
-export function HeaderBackButton({ onPress, testID }: { readonly onPress: () => void; readonly testID?: string }) {
+export function HeaderBackButton({
+  onPress,
+  testID,
+  size = HEADER_BUTTON_SIZE,
+}: {
+  readonly onPress: () => void
+  readonly testID?: string
+  /** Smaller than a header's button where it sits in a thin strip. */
+  readonly size?: number
+}) {
   const { t } = useTranslation()
-  return <GlassButton icon={ChevronLeft} label={t('common.back')} onPress={onPress} size={HEADER_BUTTON_SIZE} testID={testID} />
+  return <GlassButton icon={ChevronLeft} label={t('common.back')} onPress={onPress} size={size} testID={testID} />
 }
 
 /** The single place srcV2 applies the top safe-area inset, and THE header of
