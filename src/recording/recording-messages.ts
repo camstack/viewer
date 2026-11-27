@@ -12,6 +12,8 @@ export type RecordingReportState = 'idle' | 'loading' | 'playing' | 'paused' | '
 export type RecordingHostMessage =
   | { readonly type: 'state'; readonly state: RecordingReportState; readonly message?: string }
   | { readonly type: 'position'; readonly positionMs: number }
+  /** The recorded epoch of the frame the player PRESENTED (not the send cursor). */
+  | { readonly type: 'presented'; readonly positionMs: number }
   | { readonly type: 'log'; readonly scope: string; readonly msg: string; readonly data?: unknown }
   // First pushed scrub frame rendered on the WebRTC track. The host hides its
   // instant sprite placeholder once the requested footage is visible.
@@ -164,6 +166,10 @@ export function coerceRecordingHostMessage(data: unknown): RecordingHostMessage 
   if (m.type === 'position') {
     if (typeof m.positionMs !== 'number') return null
     return { type: 'position', positionMs: m.positionMs }
+  }
+  if (m.type === 'presented') {
+    if (typeof m.positionMs !== 'number' || !Number.isFinite(m.positionMs)) return null
+    return { type: 'presented', positionMs: m.positionMs }
   }
   if (m.type === 'log') {
     if (typeof m.scope !== 'string' || typeof m.msg !== 'string') return null

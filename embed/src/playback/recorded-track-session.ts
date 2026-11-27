@@ -33,6 +33,8 @@
  * replaces it, so the recorded→live flash is impossible by construction.
  */
 
+import { anchorFromPosition, presentedEpoch, type PresentedAnchor } from './presented-clock.js'
+
 /**
  * The client mapping decision carried alongside a `scrubTo`, in the shape
  * `drag-mapping.ts` produces. Structural on purpose — the viewer app ports the
@@ -107,9 +109,18 @@ export const HELD_OPEN_TIMEOUT_MS = 30_000
  */
 export const HELD_CARRY_GRACE_MS = 5_000
 
+/** Pointer moves after which the RTP→epoch anchor is no longer true. */
+const ANCHOR_BREAKING: ReadonlySet<string> = new Set([
+  'playRecorded', 'playClip', 'seek', 'setRate', 'stepFrame', 'goLive',
+  'scrubStart', 'scrubTo', 'scrubCommit',
+])
+
+/** The most often a presented epoch is reported to the host. */
+export const PRESENTED_REPORT_MS = 200
+
 /** The rendered-frame callback surface (structurally HTMLVideoElement). */
 export interface RecordedVideoLike {
-  requestVideoFrameCallback?(cb: () => void): number
+  requestVideoFrameCallback?(cb: (now: number, metadata?: { readonly rtpTimestamp?: number }) => void): number
   cancelVideoFrameCallback?(handle: number): void
 }
 
@@ -153,6 +164,13 @@ export interface RecordedTrackSessionDeps {
   readonly onState?: (state: RecordedTrackState) => void
   /** Server playhead (~1 Hz in playback, per push in scrub). */
   readonly onPosition?: (epochMs: number) => void
+  /**
+   * The recorded epoch of the frame the browser PRESENTED, at most one report
+   * per {@link PRESENTED_REPORT_MS}. Only fires when the hub's `position`
+   * carries an RTP stamp AND the engine exposes `rtpTimestamp` on the frame
+   * callback; otherwise `onPosition` (the send cursor) is all there is.
+   */
+  readonly onPresented?: (epochMs: number) => void
   /** Effective physical tier selected by the live adaptive session. */
   readonly onLiveProfile?: (profile: 'high' | 'mid' | 'low') => void
   /**
@@ -478,6 +496,8 @@ export class RecordedTrackSession {
     if (msg.t !== 'position' || typeof msg.epochMs !== 'number') return
     this.lastCursorMs = msg.epochMs
     this.deps.onPosition?.(msg.epochMs)
+    this.presentedAnchor = anchorFromPosition({ ...msg, epochMs: msg.epochMs })
+    if (this.presentedAnchor !== null) this.armPresented()
     // Only a position a PUSH emitted carries a sequence; keep the newest so
     // every ack names the push it settles.
     if (typeof msg.seq === 'number') this.lastPushSeq = msg.seq
@@ -629,6 +649,10 @@ export class RecordedTrackSession {
   /** True = sent; false = channel not open (the caller surfaces the gap). */
   private send(msg: Record<string, unknown>): boolean {
     if (this.disposed || this.deps.channel.readyState !== 'open') return false
+    // Any pointer move invalidates the RTP mapping: a frame presented before
+    // the hub answers belongs to the OLD pointer, and mapping it through the
+    // old anchor is the stale box after a seek. The next `position` re-anchors.
+    if (typeof msg.t === 'string' && ANCHOR_BREAKING.has(msg.t)) this.presentedAnchor = null
     this.deps.channel.send(JSON.stringify(msg))
     return true
   }
@@ -1034,6 +1058,9 @@ export class RecordedTrackSession {
 
   dispose(): void {
     this.cancelPlaybackUpgrade()
+    this.presentedAnchor = null
+    if (this.presentedHandle !== null) this.deps.video()?.cancelVideoFrameCallback?.(this.presentedHandle)
+    this.presentedHandle = null
     this.end()
     // Still held here means nobody carried it (`takeHeld`): report it.
     this.dropHeld('disposed')
@@ -1041,6 +1068,31 @@ export class RecordedTrackSession {
     this.deps.channel.removeEventListener('message', this.onMessage)
     this.deps.channel.removeEventListener('open', this.onOpen)
     this.deps.channel.removeEventListener('close', this.onClose)
+  }
+
+  /** The RTP→epoch mapping of the newest `position`; null = no presented time. */
+  private presentedAnchor: PresentedAnchor | null = null
+  private presentedHandle: number | null = null
+  private lastPresentedAt = 0
+
+  /** One presented-frame subscription at a time, re-armed per frame. */
+  private armPresented(): void {
+    if (this.presentedHandle !== null || this.begun || this.disposed) return
+    const video = this.deps.video()
+    if (!video?.requestVideoFrameCallback || !this.deps.onPresented) return
+    this.presentedHandle = video.requestVideoFrameCallback((_now, metadata) => {
+      this.presentedHandle = null
+      if (this.disposed || this.begun) return
+      const epoch = presentedEpoch(this.presentedAnchor, metadata?.rtpTimestamp)
+      const at = Date.now()
+      if (epoch !== null && at - this.lastPresentedAt >= PRESENTED_REPORT_MS) {
+        this.lastPresentedAt = at
+        this.deps.onPresented?.(epoch)
+      }
+      // Re-arm only while there is something to map; the next position with an
+      // RTP stamp re-arms after a break.
+      if (this.presentedAnchor !== null) this.armPresented()
+    })
   }
 
   /** One rendered-frame subscription at a time, re-armed per frame. */

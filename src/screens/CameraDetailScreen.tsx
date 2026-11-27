@@ -193,6 +193,7 @@ import {
 } from '../live/battery-stream-gate.js'
 import { useStreamAspect } from '../live/stream-aspect.js'
 import { PlaybackOverlayDriver } from '../playback-overlay/PlaybackOverlayDriver.js'
+import type { PresentedReport } from '../playback-overlay/playback-clock.js'
 import { createPlaybackOverlayStore, usePlaybackSlice } from '../playback-overlay/playback-overlay-store.js'
 import { NO_OCCUPANCY, resolvePlaybackGates, sameOccupancy } from '../playback-overlay/playback-overlay-source.js'
 import { MotionBoxesOverlay } from '../components/camera/MotionBoxesOverlay.js'
@@ -1414,6 +1415,12 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
     scrubFramePainted(deviceId)
   }, [deviceId])
 
+  // The frame the player PRESENTED (planning#728 P2): a ref the overlay clock
+  // polls, so a 5 Hz report never re-renders this screen.
+  const presentedRef = useRef<PresentedReport | null>(null)
+  const onPlayerPresented = useCallback((epochMs: number) => {
+    presentedRef.current = { epochMs, atWall: Date.now() }
+  }, [])
   const reportClipPosition = clipStage.reportPosition
   const onPlayerPosition = useCallback(
     (epochMs: number) => {
@@ -2957,6 +2964,7 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
                 onPlaybackState={onEmbedPlaybackState}
                 onPlayerState={setPlayerStatus}
                 onPosition={onPlayerPosition}
+                onPresented={onPlayerPresented}
                 onLiveCaptureError={onLiveCaptureError}
                 onScrubDrawn={onScrubDrawn}
                 onServedProfile={setServedTier}
@@ -2991,6 +2999,7 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
                 scrubbing: playback.state.mode === 'seeking',
                 paused: recPaused,
                 rate: speed,
+                presentedRef,
               }}
             />
             {detectionBoxesOn && gates.boxes ? (

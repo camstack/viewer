@@ -54,6 +54,7 @@ export const LiveView = forwardRef<LiveViewHandle, LiveViewProps>(function LiveV
     onPlaybackState,
     onPlayerState,
     onPosition,
+    onPresented,
     onServedProfile,
     onClipDuration,
     onClipAudio,
@@ -192,6 +193,10 @@ export const LiveView = forwardRef<LiveViewHandle, LiveViewProps>(function LiveV
       onPosition?.(m.positionMs)
       return
     }
+    if (m.type === 'presented' && typeof m.positionMs === 'number') {
+      onPresented?.(m.positionMs)
+      return
+    }
     if (m.type === 'recState' && typeof m.state === 'string') {
       onPlaybackState?.(mapRecState(m.state))
       return
@@ -219,7 +224,7 @@ export const LiveView = forwardRef<LiveViewHandle, LiveViewProps>(function LiveV
       // player is left exactly as it is.
       onClipIncomplete?.(rec)
     }
-  }, [onPosition, onPlaybackState, onServedProfile, onClipDuration, onClipAudio, onClipIncomplete, onLiveCaptureError, deviceId, logRouter])
+  }, [onPosition, onPresented, onPlaybackState, onServedProfile, onClipDuration, onClipAudio, onClipIncomplete, onLiveCaptureError, deviceId, logRouter])
 
   const { iframeRef, src, postCommand, reload } = useEmbedIframe({
     serverUrl,

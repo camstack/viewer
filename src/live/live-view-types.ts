@@ -97,6 +97,12 @@ export interface LiveViewProps {
   /** Recorded playhead position (epoch ms) reported by the embed (page → host). */
   readonly onPosition?: (epochMs: number) => void
   /**
+   * The recorded epoch of the frame the player PRESENTED (rvfc + the hub's RTP
+   * anchor). Absent on a player or hub that cannot say; `onPosition` (the send
+   * cursor) is then the only clock.
+   */
+  readonly onPresented?: (epochMs: number) => void
+  /**
    * Live capture failed before Stop (no MediaRecorder, no video element, …).
    * The host bar is already showing a recording state; this lets it drop it.
    */

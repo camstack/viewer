@@ -1103,6 +1103,8 @@ function EmbedPlayer({
             // page just forwards them to the host chrome.
             onState: (state) => emitHost({ type: 'recState', state }),
             onPosition: (epochMs) => emitHost({ type: 'position', positionMs: epochMs }),
+            // The frame on screen, not the send cursor (planning#728 P2).
+            onPresented: (epochMs) => emitHost({ type: 'presented', positionMs: epochMs }),
             onServedProfile: (served) =>
               emitHost({ type: 'servedProfile', profile: served.profile, requested: served.requested }),
             // The clip's REAL length, measured by the broker from the file's

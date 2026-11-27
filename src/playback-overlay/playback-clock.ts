@@ -6,9 +6,12 @@
  * overlays need a smoother time than 1 Hz, so this projects the last report
  * forward at the play rate, on the wall clock the caller passes in.
  *
- * Pure and immutable: every function returns a new state. Frame accuracy
- * (a receiver-side clock) is a separate piece of work; this is the best the
- * 1 Hz cursor can honestly give.
+ * Where the player can name the frame it PRESENTED (`requestVideoFrameCallback`
+ * plus the hub's RTP anchor, planning#728 P2), that report is the truth and the
+ * send cursor is ignored while it keeps arriving. Without it (no rvfc, no RTP
+ * stamp from the hub, a native player) the cursor, interpolated, is the clock.
+ *
+ * Pure and immutable: every function returns a new state.
  */
 
 export interface PlaybackClock {
@@ -18,9 +21,20 @@ export interface PlaybackClock {
   /** Play rate (1 = real time). */
   readonly rate: number
   readonly paused: boolean
+  /** Wall time of the last presented-frame anchor; null = none (cursor mode). */
+  readonly presentedWall: number | null
 }
 
-export const initialClock: PlaybackClock = { anchorEpoch: null, anchorWall: 0, rate: 1, paused: false }
+export const initialClock: PlaybackClock = {
+  anchorEpoch: null,
+  anchorWall: 0,
+  rate: 1,
+  paused: false,
+  presentedWall: null,
+}
+
+/** A presented-frame report this recent keeps the send cursor out of the clock. */
+export const PRESENTED_FRESH_MS = 1_000
 
 /** A tick further than this from the projection is a jump, not jitter. */
 export const CLOCK_JUMP_MS = 2_500
@@ -43,6 +57,7 @@ function anchored(clock: PlaybackClock, epoch: number, wall: number): PlaybackCl
  * from the projection re-anchors.
  */
 export function clockReport(clock: PlaybackClock, epoch: number, wall: number): PlaybackClock {
+  if (clock.presentedWall !== null && wall - clock.presentedWall < PRESENTED_FRESH_MS) return clock
   const projected = clockAt(clock, wall)
   if (projected === null) return anchored(clock, epoch, wall)
   const delta = epoch - projected
@@ -53,7 +68,15 @@ export function clockReport(clock: PlaybackClock, epoch: number, wall: number): 
 
 /** A seek: the previous interpolation is dropped, the rate survives. */
 export function clockSeek(clock: PlaybackClock, epoch: number, wall: number): PlaybackClock {
-  return anchored(clock, epoch, wall)
+  return { ...anchored(clock, epoch, wall), presentedWall: null }
+}
+
+/**
+ * The epoch of the frame the player presented at `wall`: a hard anchor (it is
+ * the truth, not a jittery estimate). Wall times are the caller's single clock.
+ */
+export function clockPresented(clock: PlaybackClock, epoch: number, wall: number): PlaybackClock {
+  return { ...anchored(clock, epoch, wall), presentedWall: wall }
 }
 
 export function clockSetRate(clock: PlaybackClock, rate: number, wall: number): PlaybackClock {
@@ -68,3 +91,26 @@ export function clockSetPaused(clock: PlaybackClock, paused: boolean, wall: numb
   const next = { ...clock, paused }
   return now === null ? next : anchored(next, now, wall)
 }
+
+/** The presented-frame report the player bridge writes (a ref: no re-render per frame). */
+export interface PresentedReport {
+  readonly epochMs: number
+  /** Wall time the report was received (`Date.now()`). */
+  readonly atWall: number
+}
+
+/**
+ * Take a presented report into the clock. Dropped while a seek still waits for
+ * its anchor (a frame of the OLD pointer), and each report is taken once.
+ */
+export function takePresented(
+  clock: PlaybackClock,
+  report: PresentedReport | null,
+  lastAtWall: number | null,
+  awaitingAnchor: boolean,
+): { readonly clock: PlaybackClock; readonly lastAtWall: number | null } {
+  if (report === null || report.atWall === lastAtWall) return { clock, lastAtWall }
+  if (awaitingAnchor) return { clock, lastAtWall: report.atWall }
+  return { clock: clockPresented(clock, report.epochMs, report.atWall), lastAtWall: report.atWall }
+}
+

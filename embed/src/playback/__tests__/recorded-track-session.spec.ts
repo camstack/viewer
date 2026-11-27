@@ -46,12 +46,12 @@ function fakeChannel(state = 'open'): FakeChannel {
 
 interface FakeVideo {
   render(): void
-  requestVideoFrameCallback(cb: () => void): number
+  requestVideoFrameCallback(cb: (now: number) => void): number
   cancelVideoFrameCallback(handle: number): void
 }
 
 function fakeVideo(): FakeVideo {
-  let pending: (() => void) | null = null
+  let pending: ((now: number) => void) | null = null
   return {
     requestVideoFrameCallback(cb) {
       pending = cb
@@ -63,7 +63,7 @@ function fakeVideo(): FakeVideo {
     render() {
       const cb = pending
       pending = null
-      cb?.()
+      cb?.(0)
     },
   }
 }

@@ -203,6 +203,7 @@ export const LiveViewWebView = forwardRef<LiveViewHandle, LiveViewProps>(functio
     onPlaybackState,
     onPlayerState,
     onPosition,
+    onPresented,
     onLiveCaptureError,
     onScrubDrawn,
 
@@ -1014,6 +1015,10 @@ go();})(); true;`
         onPosition?.(rec.positionMs)
         return
       }
+      if (rec && rec.type === 'presented') {
+        onPresented?.(rec.positionMs)
+        return
+      }
       if (rec && rec.type === 'servedProfile') {
         onServedProfile?.({ profile: rec.profile, requested: rec.requested })
         return
@@ -1041,7 +1046,7 @@ go();})(); true;`
       const mode = parseRecState(raw)
       if (mode) onPlaybackState?.(mode)
     }
-  }, [onPosition, onPlaybackState, onScrubDrawn, onServedProfile, onClipDuration, onClipAudio, onClipIncomplete, onLiveCaptureError, deviceId, logRouter, pipForeground])
+  }, [onPosition, onPresented, onPlaybackState, onScrubDrawn, onServedProfile, onClipDuration, onClipAudio, onClipIncomplete, onLiveCaptureError, deviceId, logRouter, pipForeground])
 
   const handleLoadError = useCallback((): void => {
     // Covers DNS/connection failures and HTTP errors (incl. TLS rejections,

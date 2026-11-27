@@ -17,7 +17,9 @@ import {
   clockSetPaused,
   clockSetRate,
   initialClock,
+  takePresented,
   type PlaybackClock,
+  type PresentedReport,
 } from './playback-clock.js'
 import {
   OVERLAY_WINDOW_MS,
@@ -27,6 +29,7 @@ import {
   windowStartFor,
   type WindowRead,
 } from './playback-window-read.js'
+export type { PresentedReport } from './playback-clock.js'
 import type { PlaybackOverlayFrame } from './playback-overlay-source.js'
 
 /** How often the interpolated time is re-read. */
@@ -45,6 +48,8 @@ export interface PlaybackOverlayInput {
   readonly scrubbing: boolean
   readonly paused: boolean
   readonly rate: number
+  /** The newest presented-frame report; null/absent = cursor-only clock. */
+  readonly presentedRef?: { current: PresentedReport | null }
 }
 
 /** tRPC clients are proxies (functions), so `isRecord` rejects them. */
@@ -53,11 +58,12 @@ function isCapClient(v: unknown): v is Record<string, unknown> {
 }
 
 export function usePlaybackOverlay(input: PlaybackOverlayInput): PlaybackOverlayFrame {
-  const { deviceId, enabled, playhead, seekTarget, seekAnchor, scrubbing, paused, rate } = input
+  const { deviceId, enabled, playhead, seekTarget, seekAnchor, scrubbing, paused, rate, presentedRef } = input
   const { controller, state } = useConnection()
 
   const clockRef = useRef<PlaybackClock>(initialClock)
   const awaitingAnchorRef = useRef(false)
+  const lastPresentedRef = useRef<number | null>(null)
   const [t, setT] = useState<number | null>(null)
 
   // Leaving the recorded path, or another camera, forgets the clock: the next
@@ -65,8 +71,10 @@ export function usePlaybackOverlay(input: PlaybackOverlayInput): PlaybackOverlay
   useEffect(() => {
     clockRef.current = initialClock
     awaitingAnchorRef.current = false
+    lastPresentedRef.current = null
+    if (presentedRef) presentedRef.current = null
     setT(null)
-  }, [enabled, deviceId])
+  }, [enabled, deviceId, presentedRef])
 
   // A seek resets the interpolation; the first cursor report after it is the
   // new anchor (a pre-seek straggler is already dropped by the machine).
@@ -74,8 +82,10 @@ export function usePlaybackOverlay(input: PlaybackOverlayInput): PlaybackOverlay
     if (!enabled || seekAnchor === null) return
     clockRef.current = clockSeek(clockRef.current, seekAnchor, Date.now())
     awaitingAnchorRef.current = true
+    // A frame presented before the seek belongs to the old pointer.
+    if (presentedRef) presentedRef.current = null
     setT(seekAnchor)
-  }, [enabled, seekAnchor])
+  }, [enabled, seekAnchor, presentedRef])
 
   // The scrub preview is the time shown while dragging.
   useEffect(() => {
@@ -102,9 +112,19 @@ export function usePlaybackOverlay(input: PlaybackOverlayInput): PlaybackOverlay
 
   useEffect(() => {
     if (!enabled || paused || scrubbing) return
-    const id = setInterval(() => setT(clockAt(clockRef.current, Date.now())), TICK_MS)
+    const id = setInterval(() => {
+      const taken = takePresented(
+        clockRef.current,
+        presentedRef?.current ?? null,
+        lastPresentedRef.current,
+        awaitingAnchorRef.current,
+      )
+      clockRef.current = taken.clock
+      lastPresentedRef.current = taken.lastAtWall
+      setT(clockAt(clockRef.current, Date.now()))
+    }, TICK_MS)
     return () => clearInterval(id)
-  }, [enabled, paused, scrubbing])
+  }, [enabled, paused, scrubbing, presentedRef])
 
   const block = t === null ? null : windowStartFor(t)
   const read = useQuery<WindowRead>({

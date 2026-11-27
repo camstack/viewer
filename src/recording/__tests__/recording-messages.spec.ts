@@ -248,3 +248,13 @@ describe('parseRecordingHostMessage — the clip duration report', () => {
     expect(coerceRecordingHostMessage(null)).toBeNull()
   })
 })
+
+describe('presented host message (planning#728 P2)', () => {
+  it('is parsed with a finite position and refused without one', () => {
+    expect(parseRecordingHostMessage(JSON.stringify({ type: 'presented', positionMs: 5 }))).toEqual({
+      type: 'presented',
+      positionMs: 5,
+    })
+    expect(parseRecordingHostMessage(JSON.stringify({ type: 'presented' }))).toBeNull()
+  })
+})
