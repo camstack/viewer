@@ -15,7 +15,7 @@
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 import { useConnection } from '../connection/ConnectionProvider.js'
 import { capQuery } from './cap-query.js'
-import { mergeZoneLists, parseZoneList, type NcZoneRef } from './zones.js'
+import { mergeZoneLists, parseZoneList, parseZoneOutlines, type NcZoneRef, type ZoneOutline } from './zones.js'
 import type { CameraZoneList } from './zone-choices.js'
 
 /** Stable empty list so consumers get a referentially-stable default. */
@@ -67,6 +67,27 @@ export function useCameraZoneLists(
           zones: parseZoneList(await capQuery(client, 'zones', 'listZones', { deviceId })),
         })),
       )
+    },
+  })
+}
+
+/** One camera's configured zones WITH geometry — what the Zones overlay draws.
+ *  Disabled until the overlay is on, so a camera that never shows zones never
+ *  asks. EMPTY is "none drawn", never "deleted" (see the header). */
+export function useCameraZoneOutlines(
+  deviceId: number,
+  enabled: boolean,
+): UseQueryResult<readonly ZoneOutline[]> {
+  const { controller, state } = useConnection()
+  return useQuery<readonly ZoneOutline[]>({
+    queryKey: ['v2', 'zones', 'outlines', deviceId],
+    enabled: enabled && state === 'connected',
+    staleTime: 60_000,
+    queryFn: async () => {
+      const system = controller.getSystem()
+      if (!system) return []
+      const client = system.trpcClient as Record<string, unknown>
+      return parseZoneOutlines(await capQuery(client, 'zones', 'listZones', { deviceId }))
     },
   })
 }

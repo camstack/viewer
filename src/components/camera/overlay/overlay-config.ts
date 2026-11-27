@@ -50,6 +50,7 @@ import {
   type OverlayAnchor,
   type OverlayPosition,
 } from './overlay-position.js'
+import { clampSizeStep, parseSizeStep } from './overlay-size.js'
 
 /**
  * Where a readout's number comes from — a live field of a device. (The audio
@@ -159,6 +160,32 @@ export type FadeableOverlay =
   | 'occupancy'
   | 'viewers'
 
+/** Every overlay with its own size step: the fadeable ones plus the
+ *  device-info pill (whose POSITION is a device setting, its step is here). */
+export type SizedOverlay = FadeableOverlay | 'deviceInfo'
+
+export const SIZED_OVERLAYS: readonly SizedOverlay[] = Object.freeze([
+  'cameraName',
+  'doorbell',
+  'motionBadge',
+  'audioMeter',
+  'stats',
+  'occupancy',
+  'viewers',
+  'deviceInfo',
+]) as readonly SizedOverlay[]
+
+export const SIZE_STEP_DEFAULTS: Readonly<Record<SizedOverlay, number>> = Object.freeze({
+  cameraName: 0,
+  doorbell: 0,
+  motionBadge: 0,
+  audioMeter: 0,
+  stats: 0,
+  occupancy: 0,
+  viewers: 0,
+  deviceInfo: 0,
+})
+
 export const FADEABLE_OVERLAYS: readonly FadeableOverlay[] = Object.freeze([
   'cameraName',
   'doorbell',
@@ -193,8 +220,22 @@ export interface OverlayConfig {
   readonly layers: readonly OverlayLayer[]
   /** The transient "motion" pill: an anchor, or off. */
   readonly motionBadge: OverlayPosition
-  /** The highlight border. */
-  readonly highlightBorder: boolean
+  /** The camera's configured zones (outline + name) drawn over the picture.
+   *  Off by default. */
+  readonly zones: boolean
+  /** Master-off migration, step 1: a document stored when the border had a
+   *  master switch that was OFF. The triggers it silenced are written off
+   *  once (`highlight-border.ts`), then this flips to `false` and
+   *  {@link OverlayConfig.highlightDefaultOff} takes over. The border itself
+   *  has no stored flag any more: it is on when any trigger is on. */
+  readonly legacyMasterOff: boolean
+  /** Master-off migration, step 2 (permanent): a camera with no stored
+   *  triggers starts with every trigger off instead of the factory motion
+   *  default, so a config whose border was off stays off everywhere. */
+  readonly highlightDefaultOff: boolean
+  /** Per overlay: size steps around the main overlay size, −3…+3, 0 = Auto
+   *  (the main size). */
+  readonly sizeStep: Readonly<Record<SizedOverlay, number>>
   /** Audio meter placement. `OverlayPosition` carries its own `off` member,
    *  so this is one field and not a boolean plus an anchor. */
   readonly audioMeter: OverlayPosition
@@ -259,7 +300,10 @@ export const FADE_DEFAULTS: Readonly<Record<FadeableOverlay, boolean>> = Object.
 export const OVERLAY_DEFAULTS: OverlayConfig = Object.freeze({
   layers: Object.freeze([]) as readonly OverlayLayer[],
   motionBadge: 'off',
-  highlightBorder: true,
+  zones: false,
+  legacyMasterOff: false,
+  highlightDefaultOff: false,
+  sizeStep: SIZE_STEP_DEFAULTS,
   audioMeter: 'top-center',
   occupancy: 'off',
   stats: 'off',
@@ -519,6 +563,13 @@ function isOverlayItemId(v: unknown): v is OverlayItemId {
   return typeof v === 'string' && (OVERLAY_ITEM_NAMES.has(v) || v.startsWith('readout:'))
 }
 
+function parseSizeSteps(raw: unknown): Readonly<Record<SizedOverlay, number>> {
+  const stored = isRecord(raw) ? raw : {}
+  const out: Record<SizedOverlay, number> = { ...SIZE_STEP_DEFAULTS }
+  for (const key of SIZED_OVERLAYS) out[key] = parseSizeStep(stored[key])
+  return out
+}
+
 function parseFade(raw: unknown): Readonly<Record<FadeableOverlay, boolean>> {
   const stored = isRecord(raw) ? raw : {}
   const out: Record<FadeableOverlay, boolean> = { ...FADE_DEFAULTS }
@@ -563,7 +614,12 @@ export function parseOverlayConfig(raw: unknown): OverlayConfig {
   return {
     layers: canonicalLayers(raw.layers),
     motionBadge: position(raw.motionBadge, OVERLAY_DEFAULTS.motionBadge),
-    highlightBorder: raw.highlightBorder !== false,
+    zones: raw.zones === true,
+    // A document from before the master switch left: `highlightBorder: false`
+    // means "every trigger off", materialised once by `highlight-border.ts`.
+    legacyMasterOff: raw.legacyMasterOff === true || raw.highlightBorder === false,
+    highlightDefaultOff: raw.highlightDefaultOff === true,
+    sizeStep: parseSizeSteps(raw.sizeStep),
     audioMeter,
     occupancy: position(raw.occupancy, OVERLAY_DEFAULTS.occupancy),
     stats: position(raw.stats, OVERLAY_DEFAULTS.stats),
@@ -626,6 +682,35 @@ export function placeOverlay(
   }
 }
 
+/** Where an overlay lands when the operator switches it on: its natural
+ *  corner, never `off`. */
+export function defaultAnchorFor(id: OverlayItemId): OverlayAnchor {
+  switch (id) {
+    case 'cameraName':
+      return 'top-left'
+    case 'audioMeter':
+      return 'top-center'
+    case 'controlsLeft':
+      return 'bottom-left'
+    case 'controlsRight':
+      return 'bottom-right'
+    case 'doorbell':
+      return DOORBELL_ANCHOR
+    default:
+      return 'top-right'
+  }
+}
+
+/** Set one overlay's size step (clamped to −3…+3). Returns a NEW config. */
+export function setSizeStep(config: OverlayConfig, id: SizedOverlay, step: number): OverlayConfig {
+  return { ...config, sizeStep: { ...config.sizeStep, [id]: clampSizeStep(step) } }
+}
+
+/** The size step of a stack item: 0 (Auto) for anything without one. */
+export function sizeStepOf(config: OverlayConfig, id: OverlayItemId): number {
+  return (SIZED_OVERLAYS as readonly string[]).includes(id) ? config.sizeStep[id as SizedOverlay] : 0
+}
+
 /** Set one overlay's `fade` flag. Returns a NEW config. */
 export function setFade(
   config: OverlayConfig,
@@ -664,7 +749,10 @@ export function isDefaultOverlay(config: OverlayConfig): boolean {
   return (
     config.layers.length === 0 &&
     config.motionBadge === OVERLAY_DEFAULTS.motionBadge &&
-    config.highlightBorder === OVERLAY_DEFAULTS.highlightBorder &&
+    config.zones === OVERLAY_DEFAULTS.zones &&
+    !config.legacyMasterOff &&
+    !config.highlightDefaultOff &&
+    SIZED_OVERLAYS.every((k) => config.sizeStep[k] === 0) &&
     config.audioMeter === OVERLAY_DEFAULTS.audioMeter &&
     config.occupancy === OVERLAY_DEFAULTS.occupancy &&
     config.stats === OVERLAY_DEFAULTS.stats &&

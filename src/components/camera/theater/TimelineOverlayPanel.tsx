@@ -63,7 +63,6 @@ import React, { useCallback, useState } from 'react'
 import { View, Text, Pressable, StyleSheet } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import {
-  Frame,
   Activity,
   Eye,
   BellRing,
@@ -75,16 +74,17 @@ import {
   EyeOff,
   Tag,
   Gamepad2,
-  Maximize2,
+  Pentagon,
 } from '../../../lib/icons.js'
 import { useSettingsStore } from '../../../store/settings-store.js'
-import { useDeviceSettingsStore } from '../../../store/device-settings-store.js'
-import { SelectRow, type SelectOption } from '../../ui/SelectRow.js'
-import { OVERLAY_SIZES, type OverlaySize } from '../overlay/overlay-size.js'
+import { StepperRow } from '../../ui/StepperRow.js'
+import { CheckboxRow } from '../../ui/CheckboxRow.js'
+import { OVERLAY_STEP_MAX, OVERLAY_STEP_MIN } from '../overlay/overlay-size.js'
 
 import { useTheme } from '../../../theme/theme-provider.js'
 import { SPACING } from '../../../theme/tokens.js'
-import { HighlightTriggerRows, PanelToggleRow } from '../HighlightTriggerRows.js'
+import { HighlightTriggerRows } from '../HighlightTriggerRows.js'
+import { ActivationRow } from '../ActivationRow.js'
 import { OverlayPositionPicker } from '../overlay/OverlayPositionPicker.js'
 import type { LucideIcon } from '../../../lib/icons.js'
 import type { GridHighlightSettings } from '../../../store/grid-store.js'
@@ -102,12 +102,14 @@ import { useLinkedDevices } from '../../../data/use-linked-devices.js'
 import { ReadoutPickerSheet } from '../overlay/ReadoutPickerSheet.js'
 import {
   addReadout,
-  FADEABLE_OVERLAYS,
+  defaultAnchorFor,
   patchOverlay,
   patchReadout,
   placeOverlay,
   setFade,
+  setSizeStep,
   type FadeableOverlay,
+  type SizedOverlay,
   type OverlayItemId,
   readoutId,
   removeReadout,
@@ -142,26 +144,6 @@ const PICTURE_ROWS: readonly ViewOptionRow[] = [
   ...rowsInGroup('detection'),
   ...rowsInGroup('liveIndicators'),
 ]
-
-const FADE_ICON: Readonly<Record<FadeableOverlay, LucideIcon>> = {
-  cameraName: Tag,
-  doorbell: BellRing,
-  motionBadge: Activity,
-  audioMeter: AudioLines,
-  stats: Activity,
-  occupancy: Users,
-  viewers: Eye,
-}
-
-const FADE_LABEL: Readonly<Record<FadeableOverlay, string>> = {
-  cameraName: 'v2.overlay.cameraName',
-  doorbell: 'v2.overlay.doorbell',
-  motionBadge: 'v2.overlay.motionBadge',
-  audioMeter: 'v2.cameraMenu.audioLevel',
-  stats: 'v2.cameraMenu.streamStats',
-  occupancy: 'v2.overlay.occupancy',
-  viewers: 'v2.overlay.liveViewers',
-}
 
 export function OverlaySettingsSections({
   deviceId,
@@ -199,15 +181,6 @@ export function OverlaySettingsSections({
     (id: OverlayItemId, next: OverlayPosition) => onChange(placeOverlay(config, id, next)),
     [config, onChange],
   )
-  // The overlay size is a DEVICE setting (a share of the picture on this
-  // screen); the shortcut here edits the very value Settings > Viewing edits.
-  const overlaySize = useDeviceSettingsStore((st) => st.settings.overlaySize)
-  const setOverlaySize = useDeviceSettingsStore((st) => st.setOverlaySize)
-  const sizeOptions: readonly SelectOption<OverlaySize>[] = OVERLAY_SIZES.map((size) => ({
-    value: size,
-    label: t(`v2.settings.overlaySize${size === 'small' ? 'Small' : size === 'medium' ? 'Medium' : 'Large'}`),
-  }))
-
   const pin = useCallback(
     (source: OverlayReadoutSource, label: string, unit?: string, precision?: number) => {
       const readout: {
@@ -228,6 +201,8 @@ export function OverlaySettingsSections({
     },
     [config, deviceId, onChange],
   )
+
+  const rowCommon = { config, onChange, context } as const
 
   return (
     <>
@@ -267,18 +242,24 @@ export function OverlaySettingsSections({
         />
       ) : null}
 
-      {/* The highlight border: the switch AND its triggers, never apart. */}
+      {/* The configured zones (outline + name) — only the single view draws them. */}
+      {context === 'single' ? (
+        <ActivationRow
+          icon={Pentagon}
+          label={t('v2.overlay.zones')}
+          on={config.zones}
+          onToggle={() => patch({ zones: !config.zones })}
+        />
+      ) : null}
+
+      {/* The highlight border has NO switch of its own: it is on when any of
+          its triggers is (`highlight-border.ts`). */}
       {shows('highlightBorder') ? (
         <>
-          <PanelToggleRow
-            icon={Frame}
-            label={t('v2.overlay.highlightBorder')}
-            value={config.highlightBorder}
-            onValueChange={() => patch({ highlightBorder: !config.highlightBorder })}
-          />
-          {config.highlightBorder ? (
-            <HighlightTriggerRows highlight={highlight} onSetHighlight={onSetHighlight} />
-          ) : null}
+          <Text style={[styles.section, { color: colors.foregroundMuted }]}>
+            {t('v2.overlay.highlightBorder')}
+          </Text>
+          <HighlightTriggerRows highlight={highlight} onSetHighlight={onSetHighlight} />
         </>
       ) : null}
 
@@ -291,125 +272,131 @@ export function OverlaySettingsSections({
           <Text style={[styles.section, { color: colors.foregroundMuted }]}>
             {t(GROUP_HEADER_KEY.liveIndicators)}
           </Text>
-          {/* ONE row shape for every placeable overlay — label left, drop-down
-              right, exactly like the app's other selectors. */}
+          {/* ONE row shape for every placeable overlay: the activation row and,
+              while it is on, its own position, size and fade. */}
           {shows('audioMeter') ? (
-            <PanelPositionRow
+            <OverlayItemRow
+              {...rowCommon}
               icon={AudioLines}
               label={t('v2.cameraMenu.audioLevel')}
-              value={config.audioMeter}
-              onChange={(next) => place('audioMeter', next)}
+              item="audioMeter"
+              position={config.audioMeter}
+              onPlace={(next) => place('audioMeter', next)}
+              sized="audioMeter"
+              fadeable="audioMeter"
             />
           ) : null}
           {shows('occupancy') ? (
-            <PanelPositionRow
+            <OverlayItemRow
+              {...rowCommon}
               icon={Users}
               label={t('v2.overlay.occupancy')}
-              value={config.occupancy}
-              onChange={(next) => place('occupancy', next)}
+              item="occupancy"
+              position={config.occupancy}
+              onPlace={(next) => place('occupancy', next)}
+              sized="occupancy"
+              fadeable="occupancy"
             />
           ) : null}
           {shows('stats') ? (
-            <PanelPositionRow
+            <OverlayItemRow
+              {...rowCommon}
               icon={Activity}
               label={t('v2.cameraMenu.streamStats')}
-              value={config.stats}
-              onChange={(next) => place('stats', next)}
+              item="stats"
+              position={config.stats}
+              onPlace={(next) => place('stats', next)}
+              sized="stats"
+              fadeable="stats"
             />
           ) : null}
           {shows('liveViewers') ? (
-            <PanelPositionRow
+            <OverlayItemRow
+              {...rowCommon}
               icon={Eye}
               label={t('v2.overlay.liveViewers')}
-              value={config.viewers}
-              onChange={(next) => place('viewers', next)}
+              item="viewers"
+              position={config.viewers}
+              onPlace={(next) => place('viewers', next)}
+              sized="viewers"
+              fadeable="viewers"
             />
           ) : null}
           {hasDoorbell ? (
-            <PanelToggleRow
+            <OverlayItemRow
+              {...rowCommon}
               icon={BellRing}
               label={t('v2.overlay.doorbell')}
-              value={config.doorbell}
-              onValueChange={() => patch({ doorbell: !config.doorbell })}
-            />
-          ) : null}
-          {hasDoorbell && config.doorbell ? (
-            <PanelPositionRow
-              icon={BellRing}
-              label={t('v2.overlay.doorbellCorner')}
-              value={config.doorbellAnchor}
-              allowOff={false}
-              onChange={(next) => place('doorbell', next)}
+              item="doorbell"
+              position={config.doorbell ? config.doorbellAnchor : 'off'}
+              onPlace={(next) => {
+                if (next === 'off') patch({ doorbell: false })
+                else onChange({ ...placeOverlay(config, 'doorbell', next), doorbell: true })
+              }}
+              sized="doorbell"
+              fadeable="doorbell"
             />
           ) : null}
           {shows('deviceInfo') ? (
-            <PanelPositionRow
+            <OverlayItemRow
+              {...rowCommon}
               icon={BatteryFull}
               label={t('v2.overlay.deviceInfo')}
-              value={deviceInfo}
-              onChange={setDeviceInfo}
+              item="deviceInfo"
+              position={deviceInfo}
+              onPlace={setDeviceInfo}
+              sized="deviceInfo"
             />
           ) : null}
         </>
       ) : null}
 
-      {/* ── GROUP: layout — where the name and the two control groups sit, how
-          big every overlay is drawn, and which ones hide with the controls.
-          ONE document for every stream. A tile has no auto-hiding controls
-          and draws its own name, so only the size applies there. */}
-      <Text style={[styles.section, { color: colors.foregroundMuted }]}>
-        {t('v2.overlay.layoutSection')}
-      </Text>
-      <SelectRow
-        icon={Maximize2}
-        label={t('v2.settings.overlaySize')}
-        options={sizeOptions}
-        value={overlaySize}
-        onChange={setOverlaySize}
-      />
+      {/* ── GROUP: layout — where the name and the two control groups sit.
+          ONE document for every stream. A tile has no auto-hiding controls and
+          draws its own name, so there is nothing to lay out there. */}
       {context === 'single' ? (
         <>
-          <PanelPositionRow
+          <Text style={[styles.section, { color: colors.foregroundMuted }]}>
+            {t('v2.overlay.layoutSection')}
+          </Text>
+          <OverlayItemRow
+            {...rowCommon}
             icon={Tag}
             label={t('v2.overlay.cameraName')}
-            value={config.cameraName}
-            onChange={(next) => place('cameraName', next)}
+            item="cameraName"
+            position={config.cameraName}
+            onPlace={(next) => place('cameraName', next)}
+            sized="cameraName"
+            fadeable="cameraName"
           />
-          <PanelPositionRow
+          <OverlayItemRow
+            {...rowCommon}
             icon={Activity}
             label={t('v2.overlay.motionBadge')}
-            value={config.motionBadge}
-            onChange={(next) => place('motionBadge', next)}
+            item="motionBadge"
+            position={config.motionBadge}
+            onPlace={(next) => place('motionBadge', next)}
+            sized="motionBadge"
+            fadeable="motionBadge"
           />
-          <PanelPositionRow
+          <OverlayItemRow
+            {...rowCommon}
             icon={Gamepad2}
             label={t('v2.overlay.controlsLeft')}
-            value={config.controlsLeft}
-            allowOff={false}
-            onChange={(next) => place('controlsLeft', next)}
+            item="controlsLeft"
+            position={config.controlsLeft}
+            onPlace={(next) => place('controlsLeft', next)}
+            alwaysOn
           />
-          <PanelPositionRow
+          <OverlayItemRow
+            {...rowCommon}
             icon={Gamepad2}
             label={t('v2.overlay.controlsRight')}
-            value={config.controlsRight}
-            allowOff={false}
-            onChange={(next) => place('controlsRight', next)}
+            item="controlsRight"
+            position={config.controlsRight}
+            onPlace={(next) => place('controlsRight', next)}
+            alwaysOn
           />
-          <Text style={[styles.section, { color: colors.foregroundMuted }]}>
-            {t('v2.overlay.fadeSection')}
-          </Text>
-          <Text style={[styles.hint, { color: colors.foregroundSubtle }]}>
-            {t('v2.overlay.fadeHint')}
-          </Text>
-          {FADEABLE_OVERLAYS.filter((id) => id !== 'doorbell' || hasDoorbell).map((id) => (
-            <PanelToggleRow
-              key={id}
-              icon={FADE_ICON[id]}
-              label={t(FADE_LABEL[id])}
-              value={config.fade[id]}
-              onValueChange={() => onChange(setFade(config, id, !config.fade[id]))}
-            />
-          ))}
         </>
       ) : null}
 
@@ -483,46 +470,88 @@ export function OverlaySettingsSections({
 }
 
 /**
- * One placement row: icon, label, and the position drop-down.
+ * One overlay, as the shared activation row: switch it on and ITS settings
+ * appear — position, size, and (single view) whether it hides with the controls.
  *
- * Every placeable overlay uses it — the audio meter, the occupancy strip and
- * (since 2026-08-02) the motion badge — so a fourth cannot invent a fourth
- * layout, which is how the panel ended up with two position vocabularies
- * before.
+ * "On" is "has a position": `off` is the switch, so there is no second field
+ * to disagree with it. Switching on places the overlay at its default anchor;
+ * switching off moves it to `off` and leaves the stacking order alone.
  */
-interface PanelPositionRowProps {
+interface OverlayItemRowProps {
   readonly icon: LucideIcon
   readonly label: string
-  readonly value: OverlayPosition
-  readonly onChange: (position: OverlayPosition) => void
-  /** False for what must always be somewhere (the two control groups). */
-  readonly allowOff?: boolean
+  readonly item: OverlayItemId
+  readonly position: OverlayPosition
+  readonly onPlace: (position: OverlayPosition) => void
+  /** Has a size step (everything drawn as a pill / read-out). */
+  readonly sized?: SizedOverlay
+  /** Has its own hide-with-the-controls flag. */
+  readonly fadeable?: FadeableOverlay
+  /** Cannot be switched off (the two control groups). */
+  readonly alwaysOn?: boolean
+  readonly config: OverlayConfig
+  readonly onChange: (next: OverlayConfig) => void
+  readonly context: ViewOptionsContext
 }
 
-function PanelPositionRow({
-  icon: Icon,
+function OverlayItemRow({
+  icon,
   label,
-  value,
+  item,
+  position,
+  onPlace,
+  sized,
+  fadeable,
+  alwaysOn = false,
+  config,
   onChange,
-  allowOff = true,
-}: PanelPositionRowProps): React.JSX.Element {
+  context,
+}: OverlayItemRowProps): React.JSX.Element {
+  const { t } = useTranslation()
   const { colors } = useTheme()
+  const on = position !== 'off'
+  const anchor = position === 'off' ? defaultAnchorFor(item) : position
   return (
-    <View style={styles.placementRow}>
-      <Icon size={18} color={colors.foregroundMuted} />
-      <Text style={[styles.placementLabel, { color: colors.foreground }]}>{label}</Text>
-      <OverlayPositionPicker value={value} onChange={onChange} allowOff={allowOff} />
-    </View>
+    <ActivationRow
+      icon={icon}
+      label={label}
+      on={on}
+      alwaysOn={alwaysOn}
+      onToggle={() => onPlace(on ? 'off' : defaultAnchorFor(item))}
+    >
+      <View style={styles.placementRow}>
+        <Text style={[styles.placementLabel, { color: colors.foreground }]}>{t('v2.overlay.position')}</Text>
+        <OverlayPositionPicker value={anchor} onChange={onPlace} allowOff={false} />
+      </View>
+      {sized !== undefined ? (
+        <StepperRow
+          compact
+          label={t('v2.overlay.size')}
+          value={config.sizeStep[sized]}
+          min={OVERLAY_STEP_MIN}
+          max={OVERLAY_STEP_MAX}
+          formatValue={(n) => (n === 0 ? t('v2.overlay.sizeAuto') : n > 0 ? `+${n}` : `${n}`)}
+          onChange={(n) => onChange(setSizeStep(config, sized, n))}
+        />
+      ) : null}
+      {fadeable !== undefined && context === 'single' ? (
+        <CheckboxRow
+          label={t('v2.overlay.fadeReadout')}
+          value={config.fade[fadeable]}
+          onValueChange={(v) => onChange(setFade(config, fadeable, v))}
+        />
+      ) : null}
+    </ActivationRow>
   )
 }
 
 const styles = StyleSheet.create({
   section: { fontSize: 12, fontWeight: '600', paddingTop: SPACING.sm, paddingBottom: SPACING.xs },
   hint: { fontSize: 11, paddingVertical: SPACING.xs },
-  placementRow: { flexDirection: 'row', alignItems: 'flex-start', gap: SPACING.md, paddingVertical: SPACING.xs },
+  placementRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: SPACING.md, paddingVertical: SPACING.xs },
   // Content-sized (flexShrink, not flex:1): the position picker stretches into
   // the leftover width and MEASURES it to choose grid vs drop-down.
-  placementLabel: { flexShrink: 1, fontSize: 14, fontWeight: '500', paddingTop: 6 },
+  placementLabel: { flexShrink: 1, fontSize: 14, fontWeight: '500' },
   readoutRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, paddingVertical: 2 },
   readoutLabel: { flexShrink: 1, fontSize: 13, fontWeight: '500' },
   removeBtn: { padding: 4 },

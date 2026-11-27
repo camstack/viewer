@@ -829,7 +829,7 @@ export function TimelinePlaybackBar({
             ]}
           >
             <Text style={[styles.tierBadgeText, { color: colors.foregroundMuted, fontSize: ui.font.xs }]}>
-              {autoProfileBadgeText(autoProfile)}
+              {autoProfileBadgeText(autoProfile, (tier) => t(`v2.playback.tier.${tier}`))}
             </Text>
           </View>
         ) : mode !== 'live' && servedTier !== undefined && servedTier !== null ? (
@@ -1246,7 +1246,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 3,
+    paddingHorizontal: 5,
   },
   tierBadgeText: { fontWeight: '700', includeFontPadding: false },
   container: {

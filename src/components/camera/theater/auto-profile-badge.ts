@@ -60,9 +60,14 @@ export function autoProfileResolutionSuffix(heightPx: number | null): string {
   return heightPx === null ? '' : ` ${heightPx}p`
 }
 
-/** The badge's visible text: the rung's initial and the height, or an ellipsis
- *  while the profile is pending. */
-export function autoProfileBadgeText(badge: AutoProfileBadge): string {
+/** The badge's visible text: the translated rung name ("High" / "Mid" / "Low")
+ *  and nothing else — never the picture height (it read as "L512P" next to the
+ *  initial and was clipped) — or an ellipsis while the profile is pending. The
+ *  caller supplies the translation so this stays a pure module. */
+export function autoProfileBadgeText(
+  badge: AutoProfileBadge,
+  tierLabel: (tier: AutoProfileTier) => string,
+): string {
   if (badge.state === 'pending') return '\u2026'
-  return `${badge.profile.charAt(0).toUpperCase()}${autoProfileResolutionSuffix(badge.heightPx)}`
+  return tierLabel(badge.profile)
 }

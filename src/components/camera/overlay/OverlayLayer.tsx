@@ -25,8 +25,9 @@ import { StreamStatsOverlay } from '../StreamStatsOverlay.js'
 import type { OccupancyClassCount } from '../../../data/occupancy.js'
 import type { StreamStats } from '../../../live/live-view-types.js'
 import type { DiscClusters } from '../OverlayDiscGroup.js'
-import { isOverlayShown, type OverlayConfig, type OverlayItemId } from './overlay-config.js'
+import { isOverlayShown, sizeStepOf, type OverlayConfig, type OverlayItemId } from './overlay-config.js'
 import type { OverlayPosition } from './overlay-position.js'
+import { OverlayStepScale } from './OverlayFrame.js'
 import { OverlayStack, type OverlayStackEntry } from './OverlayStack.js'
 import { stackItems } from './overlay-stack.js'
 import { useReadoutEntries } from './OverlayReadouts.js'
@@ -149,7 +150,14 @@ export function OverlayLayer({
       .filter((item) => isOverlayShown(config, item.id, controlsVisible))
       .filter((item) => item.id !== 'cameraName' || name !== undefined)
       .filter((item) => (item.id !== 'controlsLeft' && item.id !== 'controlsRight') || controls !== undefined)
-      .map((item) => ({ ...item, node: nodeFor(item.id) }))
+      .map((item) => {
+        const step = sizeStepOf(config, item.id)
+        const node = nodeFor(item.id)
+        return {
+          ...item,
+          node: step === 0 || node === null ? node : <OverlayStepScale step={step}>{node}</OverlayStepScale>,
+        }
+      })
     return [...named, ...readouts.entries]
   }, [
     config,

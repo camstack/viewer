@@ -3313,7 +3313,6 @@
       "reasonNms": "soppresso da NMS",
       "reasonClassFilter": "filtro classe",
       "reasonZoneGate": "regola di zona",
-      "highlightBorder": "Bordo evidenziazione",
       "occupancy": "Occupazione",
       "deviceInfo": "Informazioni dispositivo",
       "liveViewers": "Spettatori in diretta",
@@ -3341,11 +3340,13 @@
       "cameraName": "Nome della camera",
       "controlsLeft": "Controlli a sinistra",
       "controlsRight": "Controlli a destra",
-      "fadeSection": "Nascondi con i controlli",
-      "fadeHint": "Questi overlay scompaiono quando i controlli si nascondono da soli.",
       "fadeReadout": "Nascondi con i controlli",
       "motionBadge": "Badge movimento",
-      "doorbellCorner": "Angolo del badge campanello"
+      "position": "Posizione",
+      "size": "Dimensione",
+      "sizeAuto": "Auto",
+      "zones": "Zone",
+      "highlightBorder": "Bordo evidenziazione"
     },
     "clips": {
       "title": "Clip",

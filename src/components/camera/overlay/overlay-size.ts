@@ -56,6 +56,34 @@ export const OVERLAY_SIZE_MIN_SCALE: Readonly<Record<OverlaySize, number>> = {
 }
 export const MAX_SCALE = 2
 
+/**
+ * Per-overlay size step: a stepper around the main size, `Auto` (0) = the main
+ * size. The main size has only three rungs, so a step is NOT a rung: it is one
+ * fixed factor of the already-resolved multiplier, so −3…+3 reach past the
+ * ends of the three-level scale and "one step" means the same thing at every
+ * main size.
+ */
+export const OVERLAY_STEP_MIN = -3
+export const OVERLAY_STEP_MAX = 3
+/** One step multiplies (or divides) the main multiplier by this much. */
+export const OVERLAY_STEP_FACTOR = 1.2
+
+/** Narrow a stored step: an integer clamped to −3…+3; anything else is 0 (Auto). */
+export function parseSizeStep(v: unknown): number {
+  if (typeof v !== 'number' || !Number.isFinite(v)) return 0
+  return clampSizeStep(Math.trunc(v))
+}
+
+export function clampSizeStep(step: number): number {
+  return Math.min(OVERLAY_STEP_MAX, Math.max(OVERLAY_STEP_MIN, step))
+}
+
+/** The multiplier an overlay at `step` draws with, given the main multiplier. */
+export function stepScale(mainScale: number, step: number): number {
+  const s = clampSizeStep(step)
+  return s === 0 ? mainScale : Math.round(mainScale * OVERLAY_STEP_FACTOR ** s * 1000) / 1000
+}
+
 /** The stream aspect every CamStack surface lays out for. */
 export const DEFAULT_VIDEO_ASPECT = 16 / 9
 

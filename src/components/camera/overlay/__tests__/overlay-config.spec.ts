@@ -18,6 +18,9 @@ import {
   readoutsForCamera,
   removeReadout,
   setFade,
+  setSizeStep,
+  sizeStepOf,
+  defaultAnchorFor,
   type OverlayReadout,
 } from '../overlay-config.js'
 import { parseLiveFields, formatLiveValue } from '../../../../data/use-device-live-fields.js'
@@ -90,7 +93,7 @@ describe('the audio readout is retired into the audio meter (planning#745)', () 
     expect(OVERLAY_DEFAULTS.occupancy).toBe('off')
     expect(OVERLAY_DEFAULTS.viewers).toBe('off')
     expect(OVERLAY_DEFAULTS.doorbell).toBe(false)
-    expect(OVERLAY_DEFAULTS.highlightBorder).toBe(true)
+    expect(OVERLAY_DEFAULTS.zones).toBe(false)
     expect(OVERLAY_DEFAULTS.audioMeter).toBe('top-center')
     expect(isDefaultOverlay(OVERLAY_DEFAULTS)).toBe(true)
   })
@@ -370,5 +373,54 @@ describe('readout scope', () => {
     expect(parsed.readouts[0]?.scope).toBe(4)
     const cam = { id: 'c', source: { kind: 'cameraField', sectionId: 's', fieldKey: 'k' }, label: 'x', corner: 'top-left', scope: 4 }
     expect(parseOverlayConfig({ readouts: [cam] }).readouts[0]?.scope).toBeUndefined()
+  })
+})
+
+describe('per-overlay size step (planning#749)', () => {
+  it('defaults to 0 (Auto) and unknown values read as 0', () => {
+    expect(OVERLAY_DEFAULTS.sizeStep.audioMeter).toBe(0)
+    const parsed = parseOverlayConfig({ sizeStep: { audioMeter: 'big', stats: null, viewers: NaN, bogus: 2 } })
+    expect(parsed.sizeStep.audioMeter).toBe(0)
+    expect(parsed.sizeStep.stats).toBe(0)
+    expect(parsed.sizeStep.viewers).toBe(0)
+  })
+  it('keeps a stored step and clamps it to -3..+3', () => {
+    const parsed = parseOverlayConfig({ sizeStep: { occupancy: 2, stats: 9, viewers: -7, doorbell: 1.9 } })
+    expect(parsed.sizeStep.occupancy).toBe(2)
+    expect(parsed.sizeStep.stats).toBe(3)
+    expect(parsed.sizeStep.viewers).toBe(-3)
+    expect(parsed.sizeStep.doorbell).toBe(1)
+  })
+  it('setSizeStep clamps, never mutates, and sizeStepOf answers 0 for unsized items', () => {
+    const next = setSizeStep(OVERLAY_DEFAULTS, 'stats', 5)
+    expect(next.sizeStep.stats).toBe(3)
+    expect(OVERLAY_DEFAULTS.sizeStep.stats).toBe(0)
+    expect(sizeStepOf(next, 'stats')).toBe(3)
+    expect(sizeStepOf(next, 'controlsLeft')).toBe(0)
+    expect(sizeStepOf(next, 'readout:x')).toBe(0)
+  })
+  it('a non-default step makes the document non-default', () => {
+    expect(isDefaultOverlay(setSizeStep(OVERLAY_DEFAULTS, 'cameraName', -1))).toBe(false)
+  })
+  it('the fade values stay stored per overlay', () => {
+    expect(parseOverlayConfig({ fade: { stats: true } }).fade.stats).toBe(true)
+  })
+})
+
+describe('zones overlay and the retired border master (planning#749)', () => {
+  it('zones default off and persist only when strictly true', () => {
+    expect(parseOverlayConfig({}).zones).toBe(false)
+    expect(parseOverlayConfig({ zones: 'yes' }).zones).toBe(false)
+    expect(parseOverlayConfig({ zones: true }).zones).toBe(true)
+  })
+  it('a stored master-off document is flagged for migration; master-on is not', () => {
+    expect(parseOverlayConfig({ highlightBorder: false }).legacyMasterOff).toBe(true)
+    expect(parseOverlayConfig({ highlightBorder: true }).legacyMasterOff).toBe(false)
+    expect(parseOverlayConfig({}).legacyMasterOff).toBe(false)
+  })
+  it('switching an overlay on lands at its natural corner, never off', () => {
+    expect(defaultAnchorFor('audioMeter')).toBe('top-center')
+    expect(defaultAnchorFor('cameraName')).toBe('top-left')
+    expect(defaultAnchorFor('stats')).not.toBe('off')
   })
 })

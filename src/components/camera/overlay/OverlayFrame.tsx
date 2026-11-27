@@ -30,6 +30,7 @@ import { useDeviceSettingsStore } from '../../../store/device-settings-store.js'
 import {
   DEFAULT_VIDEO_ASPECT,
   overlayScale,
+  stepScale,
   scaleStyle,
   videoRectIn,
   type Rect,
@@ -66,6 +67,23 @@ export function useStyleScaler(): <T extends FlatStyle>(style: T) => T {
 export function useScaledPx(): (n: number) => number {
   const scale = useOverlayScale()
   return useCallback((n: number) => Math.round(n * scale * 100) / 100, [scale])
+}
+
+/**
+ * Draws its children at this overlay's own size: the frame's multiplier moved
+ * `step` rungs (−3…+3, 0 = the main size). Wrap ONE overlay; the context a
+ * child reads is the stepped one.
+ */
+export function OverlayStepScale({
+  step,
+  children,
+}: {
+  readonly step: number
+  readonly children: React.ReactNode
+}): React.JSX.Element {
+  const scale = useOverlayScale()
+  const metrics = useMemo<OverlayMetrics>(() => ({ scale: stepScale(scale, step) }), [scale, step])
+  return <OverlayMetricsContext.Provider value={metrics}>{children}</OverlayMetricsContext.Provider>
 }
 
 export interface OverlayFrameProps {

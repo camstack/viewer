@@ -22,6 +22,11 @@ interface StepperRowProps {
   readonly onChange: (value: number) => void
   /** Hide the bottom hairline (e.g. for the last row in a card). */
   readonly last?: boolean
+  /** How the value reads between the buttons (default: the number). */
+  readonly formatValue?: (value: number) => string
+  /** Panel density: no card paddings or hairline — for a row nested inside a
+   *  floating panel under its activation row. */
+  readonly compact?: boolean
 }
 
 /** A settings row with a -/+ stepper for an integer value, clamped to [min,max].
@@ -35,6 +40,8 @@ export function StepperRow({
   step = 1,
   onChange,
   last = false,
+  formatValue,
+  compact = false,
 }: StepperRowProps) {
   const { colors } = useTheme()
   const canDec = value > min
@@ -66,10 +73,10 @@ export function StepperRow({
       style={{
         flexDirection: 'row',
         alignItems: 'center',
-        gap: SPACING.lg,
-        paddingHorizontal: SPACING.xl,
-        paddingVertical: SPACING.lg,
-        borderBottomWidth: last ? 0 : 1,
+        gap: compact ? SPACING.md : SPACING.lg,
+        paddingHorizontal: compact ? 0 : SPACING.xl,
+        paddingVertical: compact ? SPACING.xs : SPACING.lg,
+        borderBottomWidth: last || compact ? 0 : 1,
         borderBottomColor: colors.borderSubtle,
       }}
     >
@@ -81,14 +88,14 @@ export function StepperRow({
         {button(canDec, Minus, () => onChange(Math.max(min, value - step)))}
         <Text
           style={{
-            minWidth: 28,
+            minWidth: formatValue ? 44 : 28,
             textAlign: 'center',
             color: colors.foreground,
             fontSize: 16,
             fontWeight: '600',
           }}
         >
-          {value}
+          {formatValue ? formatValue(value) : value}
         </Text>
         {button(canInc, Plus, () => onChange(Math.min(max, value + step)))}
       </View>

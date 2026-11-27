@@ -26,11 +26,9 @@
  * setting inside the camera view's border editor.
  */
 import React from 'react'
-import { View, Text, Switch, StyleSheet } from 'react-native'
 import { useTranslation } from 'react-i18next'
-import { Zap, Volume2, Box, Tag, type LucideIcon } from '../../lib/icons.js'
-import { useTheme } from '../../theme/theme-provider.js'
-import { SPACING } from '../../theme/tokens.js'
+import { Zap, Volume2, Box, Tag } from '../../lib/icons.js'
+import { ActivationRow, PanelToggleRow } from './ActivationRow.js'
 import { SelectRow, type SelectOption } from '../ui/SelectRow.js'
 import { HighlightClassChips } from '../grid/HighlightClassChips.js'
 import {
@@ -80,19 +78,18 @@ export function HighlightTriggerRows({ highlight, onSetHighlight }: HighlightTri
 
   return (
     <>
-      <PanelToggleRow
+      <ActivationRow
         icon={Zap}
         label={t('v2.gridBuilder.highlightMotion')}
-        value={highlight.motion}
-        onValueChange={() => onSetHighlight({ motion: !highlight.motion })}
+        on={highlight.motion}
+        onToggle={() => onSetHighlight({ motion: !highlight.motion })}
       />
-      <PanelToggleRow
+      <ActivationRow
         icon={Volume2}
         label={t('v2.gridBuilder.highlightAudio')}
-        value={audioOn}
-        onValueChange={() => setAudio(!audioOn, audioLevel)}
-      />
-      {audioOn ? (
+        on={audioOn}
+        onToggle={() => setAudio(!audioOn, audioLevel)}
+      >
         <SelectRow
           icon={Volume2}
           label={t('v2.gridBuilder.highlightAudioLevel')}
@@ -100,28 +97,25 @@ export function HighlightTriggerRows({ highlight, onSetHighlight }: HighlightTri
           value={audioLevel}
           onChange={(ui) => setAudio(true, ui)}
         />
-      ) : null}
-      <PanelToggleRow
+      </ActivationRow>
+      <ActivationRow
         icon={Box}
         label={t('v2.gridBuilder.highlightDetection')}
-        value={highlight.detection}
-        onValueChange={() => onSetHighlight({ detection: !highlight.detection })}
-      />
-      {highlight.detection ? (
-        <>
-          <HighlightClassChips
-            selected={highlight.detectionClasses}
-            onChange={(next) => onSetHighlight({ detectionClasses: next })}
-          />
-          <SelectRow
-            icon={Box}
-            label={t('v2.gridBuilder.highlightHold')}
-            options={holdOptions}
-            value={highlight.detectionHoldSec}
-            onChange={(v) => onSetHighlight({ detectionHoldSec: v })}
-          />
-        </>
-      ) : null}
+        on={highlight.detection}
+        onToggle={() => onSetHighlight({ detection: !highlight.detection })}
+      >
+        <HighlightClassChips
+          selected={highlight.detectionClasses}
+          onChange={(next) => onSetHighlight({ detectionClasses: next })}
+        />
+        <SelectRow
+          icon={Box}
+          label={t('v2.gridBuilder.highlightHold')}
+          options={holdOptions}
+          value={highlight.detectionHoldSec}
+          onChange={(v) => onSetHighlight({ detectionHoldSec: v })}
+        />
+      </ActivationRow>
     </>
   )
 }
@@ -152,41 +146,6 @@ export function ClusterLabelRow({ value, onChange }: ClusterLabelRowProps) {
   )
 }
 
-/** Compact icon + label + switch row used inside floating panels/dialogs.
- *  (Distinct from `ui/ToggleRow`, whose card paddings/hairline don't fit a
- *  popover.) Shared by `CameraMenuPanel` and `GridShareDialog`. */
-export function PanelToggleRow({
-  icon: Icon,
-  label,
-  value,
-  onValueChange,
-}: {
-  readonly icon: LucideIcon
-  readonly label: string
-  readonly value: boolean
-  readonly onValueChange: () => void
-}) {
-  const { colors } = useTheme()
-  return (
-    <View style={styles.row}>
-      <Icon size={18} color={value ? colors.primary : colors.foregroundMuted} />
-      <Text style={[styles.label, { color: colors.foreground }]}>{label}</Text>
-      <Switch
-        value={value}
-        onValueChange={onValueChange}
-        trackColor={{ false: colors.border, true: colors.primary }}
-        thumbColor="#ffffff"
-      />
-    </View>
-  )
-}
-
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.md,
-    paddingVertical: SPACING.sm,
-  },
-  label: { flex: 1, fontSize: 14, fontWeight: '500' },
-})
+// The switch row moved to `ActivationRow` (it is the row's own head); kept
+// importable from here for the surfaces that already take it from this module.
+export { PanelToggleRow }

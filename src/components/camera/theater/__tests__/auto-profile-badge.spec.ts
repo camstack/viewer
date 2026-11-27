@@ -11,7 +11,7 @@ import { render, cleanup } from '@testing-library/react'
 import { ThemeProvider } from '../../../../theme/theme-provider.js'
 import '../../../../app/i18n.js'
 import { TimelinePlaybackBar } from '../TimelinePlaybackBar.js'
-import { resolveAutoProfileBadge, type AutoProfileBadge } from '../auto-profile-badge.js'
+import { autoProfileBadgeText, resolveAutoProfileBadge, type AutoProfileBadge } from '../auto-profile-badge.js'
 import { parseStreamDebugSample } from '../../../../live/stream-debug-sample.js'
 
 afterEach(cleanup)
@@ -87,5 +87,21 @@ describe('the bar draws the Auto badge in live and recorded', () => {
   it('not Auto: nothing drawn live', () => {
     const c = bar('live', null)
     expect(c.querySelector('[aria-label^="Auto:"]')).toBeNull()
+  })
+})
+
+describe('autoProfileBadgeText', () => {
+  const label = (tier: 'high' | 'mid' | 'low'): string => ({ high: 'High', mid: 'Mid', low: 'Low' })[tier]
+  it('is the translated profile name only, never the height', () => {
+    expect(autoProfileBadgeText({ state: 'known', profile: 'low', heightPx: 512 }, label)).toBe('Low')
+    expect(autoProfileBadgeText({ state: 'known', profile: 'high', heightPx: null }, label)).toBe('High')
+  })
+  it('keeps the ellipsis while pending', () => {
+    expect(autoProfileBadgeText({ state: 'pending' }, label)).toBe('\u2026')
+  })
+  it('the bar draws the name and no resolution in the visible text', () => {
+    const c = bar('live', { state: 'known', profile: 'low', heightPx: 512 })
+    expect(c.textContent).toContain('Low')
+    expect(c.textContent).not.toContain('512')
   })
 })

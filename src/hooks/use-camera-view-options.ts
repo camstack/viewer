@@ -24,10 +24,8 @@ import {
 } from '../store/camera-prefs-store.js'
 import { useOverlayConfigStore } from '../store/overlay-config-store.js'
 import type { OverlayConfig } from '../components/camera/overlay/overlay-config.js'
-import {
-  withHighlightDefaults,
-  type GridHighlightSettings,
-} from '../store/grid-store.js'
+import { type GridHighlightSettings } from '../store/grid-store.js'
+import { resolveTriggers, settleMasterOff } from '../components/camera/overlay/highlight-border.js'
 
 /** The resolved (defaults-filled) configuration of one camera's menu. */
 export interface ResolvedCameraViewOptions {
@@ -46,8 +44,11 @@ export interface CameraViewOptionsBinding extends ResolvedCameraViewOptions {
 
 /** Resolve one camera's stored highlight into a complete value. Absence is the
  *  defaults, never undefined: every host draws something either way. */
-export function resolveCameraHighlight(pref: CameraPref | undefined): GridHighlightSettings {
-  return withHighlightDefaults(pref?.highlight)
+export function resolveCameraHighlight(
+  pref: CameraPref | undefined,
+  overlay: Pick<OverlayConfig, 'highlightDefaultOff'> = { highlightDefaultOff: false },
+): GridHighlightSettings {
+  return resolveTriggers(pref?.highlight, overlay)
 }
 
 /** Patch-merge onto the CURRENT resolved highlight (immutable). */
@@ -85,7 +86,24 @@ export function useCameraViewOptions(deviceId: number): CameraViewOptionsBinding
     void hydrate()
   }, [hydrate])
 
-  const highlight = useMemo(() => withHighlightDefaults(storedHighlight), [storedHighlight])
+  const highlight = useMemo(
+    () => resolveTriggers(storedHighlight, overlay),
+    [storedHighlight, overlay],
+  )
+
+  // One-shot: a document stored while the border's master switch was OFF has
+  // its triggers silenced once, on every camera that stored them (planning#749).
+  const prefsHydrated = useCameraPrefsStore((s) => s.hydrated)
+  useEffect(() => {
+    const settled = settleMasterOff(overlay)
+    if (settled === null || !prefsHydrated) return
+    const store = useCameraPrefsStore.getState()
+    for (const [id, pref] of Object.entries(store.prefs.byId)) {
+      if (pref.highlight === undefined) continue
+      store.setCameraHighlight(Number(id), { ...pref.highlight, ...settled.triggerPatch })
+    }
+    setOverlay(settled.overlay)
+  }, [overlay, prefsHydrated, setOverlay])
 
   const setHighlight = useCallback(
     (patch: Partial<GridHighlightSettings>) =>

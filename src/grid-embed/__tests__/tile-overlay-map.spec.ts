@@ -63,7 +63,6 @@ describe('tileOverlayFor', () => {
     const config = tileOverlayFor(
       overlay({
         layers: ['objects', 'discarded', 'stationary'],
-        highlightBorder: true,
         occupancy: 'bottom-left',
         motionBadge: 'off',
         audioMeter: 'off',

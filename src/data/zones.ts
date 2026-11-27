@@ -49,3 +49,38 @@ export function mergeZoneLists(lists: readonly (readonly NcZoneRef[])[]): readon
   }
   return out
 }
+
+/** A configured zone with its geometry, for drawing it over a picture. */
+export interface ZoneOutline {
+  readonly id: string
+  readonly name: string
+  /** Vertices as 0..1 fractions of the frame; a tripwire has exactly two. */
+  readonly points: readonly { readonly x: number; readonly y: number }[]
+}
+
+function unit(n: unknown): number | null {
+  return typeof n === 'number' && Number.isFinite(n) ? Math.min(1, Math.max(0, n)) : null
+}
+
+/** Parse a `zones.listZones` response into drawable outlines. A row with fewer
+ *  than two usable points costs only itself. */
+export function parseZoneOutlines(raw: unknown): readonly ZoneOutline[] {
+  if (!Array.isArray(raw)) return []
+  const out: ZoneOutline[] = []
+  for (const entry of raw) {
+    if (!isRecord(entry) || typeof entry.id !== 'string' || entry.id.length === 0) continue
+    const rawPoints: unknown = entry.polygon
+    if (!Array.isArray(rawPoints)) continue
+    const points: { x: number; y: number }[] = []
+    for (const p of rawPoints) {
+      if (!isRecord(p)) continue
+      const x = unit(p.x)
+      const y = unit(p.y)
+      if (x !== null && y !== null) points.push({ x, y })
+    }
+    if (points.length < 2) continue
+    const name = typeof entry.name === 'string' ? entry.name.trim() : ''
+    out.push({ id: entry.id, name: name.length > 0 ? name : entry.id, points })
+  }
+  return out
+}

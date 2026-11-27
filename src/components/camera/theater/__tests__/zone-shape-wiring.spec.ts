@@ -49,9 +49,12 @@ describe('the shape survives every hop', () => {
   })
 
   it('the active overlay draws a real polygon, not its bounds', () => {
-    const src = read('components/camera/ZoneActiveOverlay.tsx')
+    const src = read('components/camera/ZoneShapeView.tsx')
     expect(src).toContain('Polygon')
-    expect(src).toContain("zone.kind === 'rect'")
+    expect(src).toContain("shape.kind === 'rect'")
+    // The active filter and the configured zones share the ONE renderer.
+    expect(read('components/camera/ZoneActiveOverlay.tsx')).toContain('<ZoneShapeView')
+    expect(read('components/camera/ConfiguredZonesOverlay.tsx')).toContain('<ZoneShapeView')
   })
 })
 

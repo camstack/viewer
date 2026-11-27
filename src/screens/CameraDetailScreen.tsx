@@ -203,6 +203,8 @@ import { AudioMeterPicker } from '../components/camera/AudioLevelMeter.js'
 import { useSettingsStore } from '../store/settings-store.js'
 import type { OverlayPosition } from '../components/camera/overlay/overlay-position.js'
 import { ZoneDrawOverlay } from '../components/camera/ZoneDrawOverlay.js'
+import { highlightBorderEnabled } from '../components/camera/overlay/highlight-border.js'
+import { ConfiguredZonesOverlay } from '../components/camera/ConfiguredZonesOverlay.js'
 import { ZoneActiveOverlay } from '../components/camera/ZoneActiveOverlay.js'
 import { serializeAdhocDeviceIds } from '../grid/adhoc-devices.js'
 import {
@@ -574,19 +576,18 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
   const audioPreview = audioPreviewUntil > Date.now()
 
   // Highlight config injected into the WebView embed (same shape as the grid).
-  // `enabled` is the overlay document's border switch: the embed draws its OWN
-  // border, so without this the panel's toggle was dead on the WebView player —
-  // the exact defect the operator reported. On the native path the same flag
-  // gates the border View below; one switch, both painters.
+  // `enabled` is DERIVED from the triggers (the border is on when any trigger
+  // is): the embed draws its OWN border, so it needs the same answer the native
+  // border View below uses; one derivation, both painters.
   const embedHighlight = useMemo<GridHighlightEmbedConfig>(
     () => ({
-      enabled: overlay.highlightBorder,
+      enabled: highlightBorderEnabled(cameraHighlight),
       ...cameraHighlight,
       audioHoldSec: AUDIO_HIGHLIGHT_HOLD_SEC,
       appearance: settings.highlight,
       motionHoldSec: settings.grid.motionHoldSec,
     }),
-    [overlay.highlightBorder, cameraHighlight, settings.highlight, settings.grid.motionHoldSec],
+    [cameraHighlight, settings.highlight, settings.grid.motionHoldSec],
   )
 
   // LIVE pause. Deliberately NOT a plain `useState(false)`: mounting `LiveView`
@@ -3031,6 +3032,8 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
           {timelineZone !== null && !zoneDrawing ? (
             <ZoneActiveOverlay zone={timelineZone} />
           ) : null}
+          {/* The camera's CONFIGURED zones (outline + name), off by default. */}
+          {overlay.zones ? <ConfiguredZonesOverlay deviceId={deviceId} /> : null}
 
           {/* No-recording placeholder — shown when the navigated time has no
               footage (the server feeder reports a gap). Non-interactive so the
@@ -3047,7 +3050,7 @@ export function CameraDetailScreen({ deviceId, initialSeekMs }: CameraDetailScre
               embed (iOS) draws its OWN on the live edge, so there this one draws
               only over RECORDED playback, where the embed's highlight is gated
               off. Color/thickness from the global highlight appearance settings. */}
-          {highlightType && (!useWebViewPlayer || playbackOverlaysVisible) && gates.border && overlay.highlightBorder ? (
+          {highlightType && (!useWebViewPlayer || playbackOverlaysVisible) && gates.border && highlightBorderEnabled(cameraHighlight) ? (
             <View
               pointerEvents="none"
               style={[

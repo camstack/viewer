@@ -44,21 +44,22 @@ describe('everything drawn ON the picture is edited by ONE overlay editor', () =
     expect(src).not.toContain('<HighlightTriggerRows')
   })
 
-  it('the overlay sections host the border switch WITH its triggers', () => {
+  it('the overlay sections host the border TRIGGERS and no master switch', () => {
     // The RENDER, not the import — an unused import would satisfy the weaker
     // check while the section shipped empty. (The file keeps the historical
     // `TimelineOverlayPanel` name: `use-discarded-detections.spec.ts` pins the
     // path from outside this directory.)
     const src = read('components/camera/theater/TimelineOverlayPanel.tsx')
     expect(src).toContain('<HighlightTriggerRows')
-    expect(src).toContain('config.highlightBorder')
+    // No master switch: the triggers ARE the border's enablement (planning#749).
+    expect(src).not.toContain('config.highlightBorder')
   })
 
   it('the border toggle reaches the WebView embed too', () => {
     // `enabled: true` was hardcoded, so on the WebView player (which draws its
     // own border) the overlay panel's switch toggled nothing.
     const src = read('screens/CameraDetailScreen.tsx')
-    expect(src).toContain('enabled: overlay.highlightBorder')
+    expect(src).toContain('enabled: highlightBorderEnabled(cameraHighlight)')
   })
 
   it('motion regions and detection boxes stay two LAYERS of one control', () => {
@@ -99,11 +100,12 @@ describe('position choices go through ONE picker, inline, never cycled', () => {
     // overlay stack, live and in playback); the stream stats joined on 2026-10-07 (it was a bare switch), the live
     // viewers count on 2026-10-14.
     const src = read('components/camera/theater/TimelineOverlayPanel.tsx')
-    const rows = src.match(/<PanelPositionRow/g) ?? []
-    // audio, occupancy, stats, viewers, device info + camera name and the two
-    // control groups (the global layout rows), the motion pill and the doorbell
-    // badge's corner.
+    const rows = src.match(/<OverlayItemRow\n/g) ?? []
+    // audio, occupancy, stats, viewers, doorbell, device info + camera name,
+    // the motion pill and the two control groups: one `OverlayItemRow` each,
+    // itself an `ActivationRow`.
     expect(rows.length).toBe(10)
+    expect(src).toContain('<ActivationRow')
     expect(src).toContain("place('stats', next)")
     expect(src).toContain("place('viewers', next)")
     for (const field of ['audioMeter', 'occupancy', 'deviceInfo']) {

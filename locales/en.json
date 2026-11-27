@@ -3313,7 +3313,6 @@
       "reasonNms": "suppressed by NMS",
       "reasonClassFilter": "class filter",
       "reasonZoneGate": "zone rule",
-      "highlightBorder": "Highlight border",
       "occupancy": "Occupancy",
       "deviceInfo": "Device information",
       "liveViewers": "Live viewers",
@@ -3341,11 +3340,13 @@
       "cameraName": "Camera name",
       "controlsLeft": "Left controls",
       "controlsRight": "Right controls",
-      "fadeSection": "Hide with the controls",
-      "fadeHint": "These overlays disappear when the controls auto-hide.",
       "fadeReadout": "Hide with the controls",
       "motionBadge": "Motion badge",
-      "doorbellCorner": "Doorbell badge corner"
+      "position": "Position",
+      "size": "Size",
+      "sizeAuto": "Auto",
+      "zones": "Zones",
+      "highlightBorder": "Highlight border"
     },
     "clips": {
       "title": "Clips",

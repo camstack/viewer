@@ -8,6 +8,10 @@ import {
   overlayScale,
   parseOverlaySize,
   scaleStyle,
+  stepScale,
+  clampSizeStep,
+  parseSizeStep,
+  OVERLAY_STEP_FACTOR,
   videoRectIn,
 } from '../overlay-size.js'
 
@@ -132,5 +136,30 @@ describe('scaleStyle', () => {
   it('returns the same style at scale 1', () => {
     const base = { fontSize: 11 }
     expect(scaleStyle(base, 1)).toBe(base)
+  })
+})
+
+describe('per-overlay size step', () => {
+  it('Auto (0) is exactly the main size', () => {
+    expect(stepScale(1.3, 0)).toBe(1.3)
+  })
+  it('each step is one fixed factor, up and down', () => {
+    expect(stepScale(1, 1)).toBeCloseTo(OVERLAY_STEP_FACTOR, 3)
+    expect(stepScale(1, -1)).toBeCloseTo(1 / OVERLAY_STEP_FACTOR, 3)
+    expect(stepScale(1, 2)).toBeGreaterThan(stepScale(1, 1))
+  })
+  it('clamps at the ends, whatever is asked', () => {
+    expect(clampSizeStep(9)).toBe(3)
+    expect(clampSizeStep(-9)).toBe(-3)
+    expect(stepScale(1, 9)).toBe(stepScale(1, 3))
+    expect(stepScale(1, -9)).toBe(stepScale(1, -3))
+  })
+  it('parses a stored step: integer, clamped, anything else is Auto', () => {
+    expect(parseSizeStep(2)).toBe(2)
+    expect(parseSizeStep(2.8)).toBe(2)
+    expect(parseSizeStep(50)).toBe(3)
+    expect(parseSizeStep('2')).toBe(0)
+    expect(parseSizeStep(undefined)).toBe(0)
+    expect(parseSizeStep(Number.NaN)).toBe(0)
   })
 })
