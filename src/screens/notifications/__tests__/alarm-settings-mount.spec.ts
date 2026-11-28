@@ -772,7 +772,11 @@ describe('a typed delay', () => {
     await vi.waitFor(() => expect(customCalls('nc.setAlarmConfig')).toHaveLength(1))
     expect(customCalls('nc.setAlarmConfig')[0]).toEqual({ patch: { entryDelaySec: 45 } })
     await vi.waitFor(() => expect(dom.queryByText('Unsaved changes')).toBeNull())
-    expect(dom.getByTestId('alarm-delay-entryDelaySec')).toHaveProperty('value', '45')
+    // The banner clears when the write settles; the box shows the hub's value
+    // only after the re-read lands, which a loaded runner can deliver later.
+    await vi.waitFor(() =>
+      expect(dom.getByTestId('alarm-delay-entryDelaySec')).toHaveProperty('value', '45'),
+    )
   })
 
   it('Discard puts the typed box back to the stored value', async () => {
