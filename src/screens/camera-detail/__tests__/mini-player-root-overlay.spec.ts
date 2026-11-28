@@ -61,7 +61,9 @@ describe('the mini-player is hosted at the app root, after the navigator', () =>
 
   it('is never presented by the navigator: no modal presentation names it', () => {
     // The one file allowed to name it is the layout that hosts it (asserted above).
-    for (const file of sources(join(ROOT, 'app')).filter((f) => !f.endsWith(join('(app)', '_layout.tsx')))) {
+    for (const file of sources(join(ROOT, 'app')).filter(
+      (f) => !f.endsWith(join('(app)', '_layout.tsx')),
+    )) {
       const src = code(readFileSync(file, 'utf8'))
       expect(src, file).not.toMatch(/OnDemand|mini-?player/i)
     }
@@ -102,9 +104,45 @@ describe('the system PiP stays one request', () => {
 
   it('the route-era mini-player symbols stay gone', () => {
     const files = [...sources(join(ROOT, 'src')), ...sources(join(ROOT, 'app'))]
-    for (const symbol of ['inAppPip', 'InAppPip', 'in-app-pip', 'PipRect', 'enterInAppPip', 'exitInAppPip']) {
+    for (const symbol of [
+      'inAppPip',
+      'InAppPip',
+      'in-app-pip',
+      'PipRect',
+      'enterInAppPip',
+      'exitInAppPip',
+    ]) {
       const hits = files.filter((f) => readFileSync(f, 'utf8').includes(symbol))
-      expect(hits.map((f) => f.slice(ROOT.length + 1)), symbol).toEqual([])
+      expect(
+        hits.map((f) => f.slice(ROOT.length + 1)),
+        symbol,
+      ).toEqual([])
     }
+  })
+})
+
+describe('the route-era strings are gone from BOTH locales', () => {
+  for (const locale of ['en', 'it']) {
+    it(`${locale}.json has no orphan mini-player copy`, () => {
+      const raw = read(`locales/${locale}.json`)
+      expect(raw).not.toContain('inAppPip')
+      expect(raw).not.toContain('closePip')
+      // The system PiP disc keeps its label — that one is still on screen.
+      expect(raw).toContain('"pip"')
+    })
+  }
+})
+
+describe('the resize grip wins over the header move', () => {
+  it('is a child of the header View and carries its own responder', () => {
+    const player = code(read('src/components/camera/OnDemandPlayer.tsx'))
+    const header = player.indexOf('{...moveResponder.panHandlers}')
+    const grip = player.indexOf('{...resizeResponder.panHandlers}')
+    const headerEnd = player.indexOf('</View>', grip)
+    expect(header).toBeGreaterThan(-1)
+    expect(grip).toBeGreaterThan(header)
+    // nothing closes the header between its opening tag and the grip's handlers
+    expect(player.slice(header, grip)).not.toMatch(/<\/View>\s*<Pressable[^>]*onPress=\{onClose/)
+    expect(headerEnd).toBeGreaterThan(grip)
   })
 })

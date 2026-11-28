@@ -27,6 +27,8 @@ import {
   ONDEMAND_SIZES,
   type OnDemandContainer,
   type OnDemandSize,
+  resizedWidth,
+  ONDEMAND_RESIZE_GRIP,
 } from '../ondemand-geometry.js'
 import {
   estimateWidestBar,
@@ -155,7 +157,12 @@ describe('the panel box', () => {
     // a fixed chrome height (no second row), `small` density (no provider
     // density). Priced with the generic host — record, step — the full row
     // would not fit, which is why the host is stated rather than defaulted.
-    const host = { scale: scaleForWidth(barWidth), canWrap: false, trailingIcon: false, canStep: false }
+    const host = {
+      scale: scaleForWidth(barWidth),
+      canWrap: false,
+      trailingIcon: false,
+      canStep: false,
+    }
     expect(estimateWidestBar(PLAYBACK_BAR_TIERS[0], barWidth, host)).toBeLessThanOrEqual(barWidth)
     expect(playbackBarFit(barWidth, host)).toEqual(PLAYBACK_BAR_TIERS[0])
   })
@@ -224,7 +231,12 @@ describe('what a released resize drag commits to', () => {
 })
 
 /** A phone: safe area on top and bottom, the home bar above, the tab capsule below. */
-const PHONE_INSETS: OnDemandInsets = { top: 47 + 48, right: 0, bottom: 72 + 34, left: 0 }
+const PHONE_INSETS: OnDemandInsets = {
+  top: 47 + 48,
+  right: 0,
+  bottom: 72 + 34,
+  left: 0,
+}
 const PHONE_WIN = { width: 390, height: 844 }
 
 describe('the timeline spans the whole panel', () => {
@@ -247,7 +259,8 @@ describe('the four corners', () => {
   })
 
   it('anchors each corner inside the insets, by value', () => {
-    const at = (c: (typeof ONDEMAND_CORNERS)[number]) => cornerPosition(c, box, PHONE_WIN, PHONE_INSETS)
+    const at = (c: (typeof ONDEMAND_CORNERS)[number]) =>
+      cornerPosition(c, box, PHONE_WIN, PHONE_INSETS)
     const left = PHONE_INSETS.left + ONDEMAND_EDGE_INSET
     const top = PHONE_INSETS.top + ONDEMAND_EDGE_INSET
     const right = PHONE_WIN.width - PHONE_INSETS.right - ONDEMAND_EDGE_INSET - box.width
@@ -265,7 +278,9 @@ describe('the four corners', () => {
       for (const corner of ONDEMAND_CORNERS) {
         const p = cornerPosition(corner, b, PHONE_WIN, PHONE_INSETS)
         expect(p.y, `${size} ${corner}`).toBeGreaterThanOrEqual(PHONE_INSETS.top)
-        expect(p.y + b.height, `${size} ${corner}`).toBeLessThanOrEqual(PHONE_WIN.height - PHONE_INSETS.bottom)
+        expect(p.y + b.height, `${size} ${corner}`).toBeLessThanOrEqual(
+          PHONE_WIN.height - PHONE_INSETS.bottom,
+        )
         expect(p.x).toBeGreaterThanOrEqual(PHONE_INSETS.left)
         expect(p.x + b.width).toBeLessThanOrEqual(PHONE_WIN.width - PHONE_INSETS.right)
       }
@@ -338,5 +353,25 @@ describe('the default size', () => {
   it('is one of the declared sizes, and not the smallest', () => {
     expect(ONDEMAND_SIZES).toContain(DEFAULT_ONDEMAND_SIZE)
     expect(DEFAULT_ONDEMAND_SIZE).not.toBe(ONDEMAND_SIZES[0])
+  })
+})
+
+describe('the resize grip grows the panel away from its corner', () => {
+  it('anchored right: dragging left grows, right shrinks', () => {
+    expect(resizedWidth(300, { dx: -50, dy: 0 }, 'bottomRight')).toBe(350)
+    expect(resizedWidth(300, { dx: 50, dy: 0 }, 'topRight')).toBe(250)
+  })
+  it('anchored left: dragging right grows', () => {
+    expect(resizedWidth(300, { dx: 50, dy: 0 }, 'topLeft')).toBe(350)
+    expect(resizedWidth(300, { dx: -50, dy: 0 }, 'bottomLeft')).toBe(250)
+  })
+  it('anchored bottom: dragging up grows; anchored top: dragging down grows', () => {
+    expect(resizedWidth(300, { dx: 0, dy: -9 }, 'bottomLeft')).toBeCloseTo(316)
+    expect(resizedWidth(300, { dx: 0, dy: 9 }, 'topLeft')).toBeCloseTo(316)
+    expect(resizedWidth(300, { dx: 0, dy: 9 }, 'bottomLeft')).toBeCloseTo(284)
+  })
+  it('never goes negative, and the grip is a named size', () => {
+    expect(resizedWidth(10, { dx: 500, dy: 0 }, 'bottomRight')).toBe(0)
+    expect(ONDEMAND_RESIZE_GRIP).toBe(24)
   })
 })

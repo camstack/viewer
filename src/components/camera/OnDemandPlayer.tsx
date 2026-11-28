@@ -96,11 +96,7 @@ import {
 import { HeatmapBar } from './theater/HeatmapBar.js'
 import { TimelinePlaybackBar } from './theater/TimelinePlaybackBar.js'
 import { TimelineScaleProvider } from './theater/TimelineScaleProvider.js'
-import {
-  dayFractionToEpoch,
-  epochToDayFraction,
-  localDayWindow,
-} from './theater/heatmap-scrub.js'
+import { dayFractionToEpoch, epochToDayFraction, localDayWindow } from './theater/heatmap-scrub.js'
 import { useRecordingAvailability } from '../../data/use-recording.js'
 import { useTimelineActivity } from '../../data/use-timeline-activity.js'
 import { composeHeatmapBins } from './theater/event-highlights.js'
@@ -108,6 +104,8 @@ import {
   cornerPosition,
   DEFAULT_ONDEMAND_CORNER,
   nearestCorner,
+  ONDEMAND_RESIZE_GRIP,
+  resizedWidth,
   onDemandArea,
   onDemandChromeWidth,
   snapSizeForWidth,
@@ -129,16 +127,10 @@ import { useSystemPip } from '../../live/use-system-pip.js'
 import type { PlayerConnectionState } from '../../live/live-view-types.js'
 import { useNotice } from '../ui/confirm.js'
 import { OverlayDiscGroup, type OverlayDisc } from './OverlayDiscGroup.js'
-import {
-  muteDisc,
-  talkDisc,
-  systemPipDisc,
-  systemPipSupported,
-} from './stream-control-items.js'
+import { muteDisc, talkDisc, systemPipDisc, systemPipSupported } from './stream-control-items.js'
 import { useTheme } from '../../theme/theme-provider.js'
 import { RADIUS, SPACING, withAlpha, type ColorTokens } from '../../theme/tokens.js'
 import { ExternalLink, Move, MoveDiagonal2, X } from '../../lib/icons.js'
-
 
 /**
  * Disc diameter for this window's control cluster.
@@ -193,10 +185,7 @@ export function OnDemandPlayer({
   // Same clamp as the theater: off the LAN this overlay opens recorded, and
   // adaptive would climb after a probe. Pin `low` on a remote route.
   const routeChannel = useRouteChannel()
-  const liveTarget = useMemo(
-    () => qualityToTargetForRoute('auto', routeChannel),
-    [routeChannel],
-  )
+  const liveTarget = useMemo(() => qualityToTargetForRoute('auto', routeChannel), [routeChannel])
 
   // The window is sized and placed inside the AREA the route leaves free, so a
   // large window on a short screen cannot run under the header or the tab bar.
@@ -297,7 +286,6 @@ export function OnDemandPlayer({
     else if (playbackMode !== 'live') goLive()
   }, [request, playbackMode, goLive])
 
-
   // A TICKING clock, seeded lazily — the idiom `TheaterTimeline` uses for the
   // same job. `Date.now()` read during render is an impure call the React
   // Compiler's `purity` rule rejects, and it would also freeze the live edge at
@@ -342,7 +330,8 @@ export function OnDemandPlayer({
   )
 
   const onSeekFraction = useCallback(
-    (fraction: number) => playback.seek(dayFractionToEpoch(fraction, day.fromMs, day.toMs), 'heatmap'),
+    (fraction: number) =>
+      playback.seek(dayFractionToEpoch(fraction, day.fromMs, day.toMs), 'heatmap'),
     [playback, day.fromMs, day.toMs],
   )
   const onScrubFraction = useCallback(
@@ -399,7 +388,10 @@ export function OnDemandPlayer({
     // A denied mic or an unsupported camera is REPORTED. A talk button that
     // lights up and moves no air is the shape this overlay lost a padlock over.
     if (talkError) {
-      notice({ title: t('v2.cameraDetail.talk'), message: t('v2.cameraDetail.talkFailed') })
+      notice({
+        title: t('v2.cameraDetail.talk'),
+        message: t('v2.cameraDetail.talkFailed'),
+      })
     }
   }, [talkError, t, notice])
 
@@ -425,9 +417,20 @@ export function OnDemandPlayer({
 
   const streamDiscs = useMemo((): readonly OverlayDisc[] => {
     const next: OverlayDisc[] = [
-      muteDisc({ muted, onToggleMute: () => setMuted((m) => !m), cluster: 'left', t }),
+      muteDisc({
+        muted,
+        onToggleMute: () => setMuted((m) => !m),
+        cluster: 'left',
+        t,
+      }),
     ]
-    const talk = talkDisc({ hasTwoWayAudio, talking, onToggleTalk, cluster: 'left', t })
+    const talk = talkDisc({
+      hasTwoWayAudio,
+      talking,
+      onToggleTalk,
+      cluster: 'left',
+      t,
+    })
     if (talk) next.push(talk)
     const pip = systemPipDisc({
       supported: systemPipSupported(Platform.OS),
@@ -495,16 +498,16 @@ export function OnDemandPlayer({
         onStartShouldSetPanResponder: () => true,
         onPanResponderGrant: () => setGhostSize(size),
         onPanResponderMove: (_e, g) => {
-          setGhostSize(snapSizeForWidth(Math.max(0, box.width + g.dx), area))
+          setGhostSize(snapSizeForWidth(resizedWidth(box.width, g, rest), area))
         },
         onPanResponderRelease: (_e, g) => {
-          const next = snapSizeForWidth(Math.max(0, box.width + g.dx), area)
+          const next = snapSizeForWidth(resizedWidth(box.width, g, rest), area)
           setGhostSize(null)
           if (next !== size) onSize(next)
         },
         onPanResponderTerminate: () => setGhostSize(null),
       }),
-    [box.width, area, size, onSize],
+    [box.width, area, size, onSize, rest],
   )
 
   const ghostBox = ghostSize === null ? null : resolveOnDemandBox(ghostSize, area)
@@ -520,7 +523,12 @@ export function OnDemandPlayer({
           testID="ondemand-player-anchor"
           style={[
             styles.ghost,
-            { width: box.width, height: box.height, left: anchor.x, top: anchor.y },
+            {
+              width: box.width,
+              height: box.height,
+              left: anchor.x,
+              top: anchor.y,
+            },
           ]}
         />
       ) : null}
@@ -544,7 +552,12 @@ export function OnDemandPlayer({
           pointerEvents="none"
           style={[
             styles.ghost,
-            { width: ghostBox.width, height: ghostBox.height, left: at.x, top: at.y },
+            {
+              width: ghostBox.width,
+              height: ghostBox.height,
+              left: at.x,
+              top: at.y,
+            },
           ]}
         />
       ) : null}
@@ -563,7 +576,9 @@ export function OnDemandPlayer({
               timeline: it used to reserve a 28pt strip out of the bar's row and
               the timeline never reached the panel's right edge. A header
               control costs the picture and the timeline nothing, and the panel
-              is still resized by dragging this glyph. */}
+              is still resized by dragging this glyph. It is a CHILD of the header that
+              carries the move responder, and the responder system offers a touch
+              to the deepest view first, so the grip wins over the header move. */}
           <View
             style={styles.resizeHandle}
             hitSlop={10}
@@ -629,35 +644,34 @@ export function OnDemandPlayer({
             their chrome, this surface did not. `playback-bar-fit.ts` takes over
             where the scale tokens hit their floor. */}
         <TimelineScaleProvider availableWidth={chromeWidth}>
-        <View style={styles.chrome}>
-          <HeatmapBar
-            bins={bins}
-            cursorFraction={epochToDayFraction(viewedEpoch, day.fromMs, day.toMs)}
-            coverage={coverage.data?.ranges}
-            unknownCameras={coverage.data?.unknownIds.length ?? 0}
-            dayStartMs={day.fromMs}
-            dayEndMs={day.toMs}
-            onSeekFraction={onSeekFraction}
-            onScrubStart={onScrubStart}
-            onScrubFraction={onScrubFraction}
-            onScrubEnd={onScrubEnd}
-          />
-          <TimelinePlaybackBar
-            mode={state.mode}
-            rate={rate}
-            paused={paused}
-            loading={loading}
-            faulted={faulted}
-            scrubDirection={selectScrubDirection(state)}
-            onTogglePause={onTogglePause}
-            onJogBack={() => onJog(-10_000)}
-            onJogForward={() => onJog(10_000)}
-            onSelectRate={onSelectRate}
-            onGoLive={playback.goLive}
-          />
-        </View>
+          <View style={styles.chrome}>
+            <HeatmapBar
+              bins={bins}
+              cursorFraction={epochToDayFraction(viewedEpoch, day.fromMs, day.toMs)}
+              coverage={coverage.data?.ranges}
+              unknownCameras={coverage.data?.unknownIds.length ?? 0}
+              dayStartMs={day.fromMs}
+              dayEndMs={day.toMs}
+              onSeekFraction={onSeekFraction}
+              onScrubStart={onScrubStart}
+              onScrubFraction={onScrubFraction}
+              onScrubEnd={onScrubEnd}
+            />
+            <TimelinePlaybackBar
+              mode={state.mode}
+              rate={rate}
+              paused={paused}
+              loading={loading}
+              faulted={faulted}
+              scrubDirection={selectScrubDirection(state)}
+              onTogglePause={onTogglePause}
+              onJogBack={() => onJog(-10_000)}
+              onJogForward={() => onJog(10_000)}
+              onSelectRate={onSelectRate}
+              onGoLive={playback.goLive}
+            />
+          </View>
         </TimelineScaleProvider>
-
       </View>
     </>
   )
@@ -695,7 +709,12 @@ function makeStyles(colors: ColorTokens) {
       paddingVertical: SPACING.xs,
       backgroundColor: colors.surface,
     },
-    title: { flex: 1, color: colors.foreground, fontSize: 12, fontWeight: '600' },
+    title: {
+      flex: 1,
+      color: colors.foreground,
+      fontSize: 12,
+      fontWeight: '600',
+    },
     headerBtn: { padding: 2 },
     // ui-check-ok: video letterbox — a camera picture sits on black in both themes
     picture: { flex: 1, minHeight: 0, backgroundColor: '#000' },
@@ -713,8 +732,8 @@ function makeStyles(colors: ColorTokens) {
      * touch target past 44pt without spending header height.
      */
     resizeHandle: {
-      width: 24,
-      height: 24,
+      width: ONDEMAND_RESIZE_GRIP,
+      height: ONDEMAND_RESIZE_GRIP,
       alignItems: 'center',
       justifyContent: 'center',
       borderRadius: RADIUS.md,

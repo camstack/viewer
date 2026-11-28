@@ -165,8 +165,14 @@ export function resolveOnDemandBox(size: OnDemandSize, container: OnDemandContai
   const usableW = Math.max(0, container.width - 2 * ONDEMAND_EDGE_INSET)
   const usableH = Math.max(0, container.height - 2 * ONDEMAND_EDGE_INSET)
   const widthFromHeight = ((usableH - ONDEMAND_CHROME_HEIGHT) * 16) / 9
-  const width = Math.max(0, Math.min(askedWidth(size, container, usableW), usableW, widthFromHeight))
-  return { width, height: width > 0 ? (width * 9) / 16 + ONDEMAND_CHROME_HEIGHT : 0 }
+  const width = Math.max(
+    0,
+    Math.min(askedWidth(size, container, usableW), usableW, widthFromHeight),
+  )
+  return {
+    width,
+    height: width > 0 ? (width * 9) / 16 + ONDEMAND_CHROME_HEIGHT : 0,
+  }
 }
 
 /**
@@ -351,3 +357,27 @@ export function nearestCorner(
   if (bottom) return right ? 'bottomRight' : 'bottomLeft'
   return right ? 'topRight' : 'topLeft'
 }
+
+/**
+ * The panel's width after a resize drag of (`dx`, `dy`) from `startWidth`.
+ *
+ * The panel grows AWAY from the corner it is anchored to: anchored right, a
+ * drag LEFT grows it; anchored bottom, a drag UP grows it. The grip sits in the
+ * header, so this is the direction the operator pulls it. Horizontal and
+ * vertical pulls are both honoured; the stronger one (vertical converted to
+ * width through the 16:9 picture) wins, so a diagonal drag is not doubled.
+ */
+export function resizedWidth(
+  startWidth: number,
+  drag: { readonly dx: number; readonly dy: number },
+  corner: OnDemandCorner,
+): number {
+  const horizontal = corner === 'topRight' || corner === 'bottomRight' ? -drag.dx : drag.dx
+  const vertical =
+    (corner === 'bottomLeft' || corner === 'bottomRight' ? -drag.dy : drag.dy) * (16 / 9)
+  const growth = Math.abs(vertical) > Math.abs(horizontal) ? vertical : horizontal
+  return Math.max(0, startWidth + growth)
+}
+
+/** The resize grip's square, in points — the header's own height class. */
+export const ONDEMAND_RESIZE_GRIP = 24

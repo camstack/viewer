@@ -51,7 +51,16 @@ export function onDemandInsets({
   return {
     top: safe.top + topBar,
     right: safe.right,
-    bottom: onTabs ? Math.max(safe.bottom, bottomNavFootprint({ visible: !showSidebar, insetBottom: safe.bottom })) : safe.bottom,
-    left: onTabs && showSidebar ? sideNavFootprint({ visible: true, insetLeft: safe.left }) : safe.left,
+    bottom: onTabs
+      ? Math.max(
+          safe.bottom,
+          bottomNavFootprint({
+            visible: !showSidebar,
+            insetBottom: safe.bottom,
+          }),
+        )
+      : safe.bottom,
+    left:
+      onTabs && showSidebar ? sideNavFootprint({ visible: true, insetLeft: safe.left }) : safe.left,
   }
 }
