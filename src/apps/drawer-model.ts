@@ -39,11 +39,20 @@ export interface DrawerSettings {
   readonly path: string
 }
 
+/**
+ * What the app rail shows. `pending` and `unknown` (a failed read) draw ONE inert
+ * placeholder, never "no apps": only an answered list may say what is offered (D315).
+ */
+export type RailState = 'pending' | 'unknown' | 'ready'
+
 export interface DrawerModel {
   readonly appsState: AppCatalog['status']
-  /** Every offered app: the selector sheet lists them, the drawer body does not. */
+  readonly railState: RailState
+  /** The content column's title: the active app's name; `null` until the list answered with it. */
+  readonly heading: string | null
+  /** Every offered app, in order: one icon each in the rail, the active one selected. */
   readonly apps: readonly DrawerApp[]
-  /** The active app, for the selector row; `null` while the list has not answered. */
+  /** The active app; `null` while the list has not answered. */
   readonly activeApp: DrawerApp | null
   /** The active app's id once the list answered; `null` while it is not known. */
   readonly activeId: string | null
@@ -112,5 +121,13 @@ export function buildDrawerModel({ catalog, activeAppId, translate }: DrawerInpu
     settings = { label: translate(SETTINGS_LABEL), path: '/settings' }
   }
 
-  return { appsState: catalog.status, apps, activeApp, activeId, nav, settings }
+  return {
+    appsState: catalog.status,
+    railState: catalog.status === 'answered' ? 'ready' : catalog.status === 'pending' ? 'pending' : 'unknown',
+    heading: activeApp?.label ?? null,
+    apps, activeApp,
+    activeId,
+    nav,
+    settings,
+  }
 }

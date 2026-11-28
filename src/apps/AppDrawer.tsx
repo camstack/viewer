@@ -1,9 +1,10 @@
 /**
  * AppDrawer — THE drawer: one overlay, the same on a phone and on the web.
- * Top to bottom: the route badge, the shared search, the app selector (the
- * active app; a tap lists the apps the hub offered), the active app's NAV, its
- * Settings (only when it declares them) and sign-out. The bottom block shows who is
- * signed in, the current server and, with two or more saved, the server switch.
+ * Left, the app rail (one icon per app the hub offered; a tap switches app). Beside
+ * it, top to bottom: the active app's title with the route badge and close, the shared
+ * search and the active app's NAV. The footer is the avatar row (who is signed in, the
+ * server); it opens the account menu: Account, Switch server, the app's Settings (only
+ * when declared), Open at launch and Sign out.
  *
  * Every row comes from the apps the hub listed (`apps.listApps`, `drawer-model`):
  * no app is named here. The Viewer's own tabs stay in its bar or rail, so the
@@ -32,7 +33,7 @@ import { useAppCatalog } from '../data/use-apps.js'
 import { useDrawerSearch } from '../data/use-drawer-search.js'
 import { useMe } from '../data/use-me.js'
 import { hapticTap } from '../lib/haptics.js'
-import { ChevronsUpDown, Layers, LogOut, Plug, Server, Settings, User, Video, X } from '../lib/icons.js'
+import { ChevronsUpDown, Plug, Video, X } from '../lib/icons.js'
 import { settingsNavigation, settingsTab } from '../navigation/nav-items.js'
 import { UserAvatar } from '../navigation/UserAvatar.js'
 import { useTheme } from '../theme/theme-provider.js'
@@ -47,7 +48,8 @@ import { findApp, hostedAppOf } from './app-catalog.js'
 import { LaunchPreferenceSheet } from './LaunchPreferenceSheet.js'
 import { launchValueLabel } from './launch-choices.js'
 import { ACCOUNT_PATH } from '../screens/account/AccountScreen.js'
-import { AppSelectorSheet } from './AppSelectorSheet.js'
+import { AccountMenuSheet } from './AccountMenuSheet.js'
+import { AppRail, APP_RAIL_WIDTH } from './AppRail.js'
 import { ServerSwitchSheet } from './ServerSwitchSheet.js'
 
 const PANEL_MAX_WIDTH = 320
@@ -75,7 +77,7 @@ export function AppDrawer(): React.JSX.Element | null {
   const [query, setQuery] = useState('')
   const [switching, setSwitching] = useState(false)
   const [launching, setLaunching] = useState(false)
-  const [pickingApp, setPickingApp] = useState(false)
+  const [accountMenu, setAccountMenu] = useState(false)
 
   const translate = useMemo(() => (label: AppLabel): string => t(label.key, { defaultValue: label.fallback }), [t])
   const model = useMemo(
@@ -101,7 +103,7 @@ export function AppDrawer(): React.JSX.Element | null {
       setQuery('')
       setSwitching(false)
       setLaunching(false)
-      setPickingApp(false)
+      setAccountMenu(false)
     }
   }, [open])
 
@@ -118,7 +120,6 @@ export function AppDrawer(): React.JSX.Element | null {
 
   const goApp = (id: string): void => {
     hapticTap()
-    setPickingApp(false)
     if (id === model.activeId) {
       close()
       return
@@ -147,6 +148,7 @@ export function AppDrawer(): React.JSX.Element | null {
   }
   const goAccount = (): void => {
     hapticTap()
+    setAccountMenu(false)
     close()
     // The Account is the shell's own screen: it opens over whatever is framed.
     openApp({ appId: null })
@@ -160,7 +162,7 @@ export function AppDrawer(): React.JSX.Element | null {
     router.push({ pathname: '/device/[id]', params: { id: String(id) } })
   }
 
-  const panelWidth = Math.min(PANEL_MAX_WIDTH, Math.round(width * PANEL_FRACTION))
+  const panelWidth = Math.min(PANEL_MAX_WIDTH + APP_RAIL_WIDTH, Math.round(width * PANEL_FRACTION))
   const swipeStart = { x: 0 }
 
   return (
@@ -177,8 +179,6 @@ export function AppDrawer(): React.JSX.Element | null {
           styles.panel,
           {
             width: panelWidth,
-            paddingTop: insets.top,
-            paddingBottom: insets.bottom,
             backgroundColor: colors.background,
             borderRightColor: colors.border,
           },
@@ -190,122 +190,117 @@ export function AppDrawer(): React.JSX.Element | null {
           if (swipeStart.x - e.nativeEvent.pageX > SWIPE_CLOSE_PX) close()
         }}
       >
-        {/* Three sections, three layers: app selection (raised), the app's nav (page), the footer (surface). */}
-        <View style={[styles.top, { backgroundColor: colors.backgroundElevated, borderBottomColor: colors.border }]} testID="drawer-section-top">
-          <View style={styles.header}>
-            <View style={styles.spacer} />
-            <Badge size="sm" tone={local ? 'success' : 'warning'} label={t(local ? 'v2.apps.routeLocal' : 'v2.apps.routeRemote')} />
-            <Pressable onPress={close} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('v2.apps.closeMenu')}>
-              <X size={18} color={colors.foregroundMuted} />
+        <AppRail state={model.railState} apps={model.apps} onPick={goApp} />
+        <View style={styles.content}>
+          <View style={[styles.top, { paddingTop: insets.top, backgroundColor: colors.backgroundElevated, borderBottomColor: colors.border }]} testID="drawer-section-top">
+            <View style={styles.header}>
+              <Text numberOfLines={1} style={[styles.title, { color: colors.foreground }]} testID="drawer-app-title">
+                {model.heading ?? t(model.railState === 'pending' ? 'v2.apps.loading' : model.railState === 'unknown' ? 'v2.apps.unavailable' : 'v2.apps.apps')}
+              </Text>
+              <Badge size="sm" tone={local ? 'success' : 'warning'} label={t(local ? 'v2.apps.routeLocal' : 'v2.apps.routeRemote')} />
+              <View style={styles.spacer} />
+              <Pressable onPress={close} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('v2.apps.closeMenu')}>
+                <X size={18} color={colors.foregroundMuted} />
+              </Pressable>
+            </View>
+            <PickerSearchRow testID="drawer-search" search={{ value: query, onChange: setQuery, placeholder: t('v2.apps.searchPlaceholder'), autoFocus: searchFocus }} />
+          </View>
+
+          <ScrollView
+            style={{ backgroundColor: colors.background }}
+            contentContainerStyle={styles.body}
+            keyboardShouldPersistTaps="handled"
+            testID="drawer-section-nav"
+          >
+            {searching ? (
+              <SearchResults
+                results={results}
+                pending={data.pending}
+                failed={data.failed}
+                onNav={goNavResult}
+                onDevice={goDevice}
+                onIntegration={setQuery}
+              />
+            ) : (
+              <>
+                {model.nav.map((section) => (
+                  <View key={section.id}>
+                    {section.label !== null ? (
+                      <Text style={[styles.section, { color: colors.foregroundSubtle }]}>{section.label}</Text>
+                    ) : null}
+                    {section.items.map((item) => (
+                      <MenuRow
+                        key={item.id}
+                        testID={`drawer-nav-${item.id}`}
+                        icon={appIconFor(item.icon)}
+                        label={item.label}
+                        selected={framePath === item.path}
+                        onPress={() => goNav(item.path)}
+                      />
+                    ))}
+                  </View>
+                ))}
+              </>
+            )}
+          </ScrollView>
+
+          <View style={[styles.footer, { paddingBottom: insets.bottom, backgroundColor: colors.surface, borderTopColor: colors.border }]} testID="drawer-section-footer">
+            <Pressable
+              style={styles.account}
+              testID="drawer-user-block"
+              onPress={() => {
+                hapticTap()
+                setAccountMenu(true)
+              }}
+              accessibilityRole="button"
+              accessibilityLabel={t('v2.apps.account')}
+            >
+              <View style={styles.account} testID="drawer-account">
+                <UserAvatar name={me?.username ?? null} />
+                <View style={styles.headerText}>
+                  <Text style={[styles.name, { color: colors.foreground }]} numberOfLines={1} testID="drawer-account-name">
+                    {me == null
+                      ? t('v2.settings.accountUnknown')
+                      : `${me.username} · ${me.isAdmin ? t('v2.settings.roleAdmin') : t('v2.settings.roleViewer')}`}
+                  </Text>
+                  {serverName !== '' ? (
+                    <Text style={[styles.sub, { color: colors.foregroundMuted }]} numberOfLines={1} testID="drawer-account-server">
+                      {serverName}
+                    </Text>
+                  ) : null}
+                </View>
+                <ChevronsUpDown size={16} color={colors.foregroundSubtle} />
+              </View>
             </Pressable>
           </View>
-
-          <PickerSearchRow testID="drawer-search" search={{ value: query, onChange: setQuery, placeholder: t('v2.apps.searchPlaceholder'), autoFocus: searchFocus }} />
-
-          {searching ? null : (
-            <MenuRow
-              testID="drawer-app-selector"
-              icon={model.activeApp !== null ? appIconFor(model.activeApp.icon) : Layers}
-              label={
-                model.activeApp !== null
-                  ? model.activeApp.label
-                  : t(model.appsState === 'pending' ? 'v2.apps.loading' : model.appsState === 'unknown' ? 'v2.apps.unavailable' : 'v2.apps.apps')
-              }
-              // An ANSWERED list without the active app still opens the sheet: another app can be picked (D315).
-              disabled={model.appsState !== 'answered'}
-              onPress={() => setPickingApp(true)}
-              trailing={model.appsState === 'answered' ? <ChevronsUpDown size={16} color={colors.foregroundSubtle} /> : null}
-            />
-          )}
-        </View>
-
-        <ScrollView
-          style={{ backgroundColor: colors.background }}
-          contentContainerStyle={styles.body}
-          keyboardShouldPersistTaps="handled"
-          testID="drawer-section-nav"
-        >
-          {searching ? (
-            <SearchResults
-              results={results}
-              pending={data.pending}
-              failed={data.failed}
-              onNav={goNavResult}
-              onDevice={goDevice}
-              onIntegration={setQuery}
-            />
-          ) : (
-            <>
-              {model.nav.map((section) => (
-                <View key={section.id}>
-                  {section.label !== null ? (
-                    <Text style={[styles.section, { color: colors.foregroundSubtle }]}>{section.label}</Text>
-                  ) : null}
-                  {section.items.map((item) => (
-                    <MenuRow
-                      key={item.id}
-                      testID={`drawer-nav-${item.id}`}
-                      icon={appIconFor(item.icon)}
-                      label={item.label}
-                      selected={framePath === item.path}
-                      onPress={() => goNav(item.path)}
-                    />
-                  ))}
-                </View>
-              ))}
-            </>
-          )}
-        </ScrollView>
-
-        <View style={[styles.footer, { backgroundColor: colors.surface, borderTopColor: colors.border }]} testID="drawer-section-footer">
-          <View testID="drawer-user-block">
-            <View style={styles.account} testID="drawer-account">
-              <UserAvatar name={me?.username ?? null} />
-              <View style={styles.headerText}>
-                <Text style={[styles.name, { color: colors.foreground }]} numberOfLines={1} testID="drawer-account-name">
-                  {me == null
-                    ? t('v2.settings.accountUnknown')
-                    : `${me.username} · ${me.isAdmin ? t('v2.settings.roleAdmin') : t('v2.settings.roleViewer')}`}
-                </Text>
-                {serverName !== '' ? (
-                  <Text style={[styles.sub, { color: colors.foregroundMuted }]} numberOfLines={1} testID="drawer-account-server">
-                    {serverName}
-                  </Text>
-                ) : null}
-              </View>
-            </View>
-            <MenuRow testID="drawer-account-link" icon={User} label={t('v2.apps.account')} onPress={goAccount} />
-          </View>
-          <MenuRow testID="drawer-switch-server" icon={Server} label={t('v2.userMenu.servers')} onPress={() => setSwitching(true)} />
-          {model.settings !== null ? (
-            <MenuRow
-              testID="drawer-settings"
-              icon={Settings}
-              label={model.settings.label}
-              onPress={() => goSettings(model.settings?.path ?? '')}
-            />
-          ) : null}
-          <MenuRow
-            testID="drawer-open-at-launch"
-            icon={Settings}
-            label={t('v2.apps.openAtLaunch')}
-            onPress={() => setLaunching(true)}
-            trailing={<Text style={[styles.value, { color: colors.foregroundMuted }]}>{launchValue ?? t('v2.apps.launchLast')}</Text>}
-          />
-          <MenuRow
-            testID="drawer-sign-out"
-            icon={LogOut}
-            label={t('v2.userMenu.signOut')}
-            destructive
-            onPress={() => {
-              close()
-              void signOut()
-            }}
-          />
         </View>
       </View>
       {switching ? <ServerSwitchSheet onClose={() => setSwitching(false)} /> : null}
-      {pickingApp ? <AppSelectorSheet apps={model.apps} onPick={goApp} onClose={() => setPickingApp(false)} /> : null}
+      {accountMenu ? (
+        <AccountMenuSheet
+          settings={model.settings}
+          launchValue={launchValue ?? t('v2.apps.launchLast')}
+          onAccount={goAccount}
+          onSwitchServer={() => {
+            setAccountMenu(false)
+            setSwitching(true)
+          }}
+          onSettings={(path) => {
+            setAccountMenu(false)
+            goSettings(path)
+          }}
+          onLaunch={() => {
+            setAccountMenu(false)
+            setLaunching(true)
+          }}
+          onSignOut={() => {
+            setAccountMenu(false)
+            close()
+            void signOut()
+          }}
+          onClose={() => setAccountMenu(false)}
+        />
+      ) : null}
       {launching ? <LaunchPreferenceSheet onClose={() => setLaunching(false)} /> : null}
     </View>
   )
@@ -364,7 +359,9 @@ function SearchResults({ results, pending, failed, onNav, onDevice, onIntegratio
 const styles = StyleSheet.create({
   root: { ...StyleSheet.absoluteFill, flexDirection: 'row', zIndex: 50 },
   scrim: { ...StyleSheet.absoluteFill },
-  panel: { height: '100%', borderRightWidth: StyleSheet.hairlineWidth },
+  panel: { height: '100%', flexDirection: 'row', borderRightWidth: StyleSheet.hairlineWidth },
+  content: { flex: 1 },
+  title: { fontSize: 15, fontWeight: '700', flexShrink: 1 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',

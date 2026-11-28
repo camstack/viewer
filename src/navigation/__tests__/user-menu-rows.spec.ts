@@ -5,7 +5,7 @@ import { join } from 'node:path'
 const read = (rel: string): string => readFileSync(join(process.cwd(), rel), 'utf8')
 
 describe('the app drawer has ONE row structure', () => {
-  const drawer = read('src/apps/AppDrawer.tsx')
+  const drawer = read('src/apps/AppDrawer.tsx') + read('src/apps/AccountMenuSheet.tsx')
   const row = read('src/components/ui/MenuRow.tsx')
 
   it('apps, nodes, servers and the account entries all render through MenuRow, with no row layout of their own', () => {

@@ -64,13 +64,17 @@ describe('the drawer bottom', () => {
     const view = mountScreen(React.createElement(AppDrawer))
     const block = view.getByTestId('drawer-user-block')
     expect(block.contains(view.getByTestId('drawer-account'))).toBe(true)
-    expect(block.contains(view.getByTestId('drawer-account-link'))).toBe(true)
+    // The footer is the avatar row only; Account lives in the menu it opens.
+    expect(view.queryByTestId('drawer-account-link')).toBeNull()
+    fireEvent.click(block)
+    expect(view.getByTestId('account-menu-sheet').contains(view.getByTestId('drawer-account-link'))).toBe(true)
   })
 
   it('has an Account entry that opens /account (planning#716 P2) and closes the drawer', () => {
     resetRouterStub()
     useAppStore.getState().setDrawerOpen(true)
     const view = mountScreen(React.createElement(AppDrawer))
+    fireEvent.click(view.getByTestId('drawer-user-block'))
     fireEvent.click(view.getByTestId('drawer-account-link'))
     expect(routerCalls().some((c) => c.kind === 'push' && c.target === '/account')).toBe(true)
     expect(useAppStore.getState().drawerOpen).toBe(false)
@@ -79,6 +83,7 @@ describe('the drawer bottom', () => {
   it('keeps the servers row with a single server: its sheet is the only way to add one', () => {
     useAppStore.getState().setDrawerOpen(true)
     const view = mountScreen(React.createElement(AppDrawer))
+    fireEvent.click(view.getByTestId('drawer-user-block'))
     expect(view.getByTestId('drawer-switch-server')).toBeTruthy()
   })
 })

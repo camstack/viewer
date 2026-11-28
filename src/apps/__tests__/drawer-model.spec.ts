@@ -108,3 +108,22 @@ describe('the drawer model', () => {
     expect(buildDrawerModel({ catalog: answered(hosted, named), activeAppId: 'self', translate }).nav).toHaveLength(1)
   })
 })
+
+describe('the rail state (planning#763)', () => {
+  const t = (l: { fallback: string }): string => l.fallback
+  it('a pending or failed list is a placeholder state with no apps, never an empty ready one', () => {
+    for (const status of ['pending', 'unknown'] as const) {
+      const m = buildDrawerModel({ catalog: { status } as AppCatalog, activeAppId: null, translate: t })
+      expect(m.railState).toBe(status)
+      expect(m.apps).toEqual([])
+      expect(m.heading).toBeNull()
+    }
+  })
+  it('an answered list is ready, with the active app as heading', () => {
+    const catalog = answered(app('a'), app('b'))
+    const m = buildDrawerModel({ catalog, activeAppId: 'b', translate: t })
+    expect(m.railState).toBe('ready')
+    expect(m.heading).toBe('B')
+    expect(m.apps.map((a) => [a.id, a.selected])).toEqual([['a', false], ['b', true]])
+  })
+})

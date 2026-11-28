@@ -65,7 +65,11 @@ afterEach(() => {
   setTestPlatform('ios')
 })
 
+const openMenu = (view: ReturnType<typeof mountScreen>): void => {
+  fireEvent.click(view.getByTestId('drawer-user-block'))
+}
 const openList = (view: ReturnType<typeof mountScreen>): void => {
+  openMenu(view)
   fireEvent.click(view.getByTestId('drawer-switch-server'))
 }
 
@@ -183,17 +187,20 @@ describe('"open at launch" and the bar', () => {
   it('"open at launch" shows the current choice and a pick changes the stored one', async () => {
     useAppStore.getState().setLaunchPreference('x')
     const view = mountScreen(React.createElement(AppDrawer), { hub: { 'apps.listApps': [APP_X] } })
+    openMenu(view)
     await waitFor(() => expect(view.getByTestId('drawer-open-at-launch').textContent).toContain('Ex'))
     fireEvent.click(view.getByTestId('drawer-open-at-launch'))
     expect(view.getByTestId('launch-preference-sheet')).toBeTruthy()
     fireEvent.click(view.getByTestId('launch-option-last'))
     expect(useAppStore.getState().launchPreference).toBe('last')
     expect(view.queryByTestId('launch-preference-sheet')).toBeNull()
+    openMenu(view)
     await waitFor(() => expect(view.getByTestId('drawer-open-at-launch').textContent).toContain('Last used'))
   })
 
   it('sign out closes the drawer and runs the existing sign-out', () => {
     const view = mountScreen(React.createElement(AppDrawer))
+    openMenu(view)
     fireEvent.click(view.getByTestId('drawer-sign-out'))
     expect(signOut).toHaveBeenCalledTimes(1)
     expect(useAppStore.getState().drawerOpen).toBe(false)
