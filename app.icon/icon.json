@@ -10,7 +10,7 @@
           "image-name": "nodes.svg",
           "name": "nodes",
           "position": {
-            "scale": 1,
+            "scale": 1.25,
             "translation-in-points": [
               0,
               0
@@ -22,7 +22,7 @@
           "image-name": "orbit-front-light.svg",
           "name": "orbit-front",
           "position": {
-            "scale": 1,
+            "scale": 1.25,
             "translation-in-points": [
               0,
               0
@@ -57,7 +57,7 @@
           "image-name": "lens.svg",
           "name": "lens",
           "position": {
-            "scale": 1,
+            "scale": 1.25,
             "translation-in-points": [
               0,
               0
@@ -81,7 +81,7 @@
           "image-name": "drop.svg",
           "name": "drop",
           "position": {
-            "scale": 1,
+            "scale": 1.25,
             "translation-in-points": [
               0,
               0
@@ -105,7 +105,7 @@
           "image-name": "orbit-back-light.svg",
           "name": "orbit-back",
           "position": {
-            "scale": 1,
+            "scale": 1.25,
             "translation-in-points": [
               0,
               0
