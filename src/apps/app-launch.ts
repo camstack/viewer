@@ -63,6 +63,21 @@ export function launchResolvable(preference: LaunchPreference, lastApp: AppId, c
   return wanted === null || catalog.status !== 'pending'
 }
 
+/**
+ * Whether the launch is still undecided AND the viewer must not be painted yet:
+ * the device settings are not read (the wanted app is unknown), or they name an
+ * embedded app that has not been opened. A launch into the Viewer never waits.
+ */
+export function launchCoversViewer(input: {
+  readonly hydrated: boolean
+  readonly settled: boolean
+  readonly preference: LaunchPreference
+  readonly lastApp: AppId
+}): boolean {
+  if (input.settled) return false
+  return !input.hydrated || wantedOf(input.preference, input.lastApp) !== null
+}
+
 /** The last app used on each saved server, by server id: a server switch reopens it. */
 export type LastAppByServer = Readonly<Record<string, AppId>>
 

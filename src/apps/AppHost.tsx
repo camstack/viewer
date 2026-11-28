@@ -10,14 +10,14 @@
  * list has answered.
  */
 import React, { useEffect, useRef } from 'react'
-import { StyleSheet, View } from 'react-native'
+import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 
 import { useServer } from '../app/ServerProvider.js'
 import { useAppCatalog } from '../data/use-apps.js'
 import { useTheme } from '../theme/theme-provider.js'
 import { findApp, isHostedEntry } from './app-catalog.js'
-import { launchResolvable, offeredLaunchPreferences, resolveLaunchApp, resolveSwitchApp, switchResolvable } from './app-launch.js'
+import { launchCoversViewer, launchResolvable, offeredLaunchPreferences, resolveLaunchApp, resolveSwitchApp, switchResolvable } from './app-launch.js'
 import { useAppStore } from './app-store.js'
 import { AppDrawer } from './AppDrawer.js'
 import { EmbeddedApp } from './EmbeddedApp.js'
@@ -37,6 +37,7 @@ export function AppHost(): React.JSX.Element {
   const carried = useAppStore((s) => s.carried)
   const lastAppByServer = useAppStore((s) => s.lastAppByServer)
 
+  // Idempotent: `prefs-warmup` already started it before the first render.
   useEffect(() => {
     void useAppStore.getState().hydrate()
   }, [])
@@ -86,8 +87,15 @@ export function AppHost(): React.JSX.Element {
   const info = activeId === null ? null : findApp(catalog, activeId)
   const framed = info !== null && !isHostedEntry(info.app.entry)
 
+  const covered = launchCoversViewer({ hydrated, settled, preference, lastApp })
+
   return (
     <>
+      {covered ? (
+        <View style={[styles.overlay, styles.loader, { backgroundColor: colors.background }]} testID="launch-loader" accessibilityRole="progressbar">
+          <ActivityIndicator color={colors.primary} />
+        </View>
+      ) : null}
       {framed ? (
         <View style={[styles.overlay, { backgroundColor: colors.background }]} testID="app-host-frame">
           <EmbeddedApp key={info.app.id} info={info} title={t(info.app.label.key, { defaultValue: info.app.label.fallback })} />
@@ -101,4 +109,5 @@ export function AppHost(): React.JSX.Element {
 
 const styles = StyleSheet.create({
   overlay: { ...StyleSheet.absoluteFill, zIndex: 40 },
+  loader: { alignItems: 'center', justifyContent: 'center' },
 })

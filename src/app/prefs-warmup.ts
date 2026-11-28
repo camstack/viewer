@@ -36,6 +36,7 @@ import { watchDetectionHoldSeed } from '../store/detection-hold-seed.js'
 import { useLanguageStore } from '../store/language-store.js'
 import { useReelFilterStore } from '../store/reel-filter-store.js'
 import { useReelHighlightStore } from '../store/reel-highlight-store.js'
+import { useAppStore } from '../apps/app-store.js'
 import { useEventsFilterStore } from '../store/events-filter-store.js'
 
 void useCameraPrefsStore.getState().hydrate()
@@ -63,6 +64,10 @@ void useLanguageStore.getState().hydrate()
 void useReelFilterStore.getState().hydrate()
 void useReelHighlightStore.getState().hydrate()
 void useEventsFilterStore.getState().hydrate()
+
+// The app the launch opens (`apps/app-store.ts`): read before the first render so the
+// shell never paints the Viewer and then flips to the designated app.
+void useAppStore.getState().hydrate()
 
 // The detection hold went global: seeded once per hub from what each camera and
 // grid stored (`store/detection-hold-seed.ts`).
