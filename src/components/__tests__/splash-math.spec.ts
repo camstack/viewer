@@ -35,6 +35,8 @@ describe('splash math', () => {
     expect(placeNode(-Math.PI / 2, 5).layer).toBe('back')
     expect(placeNode(-Math.PI / 2, 5).r).toBeCloseTo(4.4, 6)
     expect(placeNode(1.5 * Math.PI, 5).opacity).toBeCloseTo(0.86, 6)
+    expect(placeNode(0, 5).opacity).toBe(1)
+    expect(placeNode(Math.PI / 2, 5).opacity).toBe(1)
   })
 
   it('starts and ends the pass at the rest angle', () => {

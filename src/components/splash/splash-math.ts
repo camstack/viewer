@@ -69,7 +69,7 @@ export function placeNode(theta: number, baseR: number): NodePlacement {
     cx: ORBIT_CX + lx * cos - ly * sin,
     cy: ORBIT_CY + lx * sin + ly * cos,
     r: baseR * (1 + 0.12 * depth),
-    opacity: 0.86 + 0.14 * Math.max(depth, 0) + (depth < 0 ? 0.14 * (1 + depth) : 0),
+    opacity: depth >= -0.0001 ? 1 : 0.86 + 0.14 * (1 + depth),
     layer: depth >= -0.0001 ? 'front' : 'back',
   }
 }
