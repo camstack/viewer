@@ -267,3 +267,21 @@ export const TYPOGRAPHY = {
 export const TABULAR: Pick<TextStyle, 'fontVariant'> = { fontVariant: ['tabular-nums'] }
 
 export const THEME: Record<ThemeMode, ColorTokens> = { dark, light }
+
+/** The logo's own artwork colours (the splash animation) — brand art, the same in both themes. */
+export const LOGO_ART = {
+  seed: '#f59e42',
+  lensOuter: '#1c1917',
+  lensEdge: '#0c0a09',
+  lensInner: '#44403c',
+  pupil: '#0c0a09',
+  blade: '#57534e',
+  glint: '#fafaf9',
+  nodeSmallFill: '#fafaf9',
+} as const
+
+/** The native splash background by colour scheme; the JS overlay paints the same. */
+export const SPLASH_BACKGROUND = { light: '#f5f5f4', dark: '#1c1917' } as const
+
+/** The logo's orbit colour by colour scheme (the node ring is the background). */
+export const SPLASH_ORBIT = { light: '#57534e', dark: '#d6d3d1' } as const

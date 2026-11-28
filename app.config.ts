@@ -64,7 +64,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   android: {
     adaptiveIcon: {
-      backgroundColor: "#292524",
+      backgroundColor: "#f5f5f4",
       foregroundImage: "./assets/images/android-icon-foreground.png",
       backgroundImage: "./assets/images/android-icon-background.png",
       monochromeImage: "./assets/images/android-icon-monochrome.png",
@@ -114,8 +114,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         image: "./assets/images/splash-icon.png",
         imageWidth: 200,
         resizeMode: "contain",
-        backgroundColor: "#292524",
+        backgroundColor: "#f5f5f4",
         dark: {
+          image: "./assets/images/splash-icon-dark.png",
           backgroundColor: "#1c1917",
         },
       },

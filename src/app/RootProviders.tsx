@@ -10,6 +10,7 @@ import { ServerScopeBinder } from './ServerScopeBinder.js'
 import { EmbedWarmup } from './EmbedWarmup.js'
 import { AppUpdateActivityBridge } from './AppUpdateActivityBridge.js'
 import { WhatsNewGate } from './WhatsNewGate.js'
+import { SplashOverlay } from '../components/splash/SplashOverlay.js'
 import { LoggerBridge } from './LoggerBridge.js'
 import { createQueryClient } from './query-client.js'
 import { bindQueryFocusToAppState } from './query-focus.js'
@@ -71,6 +72,7 @@ export function RootProviders({ children }: { children: React.ReactNode }) {
                     <EmbedWarmup />
                     <ServerScopeBinder />
                     {children}
+                    <SplashOverlay />
                   </LoggerBridge>
                 </ServerProvider>
               </ConfirmProvider>
