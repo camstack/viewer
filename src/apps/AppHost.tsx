@@ -14,10 +14,12 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 
 import { useServer } from '../app/ServerProvider.js'
+import { useConnection } from '../connection/ConnectionProvider.js'
+import { log } from '../lib/logger.js'
 import { useAppCatalog } from '../data/use-apps.js'
 import { useTheme } from '../theme/theme-provider.js'
 import { findApp, isHostedEntry } from './app-catalog.js'
-import { launchCoversViewer, launchResolvable, offeredLaunchPreferences, resolveLaunchApp, resolveSwitchApp, switchResolvable } from './app-launch.js'
+import { DEFAULT_APP, LAUNCH_COVER_MAX_MS, launchCoversViewer, launchResolvable, offeredLaunchPreferences, resolveLaunchApp, resolveSwitchApp, switchResolvable } from './app-launch.js'
 import { useAppStore } from './app-store.js'
 import { AppDrawer } from './AppDrawer.js'
 import { EmbeddedApp } from './EmbeddedApp.js'
@@ -29,6 +31,7 @@ export function AppHost(): React.JSX.Element {
   const { t } = useTranslation()
   const { server } = useServer()
   const { catalog } = useAppCatalog()
+  const { state: connection } = useConnection()
   const hydrated = useAppStore((s) => s.hydrated)
   const settled = useAppStore((s) => s.launchSettled)
   const preference = useAppStore((s) => s.launchPreference)
@@ -87,7 +90,17 @@ export function AppHost(): React.JSX.Element {
   const info = activeId === null ? null : findApp(catalog, activeId)
   const framed = info !== null && !isHostedEntry(info.app.entry)
 
-  const covered = launchCoversViewer({ hydrated, settled, preference, lastApp })
+  const covered = launchCoversViewer({ hydrated, settled, preference, lastApp, connection })
+
+  // The cover is bounded: a hub that never answers opens the Viewer instead of a loader that never ends.
+  useEffect(() => {
+    if (!covered) return undefined
+    const timer = setTimeout(() => {
+      log.warn('apps', 'launch gave up waiting for the designated app; opening the Viewer', { waitedMs: LAUNCH_COVER_MAX_MS })
+      useAppStore.getState().settleLaunch(DEFAULT_APP)
+    }, LAUNCH_COVER_MAX_MS)
+    return () => clearTimeout(timer)
+  }, [covered])
 
   return (
     <>

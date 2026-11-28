@@ -7,6 +7,7 @@
  * opened only once the list ANSWERED and holds it: pending or a failed read is
  * "not known yet", never "not offered" (D315).
  */
+import type { ConnState } from '../connection/recheck-policy.js'
 import { findApp, hostedAppOf, orderApps, type AppCatalog } from './app-catalog.js'
 
 /** An app id from the `apps` cap, or `null` for the app the shell hosts itself. */
@@ -63,18 +64,25 @@ export function launchResolvable(preference: LaunchPreference, lastApp: AppId, c
   return wanted === null || catalog.status !== 'pending'
 }
 
+/** How long the launch may hold the Viewer back waiting for the designated app; then it opens the Viewer. */
+export const LAUNCH_COVER_MAX_MS = 6_000
+
 /**
  * Whether the launch is still undecided AND the viewer must not be painted yet:
  * the device settings are not read (the wanted app is unknown), or they name an
- * embedded app that has not been opened. A launch into the Viewer never waits.
+ * embedded app that has not been opened. A launch into the Viewer never waits, and
+ * neither does one whose hub is `disconnected`: the offline Viewer (and the server
+ * switch) must stay reachable. `connecting` covers only for {@link LAUNCH_COVER_MAX_MS}
+ * (`AppHost` settles the launch to the Viewer then); a failed app list settles it at once.
  */
 export function launchCoversViewer(input: {
   readonly hydrated: boolean
   readonly settled: boolean
   readonly preference: LaunchPreference
   readonly lastApp: AppId
+  readonly connection: ConnState
 }): boolean {
-  if (input.settled) return false
+  if (input.settled || input.connection === 'disconnected') return false
   return !input.hydrated || wantedOf(input.preference, input.lastApp) !== null
 }
 

@@ -44,7 +44,15 @@ export function AppFrame({ uri, injectedBefore, reloadKey, testID, onUnhandled, 
   )
 
   // The top strip's Back walks the page's own history.
-  useEffect(() => frameController.attach(() => ref.current?.goBack()), [])
+  useEffect(
+    () =>
+      frameController.attach(async () => {
+        if (!canGoBack.current) return false
+        ref.current?.goBack()
+        return true
+      }),
+    [],
+  )
 
   const external = useCallback(
     (url: string, what: 'download' | 'external'): void => {

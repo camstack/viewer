@@ -37,7 +37,7 @@ import { ChevronsUpDown, Plug, Video, X } from '../lib/icons.js'
 import { settingsNavigation, settingsTab } from '../navigation/nav-items.js'
 import { UserAvatar } from '../navigation/UserAvatar.js'
 import { useTheme } from '../theme/theme-provider.js'
-import { BACKDROP_ALPHA, SPACING, withAlpha } from '../theme/tokens.js'
+import { BACKDROP_ALPHA, SPACING, TYPOGRAPHY, withAlpha } from '../theme/tokens.js'
 import { navSearchEntries, searchAll, type NavSearchEntry } from './app-search.js'
 import { appIconFor } from './app-icons.js'
 import { useAppStore } from './app-store.js'
@@ -361,7 +361,7 @@ const styles = StyleSheet.create({
   scrim: { ...StyleSheet.absoluteFill },
   panel: { height: '100%', flexDirection: 'row', borderRightWidth: StyleSheet.hairlineWidth },
   content: { flex: 1 },
-  title: { fontSize: 15, fontWeight: '700', flexShrink: 1 },
+  title: { fontSize: TYPOGRAPHY.size.lg, fontWeight: TYPOGRAPHY.weight.bold, flexShrink: 1 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',

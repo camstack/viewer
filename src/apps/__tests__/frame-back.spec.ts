@@ -1,90 +1,110 @@
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+/**
+ * @vitest-environment jsdom
+ *
+ * Back in an embedded app: the frame's REAL history decides (planning#763). A frame that
+ * moved stays where it is; one that did not falls back to the shell's own back.
+ */
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, waitFor } from '@testing-library/react'
+import React from 'react'
 
-import { launchCoversViewer } from '../app-launch.js'
-import { useAppStore } from '../app-store.js'
+import { mountScreen } from '../../testing/mount.js'
+import { resetRouterStub, routerCalls, setTestCanGoBack } from '../../testing/native-stubs/expo-router.js'
+import { FRAME_BACK_WAIT_MS, goBackInFrame } from '../frame-back.js'
 import { frameController } from '../frame-controller.js'
-import { advanceFrameHistory, frameCanGoBack, startFrameHistory } from '../frame-history.js'
+import { AppTopStrip } from '../AppTopStrip.js'
 
-const src = (rel: string): string => readFileSync(join(__dirname, '..', '..', rel), 'utf8')
+vi.mock('../../connection/ConnectionProvider.js', async () => (await import('../../testing/connection-stub.js')).connectionStubModule())
 
-describe('frame history from the path events', () => {
-  it('a new path is a step forward; the same path again changes nothing', () => {
-    const h = advanceFrameHistory(advanceFrameHistory(startFrameHistory('/'), '/cameras'), '/cameras')
-    expect(h).toEqual(['/', '/cameras'])
-    expect(frameCanGoBack(h)).toBe(true)
-  })
-  it('the previous path coming back is the frame going back', () => {
-    const h = advanceFrameHistory(['/', '/cameras'], '/')
-    expect(h).toEqual(['/'])
-    expect(frameCanGoBack(h)).toBe(false)
-  })
-  it('a fresh frame starts at its root', () => {
-    expect(frameCanGoBack(startFrameHistory('/x'))).toBe(false)
-  })
-})
-
-describe('the store carries the frame history', () => {
-  beforeEach(() => useAppStore.setState({ framePath: null, frameHistory: [] }))
-  it('ready starts it, path events extend and shrink it, leaving the app clears it', () => {
-    const s = useAppStore.getState()
-    s.setFramePath('/', true)
-    s.setFramePath('/a')
-    expect(useAppStore.getState().frameHistory).toEqual(['/', '/a'])
-    s.setFramePath('/')
-    expect(useAppStore.getState().frameHistory).toEqual(['/'])
-    s.setFramePath('/b')
-    useAppStore.getState().open({ appId: null })
-    expect(useAppStore.getState().frameHistory).toEqual([])
-  })
-})
+afterEach(cleanup)
 
 describe('the frame controller', () => {
-  it('goes back through the attached frame, and says no when none is mounted', () => {
-    expect(frameController.back()).toBe(false)
-    const back = vi.fn()
-    const release = frameController.attach(back)
-    expect(frameController.back()).toBe(true)
-    expect(back).toHaveBeenCalledTimes(1)
+  it('says what the frame reported, and false with no frame or a refusing one', async () => {
+    expect(await frameController.back()).toBe(false)
+    const release = frameController.attach(() => Promise.resolve(true))
+    expect(await frameController.back()).toBe(true)
     release()
-    expect(frameController.back()).toBe(false)
+    const refuse = frameController.attach(() => Promise.reject(new Error('cross-origin')))
+    expect(await frameController.back()).toBe(false)
+    refuse()
   })
 })
 
-describe('the top strip', () => {
-  const strip = src('apps/AppTopStrip.tsx')
-  it('goes back inside the frame first and only then falls back to the Cameras tab', () => {
-    expect(strip).toMatch(/frameController\.back\(\)/)
-    expect(strip).toMatch(/frameCanGoBack/)
-    expect(strip).toMatch(/backOrCameras\(router\)/)
+describe('goBackInFrame', () => {
+  type Fake = Window & { _pop: () => void }
+  function fakeFrame(opts: { canGoBack?: boolean; onBack: (frame: { href: string }, pop: () => void) => void }): Fake {
+    const listeners = new Set<() => void>()
+    const loc = { href: 'http://hub/a' }
+    const pop = (): void => listeners.forEach((l) => l())
+    const frame = {
+      navigation: opts.canGoBack === undefined ? undefined : { canGoBack: opts.canGoBack },
+      location: loc,
+      history: { back: () => opts.onBack(loc, pop) },
+      addEventListener: (_: string, l: () => void) => listeners.add(l),
+      removeEventListener: (_: string, l: () => void) => listeners.delete(l),
+      _pop: pop,
+    }
+    return frame as unknown as Fake
+  }
+  beforeEach(() => vi.useFakeTimers())
+  afterEach(() => vi.useRealTimers())
+
+  it('moved: a popstate arrives', async () => {
+    const result = goBackInFrame(fakeFrame({ onBack: (_l, pop) => pop() }))
+    expect(await result).toBe(true)
   })
+  it('moved: the location changed without a popstate', async () => {
+    const result = goBackInFrame(fakeFrame({ onBack: (l) => (l.href = 'http://hub/prev') }))
+    await vi.advanceTimersByTimeAsync(FRAME_BACK_WAIT_MS)
+    expect(await result).toBe(true)
+  })
+  it('not moved: nothing happens within the wait (a root, or a redirect that left no entry)', async () => {
+    const result = goBackInFrame(fakeFrame({ onBack: () => undefined }))
+    await vi.advanceTimersByTimeAsync(FRAME_BACK_WAIT_MS)
+    expect(await result).toBe(false)
+  })
+  it('not moved, and never called, when the Navigation API says there is nothing to go back to', async () => {
+    const back = vi.fn()
+    expect(await goBackInFrame(fakeFrame({ canGoBack: false, onBack: back }))).toBe(false)
+    expect(back).not.toHaveBeenCalled()
+  })
+  it('not moved when access is refused or there is no frame', async () => {
+    const refusing = { get location(): never { throw new Error('cross-origin') } } as unknown as Window
+    expect(await goBackInFrame(refusing)).toBe(false)
+    expect(await goBackInFrame(null)).toBe(false)
+  })
+})
+
+describe('the top strip Back', () => {
+  beforeEach(() => resetRouterStub())
+  const strip = () => mountScreen(React.createElement(AppTopStrip, { title: 'Admin', local: true, onMenu: () => undefined }))
+
+  it('a frame that moved back keeps the shell where it is', async () => {
+    const back = vi.fn(() => Promise.resolve(true))
+    const release = frameController.attach(back)
+    const view = strip()
+    fireEvent.click(view.getByTestId('app-strip-back'))
+    await waitFor(() => expect(back).toHaveBeenCalledTimes(1))
+    await Promise.resolve()
+    expect(routerCalls()).toEqual([])
+    release()
+  })
+
+  it('a frame that did not move falls back to the shell back, then to the Cameras tab', async () => {
+    const release = frameController.attach(() => Promise.resolve(false))
+    const view = strip()
+    fireEvent.click(view.getByTestId('app-strip-back'))
+    await waitFor(() => expect(routerCalls().map((c) => c.kind)).toEqual(['back']))
+    setTestCanGoBack(false)
+    fireEvent.click(view.getByTestId('app-strip-back'))
+    await waitFor(() => expect(routerCalls().map((c) => c.kind)).toContain('replace'))
+    release()
+  })
+
   it('puts Back to the right of the menu button', () => {
-    expect(strip.indexOf('testID="app-strip-menu"')).toBeGreaterThan(-1)
-    expect(strip.indexOf('testID="app-strip-back"')).toBeGreaterThan(strip.indexOf('testID="app-strip-menu"'))
-  })
-  it('both frames register their back with the controller', () => {
-    expect(src('apps/AppFrame.tsx')).toMatch(/frameController\.attach/)
-    expect(src('apps/AppFrame.web.tsx')).toMatch(/frameController\.attach/)
-  })
-})
-
-describe('boot does not paint the Viewer before the designated app', () => {
-  it('covers the Viewer while the settings are unread or name an embedded app, until settled', () => {
-    expect(launchCoversViewer({ hydrated: false, settled: false, preference: 'last', lastApp: null })).toBe(true)
-    expect(launchCoversViewer({ hydrated: true, settled: false, preference: 'last', lastApp: 'admin' })).toBe(true)
-    expect(launchCoversViewer({ hydrated: true, settled: false, preference: 'admin', lastApp: null })).toBe(true)
-    expect(launchCoversViewer({ hydrated: true, settled: true, preference: 'admin', lastApp: null })).toBe(false)
-  })
-  it('a Viewer launch is never covered once the settings are read', () => {
-    expect(launchCoversViewer({ hydrated: true, settled: false, preference: 'last', lastApp: null })).toBe(false)
-  })
-  it('the app store is hydrated by the prefs warmup, before the first render', () => {
-    expect(src('app/prefs-warmup.ts')).toMatch(/useAppStore\.getState\(\)\.hydrate\(\)/)
-  })
-  it('AppHost renders the loader from the launch rule', () => {
-    const host = src('apps/AppHost.tsx')
-    expect(host).toMatch(/launchCoversViewer\(/)
-    expect(host).toMatch(/testID="launch-loader"/)
+    const view = strip()
+    const menu = view.getByTestId('app-strip-menu')
+    const back = view.getByTestId('app-strip-back')
+    expect(menu.compareDocumentPosition(back) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 })

@@ -1,7 +1,7 @@
 /**
  * AppTopStrip — the one thin strip over a framed app (Admin):
  * [menu] [back] title, where the route is (LOCAL / REMOTE) and a reload. Back goes back inside
- * the app while it has history, and at the app's root returns to the previous screen, or to
+ * the app while the frame really moves back, and at the app's root returns to the previous screen, or to
  * the Cameras tab when there is none; the drawer reaches everything else.
  */
 import React from 'react'
@@ -16,8 +16,6 @@ import { hapticTap } from '../lib/haptics.js'
 import { Menu, RotateCw } from '../lib/icons.js'
 import { backOrCameras } from '../navigation/back-or-cameras.js'
 import { frameController } from './frame-controller.js'
-import { frameCanGoBack } from './frame-history.js'
-import { useAppStore } from './app-store.js'
 import { useTheme } from '../theme/theme-provider.js'
 import { SPACING } from '../theme/tokens.js'
 
@@ -36,10 +34,10 @@ export function AppTopStrip({ title, local, onMenu, onReload }: AppTopStripProps
   const { colors } = useTheme()
   const insets = useSafeAreaInsets()
   const router = useRouter()
-  const inFrameHistory = useAppStore((s) => frameCanGoBack(s.frameHistory))
   const onBack = (): void => {
-    if (inFrameHistory && frameController.back()) return
-    backOrCameras(router)
+    void frameController.back().then((moved) => {
+      if (!moved) backOrCameras(router)
+    })
   }
   return (
     <View
