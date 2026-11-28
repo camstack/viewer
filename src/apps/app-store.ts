@@ -18,6 +18,7 @@ import {
   type LastAppByServer,
   type LaunchPreference,
 } from './app-launch.js'
+import { advanceFrameHistory, EMPTY_FRAME_HISTORY, startFrameHistory, type FrameHistory } from './frame-history.js'
 
 export const APP_SWITCHER_STORAGE_KEY = '@dominevo/v2/app-switcher'
 
@@ -87,6 +88,8 @@ interface AppSwitcherState extends PersistedAppSwitcher {
   readonly drawerSearchFocus: boolean
   /** The path the embedded app last reported, to tick its nav item. */
   readonly framePath: string | null
+  /** The paths the embedded app went through, so Back can go back inside it. */
+  readonly frameHistory: FrameHistory
   hydrate: () => Promise<void>
   /** Show an app; it becomes the one remembered. */
   open: (app: ActiveApp, entryPath?: string) => void
@@ -104,7 +107,8 @@ interface AppSwitcherState extends PersistedAppSwitcher {
   setServerSwitch: (target: { readonly name: string } | null) => void
   /** Open the drawer with its search focused (the wide top bar's search field). */
   openDrawerSearch: () => void
-  setFramePath: (path: string | null) => void
+  /** The embedded app reported `path`; `fresh` (its `ready`) starts a new history. */
+  setFramePath: (path: string | null, fresh?: boolean) => void
   /** The embedded app took the path it was asked to open on. */
   clearEntryPath: () => void
   /**
@@ -127,6 +131,7 @@ export const useAppStore = create<AppSwitcherState>((set, get) => ({
   serverSwitch: null,
   drawerSearchFocus: false,
   framePath: null,
+  frameHistory: EMPTY_FRAME_HISTORY,
   hydrate: async () => {
     if (get().hydrated) return
     let raw: string | null = null
@@ -140,7 +145,7 @@ export const useAppStore = create<AppSwitcherState>((set, get) => ({
   open: (app, entryPath) => {
     const { serverId, lastAppByServer, launchPreference } = get()
     const byServer = serverId === null ? lastAppByServer : { ...lastAppByServer, [serverId]: app.appId }
-    set({ active: app, lastApp: app.appId, lastAppByServer: byServer, drawerOpen: false, entryPath: entryPath ?? null, framePath: null })
+    set({ active: app, lastApp: app.appId, lastAppByServer: byServer, drawerOpen: false, entryPath: entryPath ?? null, framePath: null, frameHistory: EMPTY_FRAME_HISTORY })
     persist({ lastApp: app.appId, launchPreference, lastAppByServer: byServer })
   },
   settleLaunch: (app) => {
@@ -162,6 +167,7 @@ export const useAppStore = create<AppSwitcherState>((set, get) => ({
       active: { appId: DEFAULT_APP },
       entryPath: null,
       framePath: null,
+      frameHistory: EMPTY_FRAME_HISTORY,
       launchSettled: false,
       drawerOpen: false,
       drawerSearchFocus: false,
@@ -171,8 +177,13 @@ export const useAppStore = create<AppSwitcherState>((set, get) => ({
   setDrawerOpen: (drawerOpen) => set({ drawerOpen, drawerSearchFocus: false }),
   setServerSwitch: (serverSwitch) => set({ serverSwitch }),
   openDrawerSearch: () => set({ drawerOpen: true, drawerSearchFocus: true }),
-  setFramePath: (framePath) => set({ framePath }),
+  setFramePath: (framePath, fresh = false) =>
+    set((state) => ({
+      framePath,
+      frameHistory:
+        framePath === null ? EMPTY_FRAME_HISTORY : fresh ? startFrameHistory(framePath) : advanceFrameHistory(state.frameHistory, framePath),
+    })),
   clearEntryPath: () => set({ entryPath: null }),
   resetSession: () =>
-    set({ active: { appId: DEFAULT_APP }, entryPath: null, framePath: null, launchSettled: false, carried: null, drawerOpen: false, drawerSearchFocus: false }),
+    set({ active: { appId: DEFAULT_APP }, entryPath: null, framePath: null, frameHistory: EMPTY_FRAME_HISTORY, launchSettled: false, carried: null, drawerOpen: false, drawerSearchFocus: false }),
 }))

@@ -156,7 +156,7 @@ export function EmbeddedApp({ info, title }: EmbeddedAppProps): React.JSX.Elemen
             bridgeChannel.send(navigateMessage(wanted))
             store.clearEntryPath()
           }
-          store.setFramePath(event.path)
+          store.setFramePath(event.path, true)
           break
         }
         case 'path':

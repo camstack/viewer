@@ -1,8 +1,8 @@
 /**
  * AppTopStrip — the one thin strip over a framed app (Admin):
- * [back] [menu] title, where the route is (LOCAL / REMOTE) and a reload. Back returns to
- * the previous screen, or to the Cameras tab when there is no history; the drawer reaches
- * everything else.
+ * [menu] [back] title, where the route is (LOCAL / REMOTE) and a reload. Back goes back inside
+ * the app while it has history, and at the app's root returns to the previous screen, or to
+ * the Cameras tab when there is none; the drawer reaches everything else.
  */
 import React from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
@@ -15,6 +15,9 @@ import { Badge } from '../components/ui/Badge.js'
 import { hapticTap } from '../lib/haptics.js'
 import { Menu, RotateCw } from '../lib/icons.js'
 import { backOrCameras } from '../navigation/back-or-cameras.js'
+import { frameController } from './frame-controller.js'
+import { frameCanGoBack } from './frame-history.js'
+import { useAppStore } from './app-store.js'
 import { useTheme } from '../theme/theme-provider.js'
 import { SPACING } from '../theme/tokens.js'
 
@@ -33,6 +36,11 @@ export function AppTopStrip({ title, local, onMenu, onReload }: AppTopStripProps
   const { colors } = useTheme()
   const insets = useSafeAreaInsets()
   const router = useRouter()
+  const inFrameHistory = useAppStore((s) => frameCanGoBack(s.frameHistory))
+  const onBack = (): void => {
+    if (inFrameHistory && frameController.back()) return
+    backOrCameras(router)
+  }
   return (
     <View
       style={[
@@ -40,7 +48,6 @@ export function AppTopStrip({ title, local, onMenu, onReload }: AppTopStripProps
         { paddingTop: insets.top, height: APP_STRIP_HEIGHT + insets.top, backgroundColor: colors.backgroundElevated, borderBottomColor: colors.border },
       ]}
     >
-      <HeaderBackButton size={32} testID="app-strip-back" onPress={() => backOrCameras(router)} />
       <Pressable
         testID="app-strip-menu"
         onPress={() => {
@@ -54,6 +61,7 @@ export function AppTopStrip({ title, local, onMenu, onReload }: AppTopStripProps
       >
         <Menu size={20} color={colors.foreground} />
       </Pressable>
+      <HeaderBackButton size={32} testID="app-strip-back" onPress={onBack} />
       <Text numberOfLines={1} style={[styles.title, { color: colors.foreground }]}>
         {title}
       </Text>

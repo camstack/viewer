@@ -14,6 +14,7 @@ import { StyleSheet, View } from 'react-native'
 import { useTheme } from '../theme/theme-provider.js'
 import { frameOriginOf, type AppFrameProps } from './app-frame-types.js'
 import { bridgeChannel } from './bridge-channel.js'
+import { frameController } from './frame-controller.js'
 
 export function AppFrame({ uri, reloadKey, testID, onAppMessage, onFrameLoad }: AppFrameProps): React.JSX.Element {
   const { colors } = useTheme()
@@ -30,9 +31,18 @@ export function AppFrame({ uri, reloadKey, testID, onAppMessage, onFrameLoad }: 
     }
     window.addEventListener('message', listener)
     const release = bridgeChannel.attach((message) => frame.current?.contentWindow?.postMessage(message, origin))
+    // Same-origin frame: its own history is reachable. A page that refuses is left where it is.
+    const releaseBack = frameController.attach(() => {
+      try {
+        frame.current?.contentWindow?.history.back()
+      } catch {
+        // cross-origin after a redirect: nothing to go back in
+      }
+    })
     return () => {
       window.removeEventListener('message', listener)
       release()
+      releaseBack()
     }
   }, [origin])
 

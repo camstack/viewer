@@ -18,6 +18,7 @@ import { log } from '../lib/logger.js'
 import { useTheme } from '../theme/theme-provider.js'
 import { deliverToPageScript, frameOriginOf, navigationDecision, originGuardedScript, type AppFrameProps } from './app-frame-types.js'
 import { bridgeChannel } from './bridge-channel.js'
+import { frameController } from './frame-controller.js'
 
 export function AppFrame({ uri, injectedBefore, reloadKey, testID, onUnhandled, onAppMessage, onFrameLoad }: AppFrameProps): React.JSX.Element {
   const { colors } = useTheme()
@@ -41,6 +42,9 @@ export function AppFrame({ uri, injectedBefore, reloadKey, testID, onUnhandled, 
     () => bridgeChannel.attach((message) => ref.current?.injectJavaScript(deliverToPageScript(message))),
     [],
   )
+
+  // The top strip's Back walks the page's own history.
+  useEffect(() => frameController.attach(() => ref.current?.goBack()), [])
 
   const external = useCallback(
     (url: string, what: 'download' | 'external'): void => {
