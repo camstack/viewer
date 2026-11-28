@@ -3,7 +3,8 @@
  *
  * The frame's page history is the truth (redirects, replaces and revisits all count
  * as the browser counts them), so this asks the browser: where the Navigation API
- * says there is nothing to go back to, nothing is called; otherwise `history.back()`
+ * says there is nothing to go back to (or, without it, the page has not navigated since
+ * it loaded), nothing is called; otherwise `history.back()`
  * runs and the frame has {@link FRAME_BACK_WAIT_MS} to show a `popstate` or a new
  * location. A frame that stayed, or that refuses access, did not move.
  */
@@ -13,11 +14,14 @@ interface NavigationLike {
   readonly canGoBack?: boolean
 }
 
-export function goBackInFrame(frame: Window | null): Promise<boolean> {
+export function goBackInFrame(frame: Window | null, navigatedSinceLoad: boolean): Promise<boolean> {
   if (frame === null) return Promise.resolve(false)
   try {
     const navigation: NavigationLike | undefined = Reflect.get(frame, 'navigation')
     if (navigation?.canGoBack === false) return Promise.resolve(false)
+    // Without the Navigation API a frame still on its first entry has nothing to go back to, and
+    // `history.back()` there would move the SHELL page: it is never called.
+    if (navigation === undefined && !navigatedSinceLoad) return Promise.resolve(false)
     const before = frame.location.href
     return new Promise<boolean>((resolve) => {
       const settle = (moved: boolean): void => {

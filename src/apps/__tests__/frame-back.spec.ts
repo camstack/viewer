@@ -50,28 +50,33 @@ describe('goBackInFrame', () => {
   afterEach(() => vi.useRealTimers())
 
   it('moved: a popstate arrives', async () => {
-    const result = goBackInFrame(fakeFrame({ onBack: (_l, pop) => pop() }))
+    const result = goBackInFrame(fakeFrame({ onBack: (_l, pop) => pop() }), true)
     expect(await result).toBe(true)
   })
   it('moved: the location changed without a popstate', async () => {
-    const result = goBackInFrame(fakeFrame({ onBack: (l) => (l.href = 'http://hub/prev') }))
+    const result = goBackInFrame(fakeFrame({ onBack: (l) => (l.href = 'http://hub/prev') }), true)
     await vi.advanceTimersByTimeAsync(FRAME_BACK_WAIT_MS)
     expect(await result).toBe(true)
   })
   it('not moved: nothing happens within the wait (a root, or a redirect that left no entry)', async () => {
-    const result = goBackInFrame(fakeFrame({ onBack: () => undefined }))
+    const result = goBackInFrame(fakeFrame({ onBack: () => undefined }), true)
     await vi.advanceTimersByTimeAsync(FRAME_BACK_WAIT_MS)
     expect(await result).toBe(false)
   })
   it('not moved, and never called, when the Navigation API says there is nothing to go back to', async () => {
     const back = vi.fn()
-    expect(await goBackInFrame(fakeFrame({ canGoBack: false, onBack: back }))).toBe(false)
+    expect(await goBackInFrame(fakeFrame({ canGoBack: false, onBack: back }), true)).toBe(false)
+    expect(back).not.toHaveBeenCalled()
+  })
+  it('without the Navigation API and with no navigation since load, history.back is never called', async () => {
+    const back = vi.fn()
+    expect(await goBackInFrame(fakeFrame({ onBack: back }), false)).toBe(false)
     expect(back).not.toHaveBeenCalled()
   })
   it('not moved when access is refused or there is no frame', async () => {
     const refusing = { get location(): never { throw new Error('cross-origin') } } as unknown as Window
-    expect(await goBackInFrame(refusing)).toBe(false)
-    expect(await goBackInFrame(null)).toBe(false)
+    expect(await goBackInFrame(refusing, true)).toBe(false)
+    expect(await goBackInFrame(null, true)).toBe(false)
   })
 })
 
@@ -98,6 +103,18 @@ describe('the top strip Back', () => {
     setTestCanGoBack(false)
     fireEvent.click(view.getByTestId('app-strip-back'))
     await waitFor(() => expect(routerCalls().map((c) => c.kind)).toContain('replace'))
+    release()
+  })
+
+  it('first entry of a frame without the Navigation API: history.back is not called and the shell back runs', async () => {
+    const historyBack = vi.fn()
+    const frame = { location: { href: 'http://hub/a' }, history: { back: historyBack }, addEventListener: () => undefined, removeEventListener: () => undefined } as unknown as Window
+    const release = frameController.attach(({ navigatedSinceLoad }) => goBackInFrame(frame, navigatedSinceLoad))
+    frameController.markLoaded()
+    const view = strip()
+    fireEvent.click(view.getByTestId('app-strip-back'))
+    await waitFor(() => expect(routerCalls().map((c) => c.kind)).toEqual(['back']))
+    expect(historyBack).not.toHaveBeenCalled()
     release()
   })
 

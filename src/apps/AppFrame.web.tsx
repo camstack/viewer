@@ -32,7 +32,7 @@ export function AppFrame({ uri, reloadKey, testID, onAppMessage, onFrameLoad }: 
     }
     window.addEventListener('message', listener)
     const release = bridgeChannel.attach((message) => frame.current?.contentWindow?.postMessage(message, origin))
-    const releaseBack = frameController.attach(() => goBackInFrame(frame.current?.contentWindow ?? null))
+    const releaseBack = frameController.attach(({ navigatedSinceLoad }) => goBackInFrame(frame.current?.contentWindow ?? null, navigatedSinceLoad))
     return () => {
       window.removeEventListener('message', listener)
       release()

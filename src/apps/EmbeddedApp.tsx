@@ -45,6 +45,7 @@ import { BRIDGE_FORWARDER_SCRIPT } from './app-frame-types.js'
 import { useAppStore } from './app-store.js'
 import { createReadyNavigator } from './ready-navigation.js'
 import { bridgeChannel } from './bridge-channel.js'
+import { frameController } from './frame-controller.js'
 import { helloMessage, interpretAppMessage, navigateMessage, themeMessage } from './bridge-host.js'
 
 const FRAME_SCRIPT = `${EMBEDDED_BY_VIEWER_SCRIPT} ${BRIDGE_FORWARDER_SCRIPT}`
@@ -127,6 +128,7 @@ export function EmbeddedApp({ info, title }: EmbeddedAppProps): React.JSX.Elemen
 
   const reload = (): void => {
     if (liveBase === null) return
+    frameController.markLoaded()
     setNote(null)
     setReloadKey((k) => k + 1)
     // A handoff code is single-use: a reload mints a fresh one on the current route.
@@ -156,10 +158,13 @@ export function EmbeddedApp({ info, title }: EmbeddedAppProps): React.JSX.Elemen
             bridgeChannel.send(navigateMessage(wanted))
             store.clearEntryPath()
           }
+          frameController.markLoaded()
           store.setFramePath(event.path)
           break
         }
         case 'path':
+          // The page announces its current path right after `ready`; only a different one is a move.
+          if (store.framePath !== null && event.path !== store.framePath) frameController.markNavigated()
           store.setFramePath(event.path)
           break
         case 'invalidate':
