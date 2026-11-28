@@ -20,7 +20,7 @@ export interface HandoffDeps {
   readonly pkce: PkcePrimitives
   /** `WebBrowser.openAuthSessionAsync` in the app. */
   readonly openAuthSession: (url: string, returnUrl: string) => Promise<AuthSessionResult>
-  /** The canonical `camstack://auth-callback` (or the dev scheme). */
+  /** The canonical `dominevo://auth-callback` (or the dev scheme). */
   readonly callbackUrl: string
   /** The app's current language (`i18n.resolvedLanguage`), read per run. */
   readonly lang?: () => 'en' | 'it'

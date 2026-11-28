@@ -1,7 +1,7 @@
 /**
  * `/enroll` — link this device to a hub with an admin's one-shot code (D855).
  *
- * The code arrives as a deep link (`camstack://enroll?hub=…&code=…`, scanned
+ * The code arrives as a deep link (`dominevo://enroll?hub=…&code=…`, scanned
  * with the system camera) or by scanning the QR here. Either way the device
  * generates its own key, the hub signs the public half, and the certificate
  * opens the first session — no password typed on a phone nobody can log in on.

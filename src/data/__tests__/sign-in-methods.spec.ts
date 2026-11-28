@@ -133,10 +133,10 @@ describe('change-password form', () => {
 
 describe('native link and browser handoff (D801)', () => {
   it('reads the app callback: a code to claim, or a refusal', () => {
-    expect(parseLinkCallback('camstack://auth-callback?link=nlc_abc')).toEqual({ code: 'nlc_abc' })
-    expect(parseLinkCallback('camstack:///auth-callback?linkError=provider')).toEqual({ error: 'provider' })
-    expect(parseLinkCallback('camstack://auth-callback?code=chc_x')).toBeNull()
-    expect(parseLinkCallback('camstack://auth-callback')).toBeNull()
+    expect(parseLinkCallback('dominevo://auth-callback?link=nlc_abc')).toEqual({ code: 'nlc_abc' })
+    expect(parseLinkCallback('dominevo:///auth-callback?linkError=provider')).toEqual({ error: 'provider' })
+    expect(parseLinkCallback('dominevo://auth-callback?code=chc_x')).toBeNull()
+    expect(parseLinkCallback('dominevo://auth-callback')).toBeNull()
   })
 
   it('reads the claim outcome', () => {

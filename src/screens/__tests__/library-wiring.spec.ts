@@ -61,9 +61,9 @@ describe('the Library shell owns both subsections', () => {
 })
 
 describe('the routes that already exist keep resolving', () => {
-  it('the /events tab mounts the Library shell, so `camstack://events` still lands', () => {
+  it('the /events tab mounts the Library shell, so `dominevo://events` still lands', () => {
     // The route name stays `events`: every shared deep link
-    // (`camstack://events?trackId=…&deviceId=…`) is spelled that way.
+    // (`dominevo://events?trackId=…&deviceId=…`) is spelled that way.
     const src = read('app/(app)/(tabs)/events.tsx')
     expect(src).toContain('LibraryScreen')
     expect(src).not.toContain('EventsScreen')

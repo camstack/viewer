@@ -14,7 +14,7 @@ describe('isLoadOfCandidate', () => {
   // never the hub URL. Refusing that load left `everLoaded` false and the
   // skeleton over a painted frame until the 15 s hub timeout lifted it.
   it('accepts the object URL a header-carrying candidate is painted from on web', () => {
-    const loaded = 'blob:https://camstack.zentik.app/2b0e4a8e-6c1d-4f5e-9a0b-1c2d3e4f5a6b'
+    const loaded = 'blob:https://dominevo.app/2b0e4a8e-6c1d-4f5e-9a0b-1c2d3e4f5a6b'
     expect(isLoadOfCandidate(loaded, { uri: HUB_URL, headers: { Authorization: 'Bearer t' } })).toBe(true)
   })
 
@@ -25,6 +25,6 @@ describe('isLoadOfCandidate', () => {
   })
 
   it('does not take an object URL for a candidate that has no header (it never paints one)', () => {
-    expect(isLoadOfCandidate('blob:https://camstack.zentik.app/x', { uri: HUB_URL })).toBe(false)
+    expect(isLoadOfCandidate('blob:https://dominevo.app/x', { uri: HUB_URL })).toBe(false)
   })
 })

@@ -76,9 +76,9 @@ describe('the gated actions carry the proof — and an older hub\'s input when t
   it('removeOwnPasskey and beginExternalLink add the field only when there is a proof', () => {
     expect(removePasskeyInput('c1', 'rat_1')).toEqual({ credentialId: 'c1', reauthToken: 'rat_1' })
     expect(removePasskeyInput('c1', null)).toEqual({ credentialId: 'c1' })
-    expect(beginLinkInput({ provider: 'p', returnTo: 'camstack://auth-callback' }, 'rat_1')).toEqual({
+    expect(beginLinkInput({ provider: 'p', returnTo: 'dominevo://auth-callback' }, 'rat_1')).toEqual({
       provider: 'p',
-      returnTo: 'camstack://auth-callback',
+      returnTo: 'dominevo://auth-callback',
       reauthToken: 'rat_1',
     })
     expect(beginLinkInput({ provider: 'p' }, null)).toEqual({ provider: 'p' })

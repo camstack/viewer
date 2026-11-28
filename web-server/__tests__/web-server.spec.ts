@@ -79,10 +79,10 @@ describe('the well-known pair', () => {
     const paths = AASA_COMPONENTS.map((c) => c['/'])
     expect(paths).toContain('/connect')
     expect(paths).toContain('/camera/*')
-    expect(JSON.stringify(body)).toContain('C3F24V5NS5.com.apocaliss92.camstack')
+    expect(JSON.stringify(body)).toContain('C3F24V5NS5.app.dominevo.viewer')
     // Only the production app may claim the link domain: with a second app id
     // listed, iOS picked an old dev install for a notification tap.
-    expect(JSON.stringify(body)).not.toContain('camstack.dev')
+    expect(JSON.stringify(body)).not.toContain('app.dominevo.viewer.dev')
   })
 
   it('assetlinks.json carries the configured fingerprints for the production package only', async () => {
@@ -93,7 +93,7 @@ describe('the well-known pair', () => {
     expect(body).toEqual(buildAppLinkFiles([FP]).assetLinks)
     expect(body).toEqual([
       expect.objectContaining({
-        target: expect.objectContaining({ package_name: 'com.apocaliss92.camstack', sha256_cert_fingerprints: [FP] }),
+        target: expect.objectContaining({ package_name: 'app.dominevo.viewer', sha256_cert_fingerprints: [FP] }),
       }),
     ])
   })

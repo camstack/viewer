@@ -146,7 +146,7 @@ export function EventsScreen({ embedded = false }: EventsScreenProps) {
   const cameraName = useCallback((id: number) => cameraNameById.get(id) ?? `#${id}`, [cameraNameById])
 
 
-  // Private deep-link open: an authenticated `camstack://events?trackId&deviceId`
+  // Private deep-link open: an authenticated `dominevo://events?trackId&deviceId`
   // link (copied from the detail's Share → Copy link) reopens the track detail —
   // even for a track that isn't in the currently-loaded feed page (a different
   // day). Resolves the track by id via `getTrack`, then clears the params so a

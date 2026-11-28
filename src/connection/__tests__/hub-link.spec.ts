@@ -15,7 +15,7 @@ describe('parseHubOrigin — the link domain\'s rule', () => {
   it.each([
     'http://hub.example.com',
     'javascript:alert(1)',
-    'camstack://hub',
+    'dominevo://hub',
     'https://user:pass@hub.example.com',
     'https://hub.example.com/viewer',
     'https://hub.example.com/?x=1',

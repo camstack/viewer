@@ -3,14 +3,14 @@
     "apps": [],
     "details": [
       {
-        "appIDs": ["C3F24V5NS5.com.apocaliss92.camstack"],
+        "appIDs": ["C3F24V5NS5.app.dominevo.viewer"],
         "paths": ["/*"]
       }
     ]
   },
   "webcredentials": {
     "apps": [
-      "C3F24V5NS5.com.apocaliss92.camstack"
+      "C3F24V5NS5.app.dominevo.viewer"
     ]
   }
 }

@@ -192,7 +192,7 @@ describe('librarySectionFromParam', () => {
   })
 
   it('ignores anything that is not a section, so a deep link never lands nowhere', () => {
-    // `camstack://events?trackId=…` carries no `section` at all: the tab must
+    // `dominevo://events?trackId=…` carries no `section` at all: the tab must
     // stay on Events rather than fall through to an unknown segment.
     expect(librarySectionFromParam(undefined)).toBeNull()
     expect(librarySectionFromParam('')).toBeNull()
@@ -206,7 +206,7 @@ describe('librarySectionFromParam', () => {
 
 describe('librarySectionFromParams', () => {
   it('sends a track deep link to Events even while Artifacts is showing', () => {
-    // `camstack://events?trackId=…&deviceId=…` is answered by the events page.
+    // `dominevo://events?trackId=…&deviceId=…` is answered by the events page.
     // Landing it on the gallery would swallow the link in silence.
     expect(librarySectionFromParams({ trackId: 'abc', deviceId: '3' })).toBe('events')
     // …and it wins over a stale `section` still sitting in the URL.

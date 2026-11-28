@@ -30,7 +30,7 @@ export interface EmbedLocationInput {
  * Where the embed document comes from.
  *
  * On the hub (page origin = hub origin) it is the hub's own copy, as it always
- * was. Anywhere else — the hosted PWA at camstack.zentik.app talking to the
+ * was. Anywhere else — the hosted PWA at dominevo.app talking to the
  * operator's hub — it is THIS build's bundled copy (`public/embed`, shipped in
  * every web export), on the page's own origin: the hub refuses to be framed by
  * another origin (`frame-ancestors 'self'`) and its cookie is not sent

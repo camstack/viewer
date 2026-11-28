@@ -4,7 +4,7 @@
  * `/.well-known/assetlinks.json`.
  *
  * Ported from camstack-link (`src/app-links.mjs`), which this server
- * supersedes: the hosted viewer PWA at https://camstack.zentik.app IS the link
+ * supersedes: the hosted viewer PWA at https://dominevo.app IS the link
  * domain now (operator decision 2026-10-06). The team id and bundle ids are
  * REDECLARED from `app.config.ts` (`ios.bundleIdentifier`, `android.package`)
  * and the hub's `well-known-app-links.ts` — different deploy units, nothing to
@@ -21,7 +21,7 @@
  * free to hand a notification tap to an old dev install instead.
  */
 const APPLE_TEAM_ID = 'C3F24V5NS5'
-const BUNDLE_ID = 'com.apocaliss92.camstack'
+const BUNDLE_ID = 'app.dominevo.viewer'
 
 export interface AasaComponent {
   readonly '/': string

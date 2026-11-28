@@ -1,8 +1,7 @@
 {
-  "version": "1.0.643",
-  "buildNumber": 20,
-  "runtimeVersion": "1.0.643",
+  "version": "0.1.0",
+  "buildNumber": 1,
+  "runtimeVersion": "0.1.0",
   "channel": "testflight",
-  "publishedAt": "2026-10-21T18:14:46.109Z",
-  "storeAppId": "6759228132"
+  "publishedAt": "2026-11-28T00:00:00.000Z"
 }

@@ -1,6 +1,8 @@
 /*
  * Regenerate app icons from a single square source image.
-  * The brand kit PNGs are the committed source of truth; this script is the fallback that rebuilds them from logoV2 (its android foreground/monochrome are plain resizes, not the kit's cut-out versions).
+ * The brand kit PNGs are the committed source of truth; this script is the
+ * fallback that rebuilds them from logoV2 (its android foreground/monochrome
+ * are plain resizes, not the kit's cut-out versions).
  *
  * Source: assets/logos/logoV2/Icon-iOS-Default-1024x1024@1x.png
  * Run: npm run regen:icons

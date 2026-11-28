@@ -56,6 +56,9 @@ export interface RunningBinary {
  */
 export function nativeReleaseState(running: RunningBinary, latest: NativeRelease | null | undefined): NativeReleaseState {
   if (!latest || !running.version || running.buildNumber === null || running.buildNumber === undefined) return 'unknown'
+  // A release file without a store app id belongs to an app with no store listing
+  // yet: there is nothing to offer, so say nothing (Play builds need no id).
+  if (latest.channel !== 'play' && !latest.storeAppId) return 'unknown'
   if (latest.buildNumber > running.buildNumber) return 'newer-available'
   if (compareVersions(latest.version, running.version) > 0) return 'newer-available'
   return 'up-to-date'

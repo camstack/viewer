@@ -5,7 +5,7 @@ import { APP_FLOW_ERROR_CODES, appFlowErrorKey, buildAppFlowUrl, handoffLang, pa
 import { runAppLoginHandoff, type AuthSessionResult } from '../run-app-login-handoff.js'
 import { scriptedHub } from './helpers.js'
 
-const CALLBACK = 'camstack://auth-callback'
+const CALLBACK = 'dominevo://auth-callback'
 const START = '/auth/app/passkey'
 const PKCE = { codeChallenge: 'C'.repeat(43), state: 'st4te' }
 
@@ -14,7 +14,7 @@ describe('app flow URL', () => {
     buildAppFlowUrl({ serverUrl: 'https://hub.example.com/', startPath, callbackUrl, pkce: PKCE, purpose: 'step-up' })
 
   it('carries app=1, the S256 challenge, state and purpose on the hub origin', () => {
-    const url = new URL(build('camstack:///auth-callback') ?? '')
+    const url = new URL(build('dominevo:///auth-callback') ?? '')
     expect(url.origin + url.pathname).toBe('https://hub.example.com/addon/auth-oidc/authentik/start')
     expect(url.searchParams.get('app')).toBe('1')
     expect(url.searchParams.get('code_challenge')).toBe(PKCE.codeChallenge)
@@ -39,7 +39,7 @@ describe('app flow URL', () => {
   })
 
   it('sends the redirect only when the app registers the dev scheme', () => {
-    expect(new URL(build('camstack.dev://auth-callback') ?? '').searchParams.get('redirect')).toBe('camstack.dev://auth-callback')
+    expect(new URL(build('dominevo.dev://auth-callback') ?? '').searchParams.get('redirect')).toBe('dominevo.dev://auth-callback')
   })
 
   it('refuses a start path that leaves the hub origin', () => {
@@ -57,42 +57,42 @@ describe('app flow URL', () => {
 
 describe('handoff callback parsing', () => {
   it('accepts the canonical and the three-slash callback with our state', () => {
-    expect(parseHandoffCallback('camstack://auth-callback?code=chc_1&state=st4te', CALLBACK, 'st4te')).toEqual({ status: 'ok', code: 'chc_1' })
-    expect(parseHandoffCallback('camstack:///auth-callback?code=chc_1&state=st4te', CALLBACK, 'st4te')).toEqual({ status: 'ok', code: 'chc_1' })
+    expect(parseHandoffCallback('dominevo://auth-callback?code=chc_1&state=st4te', CALLBACK, 'st4te')).toEqual({ status: 'ok', code: 'chc_1' })
+    expect(parseHandoffCallback('dominevo:///auth-callback?code=chc_1&state=st4te', CALLBACK, 'st4te')).toEqual({ status: 'ok', code: 'chc_1' })
   })
 
   it('refuses another scheme, another path, and a lookalike host', () => {
     for (const url of [
       'evil://auth-callback?code=c&state=st4te',
       'https://auth-callback?code=c&state=st4te',
-      'camstack://other?code=c&state=st4te',
-      'camstack.dev://auth-callback?code=c&state=st4te',
+      'dominevo://other?code=c&state=st4te',
+      'dominevo.dev://auth-callback?code=c&state=st4te',
     ]) {
       expect(parseHandoffCallback(url, CALLBACK, 'st4te')).toEqual({ status: 'refused', reason: 'foreign-url' })
     }
   })
 
   it('refuses a state that is not ours, or missing', () => {
-    expect(parseHandoffCallback('camstack://auth-callback?code=c&state=other', CALLBACK, 'st4te')).toEqual({ status: 'refused', reason: 'state-mismatch' })
-    expect(parseHandoffCallback('camstack://auth-callback?code=c', CALLBACK, 'st4te')).toEqual({ status: 'refused', reason: 'state-mismatch' })
+    expect(parseHandoffCallback('dominevo://auth-callback?code=c&state=other', CALLBACK, 'st4te')).toEqual({ status: 'refused', reason: 'state-mismatch' })
+    expect(parseHandoffCallback('dominevo://auth-callback?code=c', CALLBACK, 'st4te')).toEqual({ status: 'refused', reason: 'state-mismatch' })
   })
 
   it('reports an error code the hub sent, with or without our state', () => {
-    expect(parseHandoffCallback('camstack://auth-callback?error=sso-not-linked&state=st4te', CALLBACK, 'st4te')).toEqual({ status: 'error', code: 'sso-not-linked' })
-    expect(parseHandoffCallback('camstack://auth-callback?error=invalid-bridge', CALLBACK, 'st4te')).toEqual({ status: 'error', code: 'invalid-bridge' })
+    expect(parseHandoffCallback('dominevo://auth-callback?error=sso-not-linked&state=st4te', CALLBACK, 'st4te')).toEqual({ status: 'error', code: 'sso-not-linked' })
+    expect(parseHandoffCallback('dominevo://auth-callback?error=invalid-bridge', CALLBACK, 'st4te')).toEqual({ status: 'error', code: 'invalid-bridge' })
   })
 
   it('treats a cancel on the hub page as a quiet cancel, not an error', () => {
-    expect(parseHandoffCallback('camstack://auth-callback?error=cancelled&state=st4te', CALLBACK, 'st4te')).toEqual({ status: 'cancelled' })
+    expect(parseHandoffCallback('dominevo://auth-callback?error=cancelled&state=st4te', CALLBACK, 'st4te')).toEqual({ status: 'cancelled' })
   })
 
   it('shows an unknown error code as failed, and refuses an error echoing another state', () => {
-    expect(parseHandoffCallback('camstack://auth-callback?error=martian&state=st4te', CALLBACK, 'st4te')).toEqual({ status: 'error', code: 'failed' })
-    expect(parseHandoffCallback('camstack://auth-callback?error=failed&state=other', CALLBACK, 'st4te')).toEqual({ status: 'refused', reason: 'state-mismatch' })
+    expect(parseHandoffCallback('dominevo://auth-callback?error=martian&state=st4te', CALLBACK, 'st4te')).toEqual({ status: 'error', code: 'failed' })
+    expect(parseHandoffCallback('dominevo://auth-callback?error=failed&state=other', CALLBACK, 'st4te')).toEqual({ status: 'refused', reason: 'state-mismatch' })
   })
 
   it('refuses a callback without a code', () => {
-    expect(parseHandoffCallback('camstack://auth-callback?state=st4te', CALLBACK, 'st4te')).toEqual({ status: 'refused', reason: 'no-code' })
+    expect(parseHandoffCallback('dominevo://auth-callback?state=st4te', CALLBACK, 'st4te')).toEqual({ status: 'refused', reason: 'no-code' })
   })
 })
 

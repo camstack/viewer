@@ -4,7 +4,7 @@
  * A "private link" is an authenticated deep link into the viewer: it carries no
  * secret, it just names the event/track. Whoever opens it in an authenticated
  * CamStack app lands on the events tab with the detail open; an unauthenticated
- * app shows login first. The app scheme (`camstack://` / `camstack.dev://`) is
+ * app shows login first. The app scheme (`dominevo://` / `dominevo.dev://`) is
  * resolved at call-time by `expo-linking` `createURL(path, { queryParams })`, so
  * this module stays a PURE builder of the `(path, queryParams)` pair it is given.
  *

@@ -11,6 +11,7 @@ const fs = require("fs");
 const path = require("path");
 const { spawn } = require("child_process");
 const { gateOrExit } = require("./lib/check-whats-new");
+const { easProjectGateOrExit } = require("./lib/check-ship-identity");
 
 const colors = { reset: "\x1b[0m", red: "\x1b[31m", green: "\x1b[32m", yellow: "\x1b[33m", blue: "\x1b[34m" };
 const log = (c, m) => console.log(`${colors[c]}${m}${colors.reset}`);
@@ -68,6 +69,8 @@ info(`Version code: ${currentVersionCode} → ${newVersionCode}`);
 
 // Before anything is written: the notes for newVersion must already be in
 // src/app/whats-new.ts. `--skip-whats-new` bypasses it, loudly.
+// A new store app has no EAS project until `eas init`: refuse before any side effect.
+easProjectGateOrExit();
 gateOrExit({ bumpType });
 
 const backupPath = `${configPath}.backup`;

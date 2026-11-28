@@ -1,7 +1,7 @@
 /**
  * secure-lan-twin — the hosted PWA (an `https:` page) must still race the LAN.
  *
- * Operator report 2026-10-07: on https://camstack.zentik.app the probe showed
+ * Operator report 2026-10-07: on https://dominevo.app the probe showed
  * "1/1" and the app never used the hub's LAN address. With LAN HTTP on, the
  * hub advertises every LAN address only as `http://<ip>:4480`; the page drops
  * that as mixed content and only the tunnel was left. The fixtures below are

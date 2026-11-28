@@ -103,13 +103,13 @@ describe('useSnapshot honours the rule, and keeps the header object stable', () 
 })
 
 /**
- * The hosted PWA (camstack.zentik.app) talks to a hub on ANOTHER origin, so the
+ * The hosted PWA (dominevo.app) talks to a hub on ANOTHER origin, so the
  * media URL needed a Bearer — a CORS preflight per tile (~110–140 ms through
  * the tunnel) and a JS fetch → blob per frame. The hub's signed link plane is
  * public and HMAC-authorised: painted as a plain `<img>`, it needs neither.
  */
 const LINK = '/addon/snapshot/link/101.jpg?w=480&v=1&exp=1790000000000&sig=abc'
-const HOSTED = 'https://camstack.zentik.app'
+const HOSTED = 'https://dominevo.app'
 const NOW = 1_789_999_900_000
 
 function signed(overrides: Partial<SignedSnapshotLinkInput> = {}): SignedSnapshotLinkInput {

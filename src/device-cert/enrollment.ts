@@ -3,7 +3,7 @@
  * Enrollment (D855): the device generates its own key, the hub signs the
  * public half.
  *
- *  - by CODE: an admin's QR / link (`camstack://enroll?hub=...&code=...`) ->
+ *  - by CODE: an admin's QR / link (`dominevo://enroll?hub=...&code=...`) ->
  *    `auth.completeEnrollment` -> the certificate login opens the session;
  *  - SELF: a signed-in device, after a STEP-UP (a sign-in made just now) ->
  *    `auth.enrollSelf` with the single-use proof.

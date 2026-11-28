@@ -1,5 +1,5 @@
 /**
- * The production server for the hosted viewer PWA (https://camstack.zentik.app).
+ * The production server for the hosted viewer PWA (https://dominevo.app).
  *
  * Serves the static web export (`dist/`, built with base path `/`), the SPA
  * fallback, the Universal/App Link pair and `/health`. It talks to no hub:

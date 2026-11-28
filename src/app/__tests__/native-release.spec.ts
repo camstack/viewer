@@ -8,13 +8,15 @@ import {
   type NativeRelease,
 } from '../native-release.js'
 
+const STORE_APP_ID = '1000000001'
+
 const latest: NativeRelease = {
   version: '1.0.454',
   buildNumber: 16,
   runtimeVersion: '1.0.454',
   channel: 'testflight',
   publishedAt: '2026-09-06T14:41:52Z',
-  storeAppId: '6759228132',
+  storeAppId: STORE_APP_ID,
 }
 
 describe('nativeReleaseState — is the binary I run in the newest one?', () => {
@@ -22,6 +24,11 @@ describe('nativeReleaseState — is the binary I run in the newest one?', () => 
     expect(nativeReleaseState({ version: '1.0.374', buildNumber: 15 }, null)).toBe('unknown')
     expect(nativeReleaseState({ version: null, buildNumber: 15 }, latest)).toBe('unknown')
     expect(nativeReleaseState({ version: '1.0.374', buildNumber: undefined }, latest)).toBe('unknown')
+  })
+  it('says nothing for a release file that names no store app id (an app not yet listed)', () => {
+    const { storeAppId: _omit, ...unlisted } = latest
+    expect(nativeReleaseState({ version: '1.0.374', buildNumber: 15 }, unlisted)).toBe('unknown')
+    expect(nativeReleaseState({ version: '1.0.374', buildNumber: 15 }, { ...unlisted, channel: 'play' })).toBe('newer-available')
   })
   it('the crashing 1.0.374 (15) sees 1.0.454 (16) as newer', () => {
     expect(nativeReleaseState({ version: '1.0.374', buildNumber: 15 }, latest)).toBe('newer-available')
@@ -46,9 +53,9 @@ describe('the file and the links', () => {
     expect(compareVersions('1.0.455', '1.0.455')).toBe(0)
   })
   it('opens TestFlight for a TestFlight build, the store otherwise, the market on Android', () => {
-    expect(storeUrlFor(latest, 'ios', 'com.apocaliss92.camstack')).toBe('itms-beta://')
-    expect(storeUrlFor({ ...latest, channel: 'appstore' }, 'ios', 'x')).toBe('itms-apps://apps.apple.com/app/id6759228132')
-    expect(storeUrlFor(latest, 'android', 'com.apocaliss92.camstack')).toBe('market://details?id=com.apocaliss92.camstack')
+    expect(storeUrlFor(latest, 'ios', 'app.dominevo.viewer')).toBe('itms-beta://')
+    expect(storeUrlFor({ ...latest, channel: 'appstore' }, 'ios', 'x')).toBe(`itms-apps://apps.apple.com/app/id${STORE_APP_ID}`)
+    expect(storeUrlFor(latest, 'android', 'app.dominevo.viewer')).toBe('market://details?id=app.dominevo.viewer')
     expect(storeUrlFor(latest, 'web', 'x')).toBeNull()
   })
   it('is served under the viewer mount', () => {

@@ -33,7 +33,7 @@
  * the static {@link LIBRARY_SECTION_ORDER}.
  *
  * Events is the default: the tab keeps the route name `/events`, so every
- * shared deep link (`camstack://events?trackId=…&deviceId=…`) opens on exactly
+ * shared deep link (`dominevo://events?trackId=…&deviceId=…`) opens on exactly
  * the page it always opened on. Videoclips is deliberately absent.
  */
 import type { SegmentOption } from '../components/ui/SegmentedControl.js'

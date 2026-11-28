@@ -1,11 +1,10 @@
 import type { ConfigContext, ExpoConfig } from "expo/config";
 
 // Set APP_VARIANT in .env (development | preview | production)
-const { name, bundleIdentifier } = require("./config-shared");
+const { name, bundleIdentifier, scheme } = require("./config-shared");
 const { getWebMountPrefix } = require("./config-web-base.js");
 const { ALTERNATE_ICONS } = require("./config-alternate-icons.js");
 
-const scheme = process.env.APP_VARIANT === "development" ? "dominevo.dev" : "dominevo";
 
 // Web mount prefix: "/" = standalone (app at root); "<base>/camstack/" under
 // EXPO_PUBLIC_WEB_BASE_PATH (External hub, HA ingress, the hub's /viewer). The SAME
@@ -45,7 +44,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     bundleIdentifier,
     icon: "./app.icon",
     appleTeamId: process.env.EXPO_APPLE_TEAM_ID ?? "C3F24V5NS5",
-    buildNumber: "20",
+    buildNumber: "1",
     associatedDomains: [`applinks:${LINK_HOST}`],
     infoPlist: {
       UIBackgroundModes: ["audio"],
@@ -115,7 +114,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         image: "./assets/images/splash-icon.png",
         imageWidth: 200,
         resizeMode: "contain",
-        backgroundColor: "#e67e22",
+        backgroundColor: "#292524",
         dark: {
           backgroundColor: "#1c1917",
         },

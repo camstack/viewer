@@ -12,8 +12,11 @@
  */
 import { postHubAuthMutation, type FetchLike, type HubAuthOutcome } from './hub-auth-wire.js'
 
-/** Path component of the app's custom-scheme callback — the admin-ui
- *  allowlists exactly `camstack://auth-callback` (and the `.dev` scheme
+/** The production URL scheme (`config-shared.js` `productionScheme`; a spec holds them equal). */
+export const APP_SCHEME = 'dominevo'
+
+/** Path component of the app's custom-scheme callback — the hub
+ *  allowlists exactly `dominevo://auth-callback` (and the `.dev` scheme
  *  variant), so this must stay in lockstep with that allowlist. */
 export const HANDOFF_CALLBACK_PATH = 'auth-callback'
 

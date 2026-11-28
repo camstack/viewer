@@ -11,6 +11,7 @@ const fs = require("fs");
 const path = require("path");
 const { spawn, execFileSync } = require("child_process");
 const { gateOrExit } = require("./lib/check-whats-new");
+const { easProjectGateOrExit } = require("./lib/check-ship-identity");
 const { nativeGateOrExit } = require("./lib/check-native-unchanged");
 
 const colors = { reset: "\x1b[0m", red: "\x1b[31m", green: "\x1b[32m", yellow: "\x1b[33m", blue: "\x1b[34m" };
@@ -115,6 +116,8 @@ function inc(v, type) {
 // Before anything is written: the notes for the version about to ship must
 // already be in src/app/whats-new.ts (v1.0.591 shipped without them), and a
 // stale tree must never reach `eas update`.
+// A new store app has no EAS project until `eas init`: refuse before any side effect.
+easProjectGateOrExit();
 gateOrExit({ bumpType });
 // An OTA carries JavaScript only: refuse when native code moved since runtimeVersion was set.
 nativeGateOrExit();

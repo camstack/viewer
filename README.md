@@ -47,7 +47,7 @@ app again once.
 
 ## Docker (PWA)
 
-The hosted PWA (https://camstack.zentik.app) is the web export at base path `/`,
+The hosted PWA (https://dominevo.app) is the web export at base path `/`,
 served by `web-server/server.ts` (Node 24, no dependencies): static files, the
 SPA fallback, `/health`, and the Universal/App Link pair
 (`/.well-known/apple-app-site-association`, `/apple-app-site-association`,
@@ -70,7 +70,7 @@ it — two mechanisms deploying one service is how you end up debugging which of
 
 **Setup:** on the Railway service, `APP_VARIANT` + `EXPO_PUBLIC_APP_VARIANT` (`production`),
 `CAMSTACK_ANDROID_CERT_SHA256` (comma-separated SHA-256 signing-cert fingerprints; empty is a valid
-file that simply fails Android auto-verification) and the custom domain `camstack.zentik.app`
+file that simply fails Android auto-verification) and the custom domain `dominevo.app`
 (Cloudflare record DNS-only, so Railway can issue the certificate).
 
 ## Learn more

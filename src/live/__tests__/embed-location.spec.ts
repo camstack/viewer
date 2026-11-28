@@ -21,12 +21,12 @@ describe('resolveEmbedLocation — never frame the hub from another origin', () 
       resolveEmbedLocation({
         serverUrl: 'https://hub.example.com:4443/',
         mode: 'grid',
-        pageOrigin: 'https://camstack.zentik.app',
+        pageOrigin: 'https://dominevo.app',
         mountPrefix: '/',
       }),
     ).toEqual({
-      src: 'https://camstack.zentik.app/embed/index.html?mode=grid',
-      origin: 'https://camstack.zentik.app',
+      src: 'https://dominevo.app/embed/index.html?mode=grid',
+      origin: 'https://dominevo.app',
     })
   })
 

@@ -10,33 +10,33 @@ import type { FetchLike } from '../hub-auth-wire.js'
 
 describe('buildHandoffLoginUrl', () => {
   it('points at the admin-ui login with the encoded app callback', () => {
-    expect(buildHandoffLoginUrl('https://hub.example:4443', 'camstack://auth-callback')).toBe(
-      'https://hub.example:4443/login?redirect=camstack%3A%2F%2Fauth-callback',
+    expect(buildHandoffLoginUrl('https://hub.example:4443', 'dominevo://auth-callback')).toBe(
+      'https://hub.example:4443/login?redirect=dominevo%3A%2F%2Fauth-callback',
     )
   })
 
   it('tolerates a trailing slash on the server URL', () => {
-    expect(buildHandoffLoginUrl('https://hub.example/', 'camstack://auth-callback')).toBe(
-      'https://hub.example/login?redirect=camstack%3A%2F%2Fauth-callback',
+    expect(buildHandoffLoginUrl('https://hub.example/', 'dominevo://auth-callback')).toBe(
+      'https://hub.example/login?redirect=dominevo%3A%2F%2Fauth-callback',
     )
   })
 })
 
 describe('extractHandoffCode', () => {
   it('pulls the code off the callback deep link', () => {
-    expect(extractHandoffCode('camstack://auth-callback?code=chc_abc123')).toBe('chc_abc123')
-    expect(extractHandoffCode('camstack:///auth-callback?code=chc_abc123')).toBe('chc_abc123')
-    expect(extractHandoffCode('camstack.dev://auth-callback?code=chc_x&y=1')).toBe('chc_x')
+    expect(extractHandoffCode('dominevo://auth-callback?code=chc_abc123')).toBe('chc_abc123')
+    expect(extractHandoffCode('dominevo:///auth-callback?code=chc_abc123')).toBe('chc_abc123')
+    expect(extractHandoffCode('dominevo.dev://auth-callback?code=chc_x&y=1')).toBe('chc_x')
   })
 
   it('URL-decodes the code', () => {
-    expect(extractHandoffCode('camstack://auth-callback?code=chc_a%2Bb')).toBe('chc_a+b')
+    expect(extractHandoffCode('dominevo://auth-callback?code=chc_a%2Bb')).toBe('chc_a+b')
   })
 
   it('returns null when absent or empty', () => {
-    expect(extractHandoffCode('camstack://auth-callback')).toBeNull()
-    expect(extractHandoffCode('camstack://auth-callback?code=')).toBeNull()
-    expect(extractHandoffCode('camstack://auth-callback?other=1')).toBeNull()
+    expect(extractHandoffCode('dominevo://auth-callback')).toBeNull()
+    expect(extractHandoffCode('dominevo://auth-callback?code=')).toBeNull()
+    expect(extractHandoffCode('dominevo://auth-callback?other=1')).toBeNull()
   })
 })
 
@@ -103,17 +103,17 @@ describe('redeemHandoffCode', () => {
 
 describe('canonicalizeCallbackUrl', () => {
   it('normalizes the expo-linking triple-slash standalone form', () => {
-    expect(canonicalizeCallbackUrl('camstack:///auth-callback')).toBe('camstack://auth-callback')
-    expect(canonicalizeCallbackUrl('camstack.dev:///auth-callback')).toBe(
-      'camstack.dev://auth-callback',
+    expect(canonicalizeCallbackUrl('dominevo:///auth-callback')).toBe('dominevo://auth-callback')
+    expect(canonicalizeCallbackUrl('dominevo.dev:///auth-callback')).toBe(
+      'dominevo.dev://auth-callback',
     )
-    expect(canonicalizeCallbackUrl('camstack://auth-callback/')).toBe('camstack://auth-callback')
-    expect(canonicalizeCallbackUrl('camstack://auth-callback')).toBe('camstack://auth-callback')
+    expect(canonicalizeCallbackUrl('dominevo://auth-callback/')).toBe('dominevo://auth-callback')
+    expect(canonicalizeCallbackUrl('dominevo://auth-callback')).toBe('dominevo://auth-callback')
   })
 
   it('buildHandoffLoginUrl encodes the CANONICAL callback', () => {
-    expect(buildHandoffLoginUrl('https://hub:4443/', 'camstack:///auth-callback')).toBe(
-      'https://hub:4443/login?redirect=camstack%3A%2F%2Fauth-callback',
+    expect(buildHandoffLoginUrl('https://hub:4443/', 'dominevo:///auth-callback')).toBe(
+      'https://hub:4443/login?redirect=dominevo%3A%2F%2Fauth-callback',
     )
   })
 })
@@ -128,5 +128,14 @@ describe('isValidServerUrl', () => {
     expect(isValidServerUrl('https://')).toBe(false)
     expect(isValidServerUrl('not a url')).toBe(false)
     expect(isValidServerUrl('ftp://x')).toBe(false)
+  })
+})
+
+describe('the app scheme', () => {
+  it('is the production scheme the app config declares', async () => {
+    const { createRequire } = await import('node:module')
+    const shared = createRequire(import.meta.url)('../../../config-shared.js') as { productionScheme: string }
+    const { APP_SCHEME } = await import('../handoff.js')
+    expect(APP_SCHEME).toBe(shared.productionScheme)
   })
 })

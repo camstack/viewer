@@ -9,7 +9,7 @@
  * foreign scheme, a `state` that is not ours, an error code — are specified
  * without a browser.
  */
-import { canonicalizeCallbackUrl } from '../auth/handoff.js'
+import { APP_SCHEME, HANDOFF_CALLBACK_PATH, canonicalizeCallbackUrl } from '../auth/handoff.js'
 import { postHubAuthMutation, type FetchLike, type HubAuthOutcome } from '../auth/hub-auth-wire.js'
 import type { PkcePair } from './pkce.js'
 
@@ -22,7 +22,7 @@ export function handoffLang(resolvedLanguage: string | undefined): AppLang {
 }
 
 /** The callback the hub's app flow falls back to; any other (the dev scheme) is sent as `redirect`. */
-const DEFAULT_APP_CALLBACK = 'camstack://auth-callback'
+const DEFAULT_APP_CALLBACK = `${APP_SCHEME}://${HANDOFF_CALLBACK_PATH}`
 
 /** A start path is a path on the hub's own origin: never `//host`, never a scheme. */
 function isHubPath(path: string): boolean {

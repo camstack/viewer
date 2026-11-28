@@ -19,9 +19,9 @@ vi.mock('../../../connection/ConnectionProvider.js', async () =>
 // `expo-web-browser` and `expo-linking` both resolve to ONE stub file
 // (vitest.config.ts), so one mock object must answer for both.
 const browser = vi.hoisted(() => ({
-  openAuthSessionAsync: vi.fn(async () => ({ type: 'success', url: 'camstack://auth-callback?link=nlc_1' })),
+  openAuthSessionAsync: vi.fn(async () => ({ type: 'success', url: 'dominevo://auth-callback?link=nlc_1' })),
   openBrowserAsync: vi.fn(async () => ({ type: 'opened' })),
-  createURL: (path: string) => `camstack:///${path}`,
+  createURL: (path: string) => `dominevo:///${path}`,
 }))
 vi.mock('expo-web-browser', () => browser)
 vi.mock('expo-linking', () => browser)
@@ -115,12 +115,12 @@ describe('Account → Sign-in methods', () => {
     expect(hubCalls().find((c) => c.path === 'auth.reauthenticate')?.input).toEqual({ password: 'my-password' })
     expect(hubCalls().find((c) => c.path === 'auth.beginExternalLink')?.input).toEqual({
       provider: 'auth-oidc/authentik',
-      returnTo: 'camstack://auth-callback',
+      returnTo: 'dominevo://auth-callback',
       reauthToken: 'rat_1',
     })
     expect(browser.openAuthSessionAsync).toHaveBeenCalledWith(
       'http://hub.test:8080/addon/auth-oidc/authentik/start?link=li_1',
-      'camstack://auth-callback',
+      'dominevo://auth-callback',
     )
   })
 
@@ -162,7 +162,7 @@ describe('Account → Sign-in methods', () => {
     await waitFor(() => {
       expect(hubCalls().find((c) => c.path === 'auth.beginExternalLink')?.input).toEqual({
         provider: 'auth-oidc/authentik',
-        returnTo: 'camstack://auth-callback',
+        returnTo: 'dominevo://auth-callback',
       })
     })
   })

@@ -61,15 +61,14 @@ describe("what's new is filled in for every version", () => {
 
   it('is newest first, every entry with both languages', () => {
     // Dominevo restarted the version line at 0.1.0 (a new store app); the
-    // CamStack-era history below it stays as it was. Order is held inside each
-    // line, and the only drop allowed is that restart.
+    // CamStack-era history below it stays as it was. Newest-first holds
+    // everywhere except exactly one break, right after the 0.1.0 entry.
     const versions = WHATS_NEW.map((e) => e.version)
-    const restart = versions.indexOf('0.1.0')
-    const current = restart === -1 ? versions : versions.slice(0, restart + 1)
-    const legacy = restart === -1 ? [] : versions.slice(restart + 1)
-    for (const line of [current, legacy]) {
-      expect(line).toEqual([...line].sort((a, b) => compare(b, a)))
-    }
+    expect(versions[0]).toBe('0.1.0')
+    const breaks = versions.flatMap((v, i) => (i > 0 && compare(versions[i - 1] ?? '', v) < 0 ? [i] : []))
+    expect(breaks).toEqual([1])
+    const legacy = versions.slice(1)
+    expect(legacy).toEqual([...legacy].sort((x, y) => compare(y, x)))
     for (const e of WHATS_NEW) {
       expect(e.notes.en.length, e.version).toBeGreaterThan(0)
       expect(e.notes.it.length, e.version).toBeGreaterThan(0)
