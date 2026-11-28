@@ -56,6 +56,13 @@
         "resourceClass": "medium",
         "buildType": "apk"
       }
+    },
+    "simulator": {
+      "extends": "production",
+      "ios": {
+        "simulator": true,
+        "resourceClass": "m-medium"
+      }
     }
   },
   "submit": {
