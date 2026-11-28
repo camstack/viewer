@@ -31,6 +31,22 @@ export interface WhatsNewEntry {
 // i18n-ok: release notes carry their own `en` + `it` text per entry (typed, held by whats-new.spec.ts)
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
+    version: '0.1.1',
+    date: '2026-11-28',
+    notes: {
+      en: [
+        'The mini-player snaps to a corner and its timeline spans the full width.',
+        'The app under the mini-player stays fully tappable.',
+        'Live in the mini-player no longer shows an endless spinner.',
+      ],
+      it: [
+        'Il mini-player si aggancia a un angolo e la timeline è a tutta larghezza.',
+        "L'app sotto il mini-player resta tutta toccabile.",
+        'Il live nel mini-player non mostra più la rotella infinita.',
+      ],
+    },
+  },
+  {
     version: '0.1.0',
     date: '2026-11-28',
     notes: {
