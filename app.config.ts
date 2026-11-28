@@ -178,11 +178,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     // (ServerProvider etc.) — without this pin the route tree silently becomes
     // src/app and every screen 404s to Unmatched Route (OTA 1.0.154/155 bug).
     router: { root: "app" },
-    // TODO(operator, planning#757): Dominevo is a NEW store app. Create its EAS
-    // project (`eas init`), then add `extra.eas.projectId` and `updates.url`
-    // here — the old CamStack project id must not be reused.
+    eas: {
+      projectId: "b40de197-0a02-43f3-b141-3cf49c54e750",
+    },
     // TODO(operator, planning#757): eas.json submit.production.ios has no
     // `ascAppId` until the new App Store Connect app exists; add it then.
+  },
+  updates: {
+    url: "https://u.expo.dev/b40de197-0a02-43f3-b141-3cf49c54e750",
   },
   // The new Expo organization for the Dominevo app (planning#757).
   owner: "dominevo",
