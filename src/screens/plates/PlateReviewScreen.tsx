@@ -493,13 +493,13 @@ export function PlateReviewScreen(): React.JSX.Element {
         keyExtractor={(item) => item.key}
         contentContainerStyle={[styles.gridContent, { paddingBottom: gridPadBottom }]}
         renderItem={renderItem}
-        ListEmptyComponent={visibleRows.length === 0 ? listBody : null}
+        ListEmptyComponent={visibleRows.length === 0 ? (listBody ?? undefined) : undefined}
         ListFooterComponent={
           isFetchingMore ? (
             <View style={styles.footerLoading}>
               <ActivityIndicator size="small" color={colors.primary} />
             </View>
-          ) : null
+          ) : undefined
         }
         // Paging follows the FEED, never the filtered count (a client filter
         // that matches nothing yet must not stop the pager).

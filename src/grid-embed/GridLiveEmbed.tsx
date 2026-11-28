@@ -15,6 +15,7 @@
  * operator must use a trusted cert (or http) for the hub origin.
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { toAppStateStatus } from '../lib/app-state-status.js'
 import {
   View,
   Text,
@@ -141,7 +142,7 @@ export function GridLiveEmbed({
   const { token } = useServer()
   const { colors } = useTheme()
   const { t } = useTranslation()
-  const webViewRef = useRef<WebView>(null)
+  const webViewRef = useRef<React.ComponentRef<typeof WebView>>(null)
   const [state, setState] = useState<GridReportState>('connecting')
 
   const serverUrl = useLiveHubUrl()
@@ -322,7 +323,7 @@ export function GridLiveEmbed({
   // Self-heal after backgrounding (iOS suspends the WKWebView + kills peers).
   // Reconnect (keep the last frame) rather than reload (blank) — the SPA itself
   // survives the suspend; only the WebRTC peers need re-establishing.
-  const appStateRef = useRef<AppStateStatus>(AppState.currentState)
+  const appStateRef = useRef<AppStateStatus>(toAppStateStatus(AppState.currentState))
   useEffect(() => {
     const sub = AppState.addEventListener('change', (next: AppStateStatus) => {
       const prev = appStateRef.current

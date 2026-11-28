@@ -1,3 +1,4 @@
+import type { ViewInstance } from 'react-native'
 import React, { useRef, useState } from 'react'
 import { Pressable, Text, View } from 'react-native'
 import { ChevronsUpDown, type LucideIcon } from '../../lib/icons.js'
@@ -36,7 +37,7 @@ export function SelectRow<T extends string | number>({
   last = false,
 }: SelectRowProps<T>) {
   const { colors } = useTheme()
-  const valueRef = useRef<View>(null)
+  const valueRef = useRef<ViewInstance>(null)
   const [open, setOpen] = useState(false)
   const [anchor, setAnchor] = useState<AnchorRect | null>(null)
   const index = Math.max(

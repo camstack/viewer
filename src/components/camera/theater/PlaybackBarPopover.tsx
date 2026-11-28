@@ -15,6 +15,7 @@
  * it (a Modal without `supportedOrientations` forces portrait), and the
  * report is the web layout's; changing native is a separate decision.
  */
+import type { ViewInstance } from 'react-native'
 import React, { useState, type ReactNode, type RefObject } from 'react'
 import { useTranslation } from 'react-i18next'
 // ui-check-ok: a popover portalled to the window on the web (RNW's Modal), not a sheet
@@ -34,7 +35,7 @@ export interface PlaybackBarPopoverProps {
   readonly open: boolean
   readonly onClose: () => void
   /** The chip the menu hangs off — measured in window coordinates on web. */
-  readonly anchorRef: RefObject<View | null>
+  readonly anchorRef: RefObject<ViewInstance | null>
   /** The rows. Handed the direction the menu really opened in, because the
    *  rate list orders itself by it (`playbackRateMenuOrder`). */
   readonly children: (direction: PopoverDirection) => ReactNode

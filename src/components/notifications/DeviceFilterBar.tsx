@@ -17,6 +17,7 @@
  *    is reported as paused, not as matching nothing.
  *  - "Reset filters" clears search, Type, Zone and Location.
  */
+import type { ViewInstance } from 'react-native'
 import React, { useEffect, useRef, useState } from 'react'
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
@@ -80,12 +81,12 @@ interface FacetChipProps {
   /** Why the chip cannot be used (the zones read), shown as its value. */
   readonly unavailable: string | null
   readonly disabled: boolean
-  readonly onOpen: (facet: PickerFacet, ref: React.RefObject<View | null>) => void
+  readonly onOpen: (facet: PickerFacet, ref: React.RefObject<ViewInstance | null>) => void
 }
 
 function FacetChip({ facet, chosen, unavailable, disabled, onOpen }: FacetChipProps) {
   const { t } = useTranslation()
-  const ref = useRef<View>(null)
+  const ref = useRef<ViewInstance>(null)
   const value =
     unavailable ??
     (chosen.length === 0 ? t(`${UI}.filter.all`) : t(`${UI}.filter.selected`, { count: chosen.length }))
@@ -182,7 +183,7 @@ export function DeviceFilterBar({
     return () => clearTimeout(timer)
   }, [text])
 
-  const openMenu = (facet: PickerFacet, ref: React.RefObject<View | null>): void => {
+  const openMenu = (facet: PickerFacet, ref: React.RefObject<ViewInstance | null>): void => {
     ref.current?.measureInWindow((x, y, width, height) => {
       setAnchor({ x, y, width, height })
       setMenu(facet)

@@ -6,6 +6,7 @@
  * fills / turns and a count badge says how many; when something finished and
  * was not opened yet, a "ready" dot sits on the corner.
  */
+import type { ViewInstance } from 'react-native'
 import React, { memo, useEffect, useMemo, useRef, useState, type RefObject } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import Animated, { Easing, cancelAnimation, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
@@ -37,7 +38,7 @@ const DOT = 9
 export interface ActivityButtonProps {
   readonly menuAlign?: 'start' | 'end'
   /** The block both popovers hang from; the button itself when absent. */
-  readonly anchorRef?: RefObject<View | null>
+  readonly anchorRef?: RefObject<ViewInstance | null>
 }
 
 export const ActivityButton = memo(function ActivityButton({ menuAlign = 'end', anchorRef: blockRef }: ActivityButtonProps): React.JSX.Element {
@@ -45,7 +46,7 @@ export const ActivityButton = memo(function ActivityButton({ menuAlign = 'end', 
   const { colors } = useTheme()
   const items = useActivityStore((s) => s.items)
   const [open, setOpen] = useState(false)
-  const anchorRef = useRef<View>(null)
+  const anchorRef = useRef<ViewInstance>(null)
   const [anchor, setAnchor] = useState<AnchorRect | null>(null)
 
   const { hub, summary } = useHubActivity(open)

@@ -20,7 +20,7 @@ import {
   TextInput,
   View,
   type NativeSyntheticEvent,
-  type TextInputSelectionChangeEventData,
+  type TextInputSelectionChangeEvent,
 } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useTheme } from '../../theme/theme-provider.js'
@@ -126,7 +126,7 @@ export function TemplateField({
   const [forced, setForced] = useState<TextSelection | undefined>(undefined)
   const unknown = vars ? unknownPlaceholders(value, vars) : []
 
-  const onSelectionChange = (e: NativeSyntheticEvent<TextInputSelectionChangeEventData>): void => {
+  const onSelectionChange = (e: TextInputSelectionChangeEvent): void => {
     setSelection(e.nativeEvent.selection)
     setForced(undefined)
   }

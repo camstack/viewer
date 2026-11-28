@@ -27,6 +27,7 @@
  * `Gesture.Native()` and hands it here, and the pinch/pan block it.
  */
 
+import type { ViewInstance } from 'react-native'
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Platform, StyleSheet, View, type LayoutChangeEvent } from 'react-native'
 import { Gesture, GestureDetector, type GestureType } from 'react-native-gesture-handler'
@@ -126,7 +127,7 @@ export const ZoomableImage = memo(function ZoomableImage({
   const touchSequence = useSharedValue<TouchSequence>(EMPTY_TOUCH_SEQUENCE)
   const lastPinchEndMs = useSharedValue(0)
 
-  const containerRef = useRef<View>(null)
+  const containerRef = useRef<ViewInstance>(null)
 
   // Web only matters: lets the browser scroll the page from a one-finger drag
   // while unzoomed (see `pictureTouchAction`). Flips only when the picture

@@ -21,6 +21,7 @@
  * Decided by feature detection, never by catching a failed press, and logged
  * once per session.
  */
+import type { ViewInstance } from 'react-native'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Platform, type View } from 'react-native'
 import { log } from '../lib/logger.js'
@@ -205,7 +206,7 @@ function resolveMode(): WebFullscreenMode {
 }
 
 export interface WebFullscreen {
-  readonly ref: React.RefObject<View | null>
+  readonly ref: React.RefObject<ViewInstance | null>
   readonly isFullscreen: boolean
   /** What the button does here — see {@link WebFullscreenMode}. */
   readonly mode: WebFullscreenMode
@@ -215,7 +216,7 @@ export interface WebFullscreen {
 }
 
 export function useWebFullscreen(): WebFullscreen {
-  const ref = useRef<View | null>(null)
+  const ref = useRef<ViewInstance | null>(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [mode] = useState<WebFullscreenMode>(resolveMode)
 

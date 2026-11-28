@@ -1,5 +1,5 @@
 import React from 'react'
-import { View, Text, StyleSheet } from 'react-native'
+import { View, Text, StyleSheet, type ViewInstance } from 'react-native'
 import { BlurView } from 'expo-blur'
 import { usePathname } from 'expo-router'
 import { useTranslation } from 'react-i18next'
@@ -33,7 +33,7 @@ export interface HeaderAction {
   readonly disabled?: boolean
   readonly testID?: string
   /** Receives the button's box, for a menu that anchors to it (`measureInWindow`). */
-  readonly anchorRef?: React.Ref<View>
+  readonly anchorRef?: React.Ref<ViewInstance>
   /**
    * Draw the label beside the icon — a glass PILL instead of a disc. For a
    * page's ONE primary action ("+ Person"); everything else stays an icon,

@@ -19,6 +19,7 @@
  * themed error (we deliberately do NOT bypass cert validation — that would be an
  * insecure workaround). Operators must use a trusted cert or http for the embed.
  */
+import type { ViewInstance } from 'react-native'
 import React, {
   forwardRef,
   useCallback,
@@ -219,7 +220,7 @@ export const LiveViewWebView = forwardRef<LiveViewHandle, LiveViewProps>(functio
   const serverUrl = useLiveHubUrl()
   const { colors } = useTheme()
   const { t } = useTranslation()
-  const webViewRef = useRef<WebView>(null)
+  const webViewRef = useRef<React.ComponentRef<typeof WebView>>(null)
   // State AND its reason as one value: forwarded separately they land in
   // separate renders, and a reason drawn against the wrong state describes a
   // failure that is not happening.
@@ -319,7 +320,7 @@ go();})(); true;`
   // stale on rotation). We push these exact pixels into the embed to size the
   // <video>; kept in a ref so we can re-apply after (re)load / state changes.
   const frameRef = useRef<{ w: number; h: number } | null>(null)
-  const containerRef = useRef<View | null>(null)
+  const containerRef = useRef<ViewInstance | null>(null)
   const applyFrame = useCallback((): void => {
     const f = frameRef.current
     if (!f) return

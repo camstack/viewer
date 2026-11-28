@@ -96,7 +96,7 @@ export function ScenesScreen(): React.JSX.Element {
         keyExtractor={(item) => String(item.deviceId)}
         renderItem={renderItem}
         contentContainerStyle={[styles.content, { paddingBottom: padBottom }]}
-        ListEmptyComponent={empty}
+        ListEmptyComponent={empty ?? undefined}
         refreshing={false}
         onRefresh={() => {
           void scenes.refetch()

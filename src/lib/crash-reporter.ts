@@ -38,7 +38,7 @@ import { getExitMarkerRecorder, type ExitMarkerRecorder } from './exit-marker.js
 /** React Native's `AppState`, declared structurally for the same reason
  *  `ErrorUtilsLike` is: this module must stay loadable in a node test runner. */
 export interface AppStateLike {
-  readonly currentState: string
+  readonly currentState: string | null | undefined
   addEventListener: (
     type: 'change',
     handler: (state: string) => void,
@@ -211,7 +211,7 @@ export function bindExitMarkerToAppState(
   appState: AppStateLike,
   recorder: ExitMarkerRecorder = getExitMarkerRecorder(),
 ): () => void {
-  let last: string = appState.currentState
+  let last: string | null | undefined = appState.currentState
   const sub = appState.addEventListener('change', (next: string): void => {
     // iOS leaves the foreground as active → inactive → background, so the
     // state BEFORE `background` is `inactive` on every real close; only a

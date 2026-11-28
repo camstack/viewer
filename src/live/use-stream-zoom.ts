@@ -85,9 +85,9 @@ import { guardWorklet } from '../lib/worklet-guard.js'
 import type { ViewStyle } from 'react-native'
 import {
   Gesture,
-  type ComposedGesture,
+  type LegacyComposedGesture,
   type GestureType,
-  type SimultaneousGesture,
+  type LegacySimultaneousGesture,
 } from 'react-native-gesture-handler'
 import {
   cancelAnimation,
@@ -202,7 +202,7 @@ export interface StreamZoom {
    */
   readonly reclampZoom: () => void
   /** Compose the zoom pinch+pan simultaneously with the caller's gestures. */
-  readonly composeWith: (...others: (GestureType | ComposedGesture)[]) => SimultaneousGesture
+  readonly composeWith: (...others: (GestureType | LegacyComposedGesture)[]) => LegacySimultaneousGesture
   /**
    * Trace hook for the SCREEN, a worklet: the box height it actually applied,
    * whenever that changes. The box's follow-through after a release is the
@@ -848,7 +848,7 @@ export function useStreamZoom({
   )
 
   const composeWith = useCallback(
-    (...others: (GestureType | ComposedGesture)[]): SimultaneousGesture =>
+    (...others: (GestureType | LegacyComposedGesture)[]): LegacySimultaneousGesture =>
       Gesture.Simultaneous(pinch, pan, touchTracker, ...others),
     [pinch, pan, touchTracker],
   )

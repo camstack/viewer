@@ -10,6 +10,7 @@
  * Usage: `const overflow = useHeaderOverflowMenu(items)`, then put
  * `overflow.action` in the header's actions and render `overflow.menu`.
  */
+import type { ViewInstance } from 'react-native'
 import React, { useCallback, useMemo, useRef, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
@@ -42,7 +43,7 @@ export function useHeaderOverflowMenu(
   testID = 'header-overflow',
 ): HeaderOverflowMenu {
   const { t } = useTranslation()
-  const ref = useRef<View>(null)
+  const ref = useRef<ViewInstance>(null)
   const [anchor, setAnchor] = useState<AnchorRect | null>(null)
   const [open, setOpen] = useState(false)
   const close = useCallback(() => setOpen(false), [])

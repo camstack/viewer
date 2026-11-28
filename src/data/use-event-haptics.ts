@@ -20,6 +20,7 @@
  */
 import { useEffect, useRef } from 'react'
 import { AppState, Platform, type AppStateStatus } from 'react-native'
+import { toAppStateStatus } from '../lib/app-state-status.js'
 import { useConnection } from '../connection/ConnectionProvider.js'
 import { useSettingsStore } from '../store/settings-store.js'
 import { MOTION_CATEGORY, parseMotionEvent } from './use-motion.js'
@@ -61,7 +62,7 @@ export function useEventHaptics(deviceIds: readonly number[], enabled: boolean):
   // Last-fired timestamp (global rate-limit state) + live AppState, both in refs
   // so the subscription callbacks read current values without re-subscribing.
   const lastFiredAtRef = useRef(0)
-  const appStateRef = useRef<AppStateStatus>(AppState.currentState)
+  const appStateRef = useRef<AppStateStatus>(toAppStateStatus(AppState.currentState))
 
   const active =
     enabled &&

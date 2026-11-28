@@ -4,6 +4,7 @@
  * the kit's {@link AnchoredMenu}: a phone has no hover, and a raw modal would
  * be a second sheet.
  */
+import type { ViewInstance } from 'react-native'
 import React, { useRef, useState } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
@@ -48,7 +49,7 @@ function useDeviceInfoFacts(deviceId: number, t: Translate): readonly DeviceInfo
 export function DeviceInfoButton({ deviceId }: DeviceInfoButtonProps): React.JSX.Element {
   const { t } = useTranslation()
   const { colors } = useTheme()
-  const anchorRef = useRef<View>(null)
+  const anchorRef = useRef<ViewInstance>(null)
   const [anchor, setAnchor] = useState<AnchorRect | null>(null)
   const [open, setOpen] = useState(false)
   const translate: Translate = (key, opts) => t(key, opts)

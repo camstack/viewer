@@ -21,6 +21,7 @@
  * covers the PWA.
  */
 import { AppState, type AppStateStatus } from 'react-native'
+import { toAppStateStatus } from '../lib/app-state-status.js'
 import { focusManager } from '@tanstack/react-query'
 
 /**
@@ -37,7 +38,7 @@ export function bindQueryFocusToAppState(): () => void {
     // churn without a reader.
     focusManager.setFocused(status === 'active' || status === 'inactive')
   }
-  apply(AppState.currentState)
+  apply(toAppStateStatus(AppState.currentState))
   const subscription = AppState.addEventListener('change', apply)
   return () => {
     subscription.remove()

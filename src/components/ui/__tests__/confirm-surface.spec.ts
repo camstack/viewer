@@ -210,7 +210,7 @@ describe('the confirmation surface on a phone', () => {
     setTestPlatform('ios')
     const seen: AlertButton[][] = []
     vi.spyOn(Alert, 'alert').mockImplementation(
-      (_title: string, _message?: string, buttons?: readonly AlertButton[]) => {
+      (_title: string | null | undefined, _message?: string | null, buttons?: readonly AlertButton[]) => {
         seen.push([...(buttons ?? [])])
       },
     )
@@ -232,7 +232,7 @@ describe('the confirmation surface on a phone', () => {
     setTestPlatform('ios')
     let captured: readonly AlertButton[] = []
     vi.spyOn(Alert, 'alert').mockImplementation(
-      (_title: string, _message?: string, buttons?: readonly AlertButton[]) => {
+      (_title: string | null | undefined, _message?: string | null, buttons?: readonly AlertButton[]) => {
         captured = buttons ?? []
       },
     )

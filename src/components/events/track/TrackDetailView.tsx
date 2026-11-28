@@ -21,6 +21,7 @@
  *      ({@link shouldRenderFaceSection}); omitted entirely otherwise.
  *   4. METADATA + "go to this moment".
  */
+import type { ViewInstance } from 'react-native'
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { View, Text, Pressable, ScrollView, FlatList, ActivityIndicator, StyleSheet, type ListRenderItem } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
@@ -311,7 +312,7 @@ export const TrackDetailView = memo(function TrackDetailView({
   const [loadedSize, setLoadedSize] = useState<{ readonly width: number; readonly height: number } | null>(null)
   const [linkCopied, setLinkCopied] = useState(false)
   // The download menu — the same one a cluster pill opens on a long press.
-  const downloadRef = useRef<View>(null)
+  const downloadRef = useRef<ViewInstance>(null)
   const [downloadAnchor, setDownloadAnchor] = useState<AnchorRect | null>(null)
   const [downloadOpen, setDownloadOpen] = useState(false)
   const onOpenDownload = useCallback((): void => {
@@ -533,7 +534,7 @@ export const TrackDetailView = memo(function TrackDetailView({
 
   // Copy link opens a two-entry choice: the app link (opens the CamStack app) or
   // the public link (the hub's public web viewer).
-  const copyRef = useRef<View>(null)
+  const copyRef = useRef<ViewInstance>(null)
   const [copyAnchor, setCopyAnchor] = useState<AnchorRect | null>(null)
   const [copyOpen, setCopyOpen] = useState(false)
   const onCopyLink = useCallback((): void => {

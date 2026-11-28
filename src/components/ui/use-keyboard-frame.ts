@@ -29,7 +29,7 @@ function frameFromEvent(event: KeyboardEvent): KeyboardFrame | null {
 function initialFrame(): KeyboardFrame | null {
   if (keyboardEventNames(Platform.OS) === null || !Keyboard.isVisible()) return null
   const metrics = Keyboard.metrics()
-  if (metrics === undefined) return null
+  if (metrics === undefined || metrics === null) return null
   const top = keyboardTopFromFrame(metrics, Dimensions.get('window').height)
   return top === null ? null : { top, duration: 0 }
 }

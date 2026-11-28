@@ -409,7 +409,7 @@ export function ArtifactsScreen({ embedded = false }: ArtifactsScreenProps) {
             <View style={styles.footer}>
               <ActivityIndicator color={colors.primary} />
             </View>
-          ) : null
+          ) : undefined
         }
       />
     )

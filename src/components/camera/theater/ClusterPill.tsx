@@ -10,6 +10,7 @@
  * `children` is what the pill shows; it is drawn twice (in the pill and in the
  * highlight over the dim), so it must be a pure picture of the event.
  */
+import type { ViewInstance } from 'react-native'
 import React, { memo, useCallback, useRef, useState } from 'react'
 import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native'
 import Animated, { useAnimatedStyle, useSharedValue, cancelAnimation, Easing, withTiming } from 'react-native-reanimated'
@@ -68,7 +69,7 @@ export const ClusterPill = memo(function ClusterPill({
 }: ClusterPillProps): React.JSX.Element {
   const { colors } = useTheme()
   const reduced = useReducedMotion()
-  const ref = useRef<View>(null)
+  const ref = useRef<ViewInstance>(null)
   const hold = useSharedValue(0)
   const [anchor, setAnchor] = useState<AnchorRect | null>(null)
   const [open, setOpen] = useState(false)

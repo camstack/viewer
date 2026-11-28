@@ -629,13 +629,13 @@ export function FaceReviewScreen() {
         keyExtractor={(item) => item.key}
         contentContainerStyle={[styles.gridContent, { paddingBottom: gridPadBottom }]}
         renderItem={renderItem}
-        ListEmptyComponent={visibleRows.length === 0 ? listBody : null}
+        ListEmptyComponent={visibleRows.length === 0 ? (listBody ?? undefined) : undefined}
         ListFooterComponent={
           isFetchingMore ? (
             <View style={styles.footerLoading}>
               <ActivityIndicator size="small" color={colors.primary} />
             </View>
-          ) : null
+          ) : undefined
         }
         onEndReached={hasMore ? loadMore : undefined}
         onEndReachedThreshold={0.4}

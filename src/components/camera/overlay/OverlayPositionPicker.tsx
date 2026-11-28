@@ -24,6 +24,7 @@
  *
  * Presentational: value + change handler are owned by the caller.
  */
+import type { ViewInstance } from 'react-native'
 import React, { useCallback, useRef, useState } from 'react'
 import { View, Text, Pressable, StyleSheet, type LayoutChangeEvent } from 'react-native'
 import { EyeOff, ChevronsUpDown } from '../../../lib/icons.js'
@@ -171,7 +172,7 @@ interface PositionDropdownProps {
 function PositionDropdown({ value, onChange, allowOff }: PositionDropdownProps): React.JSX.Element {
   const { t } = useTranslation()
   const { colors } = useTheme()
-  const triggerRef = useRef<View>(null)
+  const triggerRef = useRef<ViewInstance>(null)
   const [open, setOpen] = useState(false)
   const [anchor, setAnchor] = useState<AnchorRect | null>(null)
   const options: readonly OverlayPosition[] = allowOff ? ['off', ...OVERLAY_ANCHORS] : OVERLAY_ANCHORS

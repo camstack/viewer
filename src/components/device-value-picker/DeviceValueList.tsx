@@ -120,7 +120,7 @@ export function DeviceValueList({
                 {header}
                 {controls}
               </>
-            ) : null
+            ) : undefined
           }
           renderItem={({ item: row }) =>
             row.kind === 'heading' ? (
@@ -144,7 +144,7 @@ export function DeviceValueList({
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
           ListFooterComponent={
-            browse.isFetchingNextPage ? <SkeletonBox style={styles.footerSkeleton} /> : null
+            browse.isFetchingNextPage ? <SkeletonBox style={styles.footerSkeleton} /> : undefined
           }
         />
       )}

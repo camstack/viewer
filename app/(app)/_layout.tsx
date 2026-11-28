@@ -216,9 +216,10 @@ export default function AppLayout() {
 }
 
 /** Rebuild the query string a deep link carried; empty when none. */
-function searchQueryString(params: Record<string, string | string[]>): string {
+function searchQueryString(params: Record<string, string | string[] | undefined>): string {
   const pairs: string[] = [];
   for (const [key, value] of Object.entries(params)) {
+    if (value === undefined) continue;
     for (const v of Array.isArray(value) ? value : [value]) {
       pairs.push(`${encodeURIComponent(key)}=${encodeURIComponent(v)}`);
     }

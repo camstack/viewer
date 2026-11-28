@@ -14,6 +14,7 @@
  * belongs to, and a caller holding its own wrapper would be free to measure
  * something other than the pill the operator pressed.
  */
+import type { ViewInstance } from 'react-native'
 import React, { memo, type ComponentType, type RefObject } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { useTheme } from '../../theme/theme-provider.js'
@@ -44,7 +45,7 @@ export interface FilterChipProps {
   readonly onPress: () => void
   readonly icon?: FilterChipIcon
   /** The wrapper an `AnchoredMenu` measures. Omit for a chip with no menu. */
-  readonly anchorRef?: RefObject<View | null>
+  readonly anchorRef?: RefObject<ViewInstance | null>
   readonly accessibilityLabel?: string
   /**
    * Inert: rendered, dimmed, and unpressable.

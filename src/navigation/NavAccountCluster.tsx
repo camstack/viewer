@@ -6,6 +6,7 @@
  * Shared by the phone bar (a row at its right edge) and the side rail (a column
  * at its foot) so both surfaces carry it the same way, drawn once.
  */
+import type { ViewInstance } from 'react-native'
 import React, { memo, useRef } from 'react'
 import { StyleSheet, View } from 'react-native'
 
@@ -21,7 +22,7 @@ export const NavAccountCluster = memo(function NavAccountCluster({
 }: NavAccountClusterProps): React.JSX.Element {
   const row = orientation === 'row'
   // The Activity popover opens against this block.
-  const blockRef = useRef<View>(null)
+  const blockRef = useRef<ViewInstance>(null)
   return (
     <View ref={blockRef} collapsable={false} style={row ? styles.row : styles.column}>
       {/* Absent while the Activity centre has nothing undismissed. */}

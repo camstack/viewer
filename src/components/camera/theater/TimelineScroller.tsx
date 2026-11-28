@@ -27,6 +27,7 @@ import {
   View,
   Text,
   StyleSheet,
+  type ScrollViewInstance,
 } from 'react-native'
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native'
 import Animated, { useAnimatedStyle, type SharedValue } from 'react-native-reanimated'
@@ -320,7 +321,7 @@ export const TimelineScroller = memo(
 
     const layoutOriginPx = timelineLayoutOriginPx({ indicatorOffsetPx, contentTopInset })
 
-    const scrollViewRef = useRef<ScrollView>(null)
+    const scrollViewRef = useRef<ScrollViewInstance>(null)
     const scrollOffsetRef = useRef(0)
     const [scrollWidth, setScrollWidth] = useState(0)
     const [band, setBand] = useState<MountBand>(() =>

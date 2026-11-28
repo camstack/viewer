@@ -12,6 +12,7 @@
  * and to the canvas / sheet components. Leaving with unsaved edits asks first
  * (`usePreventRemove`), which covers back, prev / next and the hardware back.
  */
+import type { ViewInstance } from 'react-native'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ActivityIndicator, Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native'
 import { useNavigation, useRouter } from 'expo-router'
@@ -134,7 +135,7 @@ export function RetrainEditorScreen({ frameId, deviceId, collectionId }: Retrain
   const [saveFailed, setSaveFailed] = useState(false)
   const [saving, setSaving] = useState(false)
   const [menuAnchor, setMenuAnchor] = useState<{ x: number; y: number; width: number; height: number } | null>(null)
-  const menuButton = useRef<View>(null)
+  const menuButton = useRef<ViewInstance>(null)
 
   // ── Seeding: the editor starts from the SERVER's annotations plus the
   // pipeline's boxes as drafts, minus every proposal already decided. A refetch

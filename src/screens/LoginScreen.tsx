@@ -1,3 +1,4 @@
+import type { TextInputInstance } from 'react-native'
 import React, { useEffect, useRef, useState } from 'react'
 import {
   ActivityIndicator,
@@ -62,11 +63,11 @@ interface EnterProps {
   /** Web keeps focus on submit (an error leaves the operator in the field);
    *  native keeps the keyboard up while moving to the next field. */
   readonly blurOnSubmit: boolean
-  readonly ref: (node: TextInput | null) => void
+  readonly ref: (node: TextInputInstance | null) => void
 }
 
 function useEnterProps(onSubmit: () => void): (field: LoginField) => EnterProps {
-  const refs = useRef<Partial<Record<LoginField, TextInput | null>>>({})
+  const refs = useRef<Partial<Record<LoginField, TextInputInstance | null>>>({})
   return (field) => ({
     ref: (node) => {
       refs.current[field] = node

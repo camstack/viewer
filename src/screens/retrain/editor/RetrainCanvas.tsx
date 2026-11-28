@@ -20,6 +20,7 @@
  * a phone, so no box could be drawn, moved or resized there (the web build has
  * its own manager, which is why a browser never showed it).
  */
+import type { ViewInstance } from 'react-native'
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Platform, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native'
 import { Image } from 'expo-image'
@@ -259,7 +260,7 @@ export const RetrainCanvas = memo(function RetrainCanvas(props: RetrainCanvasPro
   )
 
   // Web: the wheel zooms about the pointer.
-  const wheelRef = useRef<View>(null)
+  const wheelRef = useRef<ViewInstance>(null)
   useEffect(() => {
     if (Platform.OS !== 'web') return undefined
     const node = wheelRef.current as unknown as {

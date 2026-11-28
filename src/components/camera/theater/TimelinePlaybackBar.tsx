@@ -45,6 +45,7 @@
  * Presentational + controlled: the parent owns every piece of state except
  * which dropdown is open.
  */
+import type { ViewInstance } from 'react-native'
 import type { ServedProfileReport } from '../../../recording/recording-messages.js'
 import {
   autoProfileBadgeText,
@@ -312,9 +313,9 @@ export function TimelinePlaybackBar({
   const ui = useTimelineScale()
   const paint = useKindPaint()
   const [openMenu, setOpenMenu] = useState<OpenMenu>('none')
-  const rateAnchorRef = useRef<View>(null)
-  const overflowAnchorRef = useRef<View>(null)
-  const recordAnchorRef = useRef<View>(null)
+  const rateAnchorRef = useRef<ViewInstance>(null)
+  const overflowAnchorRef = useRef<ViewInstance>(null)
+  const recordAnchorRef = useRef<ViewInstance>(null)
   const closeMenu = (): void => setOpenMenu('none')
   /**
    * The text-sized controls as they REALLY drew (`PlaybackBarMeasured`). The

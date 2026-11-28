@@ -21,7 +21,7 @@ import { bridgeChannel } from './bridge-channel.js'
 
 export function AppFrame({ uri, injectedBefore, reloadKey, testID, onUnhandled, onAppMessage, onFrameLoad }: AppFrameProps): React.JSX.Element {
   const { colors } = useTheme()
-  const ref = useRef<WebView>(null)
+  const ref = useRef<React.ComponentRef<typeof WebView>>(null)
   const canGoBack = useRef(false)
   const frameOrigin = useMemo(() => frameOriginOf(uri), [uri])
   const guardedInjection = useMemo(() => originGuardedScript(injectedBefore, frameOrigin), [injectedBefore, frameOrigin])

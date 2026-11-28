@@ -25,6 +25,7 @@
  *
  * All of it is a no-op on the web, which has no software-keyboard events.
  */
+import type { ScrollViewInstance, ViewInstance } from 'react-native'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ScrollView,
@@ -109,7 +110,7 @@ export function KeyboardInsetView({
 }: KeyboardInsetViewProps): React.JSX.Element {
   // Measured: a marker filling this view's box. The padding below changes
   // what is inside the box, never the box, so the measurement stays put.
-  const marker = useRef<View>(null)
+  const marker = useRef<ViewInstance>(null)
   const { overlap, keyboard, onLayout } = useKeyboardOverlap(marker)
   const reduced = useReducedMotion()
   const lift = useSharedValue(0)
@@ -232,8 +233,8 @@ export function useKeyboardReveal(scroller: () => RevealScroller | null): Keyboa
     const kb = keyboardRef.current
     const target = scroller()
     // Typed non-null, but `null` whenever no field has focus.
-    const field: HostInstance | null = TextInput.State.currentlyFocusedInput()
-    if (kb === null || target === null || target.node === null || field === null) return
+    const field: HostInstance | null | undefined = TextInput.State.currentlyFocusedInput()
+    if (kb === null || target === null || target.node === null || field === null || field === undefined) return
     const node = target.node
     field.measureLayout(
       node,
@@ -281,7 +282,7 @@ export function useKeyboardReveal(scroller: () => RevealScroller | null): Keyboa
 }
 
 export interface KeyboardAwareScrollViewProps extends ScrollViewProps {
-  readonly ref?: React.Ref<ScrollView>
+  readonly ref?: React.Ref<ScrollViewInstance>
 }
 
 /**
@@ -300,11 +301,11 @@ export function KeyboardAwareScrollView({
   children,
   ...rest
 }: KeyboardAwareScrollViewProps): React.JSX.Element {
-  const scrollRef = useRef<ScrollView>(null)
+  const scrollRef = useRef<ScrollViewInstance>(null)
   const scroller = useCallback((): RevealScroller | null => revealScrollerOf(scrollRef.current), [])
   const reveal = useKeyboardReveal(scroller)
   const setRef = useCallback(
-    (view: ScrollView | null) => {
+    (view: ScrollViewInstance | null) => {
       scrollRef.current = view
       if (typeof ref === 'function') ref(view)
       else if (ref !== null && ref !== undefined) ref.current = view

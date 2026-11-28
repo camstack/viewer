@@ -38,6 +38,7 @@
  * action — a tool or the primary — may open a menu of its own through the
  * same idiom.
  */
+import type { ViewInstance } from 'react-native'
 import React, { memo, useCallback, useRef, useState, type ReactNode } from 'react'
 import { ScrollView, StyleSheet, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
@@ -195,7 +196,7 @@ export const LibraryFilterBar = memo(function LibraryFilterBar({
   const { colors } = useTheme()
   const { width } = useViewportSize()
   const overflow = useHeaderOverflowMenu(more, moreTestID)
-  const anchors = useRef(new Map<string, React.RefObject<View | null>>())
+  const anchors = useRef(new Map<string, React.RefObject<ViewInstance | null>>())
   const [open, setOpen] = useState<OpenMenu | null>(null)
   const [anchor, setAnchor] = useState<AnchorRect | null>(null)
   const [queries, setQueries] = useState<Readonly<Record<string, string>>>({})
@@ -203,10 +204,10 @@ export const LibraryFilterBar = memo(function LibraryFilterBar({
   const [monthMs, setMonthMs] = useState(0)
   const dateLocale = useDateLocale()
 
-  const refFor = (key: string): React.RefObject<View | null> => {
+  const refFor = (key: string): React.RefObject<ViewInstance | null> => {
     const found = anchors.current.get(key)
     if (found !== undefined) return found
-    const created = React.createRef<View>()
+    const created = React.createRef<ViewInstance>()
     anchors.current.set(key, created)
     return created
   }
