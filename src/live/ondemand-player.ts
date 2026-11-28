@@ -37,6 +37,8 @@
  * site that forgot it, so it cannot be optional.
  */
 import { shouldUseWideDetail, type ViewportInput } from '../hooks/sidebar-rules.js'
+import type { PlaybackMode } from '../recording/playback-machine.js'
+import type { PlayerConnectionState } from './live-view-types.js'
 import { viewedInstant } from '../recording/viewed-instant.js'
 
 /**
@@ -176,6 +178,23 @@ export function onDemandSeedSeekMs(request: OnDemandRequest): number | undefined
  */
 export function onDemandStartsLoading(request: OnDemandRequest): boolean {
   return onDemandSeedSeekMs(request) !== undefined
+}
+
+/**
+ * The busy flag after the player reported a lifecycle state.
+ *
+ * A LIVE picture that is `playing` is not loading, whatever a recorded session
+ * left in the flag. Live never sends `recState` — the only report that clears
+ * it — so without this the transport row's play button kept spinning over a
+ * picture that was already moving. Recorded mode is untouched: there the embed's
+ * own `recState` decides, and a `playing` can precede the seek settling.
+ */
+export function liveLoadingAfterPlayerState(
+  loading: boolean,
+  mode: PlaybackMode,
+  playerState: PlayerConnectionState,
+): boolean {
+  return mode === 'live' && playerState === 'playing' ? false : loading
 }
 
 /**

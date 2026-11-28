@@ -86,7 +86,7 @@ describe('the resize grip wears the app\'s affordance tokens', () => {
     const handle = src.slice(src.indexOf('resizeHandle: {'))
     const block = handle.slice(0, handle.indexOf('},'))
     expect(block).toContain('borderRadius: RADIUS.md')
-    expect(block).toContain('colors.surface')
+    expect(block).toContain('colors.background')
     expect(block).toContain('colors.border')
     // A bespoke single-corner notch was the old look.
     expect(block).not.toContain('borderTopLeftRadius')

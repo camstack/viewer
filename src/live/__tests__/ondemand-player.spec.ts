@@ -17,6 +17,7 @@ import {
   onDemandStartsLoading,
   liveOnDemandRequest,
   type MomentRequest,
+  liveLoadingAfterPlayerState,
 } from '../ondemand-player.js'
 import { DETAIL_WIDE_MIN_WIDTH, TABLET_MIN_SIDE } from '../../hooks/sidebar-rules.js'
 
@@ -241,5 +242,23 @@ describe('whether the overlay\'s transport starts busy', () => {
   it('does for a moment request — the recorded session reports when it settles', () => {
     expect(onDemandStartsLoading(REQUEST)).toBe(true)
     expect(onDemandStartsLoading({ deviceId: 101, atMs: 0 })).toBe(true)
+  })
+})
+
+describe('a live picture that is playing is not loading', () => {
+  it('clears a flag a recorded session left behind', () => {
+    expect(liveLoadingAfterPlayerState(true, 'live', 'playing')).toBe(false)
+  })
+
+  it('leaves it alone while connecting, in error, or in recorded playback', () => {
+    expect(liveLoadingAfterPlayerState(true, 'live', 'connecting')).toBe(true)
+    expect(liveLoadingAfterPlayerState(true, 'live', 'error')).toBe(true)
+    expect(liveLoadingAfterPlayerState(true, 'playback', 'playing')).toBe(true)
+    expect(liveLoadingAfterPlayerState(true, 'seeking', 'playing')).toBe(true)
+  })
+
+  it('never turns a settled flag back on', () => {
+    expect(liveLoadingAfterPlayerState(false, 'live', 'playing')).toBe(false)
+    expect(liveLoadingAfterPlayerState(false, 'live', 'connecting')).toBe(false)
   })
 })

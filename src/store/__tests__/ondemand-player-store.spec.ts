@@ -14,9 +14,9 @@ import { DEFAULT_ONDEMAND_SIZE } from '../../live/ondemand-geometry.js'
 
 describe('parsing stored box preferences', () => {
   it('reads a well-formed record back', () => {
-    expect(parseOnDemandBoxPrefs({ size: 'large', position: { x: 40, y: 60 } })).toEqual({
+    expect(parseOnDemandBoxPrefs({ size: 'large', corner: 'topRight' })).toEqual({
       size: 'large',
-      position: { x: 40, y: 60 },
+      corner: 'topRight',
     })
   })
 
@@ -36,32 +36,37 @@ describe('parsing stored box preferences', () => {
    * good one. A shape guard that wipes the whole record when a single field
    * changes is how a preference silently resets for every install.
    */
-  it('keeps a good size alongside an unreadable position', () => {
-    const prefs = parseOnDemandBoxPrefs({ size: 'compact', position: { x: 'left' } })
+  it('keeps a good size alongside an unreadable corner', () => {
+    const prefs = parseOnDemandBoxPrefs({ size: 'compact', corner: 'middle' })
     expect(prefs.size).toBe('compact')
-    expect(prefs.position).toBeNull()
+    expect(prefs.corner).toBeNull()
   })
 
-  it('keeps a good position alongside an unreadable size', () => {
-    const prefs = parseOnDemandBoxPrefs({ size: 7, position: { x: 10, y: 20 } })
+  it('keeps a good corner alongside an unreadable size', () => {
+    const prefs = parseOnDemandBoxPrefs({ size: 7, corner: 'topLeft' })
     expect(prefs.size).toBeNull()
-    expect(prefs.position).toEqual({ x: 10, y: 20 })
+    expect(prefs.corner).toBe('topLeft')
   })
 
-  it('refuses a non-finite coordinate rather than laying out against NaN', () => {
-    expect(parseOnDemandBoxPrefs({ position: { x: Number.NaN, y: 0 } }).position).toBeNull()
-    expect(parseOnDemandBoxPrefs({ position: { x: 0, y: Number.POSITIVE_INFINITY } }).position)
-      .toBeNull()
+  it('accepts exactly the four corners', () => {
+    for (const corner of ['topLeft', 'topRight', 'bottomLeft', 'bottomRight']) {
+      expect(parseOnDemandBoxPrefs({ corner }).corner).toBe(corner)
+    }
+    expect(parseOnDemandBoxPrefs({ corner: 'center' }).corner).toBeNull()
   })
 
-  it('accepts the origin — {x:0,y:0} is a position, not an absence', () => {
-    expect(parseOnDemandBoxPrefs({ position: { x: 0, y: 0 } }).position).toEqual({ x: 0, y: 0 })
+  /** A free {x, y} from an earlier build is a measurement of a window that may
+   *  be gone: it reads as "never chose", not as a guessed corner. */
+  it('drops a legacy free position instead of converting it', () => {
+    const prefs = parseOnDemandBoxPrefs({ size: 'large', position: { x: 10, y: 20 } })
+    expect(prefs.size).toBe('large')
+    expect(prefs.corner).toBeNull()
   })
 })
 
 describe('the size to lay out with', () => {
   it('is the stored one when there is one', () => {
-    expect(resolveOnDemandSize({ size: 'compact', position: null })).toBe('compact')
+    expect(resolveOnDemandSize({ size: 'compact', corner: null })).toBe('compact')
   })
 
   /** ABSENT ⇒ the default, resolved on read and never written to storage. */
@@ -109,12 +114,12 @@ describe('opening and closing', () => {
    */
   it('keeps the box preferences across a close', () => {
     useOnDemandPlayerStore.getState().setSize('large')
-    useOnDemandPlayerStore.getState().setPosition({ x: 20, y: 30 })
+    useOnDemandPlayerStore.getState().setCorner('topLeft')
     openOnDemandPlayer({ deviceId: 101, atMs: 1 })
     useOnDemandPlayerStore.getState().close()
     expect(useOnDemandPlayerStore.getState().prefs).toEqual({
       size: 'large',
-      position: { x: 20, y: 30 },
+      corner: 'topLeft',
     })
   })
 
@@ -134,7 +139,7 @@ describe('opening and closing', () => {
     openOnDemandPlayer({ deviceId: 101, atMs: 1_700_000_000_000 })
     // Whatever a screen remount does, it cannot reach this store's request.
     useOnDemandPlayerStore.getState().setSize('large')
-    useOnDemandPlayerStore.getState().setPosition({ x: 5, y: 5 })
+    useOnDemandPlayerStore.getState().setCorner('bottomLeft')
     expect(useOnDemandPlayerStore.getState().request).toEqual({
       deviceId: 101,
       atMs: 1_700_000_000_000,
@@ -143,9 +148,9 @@ describe('opening and closing', () => {
 
   it('changing one box field leaves the other alone', () => {
     useOnDemandPlayerStore.getState().setSize('compact')
-    useOnDemandPlayerStore.getState().setPosition({ x: 1, y: 2 })
+    useOnDemandPlayerStore.getState().setCorner('topRight')
     useOnDemandPlayerStore.getState().setSize('large')
-    expect(useOnDemandPlayerStore.getState().prefs.position).toEqual({ x: 1, y: 2 })
+    expect(useOnDemandPlayerStore.getState().prefs.corner).toBe('topRight')
   })
 })
 

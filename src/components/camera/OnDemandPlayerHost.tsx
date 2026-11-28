@@ -64,8 +64,12 @@
  * a surface that cannot show it, so this one really does unmount — the one
  * place in this design where a session is spent to keep a promise smaller.
  */
-import React, { useEffect } from 'react'
+import React, { useEffect, useMemo } from 'react'
 import { StyleSheet, View } from 'react-native'
+import { usePathname } from 'expo-router'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useSidebarLayout } from '../../hooks/use-responsive.js'
+import { onDemandInsets } from '../../live/ondemand-insets.js'
 import { useCameras } from '../../data/use-cameras.js'
 import { useViewportSize } from '../../hooks/use-viewport-size.js'
 import { resolveOnDemandOpen } from '../../live/ondemand-player.js'
@@ -85,9 +89,18 @@ export function OnDemandPlayerHost(): React.JSX.Element | null {
   const hydrate = useOnDemandPlayerStore((s) => s.hydrate)
   const close = useOnDemandPlayerStore((s) => s.close)
   const setSize = useOnDemandPlayerStore((s) => s.setSize)
-  const setPosition = useOnDemandPlayerStore((s) => s.setPosition)
+  const setCorner = useOnDemandPlayerStore((s) => s.setCorner)
 
   const container = useViewportSize()
+  // What the route beneath draws at each edge (safe area, home bar, tab
+  // capsule, side rail): the corners rest INSIDE it, never over it.
+  const safe = useSafeAreaInsets()
+  const pathname = usePathname()
+  const { showSidebar, compact } = useSidebarLayout()
+  const insets = useMemo(
+    () => onDemandInsets({ pathname, safe, showSidebar, compactSidebar: compact }),
+    [pathname, safe, showSidebar, compact],
+  )
   // `includeHidden` matches what the layout's own snapshot bridge asks for, so
   // this shares that cache entry rather than starting a second camera list.
   const { data: cameras } = useCameras({ includeHidden: true })
@@ -120,9 +133,10 @@ export function OnDemandPlayerHost(): React.JSX.Element | null {
         request={live}
         container={container}
         size={resolveOnDemandSize(prefs)}
-        position={prefs.position}
+        corner={prefs.corner}
+        insets={insets}
         onSize={setSize}
-        onPosition={setPosition}
+        onCorner={setCorner}
         onClose={close}
       />
     </View>

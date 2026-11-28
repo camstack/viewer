@@ -17,16 +17,16 @@
  * continuous width for the same reason: a committed value that can only be one
  * of three is a value that cannot be nudged into a relayout storm.
  *
- * ## Why the position is re-clamped on every read
+ * ## Why a corner, and why it is resolved on every read
  *
- * A stored position is a measurement of a window that may be gone — the
- * `container-width.ts` lesson, which this screen's history documents three
- * times over. A panel placed at the right edge of a 1400pt web window is off
- * screen in a 1000pt one, and the app's own tab layout runs `freezeOnBlur:
- * false`, so nothing re-seeds a latched value. {@link clampOnDemandPosition} is
- * therefore applied against the LIVE container on every render rather than at
- * the moment of the drop: a stale position self-corrects instead of stranding
- * the player somewhere the operator cannot reach it.
+ * The window rests on one of four corners ({@link OnDemandCorner}), never on a
+ * stored coordinate. A coordinate is a measurement of a window that may be gone
+ * — the `container-width.ts` lesson, which this screen's history documents three
+ * times over: a panel at the right edge of a 1400pt web window is off screen in
+ * a 1000pt one. A corner is a NAME; {@link cornerPosition} turns it into a
+ * coordinate against the LIVE container and the CURRENT route's insets (safe
+ * area, header, tab bar) on every render, so a rotation or a route change that
+ * moves a bar cannot strand the player.
  *
  * Pure — no React, no `Dimensions`.
  */
@@ -60,36 +60,14 @@ const SIZE_FRACTION: Readonly<Record<OnDemandSize, number>> = {
  * 256 since 2026-09-13, down from 280, and the number is DERIVED rather than
  * taste: `playback-bar-fit.ts` prices the complete bar — as THIS surface draws
  * it, with no record control and no frame-step — within 222pt once the scale
- * tokens hit their 0.66 floor, {@link ONDEMAND_CHROME_PADDING} takes 2pt a
- * side and {@link ONDEMAND_RESIZE_GRIP} takes the bottom-right corner — so 256
- * is the narrowest panel that still carries every control. The geometry spec
+ * tokens hit their 0.66 floor, and the chrome now spends the panel's WHOLE
+ * width on it (no side padding, no reserved grip — see
+ * {@link onDemandChromeWidth}) — so 256 is the narrowest panel that still
+ * carries every control. The geometry spec
  * asserts that relation against the bar's own estimator rather than restating
  * the number, so moving either side has to be done on both.
  */
 export const ONDEMAND_MIN_WIDTH = 256
-
-/**
- * Horizontal padding the chrome puts around the day tape and the playback bar.
- * Exported because the BAR's fit is decided from the width it actually gets,
- * which is the panel minus twice this — a caller that guesses that relation is
- * a second opinion about a layout it does not own.
- */
-export const ONDEMAND_CHROME_PADDING = 2
-
-/**
- * The bottom-right resize grip's footprint.
- *
- * It is RESERVED out of the playback bar's row rather than drawn over it. The
- * grip is the last sibling in the panel, so it wins every touch in its square,
- * and the bar's trailing slot (record, speed) sits exactly there — which meant
- * the two controls quietly competed for the same corner. Reserving the width
- * costs the bar 28pt and is the only arrangement in which both are reachable.
- *
- * 28pt of LAYOUT, with the component's `hitSlop` carrying it past the 44pt a
- * finger needs: hit area is not layout, and a 44pt opaque square in this corner
- * would eat a third of the bar on the smallest panel.
- */
-export const ONDEMAND_RESIZE_GRIP = 28
 
 /**
  * How wide the panel is allowed to get on a container too narrow for
@@ -263,45 +241,113 @@ export function nextSnapSize(size: OnDemandSize): OnDemandSize {
 }
 
 /**
- * Where a player opens when the operator has never moved it: the bottom-right
- * corner, inset.
+ * The width the timeline (day tape + transport row) is laid out into: the
+ * panel's WHOLE width.
  *
- * Bottom-right because the two entry points are both on the left half of a wide
- * surface — the reel runs under the picture and a track detail's panel opens
- * over the timeline rail — so the overlay lands where it covers neither the
- * thing that opened it nor the picture it is being compared against.
+ * It was `box.width - 2 * padding - grip`, because a resize grip lived in the
+ * bar's bottom-right corner and the bar was squeezed to make room. The grip now
+ * lives in the header, so nothing reserves a strip of the timeline and the bar
+ * is as wide as the window. Named and asserted by value so a padding cannot
+ * creep back in unnoticed.
  */
-export function defaultOnDemandPosition(
-  box: OnDemandBox,
+export function onDemandChromeWidth(box: OnDemandBox): number {
+  return box.width
+}
+
+/** The four places the window can rest. A snap target, never a free coordinate. */
+export type OnDemandCorner = 'topLeft' | 'topRight' | 'bottomLeft' | 'bottomRight'
+
+export const ONDEMAND_CORNERS: readonly OnDemandCorner[] = [
+  'topLeft',
+  'topRight',
+  'bottomLeft',
+  'bottomRight',
+]
+
+/**
+ * Bottom-right: the two entry points sit on the left half of a wide surface
+ * (the reel under the picture, a track detail's panel over the timeline rail),
+ * so the window lands where it covers neither the thing that opened it nor the
+ * picture it is compared against.
+ */
+export const DEFAULT_ONDEMAND_CORNER: OnDemandCorner = 'bottomRight'
+
+/**
+ * What the window must stay clear of, per side: the safe area plus whatever bar
+ * the CURRENT route draws there (the home bar, an inner header, the floating
+ * tab capsule, the side rail). `ondemand-insets.ts` derives it from the route.
+ */
+export interface OnDemandInsets {
+  readonly top: number
+  readonly right: number
+  readonly bottom: number
+  readonly left: number
+}
+
+export const NO_ONDEMAND_INSETS: OnDemandInsets = Object.freeze({
+  top: 0,
+  right: 0,
+  bottom: 0,
+  left: 0,
+})
+
+/** The part of the container the window may occupy: the container minus its insets. */
+export function onDemandArea(
   container: OnDemandContainer,
-): OnDemandPosition {
-  return clampOnDemandPosition(
-    {
-      x: container.width - box.width - ONDEMAND_EDGE_INSET,
-      y: container.height - box.height - ONDEMAND_EDGE_INSET,
-    },
-    box,
-    container,
-  )
+  insets: OnDemandInsets,
+): OnDemandContainer {
+  return {
+    width: Math.max(0, container.width - insets.left - insets.right),
+    height: Math.max(0, container.height - insets.top - insets.bottom),
+  }
 }
 
 /**
- * Pull a position inside the container. Applied on every read against the LIVE
- * container, not once at the drop — see the module docblock.
+ * Where the window sits when anchored to a corner: inset from the edges of the
+ * AREA, so it clears the safe area, the header and the tab bar on its side.
+ * Re-derived against the live container and insets on every render — a corner
+ * is a name, not a coordinate, so a rotation or a route change that moves a bar
+ * cannot strand it (the `container-width.ts` lesson).
  *
- * A box larger than the container clamps to the inset rather than to a negative
- * coordinate: off the top-left is just as unreachable as off the bottom-right,
- * and `Math.max` after `Math.min` is what keeps the degenerate case on screen.
+ * A box larger than the area is pinned to the area's top-left inset, never to a
+ * negative coordinate.
  */
-export function clampOnDemandPosition(
-  position: OnDemandPosition,
+export function cornerPosition(
+  corner: OnDemandCorner,
   box: OnDemandBox,
   container: OnDemandContainer,
+  insets: OnDemandInsets,
 ): OnDemandPosition {
-  const maxX = container.width - box.width - ONDEMAND_EDGE_INSET
-  const maxY = container.height - box.height - ONDEMAND_EDGE_INSET
+  const minX = insets.left + ONDEMAND_EDGE_INSET
+  const minY = insets.top + ONDEMAND_EDGE_INSET
+  const maxX = container.width - insets.right - ONDEMAND_EDGE_INSET - box.width
+  const maxY = container.height - insets.bottom - ONDEMAND_EDGE_INSET - box.height
+  const right = corner === 'topRight' || corner === 'bottomRight'
+  const bottom = corner === 'bottomLeft' || corner === 'bottomRight'
   return {
-    x: Math.max(ONDEMAND_EDGE_INSET, Math.min(position.x, maxX)),
-    y: Math.max(ONDEMAND_EDGE_INSET, Math.min(position.y, maxY)),
+    x: Math.max(minX, right ? maxX : minX),
+    y: Math.max(minY, bottom ? maxY : minY),
   }
+}
+
+/**
+ * The corner a released drag snaps to: the quadrant of the AREA the window's
+ * centre was dropped in. Quadrants rather than distance-to-corner so a fling
+ * toward a side lands on that side, and every point of the screen has exactly
+ * one answer.
+ */
+export function nearestCorner(
+  dropped: OnDemandPosition,
+  box: OnDemandBox,
+  container: OnDemandContainer,
+  insets: OnDemandInsets,
+): OnDemandCorner {
+  const cx = dropped.x + box.width / 2
+  const cy = dropped.y + box.height / 2
+  const midX = insets.left + (container.width - insets.left - insets.right) / 2
+  const midY = insets.top + (container.height - insets.top - insets.bottom) / 2
+  const bottom = cy >= midY
+  const right = cx >= midX
+  if (bottom) return right ? 'bottomRight' : 'bottomLeft'
+  return right ? 'topRight' : 'topLeft'
 }

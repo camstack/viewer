@@ -57,3 +57,23 @@ describe('the on-demand overlay never rings a live picture as loading', () => {
     expect(player).toContain('setLoading(onDemandStartsLoading(request))')
   })
 })
+
+describe('the timeline spans the whole panel', () => {
+  const player = read('src/components/camera/OnDemandPlayer.tsx')
+
+  it('lays the bar out at the panel width, and pads the chrome on no side', () => {
+    expect(player).toContain('const chromeWidth = onDemandChromeWidth(box)')
+    const at = player.indexOf('    chrome: {')
+    expect(at).toBeGreaterThan(-1)
+    expect(player.slice(at, player.indexOf('},', at))).not.toMatch(/padding(Left|Right|Horizontal)/)
+  })
+
+  it('keeps the size grip out of the timeline row (it lives in the header)', () => {
+    const header = player.slice(
+      player.indexOf('<View style={styles.header}'),
+      player.indexOf('<View style={styles.picture}'),
+    )
+    expect(header).toContain('ondemand-player-resize')
+    expect(player.slice(player.indexOf('<TimelineScaleProvider'))).not.toContain('ondemand-player-resize')
+  })
+})

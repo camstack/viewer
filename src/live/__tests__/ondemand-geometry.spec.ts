@@ -8,18 +8,22 @@
  */
 import { describe, it, expect } from 'vitest'
 import {
-  clampOnDemandPosition,
-  defaultOnDemandPosition,
+  cornerPosition,
+  nearestCorner,
+  onDemandArea,
+  onDemandChromeWidth,
+  ONDEMAND_CORNERS,
+  DEFAULT_ONDEMAND_CORNER,
+  NO_ONDEMAND_INSETS,
+  type OnDemandInsets,
   snapSizeForWidth,
   nextSnapSize,
   resolveOnDemandBox,
   DEFAULT_ONDEMAND_SIZE,
   ONDEMAND_CHROME_HEIGHT,
   ONDEMAND_EDGE_INSET,
-  ONDEMAND_CHROME_PADDING,
   ONDEMAND_MIN_WIDTH,
   ONDEMAND_OVERLAY_Z,
-  ONDEMAND_RESIZE_GRIP,
   ONDEMAND_SIZES,
   type OnDemandContainer,
   type OnDemandSize,
@@ -146,7 +150,7 @@ describe('the panel box', () => {
    * controls is the resize defect wearing a different hat.
    */
   it('floors the panel where the full playback bar still fits', () => {
-    const barWidth = ONDEMAND_MIN_WIDTH - 2 * ONDEMAND_CHROME_PADDING - ONDEMAND_RESIZE_GRIP
+    const barWidth = onDemandChromeWidth(resolveOnDemandBox('compact', { width: 300, height: 900 }))
     // What the overlay really hands the bar: no record control, no frame-step,
     // a fixed chrome height (no second row), `small` density (no provider
     // density). Priced with the generic host — record, step — the full row
@@ -219,47 +223,99 @@ describe('what a released resize drag commits to', () => {
   })
 })
 
-describe('placement', () => {
-  it('opens bottom-right, inset from both edges', () => {
-    const box = resolveOnDemandBox('medium', WIDE)
-    const at = defaultOnDemandPosition(box, WIDE)
-    expect(at.x).toBeCloseTo(WIDE.width - box.width - ONDEMAND_EDGE_INSET, 5)
-    expect(at.y).toBeCloseTo(WIDE.height - box.height - ONDEMAND_EDGE_INSET, 5)
+/** A phone: safe area on top and bottom, the home bar above, the tab capsule below. */
+const PHONE_INSETS: OnDemandInsets = { top: 47 + 48, right: 0, bottom: 72 + 34, left: 0 }
+const PHONE_WIN = { width: 390, height: 844 }
+
+describe('the timeline spans the whole panel', () => {
+  /** The grip used to reserve 28pt + 2×2pt of padding out of the bar's row. */
+  it('is the panel width, edge to edge, at every size', () => {
+    for (const container of [WIDE, PHONE_WIN]) {
+      for (const size of ONDEMAND_SIZES) {
+        const box = resolveOnDemandBox(size, container)
+        expect(onDemandChromeWidth(box), `${size} @ ${container.width}`).toBe(box.width)
+      }
+    }
+  })
+})
+
+describe('the four corners', () => {
+  const box = resolveOnDemandBox('compact', onDemandArea(PHONE_WIN, PHONE_INSETS))
+
+  it('rests bottom-right unless told otherwise', () => {
+    expect(DEFAULT_ONDEMAND_CORNER).toBe('bottomRight')
   })
 
-  it('keeps a position that is already inside', () => {
-    const box = resolveOnDemandBox('compact', WIDE)
-    expect(clampOnDemandPosition({ x: 300, y: 200 }, box, WIDE)).toEqual({ x: 300, y: 200 })
+  it('anchors each corner inside the insets, by value', () => {
+    const at = (c: (typeof ONDEMAND_CORNERS)[number]) => cornerPosition(c, box, PHONE_WIN, PHONE_INSETS)
+    const left = PHONE_INSETS.left + ONDEMAND_EDGE_INSET
+    const top = PHONE_INSETS.top + ONDEMAND_EDGE_INSET
+    const right = PHONE_WIN.width - PHONE_INSETS.right - ONDEMAND_EDGE_INSET - box.width
+    const bottom = PHONE_WIN.height - PHONE_INSETS.bottom - ONDEMAND_EDGE_INSET - box.height
+    expect(at('topLeft')).toEqual({ x: left, y: top })
+    expect(at('topRight')).toEqual({ x: right, y: top })
+    expect(at('bottomLeft')).toEqual({ x: left, y: bottom })
+    expect(at('bottomRight')).toEqual({ x: right, y: bottom })
   })
 
-  /**
-   * The `container-width.ts` lesson at this scope: a position measured in one
-   * window must not govern the next. Re-clamping on every read is what makes a
-   * stale stored value self-correct instead of stranding the player.
-   */
-  it('pulls a position stored in a BIGGER window back on screen', () => {
-    const narrow = { width: 1000, height: 700 }
-    const box = resolveOnDemandBox('medium', narrow)
-    const stale = { x: 1320, y: 840 } // valid in WIDE, off screen here
-    const at = clampOnDemandPosition(stale, box, narrow)
-    expect(at.x + box.width).toBeLessThanOrEqual(narrow.width - ONDEMAND_EDGE_INSET + 0.001)
-    expect(at.y + box.height).toBeLessThanOrEqual(narrow.height - ONDEMAND_EDGE_INSET + 0.001)
+  /** The tab capsule and the header are NEVER covered by a resting window. */
+  it('never overlaps the header or the tab bar, in any corner at any size', () => {
+    for (const size of ONDEMAND_SIZES) {
+      const b = resolveOnDemandBox(size, onDemandArea(PHONE_WIN, PHONE_INSETS))
+      for (const corner of ONDEMAND_CORNERS) {
+        const p = cornerPosition(corner, b, PHONE_WIN, PHONE_INSETS)
+        expect(p.y, `${size} ${corner}`).toBeGreaterThanOrEqual(PHONE_INSETS.top)
+        expect(p.y + b.height, `${size} ${corner}`).toBeLessThanOrEqual(PHONE_WIN.height - PHONE_INSETS.bottom)
+        expect(p.x).toBeGreaterThanOrEqual(PHONE_INSETS.left)
+        expect(p.x + b.width).toBeLessThanOrEqual(PHONE_WIN.width - PHONE_INSETS.right)
+      }
+    }
   })
 
-  it('refuses a negative coordinate — off the top-left is unreachable too', () => {
-    const box = resolveOnDemandBox('compact', WIDE)
-    expect(clampOnDemandPosition({ x: -500, y: -500 }, box, WIDE)).toEqual({
-      x: ONDEMAND_EDGE_INSET,
-      y: ONDEMAND_EDGE_INSET,
-    })
-  })
-
-  it('keeps a box larger than its container on screen rather than at a negative x', () => {
+  it('keeps a box larger than the area on screen rather than at a negative coordinate', () => {
     const tiny = { width: 300, height: 200 }
-    const box = { width: 900, height: 600 }
-    const at = clampOnDemandPosition({ x: 0, y: 0 }, box, tiny)
-    expect(at.x).toBe(ONDEMAND_EDGE_INSET)
-    expect(at.y).toBe(ONDEMAND_EDGE_INSET)
+    const huge = { width: 900, height: 600 }
+    for (const corner of ONDEMAND_CORNERS) {
+      const p = cornerPosition(corner, huge, tiny, NO_ONDEMAND_INSETS)
+      expect(p).toEqual({ x: ONDEMAND_EDGE_INSET, y: ONDEMAND_EDGE_INSET })
+    }
+  })
+
+  /** A corner is a NAME: the same corner re-resolves in a different window. */
+  it('re-resolves in a smaller window instead of stranding the player', () => {
+    const narrow = { width: 1000, height: 700 }
+    const b = resolveOnDemandBox('medium', narrow)
+    const p = cornerPosition('bottomRight', b, narrow, NO_ONDEMAND_INSETS)
+    expect(p.x + b.width).toBeLessThanOrEqual(narrow.width - ONDEMAND_EDGE_INSET + 0.001)
+    expect(p.y + b.height).toBeLessThanOrEqual(narrow.height - ONDEMAND_EDGE_INSET + 0.001)
+  })
+})
+
+describe('where a released drag snaps', () => {
+  const box = resolveOnDemandBox('compact', onDemandArea(PHONE_WIN, PHONE_INSETS))
+  const dropAt = (cx: number, cy: number) =>
+    nearestCorner({ x: cx - box.width / 2, y: cy - box.height / 2 }, box, PHONE_WIN, PHONE_INSETS)
+
+  it('takes the quadrant of the usable area the window was dropped in', () => {
+    expect(dropAt(60, 200)).toBe('topLeft')
+    expect(dropAt(330, 200)).toBe('topRight')
+    expect(dropAt(60, 700)).toBe('bottomLeft')
+    expect(dropAt(330, 700)).toBe('bottomRight')
+  })
+
+  it('measures the middle of the area the insets leave, not of the window', () => {
+    const midY = PHONE_INSETS.top + (PHONE_WIN.height - PHONE_INSETS.top - PHONE_INSETS.bottom) / 2
+    expect(dropAt(60, midY - 1)).toBe('topLeft')
+    expect(dropAt(60, midY + 1)).toBe('bottomLeft')
+  })
+
+  it('answers a corner for a point anywhere, even off screen', () => {
+    for (const corner of ONDEMAND_CORNERS) {
+      const p = cornerPosition(corner, box, PHONE_WIN, PHONE_INSETS)
+      expect(nearestCorner(p, box, PHONE_WIN, PHONE_INSETS)).toBe(corner)
+    }
+    expect(dropAt(-5000, -5000)).toBe('topLeft')
+    expect(dropAt(5000, 5000)).toBe('bottomRight')
   })
 })
 

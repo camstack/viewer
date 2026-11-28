@@ -74,7 +74,7 @@
  * composited; a gesture-driven `width`/`height`/`left`/`top` relayouts WebKit
  * every frame. So a drag moves a GHOST — an empty bordered View — and the real
  * box changes exactly once, at the release: `snapSizeForWidth` for a resize,
- * `clampOnDemandPosition` for a move. The maths is in `live/ondemand-geometry.ts`
+ * `nearestCorner` for a move. The maths is in `live/ondemand-geometry.ts`
  * and asserted by value there; this file only feeds it the gesture.
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -105,18 +105,25 @@ import { useRecordingAvailability } from '../../data/use-recording.js'
 import { useTimelineActivity } from '../../data/use-timeline-activity.js'
 import { composeHeatmapBins } from './theater/event-highlights.js'
 import {
-  clampOnDemandPosition,
+  cornerPosition,
+  DEFAULT_ONDEMAND_CORNER,
+  nearestCorner,
+  onDemandArea,
+  onDemandChromeWidth,
   snapSizeForWidth,
-  ONDEMAND_CHROME_PADDING,
-  ONDEMAND_RESIZE_GRIP,
   resolveOnDemandBox,
   ONDEMAND_OVERLAY_Z,
-  type OnDemandBox,
   type OnDemandContainer,
-  type OnDemandPosition,
+  type OnDemandCorner,
+  type OnDemandInsets,
   type OnDemandSize,
 } from '../../live/ondemand-geometry.js'
-import { onDemandSeedSeekMs, onDemandStartsLoading, type OnDemandRequest } from '../../live/ondemand-player.js'
+import {
+  liveLoadingAfterPlayerState,
+  onDemandSeedSeekMs,
+  onDemandStartsLoading,
+  type OnDemandRequest,
+} from '../../live/ondemand-player.js'
 import { useIntercom } from '../../live/use-intercom.js'
 import { useSystemPip } from '../../live/use-system-pip.js'
 import type { PlayerConnectionState } from '../../live/live-view-types.js'
@@ -159,9 +166,12 @@ export interface OnDemandPlayerProps {
   readonly request: OnDemandRequest
   readonly container: OnDemandContainer
   readonly size: OnDemandSize
-  readonly position: OnDemandPosition | null
+  /** The corner the window rests on; null = the default. */
+  readonly corner: OnDemandCorner | null
+  /** What the route beneath draws at each edge — the corners stay inside it. */
+  readonly insets: OnDemandInsets
   readonly onSize: (size: OnDemandSize) => void
-  readonly onPosition: (position: OnDemandPosition) => void
+  readonly onCorner: (corner: OnDemandCorner) => void
   readonly onClose: () => void
 }
 
@@ -169,9 +179,10 @@ export function OnDemandPlayer({
   request,
   container,
   size,
-  position,
+  corner,
+  insets,
   onSize,
-  onPosition,
+  onCorner,
   onClose,
 }: OnDemandPlayerProps): React.JSX.Element {
   const { t } = useTranslation()
@@ -187,33 +198,24 @@ export function OnDemandPlayer({
     [routeChannel],
   )
 
-  const box = useMemo(() => resolveOnDemandBox(size, container), [size, container])
+  // The window is sized and placed inside the AREA the route leaves free, so a
+  // large window on a short screen cannot run under the header or the tab bar.
+  const area = useMemo(() => onDemandArea(container, insets), [container, insets])
+  const box = useMemo(() => resolveOnDemandBox(size, area), [size, area])
   /**
-   * What the chrome actually has to render into: the panel minus its own
-   * padding and the corner the resize grip reserves.
-   *
-   * Derived here from the constants the styles use, rather than re-measured
-   * with `onLayout`. A measurement of a surface that is never unmounted latches
-   * — the defect `screens/camera-detail/container-width.ts` documents three
-   * times over, and this overlay outlives every route change by construction,
-   * so a latched value here would survive not just a rotation but a whole
-   * session. The box is KNOWN before the panel lays out; measuring it back
-   * would be asking a question we already hold the answer to.
+   * What the chrome renders into: the panel's WHOLE width — the timeline spans
+   * edge to edge. Derived from the box rather than re-measured with `onLayout`
+   * (a measurement of a surface that is never unmounted latches — the defect
+   * `screens/camera-detail/container-width.ts` documents three times over).
    */
-  const chromeWidth = Math.max(
-    0,
-    box.width - 2 * ONDEMAND_CHROME_PADDING - ONDEMAND_RESIZE_GRIP,
-  )
-  // Re-clamped against the LIVE container on every render, never once at the
-  // drop: a position measured in a window that has since shrunk would otherwise
-  // strand the player off screen for the rest of the session, which is the
-  // latched-measurement defect `container-width.ts` documents three times.
+  const chromeWidth = onDemandChromeWidth(box)
+  // Resolved against the LIVE container and insets on every render, never once
+  // at the drop: a corner is a name, so a rotation or a route that moves a bar
+  // cannot strand the player.
+  const rest = corner ?? DEFAULT_ONDEMAND_CORNER
   const at = useMemo(
-    () =>
-      position === null
-        ? defaultCorner(box, container)
-        : clampOnDemandPosition(position, box, container),
-    [position, box, container],
+    () => cornerPosition(rest, box, container, insets),
+    [rest, box, container, insets],
   )
 
   // ── Playback ───────────────────────────────────────────────────────────────
@@ -454,6 +456,8 @@ export function OnDemandPlayer({
   }))
   const [dragging, setDragging] = useState(false)
   const [ghostSize, setGhostSize] = useState<OnDemandSize | null>(null)
+  // The corner the drag would land on right now — drawn as the dashed anchor.
+  const [target, setTarget] = useState<OnDemandCorner | null>(null)
 
   const moveResponder = useMemo(
     () =>
@@ -462,6 +466,7 @@ export function OnDemandPlayer({
         onPanResponderGrant: () => {
           ghostX.set(0)
           ghostY.set(0)
+          setTarget(rest)
           setDragging(true)
         },
         onPanResponderMove: (_e, g) => {
@@ -469,14 +474,19 @@ export function OnDemandPlayer({
           // panel's own box changes, so WebKit never relayouts mid-drag.
           ghostX.set(g.dx)
           ghostY.set(g.dy)
+          setTarget(nearestCorner({ x: at.x + g.dx, y: at.y + g.dy }, box, container, insets))
         },
         onPanResponderRelease: (_e, g) => {
           setDragging(false)
-          onPosition(clampOnDemandPosition({ x: at.x + g.dx, y: at.y + g.dy }, box, container))
+          setTarget(null)
+          onCorner(nearestCorner({ x: at.x + g.dx, y: at.y + g.dy }, box, container, insets))
         },
-        onPanResponderTerminate: () => setDragging(false),
+        onPanResponderTerminate: () => {
+          setDragging(false)
+          setTarget(null)
+        },
       }),
-    [ghostX, ghostY, at.x, at.y, box, container, onPosition],
+    [ghostX, ghostY, at.x, at.y, rest, box, container, insets, onCorner],
   )
 
   const resizeResponder = useMemo(
@@ -485,24 +495,35 @@ export function OnDemandPlayer({
         onStartShouldSetPanResponder: () => true,
         onPanResponderGrant: () => setGhostSize(size),
         onPanResponderMove: (_e, g) => {
-          setGhostSize(snapSizeForWidth(Math.max(0, box.width + g.dx), container))
+          setGhostSize(snapSizeForWidth(Math.max(0, box.width + g.dx), area))
         },
         onPanResponderRelease: (_e, g) => {
-          const next = snapSizeForWidth(Math.max(0, box.width + g.dx), container)
+          const next = snapSizeForWidth(Math.max(0, box.width + g.dx), area)
           setGhostSize(null)
           if (next !== size) onSize(next)
         },
         onPanResponderTerminate: () => setGhostSize(null),
       }),
-    [box.width, container, size, onSize],
+    [box.width, area, size, onSize],
   )
 
-  const ghostBox = ghostSize === null ? null : resolveOnDemandBox(ghostSize, container)
+  const ghostBox = ghostSize === null ? null : resolveOnDemandBox(ghostSize, area)
+  const anchor = target === null ? null : cornerPosition(target, box, container, insets)
 
   return (
     <>
       {/* The move ghost: where the panel will land. Sits under the panel and
           outside its subtree, so nothing the panel hosts is re-laid-out. */}
+      {anchor !== null ? (
+        <View
+          pointerEvents="none"
+          testID="ondemand-player-anchor"
+          style={[
+            styles.ghost,
+            { width: box.width, height: box.height, left: anchor.x, top: anchor.y },
+          ]}
+        />
+      ) : null}
       {dragging ? (
         <Animated.View
           pointerEvents="none"
@@ -538,6 +559,21 @@ export function OnDemandPlayer({
                 the stream it was opened from, were indistinguishable. */}
             {onDemandTitle(cameras ?? [], request.deviceId, t('v2.onDemandPlayer.title'))}
           </Text>
+          {/* The size grip lives in the HEADER, not in a corner of the
+              timeline: it used to reserve a 28pt strip out of the bar's row and
+              the timeline never reached the panel's right edge. A header
+              control costs the picture and the timeline nothing, and the panel
+              is still resized by dragging this glyph. */}
+          <View
+            style={styles.resizeHandle}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel={t('v2.onDemandPlayer.resize')}
+            testID="ondemand-player-resize"
+            {...resizeResponder.panHandlers}
+          >
+            <MoveDiagonal2 size={15} color={colors.foregroundMuted} />
+          </View>
           <Pressable
             onPress={onClose}
             hitSlop={8}
@@ -565,7 +601,13 @@ export function OnDemandPlayer({
               // settled state: keeping it would re-seek a later reload.
               if (embed !== 'loading') setSeedSeekMs(undefined)
             }}
-            onPlayerState={(status) => setPlayerState(status.state)}
+            onPlayerState={(status) => {
+              setPlayerState(status.state)
+              // A live picture that is PLAYING is not loading. Live never sends
+              // `recState`, so nothing else would clear a flag a recorded
+              // session left behind — the play button that kept spinning.
+              setLoading((busy) => liveLoadingAfterPlayerState(busy, state.mode, status.state))
+            }}
             onPosition={playback.reportPosition}
           />
           <OverlayDiscGroup
@@ -616,35 +658,8 @@ export function OnDemandPlayer({
         </View>
         </TimelineScaleProvider>
 
-        {/* The grip. Its 28pt box is RESERVED out of the bar's row
-            (`styles.chrome`), so the two no longer compete for this corner, and
-            `hitSlop` carries the touch target past the 44pt a finger needs
-            without spending the layout — hit area is not layout. It is also
-            given a visible surface: the operator's report was "it does not
-            appear to be resizable", and an affordance nobody can see is one
-            nobody tries. */}
-        <View
-          style={styles.resizeHandle}
-          hitSlop={10}
-          accessibilityRole="button"
-          accessibilityLabel={t('v2.onDemandPlayer.resize')}
-          testID="ondemand-player-resize"
-          {...resizeResponder.panHandlers}
-        >
-          <MoveDiagonal2 size={15} color={colors.foregroundMuted} />
-        </View>
       </View>
     </>
-  )
-}
-
-/** Bottom-right, inset — kept here rather than imported so the component has
- *  one source for "no stored position" and the geometry module stays pure. */
-function defaultCorner(box: OnDemandBox, container: OnDemandContainer): OnDemandPosition {
-  return clampOnDemandPosition(
-    { x: container.width - box.width, y: container.height - box.height },
-    box,
-    container,
   )
 }
 
@@ -684,39 +699,26 @@ function makeStyles(colors: ColorTokens) {
     headerBtn: { padding: 2 },
     // ui-check-ok: video letterbox — a camera picture sits on black in both themes
     picture: { flex: 1, minHeight: 0, backgroundColor: '#000' },
+    /** The timeline spans the panel edge to edge: no side padding, and no
+     *  corner reserved for a grip (see `onDemandChromeWidth`). */
     chrome: {
-      paddingLeft: ONDEMAND_CHROME_PADDING,
       paddingBottom: SPACING.xs,
-      /** The resize grip owns the bottom-right corner. Reserved rather than
-       *  overlapped: the grip is the last sibling and wins every touch in its
-       *  square, which is exactly where the bar's record/speed controls sit. */
-      paddingRight: ONDEMAND_CHROME_PADDING + ONDEMAND_RESIZE_GRIP,
     },
     /**
-     * The grip, in the shape this app gives every small icon affordance: a
-     * `RADIUS.md` square on `surface`, hairline `border`, a MUTED
-     * glyph — the token set `TrackFlagButtons`, `ClusterDetailBody` and
-     * `FaceAssignPanel` all use for their 36pt icon buttons, at the 28pt this
-     * corner can spend (`ONDEMAND_RESIZE_GRIP`; `hitSlop` carries the touch
-     * target past 44).
-     *
-     * What it is NOT any more: a bespoke notch welded to the corner (one
-     * rounded edge, three square) wearing the single-camera screen's own
-     * FULLSCREEN glyph — so the corner was signing the wrong action, and the
-     * spec beside this file names that glyph so nobody brings it back.
-     * `MoveDiagonal2` is the corner-drag sign. The maths behind
-     * the gesture was fixed on 2026-09-12 — this is only its appearance.
+     * The size grip, in the header. A `RADIUS.md` square with a hairline
+     * `border` and a MUTED glyph — the token set the app's small icon buttons
+     * wear — filled with `background` so it reads as a control on the header's
+     * `surface`. `MoveDiagonal2` is the corner-drag sign; the fullscreen
+     * disc's glyph names the wrong action here. `hitSlop` carries the
+     * touch target past 44pt without spending header height.
      */
     resizeHandle: {
-      position: 'absolute',
-      right: SPACING.xs,
-      bottom: SPACING.xs,
-      width: ONDEMAND_RESIZE_GRIP,
-      height: ONDEMAND_RESIZE_GRIP,
+      width: 24,
+      height: 24,
       alignItems: 'center',
       justifyContent: 'center',
       borderRadius: RADIUS.md,
-      backgroundColor: colors.surface,
+      backgroundColor: colors.background,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.border,
     },

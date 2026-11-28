@@ -21,7 +21,7 @@
  *
  * ## What persists, and what deliberately does not
  *
- * The BOX persists — the size and the position. An operator who drags the
+ * The BOX persists — the size and the corner it rests on. An operator who drags the
  * player to the left edge and makes it large has expressed a preference about
  * their screen, not about that camera, and being asked again every launch is
  * the kind of small insult the app already avoids elsewhere.
@@ -33,19 +33,21 @@
  * for. "On demand" means somebody asked just now.
  *
  * Absent storage means the DEFAULT in both fields: `size: null` is
- * `DEFAULT_ONDEMAND_SIZE` and `position: null` is bottom-right, resolved
- * against the live window every read. Neither default is ever materialised into
- * storage — a stored `'compact'` standing in for "never chosen" would freeze
- * today's default into every install, and a stored coordinate would outlive the
- * window it was measured in.
+ * `DEFAULT_ONDEMAND_SIZE` and `corner: null` is `DEFAULT_ONDEMAND_CORNER`,
+ * resolved against the live window every read. Neither default is ever
+ * materialised into storage — a stored `'compact'` standing in for "never
+ * chosen" would freeze today's default into every install. The position is a
+ * corner NAME for the same reason: a coordinate would outlive the window it was
+ * measured in.
  */
 import { create } from 'zustand'
 import { log } from '../lib/logger.js'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import {
   DEFAULT_ONDEMAND_SIZE,
+  ONDEMAND_CORNERS,
   ONDEMAND_SIZES,
-  type OnDemandPosition,
+  type OnDemandCorner,
   type OnDemandSize,
 } from '../live/ondemand-geometry.js'
 import { resolveOnDemandOnFocus, type OnDemandRequest } from '../live/ondemand-player.js'
@@ -55,28 +57,26 @@ const STORAGE_KEY = 'camstack.v2.ondemand-player'
 /** The persisted half: the operator's box. Both fields ABSENT ⇒ the default. */
 export interface OnDemandBoxPrefs {
   readonly size: OnDemandSize | null
-  readonly position: OnDemandPosition | null
+  readonly corner: OnDemandCorner | null
 }
 
 export const ONDEMAND_BOX_DEFAULTS: OnDemandBoxPrefs = Object.freeze({
   size: null,
-  position: null,
+  corner: null,
 })
 
 function isOnDemandSize(value: unknown): value is OnDemandSize {
   return typeof value === 'string' && ONDEMAND_SIZES.includes(value as OnDemandSize)
 }
 
-function isPosition(value: unknown): value is OnDemandPosition {
-  if (typeof value !== 'object' || value === null) return false
-  const record: Record<string, unknown> = { ...(value as Record<string, unknown>) }
-  return Number.isFinite(record['x']) && Number.isFinite(record['y'])
+function isOnDemandCorner(value: unknown): value is OnDemandCorner {
+  return typeof value === 'string' && ONDEMAND_CORNERS.includes(value as OnDemandCorner)
 }
 
 /**
  * Parse a stored blob, field by field.
  *
- * Per-field and not all-or-nothing on purpose: a `position` this build does not
+ * Per-field and not all-or-nothing on purpose: a `corner` this build does not
  * recognise must not also discard a perfectly good `size`. A storage SHAPE
  * guard that throws away the whole record because one member changed is how a
  * preference silently resets for everybody, and this repo has paid for a value
@@ -87,9 +87,9 @@ export function parseOnDemandBoxPrefs(raw: unknown): OnDemandBoxPrefs {
   const record = raw as Record<string, unknown>
   return {
     size: isOnDemandSize(record['size']) ? record['size'] : null,
-    position: isPosition(record['position'])
-      ? { x: record['position'].x, y: record['position'].y }
-      : null,
+    // A free `{x, y}` stored by an earlier build is not a corner and is not
+    // converted: it was a measurement of a window that may be gone.
+    corner: isOnDemandCorner(record['corner']) ? record['corner'] : null,
   }
 }
 
@@ -123,7 +123,7 @@ interface OnDemandPlayerState {
    */
   focusCamera: (deviceId: number) => void
   setSize: (size: OnDemandSize) => void
-  setPosition: (position: OnDemandPosition) => void
+  setCorner: (corner: OnDemandCorner) => void
 }
 
 function persist(prefs: OnDemandBoxPrefs): void {
@@ -162,8 +162,8 @@ export const useOnDemandPlayerStore = create<OnDemandPlayerState>((set, get) => 
     set({ prefs })
     persist(prefs)
   },
-  setPosition: (position) => {
-    const prefs: OnDemandBoxPrefs = { ...get().prefs, position }
+  setCorner: (corner) => {
+    const prefs: OnDemandBoxPrefs = { ...get().prefs, corner }
     set({ prefs })
     persist(prefs)
   },
