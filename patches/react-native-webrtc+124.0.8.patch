@@ -1,0 +1,1106 @@
+diff --git a/node_modules/react-native-webrtc/ios/RCTWebRTC/PIPController.h b/node_modules/react-native-webrtc/ios/RCTWebRTC/PIPController.h
+index 6e81776..a19e85f 100644
+--- a/node_modules/react-native-webrtc/ios/RCTWebRTC/PIPController.h
++++ b/node_modules/react-native-webrtc/ios/RCTWebRTC/PIPController.h
+@@ -14,6 +14,12 @@ API_AVAILABLE(ios(15.0))
+ @property(nonatomic, assign) BOOL stopAutomatically;
+ @property(nonatomic, assign) CGSize preferredSize;
+ 
++/** Global reference to the most recently created PIPController (for manual trigger). */
+++ (nullable instancetype)activeController;
++
++/** Whether Picture-in-Picture is currently active (window visible). */
++- (BOOL)isPictureInPictureActive;
++
+ - (instancetype)initWithSourceView:(UIView *)sourceView;
+ - (void)togglePIP;
+ - (void)startPIP;
+diff --git a/node_modules/react-native-webrtc/ios/RCTWebRTC/PIPController.m b/node_modules/react-native-webrtc/ios/RCTWebRTC/PIPController.m
+index 5137c71..b15102f 100644
+--- a/node_modules/react-native-webrtc/ios/RCTWebRTC/PIPController.m
++++ b/node_modules/react-native-webrtc/ios/RCTWebRTC/PIPController.m
+@@ -2,22 +2,43 @@
+ #import <AVKit/AVKit.h>
+ #import "SampleBufferVideoCallView.h"
+ 
+-@interface PIPController ()
++/**
++ * Use AVPictureInPictureSampleBufferPlaybackDelegate instead of
++ * AVPictureInPictureVideoCallViewController so that the standard PiP controls
++ * (close ✕, play/pause, expand) are shown.  The "video-call" content source
++ * only shows a single "tap-to-restore" affordance with no buttons.
++ */
++@interface PIPController () <AVPictureInPictureSampleBufferPlaybackDelegate>
+ 
+-@property(nonatomic, strong) AVPictureInPictureVideoCallViewController *pipCallViewController;
+ @property(nonatomic, strong) AVPictureInPictureControllerContentSource *contentSource;
+ @property(nonatomic, strong) AVPictureInPictureController *pipController;
+ @property(nonnull, nonatomic, strong) SampleBufferVideoCallView *sampleView;
+ 
+ @property(nonnull, nonatomic, strong) UIView *fallbackView;
+ 
++@property(nonatomic, assign) BOOL playing;
++
+ @end
+ 
++static __weak PIPController *_activeController = nil;
++
+ @implementation PIPController
+ 
++@synthesize preferredSize = _preferredSize;
++
+++ (nullable instancetype)activeController {
++    return _activeController;
++}
++
++- (BOOL)isPictureInPictureActive {
++    return _pipController && _pipController.isPictureInPictureActive;
++}
++
+ - (instancetype)initWithSourceView:(UIView *)sourceView {
+     if (self = [super init]) {
+         self.sourceView = sourceView;
++        _activeController = self;
++        _playing = YES;
+ 
+         _fallbackView = [[UIView alloc] initWithFrame:CGRectZero];
+         _fallbackView.translatesAutoresizingMaskIntoConstraints = false;
+@@ -25,13 +46,21 @@ - (instancetype)initWithSourceView:(UIView *)sourceView {
+         SampleBufferVideoCallView *subview = [[SampleBufferVideoCallView alloc] initWithFrame:CGRectZero];
+         _sampleView = subview;
+         _sampleView.translatesAutoresizingMaskIntoConstraints = false;
+-        _pipCallViewController = [[AVPictureInPictureVideoCallViewController alloc] init];
+-
+-        [self addToCallViewController:_fallbackView];
+ 
++        // Add sampleView behind the main Metal video view so the layer is in
++        // the hierarchy (required by AVPictureInPictureController).
++        [sourceView insertSubview:_sampleView atIndex:0];
++        [NSLayoutConstraint activateConstraints:@[
++            [_sampleView.leadingAnchor constraintEqualToAnchor:sourceView.leadingAnchor],
++            [_sampleView.trailingAnchor constraintEqualToAnchor:sourceView.trailingAnchor],
++            [_sampleView.topAnchor constraintEqualToAnchor:sourceView.topAnchor],
++            [_sampleView.bottomAnchor constraintEqualToAnchor:sourceView.bottomAnchor]
++        ]];
++
++        // ---- Sample-buffer content source → standard PiP controls ----
+         _contentSource = [[AVPictureInPictureControllerContentSource alloc]
+-            initWithActiveVideoCallSourceView:sourceView
+-                        contentViewController:_pipCallViewController];
++            initWithSampleBufferDisplayLayer:_sampleView.sampleBufferLayer
++                           playbackDelegate:self];
+ 
+         _pipController = [[AVPictureInPictureController alloc] initWithContentSource:_contentSource];
+         _pipController.canStartPictureInPictureAutomaticallyFromInline = YES;
+@@ -56,7 +85,9 @@ - (void)observeValueForKeyPath:(NSString *)keyPath
+                         change:(NSDictionary *)change
+                        context:(void *)context {
+     if ([keyPath isEqualToString:@"pictureInPictureActive"]) {
+-        _sampleView.shouldRender = [change[NSKeyValueChangeNewKey] boolValue];
++        // With the sample-buffer approach shouldRender is kept YES as long as
++        // there is a video track (see setVideoTrack:).  Play/pause is handled
++        // by the playback delegate (setPlaying:).
+     }
+ }
+ 
+@@ -68,39 +99,20 @@ - (void)applicationWillEnterForeground:(NSNotification *)notification {
+     }
+ }
+ 
+-- (void)addToCallViewController:(UIView *)view {
+-    [_pipCallViewController.view addSubview:view];
+-    NSArray *constraints = @[
+-        [view.leadingAnchor constraintEqualToAnchor:_pipCallViewController.view.leadingAnchor],
+-        [view.trailingAnchor constraintEqualToAnchor:_pipCallViewController.view.trailingAnchor],
+-        [view.topAnchor constraintEqualToAnchor:_pipCallViewController.view.topAnchor],
+-        [view.bottomAnchor constraintEqualToAnchor:_pipCallViewController.view.bottomAnchor]
+-    ];
+-    [NSLayoutConstraint activateConstraints:constraints];
+-}
+-
+ - (void)setVideoTrack:(RTCVideoTrack *)videoTrack {
+     if (_videoTrack != videoTrack) {
+         [_videoTrack removeRenderer:_sampleView];
+     }
+ 
+     _videoTrack = videoTrack;
+-    [videoTrack addRenderer:_sampleView];
+-
+-    if (_videoTrack) {
+-        if (!_sampleView.superview) {
+-            [self addToCallViewController:_sampleView];
+-        }
+-        if (_fallbackView.superview) {
+-            [_fallbackView removeFromSuperview];
+-        }
++
++    if (videoTrack) {
++        // Always render so the sample-buffer layer has content ready for PiP.
++        _sampleView.shouldRender = YES;
++        _playing = YES;
++        [videoTrack addRenderer:_sampleView];
+     } else {
+-        if (!_fallbackView.superview) {
+-            [self addToCallViewController:_fallbackView];
+-        }
+-        if (_sampleView.superview) {
+-            [_sampleView removeFromSuperview];
+-        }
++        _sampleView.shouldRender = NO;
+     }
+ }
+ 
+@@ -116,17 +128,6 @@ - (void)setObjectFit:(RTCVideoViewObjectFit)fit {
+     }
+ }
+ 
+-- (CGSize)preferredSize {
+-    return _pipCallViewController.preferredContentSize;
+-}
+-
+-- (void)setPreferredSize:(CGSize)size {
+-    if (!CGSizeEqualToSize(size, _pipCallViewController.preferredContentSize)) {
+-        _pipCallViewController.preferredContentSize = size;
+-        [_sampleView requestScaleRecalculation];
+-    }
+-}
+-
+ - (BOOL)startAutomatically {
+     return _pipController.canStartPictureInPictureAutomaticallyFromInline;
+ }
+@@ -156,6 +157,9 @@ - (void)stopPIP {
+ }
+ 
+ - (void)dealloc {
++    if (_activeController == self) {
++        _activeController = nil;
++    }
+     [_videoTrack removeRenderer:_sampleView];
+     [_pipController removeObserver:self forKeyPath:@"pictureInPictureActive"];
+     [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationDidBecomeActiveNotification object:nil];
+@@ -163,72 +167,70 @@ - (void)dealloc {
+ 
+ @end
+ 
++#pragma mark - AVPictureInPictureControllerDelegate
++
+ @implementation PIPController (AVPictureInPictureControllerDelegate)
+ 
+-/*!
+-    @method        pictureInPictureControllerWillStartPictureInPicture:
+-    @param        pictureInPictureController
+-                The Picture in Picture controller.
+-    @abstract    Delegate can implement this method to be notified when Picture in Picture will start.
+- */
+ - (void)pictureInPictureControllerWillStartPictureInPicture:(AVPictureInPictureController *)pictureInPictureController {
+-    NSLog(@"%@", NSStringFromSelector(_cmd));  // Objective-C
++    NSLog(@"%@", NSStringFromSelector(_cmd));
+ }
+ 
+-/*!
+-    @method        pictureInPictureControllerDidStartPictureInPicture:
+-    @param        pictureInPictureController
+-                The Picture in Picture controller.
+-    @abstract    Delegate can implement this method to be notified when Picture in Picture did start.
+- */
+ - (void)pictureInPictureControllerDidStartPictureInPicture:(AVPictureInPictureController *)pictureInPictureController {
+-    NSLog(@"%@", NSStringFromSelector(_cmd));  // Objective-C
++    NSLog(@"%@", NSStringFromSelector(_cmd));
+ }
+ 
+-/*!
+-    @method        pictureInPictureController:failedToStartPictureInPictureWithError:
+-    @param        pictureInPictureController
+-                The Picture in Picture controller.
+-    @param        error
+-                An error describing why it failed.
+-    @abstract    Delegate can implement this method to be notified when Picture in Picture failed to start.
+- */
+ - (void)pictureInPictureController:(AVPictureInPictureController *)pictureInPictureController
+     failedToStartPictureInPictureWithError:(NSError *)error {
+-    NSLog(@"%@: %@", NSStringFromSelector(_cmd), [error localizedDescription]);  // Objective-C
++    NSLog(@"%@: %@", NSStringFromSelector(_cmd), [error localizedDescription]);
+ }
+ 
+-/*!
+-    @method        pictureInPictureControllerWillStopPictureInPicture:
+-    @param        pictureInPictureController
+-                The Picture in Picture controller.
+-    @abstract    Delegate can implement this method to be notified when Picture in Picture will stop.
+- */
+ - (void)pictureInPictureControllerWillStopPictureInPicture:(AVPictureInPictureController *)pictureInPictureController {
+-    NSLog(@"%@", NSStringFromSelector(_cmd));  // Objective-C
++    NSLog(@"%@", NSStringFromSelector(_cmd));
+ }
+ 
+-/*!
+-    @method        pictureInPictureControllerDidStopPictureInPicture:
+-    @param        pictureInPictureController
+-                The Picture in Picture controller.
+-    @abstract    Delegate can implement this method to be notified when Picture in Picture did stop.
+- */
+ - (void)pictureInPictureControllerDidStopPictureInPicture:(AVPictureInPictureController *)pictureInPictureController {
+-    NSLog(@"%@", NSStringFromSelector(_cmd));  // Objective-C
++    NSLog(@"%@", NSStringFromSelector(_cmd));
+ }
+ 
+-/*!
+-    @method        pictureInPictureController:restoreUserInterfaceForPictureInPictureStopWithCompletionHandler:
+-    @param        pictureInPictureController
+-                The Picture in Picture controller.
+-    @param        completionHandler
+-                The completion handler the delegate needs to call after restore.
+-    @abstract    Delegate can implement this method to restore the user interface before Picture in Picture stops.
+- */
+ - (void)pictureInPictureController:(AVPictureInPictureController *)pictureInPictureController
+     restoreUserInterfaceForPictureInPictureStopWithCompletionHandler:(void (^)(BOOL restored))completionHandler {
+-    NSLog(@"%@", NSStringFromSelector(_cmd));  // Objective-C
++    NSLog(@"%@", NSStringFromSelector(_cmd));
++    // MUST call completionHandler — not calling it hangs the PiP system.
++    completionHandler(YES);
++}
++
++@end
++
++#pragma mark - AVPictureInPictureSampleBufferPlaybackDelegate
++
++@implementation PIPController (AVPictureInPictureSampleBufferPlaybackDelegate)
++
++- (BOOL)pictureInPictureControllerIsPlaybackPaused:(AVPictureInPictureController *)pictureInPictureController {
++    return !self.playing;
++}
++
++- (void)pictureInPictureController:(AVPictureInPictureController *)pictureInPictureController
++                        setPlaying:(BOOL)playing {
++    self.playing = playing;
++    self.sampleView.shouldRender = playing;
++}
++
++- (CMTimeRange)pictureInPictureControllerTimeRangeForPlayback:(AVPictureInPictureController *)pictureInPictureController {
++    // Return an indefinite/live time range — this tells the system
++    // the content is live so no scrubber/progress bar is shown.
++    return CMTimeRangeMake(kCMTimeZero, kCMTimePositiveInfinity);
++}
++
++- (void)pictureInPictureController:(AVPictureInPictureController *)pictureInPictureController
++       didTransitionToRenderSize:(CMVideoDimensions)newRenderSize {
++    // No action needed for live camera content.
++}
++
++- (void)pictureInPictureController:(AVPictureInPictureController *)pictureInPictureController
++              skipByInterval:(CMTime)skipInterval
++           completionHandler:(void (^)(void))completionHandler {
++    // Not applicable for live streams.
++    completionHandler();
+ }
+ 
+ @end
+diff --git a/node_modules/react-native-webrtc/ios/RCTWebRTC/RTCPIPModule.h b/node_modules/react-native-webrtc/ios/RCTWebRTC/RTCPIPModule.h
+new file mode 100644
+index 0000000..57c69cc
+--- /dev/null
++++ b/node_modules/react-native-webrtc/ios/RCTWebRTC/RTCPIPModule.h
+@@ -0,0 +1,4 @@
++#import <React/RCTBridgeModule.h>
++
++@interface RTCPIPModule : NSObject <RCTBridgeModule>
++@end
+diff --git a/node_modules/react-native-webrtc/ios/RCTWebRTC/RTCPIPModule.m b/node_modules/react-native-webrtc/ios/RCTWebRTC/RTCPIPModule.m
+new file mode 100644
+index 0000000..9e16a2d
+--- /dev/null
++++ b/node_modules/react-native-webrtc/ios/RCTWebRTC/RTCPIPModule.m
+@@ -0,0 +1,61 @@
++#import "RTCPIPModule.h"
++#import "PIPController.h"
++
++/**
++ * Standalone native module for manual PiP control.
++ * Does NOT depend on the bridge or UIManager — works with both Paper and Fabric.
++ * Uses PIPController's static activeController reference.
++ */
++@implementation RTCPIPModule
++
++RCT_EXPORT_MODULE();
++
+++ (BOOL)requiresMainQueueSetup {
++    return NO;
++}
++
++- (dispatch_queue_t)methodQueue {
++    return dispatch_get_main_queue();
++}
++
++RCT_EXPORT_METHOD(startPIP) {
++    @try {
++        if (@available(iOS 15.0, *)) {
++            PIPController *controller = [PIPController activeController];
++            if (controller) {
++                [controller startPIP];
++            } else {
++                NSLog(@"[RTCPIPModule] No active PIPController — cannot start PiP");
++            }
++        }
++    } @catch (NSException *e) {
++        RCTLogError(@"startPIP exception: %@", e);
++    }
++}
++
++RCT_EXPORT_METHOD(stopPIP) {
++    @try {
++        if (@available(iOS 15.0, *)) {
++            PIPController *controller = [PIPController activeController];
++            if (controller) {
++                [controller stopPIP];
++            } else {
++                NSLog(@"[RTCPIPModule] No active PIPController — cannot stop PiP");
++            }
++        }
++    } @catch (NSException *e) {
++        RCTLogError(@"stopPIP exception: %@", e);
++    }
++}
++
++RCT_EXPORT_METHOD(isActive:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject) {
++    if (@available(iOS 15.0, *)) {
++        PIPController *controller = [PIPController activeController];
++        BOOL active = controller && [controller isPictureInPictureActive];
++        resolve(@(active));
++    } else {
++        resolve(@(NO));
++    }
++}
++
++@end
+diff --git a/node_modules/react-native-webrtc/ios/RCTWebRTC/RTCVideoViewManager.m b/node_modules/react-native-webrtc/ios/RCTWebRTC/RTCVideoViewManager.m
+index e64005d..ce7c0a1 100644
+--- a/node_modules/react-native-webrtc/ios/RCTWebRTC/RTCVideoViewManager.m
++++ b/node_modules/react-native-webrtc/ios/RCTWebRTC/RTCVideoViewManager.m
+@@ -378,30 +378,38 @@ - (dispatch_queue_t)methodQueue {
+ }
+ 
+ RCT_EXPORT_METHOD(startIOSPIP : (nonnull NSNumber *)reactTag) {
+-    if (@available(iOS 15.0, *)) {
+-        RCTUIManager *uiManager = [self.bridge moduleForClass:[RCTUIManager class]];
+-        [uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
+-            UIView *view = viewRegistry[reactTag];
+-            if (!view || ![view isKindOfClass:[RTCVideoView class]]) {
+-                RCTLogError(@"Cannot find RTCVideoView with tag #%@", reactTag);
+-                return;
+-            }
+-            [(RTCVideoView *)view startPIP];
+-        }];
++    @try {
++        if (@available(iOS 15.0, *)) {
++            RCTUIManager *uiManager = [self.bridge moduleForClass:[RCTUIManager class]];
++            [uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
++                UIView *view = viewRegistry[reactTag];
++                if (!view || ![view isKindOfClass:[RTCVideoView class]]) {
++                    RCTLogError(@"Cannot find RTCVideoView with tag #%@", reactTag);
++                    return;
++                }
++                [(RTCVideoView *)view startPIP];
++            }];
++        }
++    } @catch (NSException *e) {
++        RCTLogError(@"startIOSPIP exception: %@", e);
+     }
+ }
+ 
+ RCT_EXPORT_METHOD(stopIOSPIP : (nonnull NSNumber *)reactTag) {
+-    if (@available(iOS 15.0, *)) {
+-        RCTUIManager *uiManager = [self.bridge moduleForClass:[RCTUIManager class]];
+-        [uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
+-            UIView *view = viewRegistry[reactTag];
+-            if (!view || ![view isKindOfClass:[RTCVideoView class]]) {
+-                RCTLogError(@"Cannot find RTCVideoView with tag #%@", reactTag);
+-                return;
+-            }
+-            [(RTCVideoView *)view stopPIP];
+-        }];
++    @try {
++        if (@available(iOS 15.0, *)) {
++            RCTUIManager *uiManager = [self.bridge moduleForClass:[RCTUIManager class]];
++            [uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
++                UIView *view = viewRegistry[reactTag];
++                if (!view || ![view isKindOfClass:[RTCVideoView class]]) {
++                    RCTLogError(@"Cannot find RTCVideoView with tag #%@", reactTag);
++                    return;
++                }
++                [(RTCVideoView *)view stopPIP];
++            }];
++        }
++    } @catch (NSException *e) {
++        RCTLogError(@"stopIOSPIP exception: %@", e);
+     }
+ }
+ + (BOOL)requiresMainQueueSetup {
+diff --git a/node_modules/react-native-webrtc/ios/RCTWebRTC/WebRTCModule+RTCDataChannel.m b/node_modules/react-native-webrtc/ios/RCTWebRTC/WebRTCModule+RTCDataChannel.m
+index 1c5678b..181bc78 100644
+--- a/node_modules/react-native-webrtc/ios/RCTWebRTC/WebRTCModule+RTCDataChannel.m
++++ b/node_modules/react-native-webrtc/ios/RCTWebRTC/WebRTCModule+RTCDataChannel.m
+@@ -58,32 +58,48 @@ @implementation WebRTCModule (RTCDataChannel)
+ }
+ 
+ RCT_EXPORT_METHOD(dataChannelClose : (nonnull NSNumber *)peerConnectionId reactTag : (nonnull NSString *)tag {
+-    RTCPeerConnection *peerConnection = self.peerConnections[peerConnectionId];
+-    DataChannelWrapper *dcw = peerConnection.dataChannels[tag];
+-    if (dcw) {
+-        [dcw.channel close];
++    @try {
++        RTCPeerConnection *peerConnection = self.peerConnections[peerConnectionId];
++        DataChannelWrapper *dcw = peerConnection.dataChannels[tag];
++        if (dcw) {
++            [dcw.channel close];
++        }
++    } @catch (NSException *e) {
++        RCTLogError(@"dataChannelClose exception: %@", e);
+     }
+ })
+ 
+ RCT_EXPORT_METHOD(dataChannelDispose : (nonnull NSNumber *)peerConnectionId reactTag : (nonnull NSString *)tag {
+-    RTCPeerConnection *peerConnection = self.peerConnections[peerConnectionId];
+-    DataChannelWrapper *dcw = peerConnection.dataChannels[tag];
+-    if (dcw) {
+-        dcw.delegate = nil;
+-        [peerConnection.dataChannels removeObjectForKey:tag];
++    @try {
++        RTCPeerConnection *peerConnection = self.peerConnections[peerConnectionId];
++        DataChannelWrapper *dcw = peerConnection.dataChannels[tag];
++        if (dcw) {
++            dcw.delegate = nil;
++            [peerConnection.dataChannels removeObjectForKey:tag];
++        }
++    } @catch (NSException *e) {
++        RCTLogError(@"dataChannelDispose exception: %@", e);
+     }
+ })
+ 
+ RCT_EXPORT_METHOD(dataChannelSend : (nonnull NSNumber *)peerConnectionId reactTag : (nonnull NSString *)
+                       tag data : (NSString *)data type : (NSString *)type {
+-                          RTCPeerConnection *peerConnection = self.peerConnections[peerConnectionId];
+-                          DataChannelWrapper *dcw = peerConnection.dataChannels[tag];
+-                          if (dcw) {
+-                              BOOL isBinary = [type isEqualToString:@"binary"];
+-                              NSData *bytes = isBinary ? [[NSData alloc] initWithBase64EncodedString:data options:0]
+-                                                       : [data dataUsingEncoding:NSUTF8StringEncoding];
+-                              RTCDataBuffer *buffer = [[RTCDataBuffer alloc] initWithData:bytes isBinary:isBinary];
+-                              [dcw.channel sendData:buffer];
++                          @try {
++                              RTCPeerConnection *peerConnection = self.peerConnections[peerConnectionId];
++                              DataChannelWrapper *dcw = peerConnection.dataChannels[tag];
++                              if (dcw) {
++                                  BOOL isBinary = [type isEqualToString:@"binary"];
++                                  NSData *bytes = isBinary ? [[NSData alloc] initWithBase64EncodedString:data options:0]
++                                                           : [data dataUsingEncoding:NSUTF8StringEncoding];
++                                  if (!bytes) {
++                                      RCTLogWarn(@"dataChannelSend: nil data bytes, skipping send");
++                                      return;
++                                  }
++                                  RTCDataBuffer *buffer = [[RTCDataBuffer alloc] initWithData:bytes isBinary:isBinary];
++                                  [dcw.channel sendData:buffer];
++                              }
++                          } @catch (NSException *e) {
++                              RCTLogError(@"dataChannelSend exception: %@", e);
+                           }
+                       })
+ 
+diff --git a/node_modules/react-native-webrtc/ios/RCTWebRTC/WebRTCModule+RTCMediaStream.m b/node_modules/react-native-webrtc/ios/RCTWebRTC/WebRTCModule+RTCMediaStream.m
+index d2078d2..bb0f24b 100644
+--- a/node_modules/react-native-webrtc/ios/RCTWebRTC/WebRTCModule+RTCMediaStream.m
++++ b/node_modules/react-native-webrtc/ios/RCTWebRTC/WebRTCModule+RTCMediaStream.m
+@@ -214,68 +214,71 @@ - (RTCVideoTrack *)createScreenCaptureVideoTrack {
+     errorCallback(@[ @"PlatformNotSupported", @"getUserMedia is not supported on tvOS." ]);
+     return;
+ #else
+-    RTCAudioTrack *audioTrack = nil;
+-    RTCVideoTrack *videoTrack = nil;
++    @try {
++        RTCAudioTrack *audioTrack = nil;
++        RTCVideoTrack *videoTrack = nil;
+ 
+-    if (constraints[@"audio"]) {
+-        audioTrack = [self createAudioTrack:constraints];
+-    }
+-    if (constraints[@"video"]) {
+-        videoTrack = [self createVideoTrack:constraints];
+-    }
+-
+-    if (audioTrack == nil && videoTrack == nil) {
+-        // Fail with DOMException with name AbortError as per:
+-        // https://www.w3.org/TR/mediacapture-streams/#dom-mediadevices-getusermedia
+-        errorCallback(@[ @"DOMException", @"AbortError" ]);
+-        return;
+-    }
++        if (constraints[@"audio"]) {
++            audioTrack = [self createAudioTrack:constraints];
++        }
++        if (constraints[@"video"]) {
++            videoTrack = [self createVideoTrack:constraints];
++        }
+ 
+-    NSString *mediaStreamId = [[NSUUID UUID] UUIDString];
+-    RTCMediaStream *mediaStream = [self.peerConnectionFactory mediaStreamWithStreamId:mediaStreamId];
+-    NSMutableArray *tracks = [NSMutableArray array];
+-    NSMutableArray *tmp = [NSMutableArray array];
+-    if (audioTrack)
+-        [tmp addObject:audioTrack];
+-    if (videoTrack)
+-        [tmp addObject:videoTrack];
+-
+-    for (RTCMediaStreamTrack *track in tmp) {
+-        if ([track.kind isEqualToString:@"audio"]) {
+-            [mediaStream addAudioTrack:(RTCAudioTrack *)track];
+-        } else if ([track.kind isEqualToString:@"video"]) {
+-            [mediaStream addVideoTrack:(RTCVideoTrack *)track];
++        if (audioTrack == nil && videoTrack == nil) {
++            errorCallback(@[ @"DOMException", @"AbortError" ]);
++            return;
+         }
+ 
+-        NSString *trackId = track.trackId;
++        NSString *mediaStreamId = [[NSUUID UUID] UUIDString];
++        RTCMediaStream *mediaStream = [self.peerConnectionFactory mediaStreamWithStreamId:mediaStreamId];
++        NSMutableArray *tracks = [NSMutableArray array];
++        NSMutableArray *tmp = [NSMutableArray array];
++        if (audioTrack)
++            [tmp addObject:audioTrack];
++        if (videoTrack)
++            [tmp addObject:videoTrack];
++
++        for (RTCMediaStreamTrack *track in tmp) {
++            if ([track.kind isEqualToString:@"audio"]) {
++                [mediaStream addAudioTrack:(RTCAudioTrack *)track];
++            } else if ([track.kind isEqualToString:@"video"]) {
++                [mediaStream addVideoTrack:(RTCVideoTrack *)track];
++            }
+ 
+-        self.localTracks[trackId] = track;
++            NSString *trackId = track.trackId;
+ 
+-        NSDictionary *settings = @{};
+-        if ([track.kind isEqualToString:@"video"]) {
+-            RTCVideoTrack *videoTrack = (RTCVideoTrack *)track;
+-            if ([videoTrack.captureController isKindOfClass:[CaptureController class]]) {
+-                settings = [videoTrack.captureController getSettings];
++            self.localTracks[trackId] = track;
++
++            NSDictionary *settings = @{};
++            if ([track.kind isEqualToString:@"video"]) {
++                RTCVideoTrack *videoTrack = (RTCVideoTrack *)track;
++                if ([videoTrack.captureController isKindOfClass:[CaptureController class]]) {
++                    settings = [videoTrack.captureController getSettings];
++                }
++            } else if ([track.kind isEqualToString:@"audio"]) {
++                settings = @{
++                    @"deviceId" : @"audio",
++                    @"groupId" : @"",
++                };
+             }
+-        } else if ([track.kind isEqualToString:@"audio"]) {
+-            settings = @{
+-                @"deviceId" : @"audio",
+-                @"groupId" : @"",
+-            };
++
++            [tracks addObject:@{
++                @"enabled" : @(track.isEnabled),
++                @"id" : trackId,
++                @"kind" : track.kind,
++                @"readyState" : @"live",
++                @"remote" : @(NO),
++                @"settings" : settings
++            }];
+         }
+ 
+-        [tracks addObject:@{
+-            @"enabled" : @(track.isEnabled),
+-            @"id" : trackId,
+-            @"kind" : track.kind,
+-            @"readyState" : @"live",
+-            @"remote" : @(NO),
+-            @"settings" : settings
+-        }];
++        self.localStreams[mediaStreamId] = mediaStream;
++        successCallback(@[ mediaStreamId, tracks ]);
++    } @catch (NSException *e) {
++        RCTLogError(@"getUserMedia exception: %@", e);
++        errorCallback(@[ @"DOMException", [e reason] ?: @"Unknown error" ]);
+     }
+-
+-    self.localStreams[mediaStreamId] = mediaStream;
+-    successCallback(@[ mediaStreamId, tracks ]);
+ #endif
+ }
+ 
+@@ -285,117 +288,138 @@ - (RTCVideoTrack *)createScreenCaptureVideoTrack {
+ #if TARGET_OS_TV
+     callback(@[]);
+ #else
+-    NSMutableArray *devices = [NSMutableArray array];
+-    NSMutableArray *deviceTypes = [NSMutableArray array];
+-    [deviceTypes addObjectsFromArray:@[
+-        AVCaptureDeviceTypeBuiltInWideAngleCamera,
+-        AVCaptureDeviceTypeBuiltInUltraWideCamera,
+-        AVCaptureDeviceTypeBuiltInTelephotoCamera,
+-        AVCaptureDeviceTypeBuiltInDualCamera,
+-        AVCaptureDeviceTypeBuiltInDualWideCamera,
+-        AVCaptureDeviceTypeBuiltInTripleCamera
+-    ]];
+-    if (@available(macos 14.0, ios 17.0, tvos 17.0, *)) {
+-        [deviceTypes addObject:AVCaptureDeviceTypeExternal];
+-    }
+-    AVCaptureDeviceDiscoverySession *videoDevicesSession =
+-        [AVCaptureDeviceDiscoverySession discoverySessionWithDeviceTypes:deviceTypes
+-                                                               mediaType:AVMediaTypeVideo
+-                                                                position:AVCaptureDevicePositionUnspecified];
+-    for (AVCaptureDevice *device in videoDevicesSession.devices) {
+-        if (device.uniqueID == nil) {
+-            continue;
++    @try {
++        NSMutableArray *devices = [NSMutableArray array];
++        NSMutableArray *deviceTypes = [NSMutableArray array];
++        [deviceTypes addObjectsFromArray:@[
++            AVCaptureDeviceTypeBuiltInWideAngleCamera,
++            AVCaptureDeviceTypeBuiltInUltraWideCamera,
++            AVCaptureDeviceTypeBuiltInTelephotoCamera,
++            AVCaptureDeviceTypeBuiltInDualCamera,
++            AVCaptureDeviceTypeBuiltInDualWideCamera,
++            AVCaptureDeviceTypeBuiltInTripleCamera
++        ]];
++        if (@available(macos 14.0, ios 17.0, tvos 17.0, *)) {
++            [deviceTypes addObject:AVCaptureDeviceTypeExternal];
+         }
+-        NSString *position = @"unknown";
+-        if (device.position == AVCaptureDevicePositionBack) {
+-            position = @"environment";
+-        } else if (device.position == AVCaptureDevicePositionFront) {
+-            position = @"front";
+-        }
+-        NSString *label = @"Unknown video device";
+-        if (device.localizedName != nil) {
+-            label = device.localizedName;
+-        }
+-
+-        [devices addObject:@{
+-            @"facing" : position,
+-            @"deviceId" : device.uniqueID,
+-            @"groupId" : @"",
+-            @"label" : label,
+-            @"kind" : @"videoinput",
+-        }];
+-    }
++        AVCaptureDeviceDiscoverySession *videoDevicesSession =
++            [AVCaptureDeviceDiscoverySession discoverySessionWithDeviceTypes:deviceTypes
++                                                                   mediaType:AVMediaTypeVideo
++                                                                    position:AVCaptureDevicePositionUnspecified];
++        for (AVCaptureDevice *device in videoDevicesSession.devices) {
++            if (device.uniqueID == nil) {
++                continue;
++            }
++            NSString *position = @"unknown";
++            if (device.position == AVCaptureDevicePositionBack) {
++                position = @"environment";
++            } else if (device.position == AVCaptureDevicePositionFront) {
++                position = @"front";
++            }
++            NSString *label = @"Unknown video device";
++            if (device.localizedName != nil) {
++                label = device.localizedName;
++            }
+ 
+-    AVCaptureDeviceDiscoverySession *audioDevicesSession =
+-        [AVCaptureDeviceDiscoverySession discoverySessionWithDeviceTypes:@[ AVCaptureDeviceTypeBuiltInMicrophone ]
+-                                                               mediaType:AVMediaTypeAudio
+-                                                                position:AVCaptureDevicePositionUnspecified];
+-    for (AVCaptureDevice *device in audioDevicesSession.devices) {
+-        if (device.uniqueID == nil) {
+-            continue;
++            [devices addObject:@{
++                @"facing" : position,
++                @"deviceId" : device.uniqueID,
++                @"groupId" : @"",
++                @"label" : label,
++                @"kind" : @"videoinput",
++            }];
+         }
+-        NSString *label = @"Unknown audio device";
+-        if (device.localizedName != nil) {
+-            label = device.localizedName;
++
++        AVCaptureDeviceDiscoverySession *audioDevicesSession =
++            [AVCaptureDeviceDiscoverySession discoverySessionWithDeviceTypes:@[ AVCaptureDeviceTypeBuiltInMicrophone ]
++                                                                   mediaType:AVMediaTypeAudio
++                                                                    position:AVCaptureDevicePositionUnspecified];
++        for (AVCaptureDevice *device in audioDevicesSession.devices) {
++            if (device.uniqueID == nil) {
++                continue;
++            }
++            NSString *label = @"Unknown audio device";
++            if (device.localizedName != nil) {
++                label = device.localizedName;
++            }
++            [devices addObject:@{
++                @"deviceId" : device.uniqueID,
++                @"groupId" : @"",
++                @"label" : label,
++                @"kind" : @"audioinput",
++            }];
+         }
+-        [devices addObject:@{
+-            @"deviceId" : device.uniqueID,
+-            @"groupId" : @"",
+-            @"label" : label,
+-            @"kind" : @"audioinput",
+-        }];
++        callback(@[ devices ]);
++    } @catch (NSException *e) {
++        RCTLogError(@"enumerateDevices exception: %@", e);
++        callback(@[ @[] ]);
+     }
+-    callback(@[ devices ]);
+ #endif
+ }
+ 
+ RCT_EXPORT_METHOD(mediaStreamCreate : (nonnull NSString *)streamID) {
+-    RTCMediaStream *mediaStream = [self.peerConnectionFactory mediaStreamWithStreamId:streamID];
+-    self.localStreams[streamID] = mediaStream;
++    @try {
++        RTCMediaStream *mediaStream = [self.peerConnectionFactory mediaStreamWithStreamId:streamID];
++        self.localStreams[streamID] = mediaStream;
++    } @catch (NSException *e) {
++        RCTLogError(@"mediaStreamCreate exception: %@", e);
++    }
+ }
+ 
+ RCT_EXPORT_METHOD(mediaStreamAddTrack : (nonnull NSString *)streamID : (nonnull NSNumber *)pcId : (nonnull NSString *)
+                       trackID) {
+-    RTCMediaStream *mediaStream = self.localStreams[streamID];
+-    if (mediaStream == nil) {
+-        return;
+-    }
++    @try {
++        RTCMediaStream *mediaStream = self.localStreams[streamID];
++        if (mediaStream == nil) {
++            return;
++        }
+ 
+-    RTCMediaStreamTrack *track = [self trackForId:trackID pcId:pcId];
+-    if (track == nil) {
+-        return;
+-    }
++        RTCMediaStreamTrack *track = [self trackForId:trackID pcId:pcId];
++        if (track == nil) {
++            return;
++        }
+ 
+-    if ([track.kind isEqualToString:@"audio"]) {
+-        [mediaStream addAudioTrack:(RTCAudioTrack *)track];
+-    } else if ([track.kind isEqualToString:@"video"]) {
+-        [mediaStream addVideoTrack:(RTCVideoTrack *)track];
++        if ([track.kind isEqualToString:@"audio"]) {
++            [mediaStream addAudioTrack:(RTCAudioTrack *)track];
++        } else if ([track.kind isEqualToString:@"video"]) {
++            [mediaStream addVideoTrack:(RTCVideoTrack *)track];
++        }
++    } @catch (NSException *e) {
++        RCTLogError(@"mediaStreamAddTrack exception: %@", e);
+     }
+ }
+ 
+ RCT_EXPORT_METHOD(mediaStreamRemoveTrack : (nonnull NSString *)streamID : (nonnull NSNumber *)
+                       pcId : (nonnull NSString *)trackID) {
+-    RTCMediaStream *mediaStream = self.localStreams[streamID];
+-    if (mediaStream == nil) {
+-        return;
+-    }
++    @try {
++        RTCMediaStream *mediaStream = self.localStreams[streamID];
++        if (mediaStream == nil) {
++            return;
++        }
+ 
+-    RTCMediaStreamTrack *track = [self trackForId:trackID pcId:pcId];
+-    if (track == nil) {
+-        return;
+-    }
++        RTCMediaStreamTrack *track = [self trackForId:trackID pcId:pcId];
++        if (track == nil) {
++            return;
++        }
+ 
+-    if ([track.kind isEqualToString:@"audio"]) {
+-        [mediaStream removeAudioTrack:(RTCAudioTrack *)track];
+-    } else if ([track.kind isEqualToString:@"video"]) {
+-        [mediaStream removeVideoTrack:(RTCVideoTrack *)track];
++        if ([track.kind isEqualToString:@"audio"]) {
++            [mediaStream removeAudioTrack:(RTCAudioTrack *)track];
++        } else if ([track.kind isEqualToString:@"video"]) {
++            [mediaStream removeVideoTrack:(RTCVideoTrack *)track];
++        }
++    } @catch (NSException *e) {
++        RCTLogError(@"mediaStreamRemoveTrack exception: %@", e);
+     }
+ }
+ 
+ RCT_EXPORT_METHOD(mediaStreamRelease : (nonnull NSString *)streamID) {
+-    RTCMediaStream *stream = self.localStreams[streamID];
+-    if (stream) {
+-        [self.localStreams removeObjectForKey:streamID];
++    @try {
++        RTCMediaStream *stream = self.localStreams[streamID];
++        if (stream) {
++            [self.localStreams removeObjectForKey:streamID];
++        }
++    } @catch (NSException *e) {
++        RCTLogError(@"mediaStreamRelease exception: %@", e);
+     }
+ }
+ 
+@@ -403,32 +427,39 @@ - (RTCVideoTrack *)createScreenCaptureVideoTrack {
+ #if TARGET_OS_TV
+     return;
+ #else
+-
+-    RTCMediaStreamTrack *track = self.localTracks[trackID];
+-    if (track) {
+-        track.isEnabled = NO;
+-        [track.captureController stopCapture];
+-        [self.localTracks removeObjectForKey:trackID];
++    @try {
++        RTCMediaStreamTrack *track = self.localTracks[trackID];
++        if (track) {
++            track.isEnabled = NO;
++            [track.captureController stopCapture];
++            [self.localTracks removeObjectForKey:trackID];
++        }
++    } @catch (NSException *e) {
++        RCTLogError(@"mediaStreamTrackRelease exception: %@", e);
+     }
+ #endif
+ }
+ 
+ RCT_EXPORT_METHOD(mediaStreamTrackSetEnabled : (nonnull NSNumber *)pcId : (nonnull NSString *)trackID : (BOOL)enabled) {
+-    RTCMediaStreamTrack *track = [self trackForId:trackID pcId:pcId];
+-    if (track == nil) {
+-        return;
+-    }
++    @try {
++        RTCMediaStreamTrack *track = [self trackForId:trackID pcId:pcId];
++        if (track == nil) {
++            return;
++        }
+ 
+-    track.isEnabled = enabled;
++        track.isEnabled = enabled;
+ #if !TARGET_OS_TV
+-    if (track.captureController) {  // It could be a remote track!
+-        if (enabled) {
+-            [track.captureController startCapture];
+-        } else {
+-            [track.captureController stopCapture];
++        if (track.captureController) {  // It could be a remote track!
++            if (enabled) {
++                [track.captureController startCapture];
++            } else {
++                [track.captureController stopCapture];
++            }
+         }
+-    }
+ #endif
++    } @catch (NSException *e) {
++        RCTLogError(@"mediaStreamTrackSetEnabled exception: %@", e);
++    }
+ }
+ 
+ RCT_EXPORT_METHOD(mediaStreamTrackApplyConstraints : (nonnull NSString *)trackID : (NSDictionary *)
+@@ -463,37 +494,45 @@ - (RTCVideoTrack *)createScreenCaptureVideoTrack {
+ }
+ 
+ RCT_EXPORT_METHOD(mediaStreamTrackSetVolume : (nonnull NSNumber *)pcId : (nonnull NSString *)trackID : (double)volume) {
+-    RTCMediaStreamTrack *track = [self trackForId:trackID pcId:pcId];
+-    if (track && [track.kind isEqualToString:@"audio"]) {
+-        RTCAudioTrack *audioTrack = (RTCAudioTrack *)track;
+-        audioTrack.source.volume = volume;
++    @try {
++        RTCMediaStreamTrack *track = [self trackForId:trackID pcId:pcId];
++        if (track && [track.kind isEqualToString:@"audio"]) {
++            RTCAudioTrack *audioTrack = (RTCAudioTrack *)track;
++            audioTrack.source.volume = volume;
++        }
++    } @catch (NSException *e) {
++        RCTLogError(@"mediaStreamTrackSetVolume exception: %@", e);
+     }
+ }
+ 
+ RCT_EXPORT_METHOD(mediaStreamTrackSetVideoEffects : (nonnull NSString *)trackID names : (nonnull NSArray<NSString *> *)
+                       names) {
+-    RTCMediaStreamTrack *track = self.localTracks[trackID];
+-    if (track == nil) {
+-        return;
+-    }
++    @try {
++        RTCMediaStreamTrack *track = self.localTracks[trackID];
++        if (track == nil) {
++            return;
++        }
+ 
+-    RTCVideoTrack *videoTrack = (RTCVideoTrack *)track;
+-    RTCVideoSource *videoSource = videoTrack.source;
++        RTCVideoTrack *videoTrack = (RTCVideoTrack *)track;
++        RTCVideoSource *videoSource = videoTrack.source;
+ 
+-    NSMutableArray *processors = [[NSMutableArray alloc] init];
+-    for (NSString *name in names) {
+-        NSObject<VideoFrameProcessorDelegate> *processor = [ProcessorProvider getProcessor:name];
+-        if (processor != nil) {
+-            [processors addObject:processor];
++        NSMutableArray *processors = [[NSMutableArray alloc] init];
++        for (NSString *name in names) {
++            NSObject<VideoFrameProcessorDelegate> *processor = [ProcessorProvider getProcessor:name];
++            if (processor != nil) {
++                [processors addObject:processor];
++            }
+         }
+-    }
+ 
+-    self.videoEffectProcessor = [[VideoEffectProcessor alloc] initWithProcessors:processors videoSource:videoSource];
++        self.videoEffectProcessor = [[VideoEffectProcessor alloc] initWithProcessors:processors videoSource:videoSource];
+ 
+-    VideoCaptureController *vcc = (VideoCaptureController *)videoTrack.captureController;
+-    RTCVideoCapturer *capturer = vcc.capturer;
++        VideoCaptureController *vcc = (VideoCaptureController *)videoTrack.captureController;
++        RTCVideoCapturer *capturer = vcc.capturer;
+ 
+-    capturer.delegate = self.videoEffectProcessor;
++        capturer.delegate = self.videoEffectProcessor;
++    } @catch (NSException *e) {
++        RCTLogError(@"mediaStreamTrackSetVideoEffects exception: %@", e);
++    }
+ }
+ 
+ #pragma mark - Helpers
+diff --git a/node_modules/react-native-webrtc/ios/RCTWebRTC/WebRTCModule+RTCPeerConnection.m b/node_modules/react-native-webrtc/ios/RCTWebRTC/WebRTCModule+RTCPeerConnection.m
+index 9dd5543..31c9c30 100644
+--- a/node_modules/react-native-webrtc/ios/RCTWebRTC/WebRTCModule+RTCPeerConnection.m
++++ b/node_modules/react-native-webrtc/ios/RCTWebRTC/WebRTCModule+RTCPeerConnection.m
+@@ -120,11 +120,15 @@ + (RTCCertificate *)getCertificate:(NSString *)certId {
+ 
+ RCT_EXPORT_METHOD(peerConnectionSetConfiguration : (RTCConfiguration *)configuration objectID : (nonnull NSNumber *)
+                       objectID) {
+-    RTCPeerConnection *peerConnection = self.peerConnections[objectID];
+-    if (!peerConnection) {
+-        return;
++    @try {
++        RTCPeerConnection *peerConnection = self.peerConnections[objectID];
++        if (!peerConnection) {
++            return;
++        }
++        [peerConnection setConfiguration:configuration];
++    } @catch (NSException *e) {
++        RCTLogError(@"peerConnectionSetConfiguration exception: %@", e);
+     }
+-    [peerConnection setConfiguration:configuration];
+ }
+ 
+ RCT_EXPORT_METHOD(peerConnectionCreateOffer : (nonnull NSNumber *)objectID options : (NSDictionary *)
+@@ -310,42 +314,50 @@ + (RTCCertificate *)getCertificate:(NSString *)certId {
+ }
+ 
+ RCT_EXPORT_METHOD(peerConnectionClose : (nonnull NSNumber *)objectID) {
+-    RTCPeerConnection *peerConnection = self.peerConnections[objectID];
+-    if (!peerConnection) {
+-        return;
+-    }
++    @try {
++        RTCPeerConnection *peerConnection = self.peerConnections[objectID];
++        if (!peerConnection) {
++            return;
++        }
+ 
+-    [peerConnection close];
++        [peerConnection close];
++    } @catch (NSException *e) {
++        RCTLogError(@"peerConnectionClose exception: %@", e);
++    }
+ }
+ 
+ RCT_EXPORT_METHOD(peerConnectionDispose : (nonnull NSNumber *)objectID) {
+-    RTCPeerConnection *peerConnection = self.peerConnections[objectID];
+-    if (!peerConnection) {
+-        return;
+-    }
++    @try {
++        RTCPeerConnection *peerConnection = self.peerConnections[objectID];
++        if (!peerConnection) {
++            return;
++        }
+ 
+-    // Remove video track adapters
+-    for (NSString *key in peerConnection.remoteTracks.allKeys) {
+-        RTCMediaStreamTrack *track = peerConnection.remoteTracks[key];
+-        if (track.kind == kRTCMediaStreamTrackKindVideo) {
+-            [peerConnection removeVideoTrackAdapter:(RTCVideoTrack *)track];
++        // Remove video track adapters
++        for (NSString *key in peerConnection.remoteTracks.allKeys) {
++            RTCMediaStreamTrack *track = peerConnection.remoteTracks[key];
++            if (track.kind == kRTCMediaStreamTrackKindVideo) {
++                [peerConnection removeVideoTrackAdapter:(RTCVideoTrack *)track];
++            }
+         }
+-    }
+ 
+-    // Clean up peerConnection's streams and tracks
+-    [peerConnection.remoteStreams removeAllObjects];
+-    [peerConnection.remoteTracks removeAllObjects];
++        // Clean up peerConnection's streams and tracks
++        [peerConnection.remoteStreams removeAllObjects];
++        [peerConnection.remoteTracks removeAllObjects];
+ 
+-    // Clean up peerConnection's dataChannels.
+-    NSMutableDictionary<NSString *, DataChannelWrapper *> *dataChannels = peerConnection.dataChannels;
+-    for (NSString *tag in dataChannels) {
+-        dataChannels[tag].delegate = nil;
+-        // There is no need to close the RTCDataChannel because it is owned by the
+-        // RTCPeerConnection and the latter will close the former.
+-    }
+-    [dataChannels removeAllObjects];
++        // Clean up peerConnection's dataChannels.
++        NSMutableDictionary<NSString *, DataChannelWrapper *> *dataChannels = peerConnection.dataChannels;
++        for (NSString *tag in dataChannels) {
++            dataChannels[tag].delegate = nil;
++            // There is no need to close the RTCDataChannel because it is owned by the
++            // RTCPeerConnection and the latter will close the former.
++        }
++        [dataChannels removeAllObjects];
+ 
+-    [self.peerConnections removeObjectForKey:objectID];
++        [self.peerConnections removeObjectForKey:objectID];
++    } @catch (NSException *e) {
++        RCTLogError(@"peerConnectionDispose exception: %@", e);
++    }
+ }
+ 
+ RCT_EXPORT_METHOD(peerConnectionGetStats : (nonnull NSNumber *)objectID resolver : (RCTPromiseResolveBlock)
+@@ -421,12 +433,16 @@ + (RTCCertificate *)getCertificate:(NSString *)certId {
+ }
+ 
+ RCT_EXPORT_METHOD(peerConnectionRestartIce : (nonnull NSNumber *)objectID) {
+-    RTCPeerConnection *peerConnection = self.peerConnections[objectID];
+-    if (!peerConnection) {
+-        return;
+-    }
++    @try {
++        RTCPeerConnection *peerConnection = self.peerConnections[objectID];
++        if (!peerConnection) {
++            return;
++        }
+ 
+-    [peerConnection restartIce];
++        [peerConnection restartIce];
++    } @catch (NSException *e) {
++        RCTLogError(@"peerConnectionRestartIce exception: %@", e);
++    }
+ }
+ 
+ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(peerConnectionAddTrack : (nonnull NSNumber *)objectID trackId : (NSString *)
