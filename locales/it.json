@@ -710,6 +710,21 @@
       "countMore_other": "{{count}}+ eventi"
     },
     "settings": {
+      "appIcon": "Icona dell'app",
+      "appIconDefault": "Predefinita",
+      "appIconPickTitle": "Scegli l'icona dell'app",
+      "appIconNames": {
+        "NeonAmber": "Neon ambra",
+        "NeonCyan": "Neon ciano",
+        "Synthwave": "Synthwave",
+        "Midnight": "Mezzanotte",
+        "Mint": "Menta",
+        "Lava": "Lava",
+        "Gold": "Oro",
+        "Owl": "Gufo",
+        "Home": "Casa",
+        "Constellation": "Costellazione"
+      },
       "themeSystem": "Sistema",
       "themeDark": "Scuro",
       "themeLight": "Chiaro",

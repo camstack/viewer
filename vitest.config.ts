@@ -34,6 +34,7 @@ const nativeAliases = [
   { find: /^expo-file-system(\/legacy)?$/, replacement: stub('file-system.ts') },
   { find: /^expo-(sharing|clipboard|document-picker|web-browser|linking|pip|sqlite|font|splash-screen|system-ui|device|crypto|camera)$/, replacement: stub('empty.tsx') },
   { find: /^expo-secure-store$/, replacement: stub('secure-store.ts') },
+  { find: /^expo-alternate-app-icons$/, replacement: stub('expo-alternate-app-icons.ts') },
   { find: /^react-native-safe-area-context$/, replacement: stub('safe-area-context.tsx') },
   { find: /^react-native-svg$/, replacement: stub('react-native-svg.tsx') },
   { find: /^react-native-video$/, replacement: stub('react-native-video.tsx') },

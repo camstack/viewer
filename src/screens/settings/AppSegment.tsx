@@ -31,6 +31,7 @@ import { useNotice } from '../../components/ui/confirm.js'
 import { useLanguage, type LanguagePreference } from '../../data/use-language.js'
 import { useSettings } from '../../data/use-settings.js'
 import { SPACING } from '../../theme/tokens.js'
+import { AppIconRow } from './AppIconRow.js'
 import { SettingsGrid } from './SettingsGrid.js'
 import { SettingsLevelsSection } from './SettingsLevelsSection.js'
 import { NATIVE_BINARY, runningVersionRows, versionValue } from './running-version.js'
@@ -65,6 +66,7 @@ export function AppSegment() {
             </Text>
             <SegmentedControl options={languageOptions} value={langPreference} onChange={setLangPreference} />
           </View>
+          <AppIconRow />
           <ToggleRow
             icon={Vibrate}
             label={t('v2.settings.hapticsUiFeedback')}
