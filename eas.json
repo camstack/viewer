@@ -48,6 +48,14 @@
       "env": {
         "APP_VARIANT": "production"
       }
+    },
+    "beta-apk": {
+      "extends": "production",
+      "distribution": "internal",
+      "android": {
+        "resourceClass": "medium",
+        "buildType": "apk"
+      }
     }
   },
   "submit": {

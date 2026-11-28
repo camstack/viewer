@@ -38,11 +38,13 @@ export const WHATS_NEW: readonly WhatsNewEntry[] = [
         'The mini-player snaps to a corner and its timeline spans the full width.',
         'The app under the mini-player stays fully tappable.',
         'Live in the mini-player no longer shows an endless spinner.',
+        'New app icon, and an animated start screen in light and dark.',
       ],
       it: [
         'Il mini-player si aggancia a un angolo e la timeline è a tutta larghezza.',
         "L'app sotto il mini-player resta tutta toccabile.",
         'Il live nel mini-player non mostra più la rotella infinita.',
+        "Nuova icona dell'app e schermata d'avvio animata, chiara e scura.",
       ],
     },
   },
