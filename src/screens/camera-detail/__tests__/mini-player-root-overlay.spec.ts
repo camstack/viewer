@@ -103,7 +103,11 @@ describe('the system PiP stays one request', () => {
   })
 
   it('the route-era mini-player symbols stay gone', () => {
-    const files = [...sources(join(ROOT, 'src')), ...sources(join(ROOT, 'app'))]
+    // Read every source once; scanning the tree per symbol timed out on a busy machine.
+    const files = [...sources(join(ROOT, 'src')), ...sources(join(ROOT, 'app'))].map((f) => ({
+      f,
+      text: readFileSync(f, 'utf8'),
+    }))
     for (const symbol of [
       'inAppPip',
       'InAppPip',
@@ -112,9 +116,9 @@ describe('the system PiP stays one request', () => {
       'enterInAppPip',
       'exitInAppPip',
     ]) {
-      const hits = files.filter((f) => readFileSync(f, 'utf8').includes(symbol))
+      const hits = files.filter(({ text }) => text.includes(symbol))
       expect(
-        hits.map((f) => f.slice(ROOT.length + 1)),
+        hits.map(({ f }) => f.slice(ROOT.length + 1)),
         symbol,
       ).toEqual([])
     }
