@@ -5,10 +5,10 @@
  * title is told apart from a phone by its declaration, never by its kind string.
  *
  * A port of the hub's `deliverableFields` / `fieldSupportForTargets`
- * (`@camstack/types` `notification/notification-fields.ts`, which the hub's
+ * (`@dominevo/types` `notification/notification-fields.ts`, which the hub's
  * dispatcher drops fields by and the admin editor hides them by) and of the
  * admin's `fieldSupportForSelection`. Those values are not on the
- * `@camstack/types/client` entry, so the viewer keeps this copy; the spec pins
+ * `@dominevo/types/client` entry, so the viewer keeps this copy; the spec pins
  * the same cases.
  */
 import {

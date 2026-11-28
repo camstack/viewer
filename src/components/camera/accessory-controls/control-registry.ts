@@ -33,7 +33,7 @@
  * `CONTROL_BY_DEVICE_TYPE` map below is a compile-time parity GUARD — see it.
  */
 
-import { DeviceType } from '@camstack/types/client'
+import { DeviceType } from '@dominevo/types/client'
 import { TIMED_RUN_FEATURE } from '../../../data/timed-run.js'
 import { canonicalStoredDeviceType, climateRoleOf, isSwitchHeater } from './device-kind.js'
 
@@ -152,7 +152,7 @@ export interface AccessoryControlInput {
  * PARITY GUARD — the single source of truth mapping every shared `DeviceType`
  * to its viewer control kind. `satisfies Record<DeviceType, AccessoryControlKind>`
  * makes this map EXHAUSTIVE over the enum: if a new `DeviceType` is added to
- * `@camstack/types` (i.e. admin-ui grows a device class) but NOT given a mapping
+ * `@dominevo/types` (i.e. admin-ui grows a device class) but NOT given a mapping
  * here, the viewer `tsc` FAILS with a missing-key error — so the viewer can
  * never silently lag admin-ui's device controls. Removing any one entry breaks
  * the build the same way. Deleting an enum member likewise surfaces the now-dead

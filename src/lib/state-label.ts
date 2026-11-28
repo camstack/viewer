@@ -1,6 +1,6 @@
 /**
  * state-label — the viewer's door to the ONE shared dictionary of state
- * labels (`stateLabel` in `@camstack/types`, R7, D690): the device-state and
+ * labels (`stateLabel` in `@dominevo/types`, R7, D690): the device-state and
  * scene words the rule editors show. The admin UI reads the same dictionary,
  * so the two editors cannot call one state two things.
  *
@@ -8,8 +8,8 @@
  * (Italian, else English). An unknown word is shown as it is stored — the
  * shared function's own fallback.
  */
-import { stateLabel } from '@camstack/types/client'
-import type { StateLabelLocale } from '@camstack/types'
+import { stateLabel } from '@dominevo/types/client'
+import type { StateLabelLocale } from '@dominevo/types'
 
 /** The dictionary locale for an i18n language tag (`it`, `it-IT` → `it`). */
 export function stateLabelLocale(language: string | undefined): StateLabelLocale {

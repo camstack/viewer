@@ -1,6 +1,6 @@
 /**
  * Local interpreter of the hub's catalog data. Local because this app
- * resolves @camstack/types from the PUBLISHED package and must work against a
+ * resolves @dominevo/types from the PUBLISHED package and must work against a
  * hub older than the one that published it; the parity spec pins it to
  * `templateVarsFor`. The kind axes (D637: a served `system` covers every
  * system rule kind, and a family narrows the event-kind axis) are read through
@@ -13,7 +13,7 @@ import {
   templateVarDeliveryApplies,
   templateVarKindApplies,
   templateVarSystemEventApplies,
-} from '@camstack/types/client'
+} from '@dominevo/types/client'
 import type {
   NcSystemEventKind,
   NcTemplateVarContext,

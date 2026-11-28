@@ -2,7 +2,7 @@
  * tile-action — the lock's "Open door" action and the caption a row shows while
  * a confirmed action is armed ("Tap again to …").
  */
-import type { HeroCall, HeroConfirm } from '@camstack/types'
+import type { HeroCall, HeroConfirm } from '@dominevo/types'
 
 /** The `DeviceFeature.LockOpen` wire value: the lock has a latch that can be released apart from the bolt. */
 export const LOCK_OPEN_FEATURE = 'lock-open'

@@ -13,7 +13,7 @@
  * the locale file made the problem look solved.
  *
  * So the catalogs are checked against the locales on every `ts-check`, in CI.
- * A class joins the check by existing in `@camstack/types` — there is no list
+ * A class joins the check by existing in `@dominevo/types` — there is no list
  * here to keep up to date, which is the only reason this cannot rot the way the
  * dead keys did.
  *
@@ -41,7 +41,7 @@ const {
   EVENT_TAXONOMY,
   MACRO_LABELS,
   YAMNET_TO_MACRO,
-} = require('@camstack/types')
+} = require('@dominevo/types')
 
 /** The locales every operator-facing string must exist in. */
 const LOCALES = ['en', 'it']

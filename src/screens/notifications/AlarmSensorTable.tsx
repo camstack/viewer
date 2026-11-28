@@ -30,7 +30,7 @@
 import React, { useMemo, useState } from 'react'
 import { ActivityIndicator, Pressable, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
-import type { AlarmArmMode } from '@camstack/types'
+import type { AlarmArmMode } from '@dominevo/types'
 
 import { ToggleRow } from '../../components/ui/ToggleRow.js'
 import { useTheme } from '../../theme/theme-provider.js'

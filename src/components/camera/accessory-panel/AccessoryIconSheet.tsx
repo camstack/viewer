@@ -24,7 +24,7 @@ import {
   View,
 } from 'react-native'
 import { useTranslation } from 'react-i18next'
-import { iconCategoryLabel } from '@camstack/types/client'
+import { iconCategoryLabel } from '@dominevo/types/client'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { Search, X } from '../../../lib/icons.js'

@@ -351,7 +351,7 @@ The reel keeps only the glyph + finest label over the hero and the time in its
 one-line footer — the native reel's own composition, and all its reserved height
 allows.
 
-Glyphs come from `@camstack/ui-library`'s `resolveEventKindIcon` — the WEB half
+Glyphs come from `@dominevo/ui-library`'s `resolveEventKindIcon` — the WEB half
 of the same 65-id map the viewer uses natively (verified byte-identical), so the
 same class gets the same glyph on both surfaces. `lucide-react` is a direct
 dependency and tree-shakes into the bundle: **no CDN, no runtime fetch**. The

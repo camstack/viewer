@@ -14,7 +14,7 @@ const { createSystem } = vi.hoisted(() => ({
     close: vi.fn(),
   })),
 }))
-vi.mock('@camstack/sdk', () => ({ createSystem }))
+vi.mock('@dominevo/sdk', () => ({ createSystem }))
 
 beforeEach(async () => {
   createSystem.mockClear()

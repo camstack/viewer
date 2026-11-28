@@ -2,8 +2,8 @@
  * Every icon `deviceTypeIconKey` / the hub role table can return must draw in
  * the viewer (`icon-nodes.generated.ts`).
  */
-import { DeviceType, deviceIconKey, deviceTypeIconKey } from '@camstack/types/client'
-import { DeviceRole } from '@camstack/types'
+import { DeviceType, deviceIconKey, deviceTypeIconKey } from '@dominevo/types/client'
+import { DeviceRole } from '@dominevo/types'
 import { describe, expect, it } from 'vitest'
 
 import { ICON_NODES } from '../../lib/icon-nodes.generated.js'

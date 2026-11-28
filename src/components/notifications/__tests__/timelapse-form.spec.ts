@@ -18,7 +18,7 @@
  *     sees a refusal for a target the picker should not have offered.
  */
 import { describe, expect, it } from 'vitest'
-import type { TimelapseRule } from '@camstack/types'
+import type { TimelapseRule } from '@dominevo/types'
 import {
   emptyTimelapseForm,
   isTimelapseFormValid,

@@ -9,7 +9,7 @@
  */
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
-import type { DeviceSearchInput, DeviceSearchItem, DeviceSearchResult } from '@camstack/types'
+import type { DeviceSearchInput, DeviceSearchItem, DeviceSearchResult } from '@dominevo/types'
 
 import { useConnection } from '../../connection/ConnectionProvider.js'
 import { capQuery, isRecord } from '../../data/cap-query.js'
@@ -27,7 +27,7 @@ export type DeviceSearchQuery = Omit<DeviceSearchInput, 'cursor' | 'ids'>
 /**
  * The shape check at the wire. The hub validates its own output against
  * `DeviceSearchResultSchema`; the app holds no copy of that schema (it is not
- * on `@camstack/types/client`), so this checks the parts the picker walks and
+ * on `@dominevo/types/client`), so this checks the parts the picker walks and
  * refuses anything else as unreadable rather than drawing it as "nothing".
  */
 export function isDeviceSearchResult(raw: unknown): raw is DeviceSearchResult {

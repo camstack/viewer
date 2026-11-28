@@ -6,7 +6,7 @@
 import { Platform } from 'react-native'
 import * as Linking from 'expo-linking'
 import * as WebBrowser from 'expo-web-browser'
-import type { DevicePlatform } from '@camstack/types'
+import type { DevicePlatform } from '@dominevo/types'
 import { canonicalizeCallbackUrl, HANDOFF_CALLBACK_PATH } from '../auth/handoff.js'
 import { optionalModule } from './optional-module.js'
 import { expoPkcePrimitives } from './pkce-expo.js'

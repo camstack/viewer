@@ -4,7 +4,7 @@
  * The hub's `displayPalette.getPalette` is the table. This module holds the
  * answer the screens paint from, and the bundled CamStack preset for the two
  * moments the hub has not given one: before the first read, and when the read
- * is `unknown`. No hex lives here — the preset is `@camstack/types/client`.
+ * is `unknown`. No hex lives here — the preset is `@dominevo/types/client`.
  */
 import { useCallback, useSyncExternalStore } from 'react'
 import {
@@ -12,7 +12,7 @@ import {
   paintHex,
   paletteResultSchema,
   type PaletteReady,
-} from '@camstack/types/client'
+} from '@dominevo/types/client'
 
 export type PaletteOrigin = 'pending' | 'hub' | 'unknown'
 

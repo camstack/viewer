@@ -9,7 +9,7 @@
  *
  * Changed 2026-10-01 (operator ruling): `detection` / `occupancy` / `sound`
  * moved off the plain camera-TYPE list onto `ruleDeviceCompatCapNames`
- * (`@camstack/types`) — the SAME capability table the admin's Devices tab
+ * (`@dominevo/types`) — the SAME capability table the admin's Devices tab
  * now asks `deviceManager.listDeviceIdsByCaps` for, so a camera with no
  * `detection-pipeline` (or `audio-metrics`) binding is no longer offered for
  * a rule that could never match it.
@@ -19,7 +19,7 @@
  * engine matches a sensor rule scoped to a CAMERA (`rowCameraIds`, D630 §6),
  * so a camera-scoped sensor rule is legitimate and the picker's two
  * `listDeviceIdsByCaps` queries (`ruleDeviceCompatCapQueries`,
- * `@camstack/types` 1.2.281) must both be offered.
+ * `@dominevo/types` 1.2.281) must both be offered.
  */
 import { describe, expect, it } from 'vitest'
 import {
@@ -27,8 +27,8 @@ import {
   NC_CAMERA_SCOPE_CAP_NAME,
   NC_RULE_KIND_SPECS,
   ruleEditorSectionsForKind,
-} from '@camstack/types/client'
-import { ruleDeviceCompatCapQueries } from '@camstack/types'
+} from '@dominevo/types/client'
+import { ruleDeviceCompatCapQueries } from '@dominevo/types'
 
 import { MAX_CAPS_PER_QUERY, ruleDeviceSource, sensorRuleCapNames } from '../rule-device-source.js'
 
@@ -51,7 +51,7 @@ describe('ruleDeviceSource — the device list a rule kind offers', () => {
     })
   })
 
-  it('matches the union @camstack/types itself says a sensor rule may target', () => {
+  it('matches the union @dominevo/types itself says a sensor rule may target', () => {
     const source = ruleDeviceSource('sensor', undefined)
     expect(source.kind).toBe('caps')
     if (source.kind !== 'caps') throw new Error('unreachable')

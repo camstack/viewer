@@ -6,7 +6,7 @@
  * stay with `HeroControlView`.
  */
 import React from 'react'
-import type { HeroControl } from '@camstack/types'
+import type { HeroControl } from '@dominevo/types'
 import { IconButton } from '../components/camera/accessory-controls/control-atoms.js'
 import { IconButtonGroup } from '../components/ui/IconButtonGroup.js'
 import { Play, Power, Square, type LucideIcon } from '../lib/icons.js'

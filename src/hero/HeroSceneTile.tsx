@@ -15,7 +15,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated'
-import type { HeroTone } from '@camstack/types'
+import type { HeroTone } from '@dominevo/types'
 import { CatalogIcon } from '../components/CatalogIcon.js'
 import { useTheme } from '../theme/theme-provider.js'
 import { MOTION_EASE } from '../theme/motion.js'

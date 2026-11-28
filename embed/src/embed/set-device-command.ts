@@ -14,7 +14,7 @@
  * `null` (a no-op for the caller) rather than throwing inside the page.
  */
 import { z } from 'zod'
-import { CamProfileSchema } from '@camstack/types/client'
+import { CamProfileSchema } from '@dominevo/types/client'
 
 /**
  * WebRTC target for the swapped-to camera. Mirrors the page config's target

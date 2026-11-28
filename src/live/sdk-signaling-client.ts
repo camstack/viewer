@@ -10,7 +10,7 @@
  * `IceCandidateInit` shapes already match structurally, so no field mapping is
  * needed beyond forwarding.
  */
-import type { System } from '@camstack/sdk'
+import type { System } from '@dominevo/sdk'
 import type {
   SignalingClient,
   IceServer,

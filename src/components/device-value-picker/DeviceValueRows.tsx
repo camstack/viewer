@@ -11,7 +11,7 @@
 import React from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
-import type { DeviceSearchItem, DeviceValueOption } from '@camstack/types'
+import type { DeviceSearchItem, DeviceValueOption } from '@dominevo/types'
 
 import { Check, ChevronRight } from '../../lib/icons.js'
 import { useTheme } from '../../theme/theme-provider.js'

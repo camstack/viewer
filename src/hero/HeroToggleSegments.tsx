@@ -4,7 +4,7 @@
  * them. Render under an `IconButtonGroup`; nothing when the model has no toggle.
  */
 import React from 'react'
-import type { HeroControl } from '@camstack/types'
+import type { HeroControl } from '@dominevo/types'
 import { useTranslation } from 'react-i18next'
 import { heroLocale } from './hero-view.js'
 import { HeroIconSegments } from './HeroIconGroup.js'

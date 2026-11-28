@@ -3,7 +3,7 @@
  * them on a row (`identifiers`).
  *
  * The schema is a viewer-LOCAL mirror of `DeviceIdentifiersSchema` in
- * `@camstack/types` (`device/device-identifiers.ts`): the `/client` entry does
+ * `@dominevo/types` (`device/device-identifiers.ts`): the `/client` entry does
  * not export it. Keep the patterns in step with that file. A payload this
  * schema refuses is shown as no identifiers at all, like the hub admin does.
  */

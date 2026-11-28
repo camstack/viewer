@@ -2,14 +2,14 @@
  * The remote layout the viewer draws: the saved grid of a `remote` extension
  * (columns × rows, buttons, group frames), read from the hub's template store.
  * The admin UI draws the same payload; here it is parsed STRUCTURALLY, because
- * the schema's value is not part of the viewer's `@camstack/types/client` entry.
+ * the schema's value is not part of the viewer's `@dominevo/types/client` entry.
  * A payload that is not a remote layout is `null` — "we cannot draw it", never
  * an empty remote.
  *
  * Pure: no React, no hub. The sheet (`RemoteSheet.tsx`) places what this returns.
  */
 
-import { remoteRoleIcon, remoteRoleLabel, remoteRoleLegend, type VocabLocale } from '@camstack/types/client'
+import { remoteRoleIcon, remoteRoleLabel, remoteRoleLegend, type VocabLocale } from '@dominevo/types/client'
 import { resolveAppBrand, type AppBrand } from './app-brand-icons.js'
 
 export interface RemoteLayoutButton {

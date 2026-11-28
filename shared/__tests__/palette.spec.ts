@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { bundledCamstack, paintHex } from '@camstack/types/client'
+import { bundledCamstack, paintHex } from '@dominevo/types/client'
 import {
   audioScaleColors,
   failureReason,

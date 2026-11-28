@@ -20,7 +20,7 @@
  *
  * Outcomes are the caller's decision table: only `refused` means "signed out".
  */
-import { deviceRefusalFromMessage } from '@camstack/types/client'
+import { deviceRefusalFromMessage } from '@dominevo/types/client'
 import { isUnauthorizedError } from './unauthorized.js'
 import { postTrpcMutation, type FetchLike } from './hub-auth-wire.js'
 

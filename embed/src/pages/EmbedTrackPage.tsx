@@ -12,8 +12,8 @@
  * operator actions of the app's detail view; an iframe in someone else's
  * dashboard shows what happened and where.
  */
-import { resolveEventKindIcon } from '@camstack/ui-library'
-import { createSystem, type System } from '@camstack/sdk'
+import { resolveEventKindIcon } from '@dominevo/ui-library'
+import { createSystem, type System } from '@dominevo/sdk'
 import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { PaletteBridge } from '../embed/PaletteBridge'
 import {

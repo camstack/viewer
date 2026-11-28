@@ -5,7 +5,7 @@
  * ## Why the app declares its own shape
  *
  * The numbers are measured by `CameraStreamPlayer`, which lives in
- * `@camstack/ui-library` — a **DOM** component library. A React Native app must
+ * `@dominevo/ui-library` — a **DOM** component library. A React Native app must
  * not import it: its bundle reaches for browser globals and for
  * `Array.prototype.toSorted`, which Hermes does not have
  * (`scripts/check-hermes-builtins.mjs` exists because of exactly this class of

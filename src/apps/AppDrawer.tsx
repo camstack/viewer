@@ -18,7 +18,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } fr
 import { usePathname, useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import type { AppLabel } from '@camstack/types'
+import type { AppLabel } from '@dominevo/types'
 
 import { useServer } from '../app/ServerProvider.js'
 import { Badge } from '../components/ui/Badge.js'

@@ -5,7 +5,7 @@ import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { renderHook, waitFor } from '@testing-library/react'
-import { bundledCamstack } from '@camstack/types/client'
+import { bundledCamstack } from '@dominevo/types/client'
 import { paintKind, resetPaletteView } from '../../../shared/palette.js'
 import { resetPaletteLog, shouldRefreshPalette, usePalette } from '../use-palette.js'
 

@@ -43,7 +43,7 @@ const { createSystem, sockets } = vi.hoisted(() => {
   }
 })
 
-vi.mock('@camstack/sdk', () => ({ createSystem }))
+vi.mock('@dominevo/sdk', () => ({ createSystem }))
 
 const raceSeam = async (): Promise<CandidateRaceOutcome> => ({ winner: null, results: [] })
 

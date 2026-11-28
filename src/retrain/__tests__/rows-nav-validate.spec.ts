@@ -1,4 +1,4 @@
-import type { RetrainAnnotation } from '@camstack/types'
+import type { RetrainAnnotation } from '@dominevo/types'
 import { describe, expect, it } from 'vitest'
 import { deleteBox, seedEditor } from '../editor.js'
 import { frameNav } from '../frame-nav.js'

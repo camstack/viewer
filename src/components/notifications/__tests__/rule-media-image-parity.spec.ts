@@ -1,6 +1,6 @@
 /**
  * The picture-mode mirror (`rule-media-image.ts`) against the PUBLISHED hub
- * functions (`@camstack/types`, D897), over every combination that matters.
+ * functions (`@dominevo/types`, D897), over every combination that matters.
  *
  * The mirror exists because those functions ship on the bare entry, which this
  * app imports for types only. A hub change to the mapping, the clamp or the
@@ -18,7 +18,7 @@ import {
   ruleTriggerZoneIds as hubRuleTriggerZoneIds,
   NC_MEDIA_IMAGE_MODES as HUB_MODES,
   NC_RULE_KIND_SPECS,
-} from '@camstack/types'
+} from '@dominevo/types'
 import type { NcConditions, NcDelivery, NcMediaPolicy } from '../../../data/notification-center.js'
 import {
   NC_MEDIA_IMAGE_MODES,
@@ -29,7 +29,7 @@ import {
   ruleTriggerZoneIds,
 } from '../rule-media-image.js'
 import { pruneMediaPolicy } from '../rule-editor.js'
-import { ruleKindOf } from '@camstack/types/client'
+import { ruleKindOf } from '@dominevo/types/client'
 
 const KINDS = NC_RULE_KIND_SPECS.map((spec) => spec.kind)
 

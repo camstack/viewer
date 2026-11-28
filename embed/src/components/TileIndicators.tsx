@@ -17,10 +17,10 @@
  * `getCurrentSnapshot` and then follows `occupancy-changed`.
  */
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
-import { useLiveEvent } from '@camstack/ui-library'
-import type { System } from '@camstack/sdk'
-import { EventCategory } from '@camstack/types/enums'
-import type { PipelineAudioInferenceResultPayload } from '@camstack/types'
+import { useLiveEvent } from '@dominevo/ui-library'
+import type { System } from '@dominevo/sdk'
+import { EventCategory } from '@dominevo/types/enums'
+import type { PipelineAudioInferenceResultPayload } from '@dominevo/types'
 import {
   audioLevelColor,
   anchorStyle,

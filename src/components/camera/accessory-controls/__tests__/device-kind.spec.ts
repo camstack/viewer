@@ -1,10 +1,10 @@
 /**
  * `device-kind.ts` hand-copies hub `CLIMATE_ROLES`; this spec fails when the hub
  * list drifts from the viewer copy or from hub `DeviceRole` (specs may read
- * `@camstack/types`; `/client` carries `DeviceType` only until `DeviceRole` ships).
+ * `@dominevo/types`; `/client` carries `DeviceType` only until `DeviceRole` ships).
  */
 import { describe, expect, it } from 'vitest'
-import { DeviceRole } from '@camstack/types'
+import { DeviceRole } from '@dominevo/types'
 import { VIEWER_CLIMATE_ROLES } from '../device-kind.js'
 
 /** Hub `packages/types/src/device/device-kind.ts` — `CLIMATE_ROLES` order. */

@@ -14,8 +14,8 @@
  * TEST NOW never says "sent": delivery is asynchronous through the durable
  * outbox, so the most this side can honestly claim is "queued".
  */
-import { isSystemRuleKind } from '@camstack/types/client'
-import type { NcRuleKind } from '@camstack/types'
+import { isSystemRuleKind } from '@dominevo/types/client'
+import type { NcRuleKind } from '@dominevo/types'
 import type {
   NcDelivery,
   NcDryRunRecord,

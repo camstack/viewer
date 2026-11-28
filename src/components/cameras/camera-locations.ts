@@ -16,7 +16,7 @@ export interface LocatableCamera {
  * A SITE ZONE as this screen needs it — a named part of the property holding
  * several locations ("Night zone" holds the bedrooms).
  *
- * Declared structurally HERE and not imported from `@camstack/types`: that
+ * Declared structurally HERE and not imported from `@dominevo/types`: that
  * specifier resolves to the workspace source for tsc and to the PUBLISHED
  * package at runtime, so importing a type added the same day compiles green and
  * throws the moment the app evaluates it. The shape is small; the trap is not.

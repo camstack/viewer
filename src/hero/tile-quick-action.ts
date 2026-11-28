@@ -15,7 +15,7 @@
  *
  * A read-only session never gets an action (`canActuate`).
  */
-import type { HeroTone } from '@camstack/types'
+import type { HeroTone } from '@dominevo/types'
 import type { AccessoryControlKind } from '../components/camera/accessory-controls/control-registry.js'
 
 export type TileQuickKind = 'switch' | 'cover' | 'lock' | 'hero-power' | 'none'

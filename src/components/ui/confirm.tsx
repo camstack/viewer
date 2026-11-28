@@ -14,7 +14,7 @@
  *
  * ## The contract
  *
- * Deliberately the same one `@camstack/ui-library` exposes to the admin UI
+ * Deliberately the same one `@dominevo/ui-library` exposes to the admin UI
  * (`composites/confirm-dialog.tsx`): promise-based, `Promise<boolean>`, options
  * by name. That library's PROVIDER is unusable here — it renders raw `<div>` /
  * `<button>` with Tailwind classes, which have no meaning under React Native —

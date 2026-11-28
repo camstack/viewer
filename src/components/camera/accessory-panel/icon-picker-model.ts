@@ -11,8 +11,8 @@ import {
   ICON_CATEGORIES,
   iconsInCategory,
   searchIcons,
-} from '@camstack/types/client'
-import type { IconCategoryId, IconKey } from '@camstack/types'
+} from '@dominevo/types/client'
+import type { IconCategoryId, IconKey } from '@dominevo/types'
 
 export interface IconSection {
   readonly category: IconCategoryId

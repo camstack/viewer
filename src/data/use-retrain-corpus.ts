@@ -5,7 +5,7 @@
  */
 import { useCallback, useMemo } from 'react'
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import type { RetrainFrame } from '@camstack/types'
+import type { RetrainFrame } from '@dominevo/types'
 
 import { useConnection } from '../connection/ConnectionProvider.js'
 import { useServer } from '../app/ServerProvider.js'

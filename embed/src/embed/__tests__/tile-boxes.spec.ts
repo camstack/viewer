@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import type { FrameResult, ObjectDetection } from '@camstack/types'
+import type { FrameResult, ObjectDetection } from '@dominevo/types'
 import { normalizeFrameBoxes, tileBoxColor, TILE_BOXES_FADE_MS } from '../tile-boxes'
 
 function det(overrides: Partial<ObjectDetection>): ObjectDetection {

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { IntegrationInstanceSchema } from '@camstack/types'
+import { IntegrationInstanceSchema } from '@dominevo/types'
 import { makeNcClient } from '../notification-center.js'
 import { type NcInstanceMethod, NcTargetInstanceSchema } from '../nc-target-instances.js'
 

@@ -3,7 +3,7 @@
  * the raise, the clear, or both (`conditions.sensorTransition`, ABSENT = both;
  * there is no `'both'` member, and choosing "both" deletes the key).
  *
- * Every rule is SHARED with the admin and the hub, from `@camstack/types`:
+ * Every rule is SHARED with the admin and the hub, from `@dominevo/types`:
  *  - the support rule, `sensorTransitionOffered(sensorKinds)` — offered only
  *    when the rule names at least one sensor kind and every one raises and
  *    clears;
@@ -20,10 +20,10 @@ import {
   NC_SENSOR_TRANSITION_UNSUPPORTED_REASON,
   sensorTransitionNeverFires,
   sensorTransitionOffered,
-} from '@camstack/types/client'
-import type { NcDroppedCondition, NcRuleKind } from '@camstack/types'
-import { stepPullsAlarmTrigger } from '@camstack/types/client'
-import type { ActionStep } from '@camstack/types'
+} from '@dominevo/types/client'
+import type { NcDroppedCondition, NcRuleKind } from '@dominevo/types'
+import { stepPullsAlarmTrigger } from '@dominevo/types/client'
+import type { ActionStep } from '@dominevo/types'
 import type {
   NcConditionDescriptor,
   NcConditions,

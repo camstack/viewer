@@ -12,7 +12,7 @@
  * So the check is structural and exhaustive rather than a list of remembered
  * fields: both schemas are walked into `path: shape` lines (object keys, enum
  * members, array/record/union structure) and the two sets must be equal. The
- * published `@camstack/types` is what this app resolves at runtime, so a hub
+ * published `@dominevo/types` is what this app resolves at runtime, so a hub
  * field this build lacks turns this red the day the types are bumped.
  */
 import { describe, expect, it } from 'vitest'
@@ -20,7 +20,7 @@ import {
   NcRuleInputSchema as PublishedRuleInput,
   NcRulePatchSchema as PublishedRulePatch,
   NcRuleSchema as PublishedRule,
-} from '@camstack/types'
+} from '@dominevo/types'
 import { NcRuleInputSchema, NcRulePatchSchema, NcRuleSchema } from '../notification-center.js'
 
 type Obj = Readonly<Record<string, unknown>>
@@ -102,7 +102,7 @@ function lines(schema: unknown): string[] {
 /**
  * Lines the viewer carries AHEAD of the published types, by name — and only
  * while they are ahead. A field added to the cap reaches the phone before the
- * `@camstack/types` release that carries it (the mirror must parse what the
+ * `@dominevo/types` release that carries it (the mirror must parse what the
  * newer hub serves, or a phone save strips it). Each entry here is checked to
  * be ABSENT from the published types: the day the release lands, this list
  * fails the suite until the entry is removed, so it cannot outlive its reason.

@@ -8,11 +8,11 @@
  * Authority: `addon-post-analysis/src/notification-center/nc-actions.ts`
  * (`NcAlarmStatusSchema`) and `alarm/alarm-arm-guard.ts`
  * (`NcAlarmArmOutcomeSchema`). The outcome lives in the ADDON, not in
- * `@camstack/types`, because it is the response of the bridge — the cap
+ * `@dominevo/types`, because it is the response of the bridge — the cap
  * (`alarm-panel.arm`) answers `void` and can only THROW a refusal, which loses
  * the id Arm anyway must carry. So it is mirrored here, field for field.
  *
- * The config and the patch ARE published (`@camstack/types`), and are taken
+ * The config and the patch ARE published (`@dominevo/types`), and are taken
  * from there rather than re-declared. The live sub-schema is not on the
  * barrel; it is derived from the config exactly as the server derives it.
  *
@@ -25,14 +25,14 @@ import {
   NcAlarmConfigSchema,
   NcAlarmSensorsSchema,
   NcAlarmSettingsPatchSchema,
-} from '@camstack/types/client'
+} from '@dominevo/types/client'
 import type {
   AlarmState,
   AlarmArmMode,
   NcAlarmConfig,
   NcAlarmSensors,
   NcAlarmSettingsPatch,
-} from '@camstack/types'
+} from '@dominevo/types'
 
 export { NcAlarmConfigSchema, NcAlarmSensorsSchema, NcAlarmSettingsPatchSchema, AlarmArmModeSchema }
 export type { AlarmArmMode, NcAlarmConfig, NcAlarmSensors, NcAlarmSettingsPatch }

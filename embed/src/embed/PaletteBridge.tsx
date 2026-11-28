@@ -3,7 +3,7 @@
  * says so. The pages do not share one React tree with the app.
  */
 import React from 'react'
-import type { System } from '@camstack/sdk'
+import type { System } from '@dominevo/sdk'
 import { THEME } from '../../../src/theme/tokens'
 import { usePaletteView } from '../../../shared/palette'
 import { useEmbedPalette } from './use-display-palette'

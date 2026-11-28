@@ -12,7 +12,7 @@
 import React, { useState } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
-import type { DeviceSearchItem, DeviceSearchRequires } from '@camstack/types'
+import type { DeviceSearchItem, DeviceSearchRequires } from '@dominevo/types'
 
 import { Check, ChevronLeft, X } from '../../lib/icons.js'
 import { useTheme } from '../../theme/theme-provider.js'

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { DeviceType } from '@camstack/types/client'
+import { DeviceType } from '@dominevo/types/client'
 import {
   pickAccessoryControl, hasMotionTrigger, isActuatingControlKind, MOTION_TRIGGER_FEATURE,
   type AccessoryControlKind,

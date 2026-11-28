@@ -27,7 +27,7 @@
  * track with no stored crop (or a failed fetch) falls back to a class-tinted
  * tile rather than a broken-image glyph.
  */
-import { resolveEventKindIcon } from '@camstack/ui-library'
+import { resolveEventKindIcon } from '@dominevo/ui-library'
 import { memo, useRef, type CSSProperties } from 'react'
 import type { EventsFields, EventsLocale } from '../embed/events-config'
 import { formatEventAge } from '../../../shared/events/events-time'
@@ -208,7 +208,7 @@ export const EventsCard = memo(function EventsCard({
    */
   const thumbnailCarriesLabels = display.tileLabelMode === 'label'
   const caption = rowCaption(row, thumbnailCarriesLabels, title.text, kindLabels)
-  // Resolved through the SHARED web icon set (`@camstack/ui-library`), which is
+  // Resolved through the SHARED web icon set (`@dominevo/ui-library`), which is
   // byte-identical to the viewer's native map — 65 ids, one source, bundled.
   // No CDN: lucide-react is a direct dependency and tree-shakes into the bundle.
   const ClassGlyph = resolveEventKindIcon(iconId)

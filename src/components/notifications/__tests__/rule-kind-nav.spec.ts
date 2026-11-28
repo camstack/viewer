@@ -1,4 +1,4 @@
-import { ruleKindOf } from '@camstack/types/client'
+import { ruleKindOf } from '@dominevo/types/client'
 import { describe, expect, it } from 'vitest'
 import enLocale from '../../../../locales/en.json'
 import itLocale from '../../../../locales/it.json'

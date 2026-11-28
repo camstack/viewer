@@ -352,7 +352,7 @@ describe('the privacy mask with no zone drawn is a LIVE control with a warning',
   const zoneless = row({ id: 'privacy-mask', available: false, enabled: false, unavailableReason: 'not-configured' })
 
   it('the CURRENT hub says so itself: available, with a warning code', () => {
-    // Since @camstack/types 1.2.243 the derivation no longer withholds the
+    // Since @dominevo/types 1.2.243 the derivation no longer withholds the
     // control — it sends `available: true` plus `warning`. This is the shape
     // every up-to-date hub produces; the `not-configured` row below is the
     // old one, kept only so this app still works against a stale hub.

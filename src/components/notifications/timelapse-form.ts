@@ -29,13 +29,13 @@
  * `clear` ({@link timelapseClearsFor}), the addon-local list
  * `nc.upsertTimelapseRule` takes (Plan A's `nc.updateRule` design).
  *
- * ## Schemas come from `@camstack/types`, not from a mirror
+ * ## Schemas come from `@dominevo/types`, not from a mirror
  *
  * `TimelapseRule` already ships in the package the app depends on, so there is
  * no second copy of the shape here — see the note in
  * `data/notification-center.ts`.
  */
-import { TIMELAPSE_DENSE_FLOOR_SEC } from '@camstack/types/client'
+import { TIMELAPSE_DENSE_FLOOR_SEC } from '@dominevo/types/client'
 import type {
   NcRuleTarget,
   NcSchedule,
@@ -44,7 +44,7 @@ import type {
   TimelapseRuleInput,
   TimelapseRulePatch,
   TimelapseTemplate,
-} from '@camstack/types'
+} from '@dominevo/types'
 import type { NcTimelapseRuleClearableKey } from '../../data/notification-center.js'
 import {
   ownershipSafeTargets,

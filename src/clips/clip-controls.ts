@@ -50,7 +50,7 @@
  * Pure: no React, no i18n, no network.
  */
 
-import type { ClipPlaybackOptions } from '@camstack/types'
+import type { ClipPlaybackOptions } from '@dominevo/types'
 
 import {
   CLIP_LEGACY_RATE_LADDER,

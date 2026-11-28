@@ -92,7 +92,7 @@ const AUDIO_MACRO_ID = 'audio'
  * namespaced (`audio-speech`). One place converts.
  *
  * IDEMPOTENT, exactly like its server-side twin (`audioKindId` in
- * `@camstack/types`). Without the guard this doubles a value that already
+ * `@dominevo/types`). Without the guard this doubles a value that already
  * carries the namespace — and since the hub's D189 contract an audio row's
  * class is the macro `audio` itself, so the ungarded form produced
  * `audio-audio`: an id the taxonomy does not know, which shadows both

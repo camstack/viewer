@@ -10,7 +10,7 @@
  * sent in `values` so a hub that does not stamp keeps ownership working.
  *
  * `NcTargetInstanceSchema` mirrors the published `IntegrationInstanceSchema`
- * (`@camstack/types`), reduced to the fields a target needs.
+ * (`@dominevo/types`), reduced to the fields a target needs.
  */
 import { z } from 'zod'
 import type { Target } from './notification-center.js'

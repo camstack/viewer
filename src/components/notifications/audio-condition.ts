@@ -29,7 +29,7 @@ import {
   type NcTaxonomy,
 } from '../../data/notification-center.js'
 
-/** One audio macro class, mirroring `@camstack/types` `AUDIO_MACRO_LABELS`.
+/** One audio macro class, mirroring `@dominevo/types` `AUDIO_MACRO_LABELS`.
  *  The hub's taxonomy carries the ids and the words but NOT the icons, so the
  *  emoji live here — the ids are what the two sides agree on. */
 export interface NcAudioMacroLabel {
@@ -124,7 +124,7 @@ export function audioOrDefaults(value: NcAudioCondition | undefined): NcAudioCon
 
 /**
  * The two EXCLUSIVE ways an audio rule works (server decision D157) — mirrors
- * `@camstack/types` `NcAudioMode`.
+ * `@dominevo/types` `NcAudioMode`.
  *
  *  - `label` — the rule NAMES SOUNDS. It fires on the FIRST frame the
  *    classifier labels with one of them (above the analyzer's own per-device

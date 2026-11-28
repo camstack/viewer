@@ -11,8 +11,8 @@ import {
   NcThrottleSchema,
 } from '../../../data/notification-center.js'
 import { NC_CLIP_SPEED_DEFAULT } from '../rule-editor.js'
-import { NC_ALARM_SYSTEM_EVENT_KINDS } from '@camstack/types/client'
-import type { ActionStep } from '@camstack/types'
+import { NC_ALARM_SYSTEM_EVENT_KINDS } from '@dominevo/types/client'
+import type { ActionStep } from '@dominevo/types'
 import { actionStepsResolver } from '../../../data/listed-actions.js'
 import {
   NC_CLIP_SPEED_CHOICES,

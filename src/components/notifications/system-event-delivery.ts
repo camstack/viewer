@@ -4,7 +4,7 @@
  *
  * The phone's twin of the admin's `NotificationSystemEventDelivery.tsx` /
  * `notification-system-event-delivery.ts`. What is decided on the hub is READ
- * from `@camstack/types`, never restated: which families may summarise
+ * from `@dominevo/types`, never restated: which families may summarise
  * (`NC_SYSTEM_EVENT_SUMMARY_FAMILIES`), why a summary is refused
  * (`systemEventDeliveryProblems`) and whether a body carries the summary
  * (`templateCarriesSummary`).
@@ -30,8 +30,8 @@ import {
   systemEventDeliveryProblems,
   systemFamilyOfKind,
   templateCarriesSummary,
-} from '@camstack/types/client'
-import type { NcRuleKind, NcSystemEventDeliveryProblem } from '@camstack/types'
+} from '@dominevo/types/client'
+import type { NcRuleKind, NcSystemEventDeliveryProblem } from '@dominevo/types'
 import type {
   NcDelivery,
   NcSchedule,

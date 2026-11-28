@@ -38,8 +38,8 @@ import { isRecord } from './cap-query.js'
  * The source id CamStack's own recorder serves. RESERVED — no other addon may
  * spell it (`packages/types/src/capabilities/reserved-collection-sources.ts`).
  *
- * Spelled here rather than imported from `@camstack/types` on purpose: this
- * checkout resolves `@camstack/*` from the PUBLISHED packages, exactly as
+ * Spelled here rather than imported from `@dominevo/types` on purpose: this
+ * checkout resolves `@dominevo/*` from the PUBLISHED packages, exactly as
  * metro and CI do, so importing a constant added in the workspace would
  * type-check green against a tsconfig nobody ships with and throw on first
  * evaluation. The server-side guard is what keeps the two spellings honest.

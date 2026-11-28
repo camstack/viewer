@@ -12,8 +12,8 @@
  */
 import { useMemo } from 'react'
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
-import { NodeDirectorySchema } from '@camstack/types/client'
-import type { NodeDirectory } from '@camstack/types'
+import { NodeDirectorySchema } from '@dominevo/types/client'
+import type { NodeDirectory } from '@dominevo/types'
 import { useConnection } from '../connection/ConnectionProvider.js'
 import { capQuery } from './cap-query.js'
 

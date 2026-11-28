@@ -22,7 +22,7 @@
  */
 import { useMemo } from 'react'
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
-import type { ClipPlaybackOptions } from '@camstack/types'
+import type { ClipPlaybackOptions } from '@dominevo/types'
 
 import { useConnection } from '../connection/ConnectionProvider.js'
 import { capQuery } from '../data/cap-query.js'

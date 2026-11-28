@@ -16,8 +16,8 @@ import {
   NcRuleClearableKeySchema,
   NcDryRunResultSchema,
 } from '../notification-center.js'
-import { NC_GROUPING_MAX_SEC, NC_GROUPING_MIN_SEC, NC_TEMPLATE_VARS } from '@camstack/types/client'
-import { NcSystemEventKindSchema as PublishedSystemEventKindSchema } from '@camstack/types'
+import { NC_GROUPING_MAX_SEC, NC_GROUPING_MIN_SEC, NC_TEMPLATE_VARS } from '@dominevo/types/client'
+import { NcSystemEventKindSchema as PublishedSystemEventKindSchema } from '@dominevo/types'
 
 describe('ncClient', () => {
   it('routes listRules to addons.custom with addonId pipeline-analytics', async () => {

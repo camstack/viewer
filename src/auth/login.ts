@@ -1,4 +1,4 @@
-import { createSystem } from '@camstack/sdk'
+import { createSystem } from '@dominevo/sdk'
 import { HubUnreachableError } from './web-reachability.js'
 import { hubLanguage } from '../connection/hub-language.js'
 

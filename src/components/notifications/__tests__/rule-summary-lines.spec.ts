@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import enLocale from '../../../../locales/en.json'
 import itLocale from '../../../../locales/it.json'
-import { NC_RULE_EDITOR_SECTION_ORDER } from '@camstack/types/client'
+import { NC_RULE_EDITOR_SECTION_ORDER } from '@dominevo/types/client'
 import { emptyRuleForm } from '../rule-editor.js'
 import { NC_ACTIONS_EMPTY_FORM } from '../rule-action-form.js'
 import { ruleScopeDraftOf, switchRuleScopeMode } from '../rule-scope-model.js'

@@ -16,7 +16,7 @@
 import React from 'react'
 import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native'
 import { useTranslation } from 'react-i18next'
-import type { HeroControl, HeroRowModel, REMOTE_OPEN_ACTION_ID } from '@camstack/types'
+import type { HeroControl, HeroRowModel, REMOTE_OPEN_ACTION_ID } from '@dominevo/types'
 import { useRouter } from 'expo-router'
 import { CatalogIcon } from '../components/CatalogIcon.js'
 import { OfflineBadge } from '../components/device/OfflineBadge.js'

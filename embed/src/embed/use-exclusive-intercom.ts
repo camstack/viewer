@@ -14,7 +14,7 @@ import {
   useIntercomStartSession,
   useIntercomHandleAnswer,
   useIntercomStopSession,
-} from '@camstack/ui-library'
+} from '@dominevo/ui-library'
 
 export type MicState = 'idle' | 'starting' | 'talking' | 'error'
 

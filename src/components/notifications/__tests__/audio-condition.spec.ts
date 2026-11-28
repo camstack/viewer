@@ -224,7 +224,7 @@ describe('defaults and fail-closed', () => {
  * carries, so a rule authored before the modes existed migrates for free and
  * there is no second switch that can disagree with the first.
  *
- * This mirrors `@camstack/types` `audioModeOf`; the viewer keeps its own copy
+ * This mirrors `@dominevo/types` `audioModeOf`; the viewer keeps its own copy
  * for the same reason it keeps its own `patchAudio` (separate toolchain), and
  * this suite is what keeps the copy honest.
  */

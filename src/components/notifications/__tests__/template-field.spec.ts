@@ -7,7 +7,7 @@
  * grammar, the caption-field fixed allow-list, and the
  * kinds/deliveries/systemEventKinds filtering axes.
  *
- * The published `@camstack/types` (1.2.250) exports `NC_TEMPLATE_VARS` and
+ * The published `@dominevo/types` (1.2.250) exports `NC_TEMPLATE_VARS` and
  * `templateVarsFor`, so the parity sweep below runs HERE too, against the real
  * catalog and the real function — the same arbiter the admin's spec uses.
  *
@@ -22,8 +22,8 @@
  * regression in either the rule statement or the port shows up as a mismatch.
  */
 import { describe, expect, it } from 'vitest'
-import { NC_TEMPLATE_VARS, systemEventKindsOfFamily } from '@camstack/types/client'
-import { templateVarsFor } from '@camstack/types'
+import { NC_TEMPLATE_VARS, systemEventKindsOfFamily } from '@dominevo/types/client'
+import { templateVarsFor } from '@dominevo/types'
 import enLocale from '../../../../locales/en.json'
 import itLocale from '../../../../locales/it.json'
 import {

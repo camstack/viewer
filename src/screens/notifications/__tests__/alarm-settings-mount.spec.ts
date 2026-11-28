@@ -22,7 +22,7 @@ import {
   applyModeDelaysEdits,
   NcAlarmModeDelaysEditSchema,
   NcAlarmModeDelaysSchema,
-} from '@camstack/types'
+} from '@dominevo/types'
 
 import { mountScreen } from '../../../testing/mount.js'
 import { hubCalls } from '../../../testing/hub-stub.js'

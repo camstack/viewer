@@ -7,7 +7,7 @@
  * {@link NcSchedule}, not a `conditions` field.
  *
  * VISIBILITY IS `delivery` × `kind`, and the shared model decides it
- * ({@link conditionVisibleForKind} in `@camstack/types`). `appliesTo` alone —
+ * ({@link conditionVisibleForKind} in `@dominevo/types`). `appliesTo` alone —
  * what this form used until now — left an occupancy rule offering `sensorKinds`,
  * `eventTypeTokens` and `source`: three fields the engine fails CLOSED on an
  * occupancy subject, so the rule sat enabled, in the list, and permanently
@@ -55,8 +55,8 @@ import { deviceListConditionKey, scopeDescriptorRole, withClassScope } from './r
 import { conditionSupportedByRule, type NcSensorTransitionAlarmActions } from './sensor-transition.js'
 import { occupancyDroppedClasses } from './occupancy-condition.js'
 import { conditionGroupLabelFallback, orderedConditionGroups } from './rule-sections.js'
-import { conditionVisibleForKind } from '@camstack/types/client'
-import type { NcRuleKind, NcSystemEventFamily } from '@camstack/types'
+import { conditionVisibleForKind } from '@dominevo/types/client'
+import type { NcRuleKind, NcSystemEventFamily } from '@dominevo/types'
 import type {
   NcConditionDescriptor,
   NcConditions,

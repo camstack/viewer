@@ -33,8 +33,8 @@
  *
  * Pure and RN-free: the node-env specs exercise it directly.
  */
-import { conditionVisibleForKind, pickerForRuleClasses } from '@camstack/types/client'
-import type { NcRuleKind } from '@camstack/types'
+import { conditionVisibleForKind, pickerForRuleClasses } from '@dominevo/types/client'
+import type { NcRuleKind } from '@dominevo/types'
 import type {
   NcConditionDescriptor,
   NcConditions,

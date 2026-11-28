@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { SystemController, type SystemControllerConfig } from '../system-controller.js'
 
 const { createSystem } = vi.hoisted(() => ({ createSystem: vi.fn() }))
-vi.mock('@camstack/sdk', () => ({ createSystem }))
+vi.mock('@dominevo/sdk', () => ({ createSystem }))
 
 class FakeSystem {
   closed = false

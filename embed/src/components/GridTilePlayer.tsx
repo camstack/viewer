@@ -1,10 +1,10 @@
-import type { System } from '@camstack/sdk'
+import type { System } from '@dominevo/sdk'
 import {
   CameraStreamPlayer,
   type PlayerConnectionState,
   useDeviceWebrtc,
   type WebrtcTarget,
-} from '@camstack/ui-library'
+} from '@dominevo/ui-library'
 import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import type { GridHighlightConfig, GridQuality, TileOverlayConfig } from '../embed/embed-grid-config'
 import { isOverlayAnchor } from '../embed/tile-overlays'

@@ -39,7 +39,7 @@ const { close, reconnect, authMe, createSystem, connectionChange } = vi.hoisted(
   }
 })
 
-vi.mock('@camstack/sdk', () => ({ createSystem }))
+vi.mock('@dominevo/sdk', () => ({ createSystem }))
 
 /** No route optimisation in these specs: a race that elects nothing leaves the
  *  transport where it is, which is all this file cares about. */

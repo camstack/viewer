@@ -25,7 +25,7 @@ import {
   EVENT_TAXONOMY,
   MACRO_LABELS,
   YAMNET_TO_MACRO,
-} from '@camstack/types/client'
+} from '@dominevo/types/client'
 import enLocale from '../../../locales/en.json'
 import itLocale from '../../../locales/it.json'
 import {

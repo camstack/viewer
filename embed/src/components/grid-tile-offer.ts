@@ -20,7 +20,7 @@ import type {
   ClientStreamHints,
   PlayerWebrtcTarget,
   WebrtcTarget,
-} from '@camstack/ui-library'
+} from '@dominevo/ui-library'
 
 /** The device-bound signaling call the tile closes over (`useDeviceWebrtc`). */
 export type TileHandleOffer = (

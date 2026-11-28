@@ -12,7 +12,7 @@
  * with no clip id; without the intent that offer dialled a sleeping camera
  * live and the session was torn down until it woke (planning#566).
  */
-import type { ClientStreamHints } from '@camstack/ui-library'
+import type { ClientStreamHints } from '@dominevo/ui-library'
 
 /** The offer hints plus the intent the published `ClientStreamHints` lacks. */
 export type OfferHints = ClientStreamHints & { readonly intent?: 'live' | 'clip' }

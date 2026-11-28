@@ -10,7 +10,7 @@
 import React from 'react'
 import { Pressable, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
-import type { AlarmArmMode, NcAlarmModeCoverage } from '@camstack/types'
+import type { AlarmArmMode, NcAlarmModeCoverage } from '@dominevo/types'
 import { Section } from '../../components/ui/Section.js'
 import { AlarmControl } from '../../components/camera/accessory-controls/controls-alarm.js'
 import {

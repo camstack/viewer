@@ -9,8 +9,8 @@
  * to the hub's English label, or worse, to the raw key.
  */
 import { describe, expect, it } from 'vitest'
-import { DeviceType, NC_RULE_KIND_SPECS } from '@camstack/types/client'
-import { NC_CONDITION_CATALOG } from '@camstack/types'
+import { DeviceType, NC_RULE_KIND_SPECS } from '@dominevo/types/client'
+import { NC_CONDITION_CATALOG } from '@dominevo/types'
 import enLocale from '../../../../locales/en.json'
 import itLocale from '../../../../locales/it.json'
 import {

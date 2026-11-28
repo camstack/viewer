@@ -5,7 +5,7 @@ import {
   NC_GROUPING_MIN_SEC,
   NC_SYSTEM_EVENT_CLASS_SPECS,
   NC_SYSTEM_EVENT_FAMILY_FILTERS,
-} from '@camstack/types/client'
+} from '@dominevo/types/client'
 import {
   NC_CONDITION_CATALOG,
   NC_AUTHORABLE_SYSTEM_EVENT_KINDS,
@@ -14,7 +14,7 @@ import {
   NC_SYSTEM_EVENT_FILTER_KEYS,
   systemEventFilterApplies,
   type NcSystemEventFilterKey,
-} from '@camstack/types'
+} from '@dominevo/types'
 import type {
   NcConditionDescriptor,
   NcConditions,
@@ -728,7 +728,7 @@ describe('helpers', () => {
 
   /**
    * THE SCOPING IS NOT AUTHORED HERE. `systemEventFilterApplies`
-   * (`@camstack/types` → `src/notification/system-event-filters.ts`) is the one
+   * (`@dominevo/types` → `src/notification/system-event-filters.ts`) is the one
    * place that says which narrowing filter speaks about which kind, and the
    * rule ENGINE reads the same function — a viewer that re-derived it would be
    * a third author of a rule that already cost four days of undelivered system

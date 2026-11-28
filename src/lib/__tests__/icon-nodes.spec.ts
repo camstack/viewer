@@ -3,7 +3,7 @@
  * bump that adds a key fails HERE until `npm run gen:icon-nodes` is rerun.
  */
 import { describe, expect, it } from 'vitest'
-import { ICON_KEYS, ICON_VIEWER_MODULES } from '@camstack/types/client'
+import { ICON_KEYS, ICON_VIEWER_MODULES } from '@dominevo/types/client'
 
 import { ICON_NODES } from '../icon-nodes.generated.js'
 import { iconNodeFor } from '../icon-node-for.js'

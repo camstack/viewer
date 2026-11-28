@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { NC_CONDITION_CATALOG } from '@camstack/types'
+import { NC_CONDITION_CATALOG } from '@dominevo/types'
 import { isNumberConditionKey } from '../condition-field-keys.js'
 import { scopeDescriptorRole } from '../rule-scope-form.js'
 

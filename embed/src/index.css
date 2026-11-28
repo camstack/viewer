@@ -1,10 +1,10 @@
 @import "tailwindcss";
-@import "@camstack/ui-library/tailwind/camstack-theme.css";
+@import "@dominevo/ui-library/tailwind/camstack-theme.css";
 
 /* Shared ui-library composites emit Tailwind classes from their installed
    distribution, outside this source tree. Scan it explicitly so video sizing
    and player controls are present in the standalone Viewer build. */
-@source "../../node_modules/@camstack/ui-library/dist";
+@source "../../node_modules/@dominevo/ui-library/dist";
 @source ".";
 
 /* Dark by default — the embed is a chrome-less video surface on a black page. */

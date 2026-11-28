@@ -8,7 +8,7 @@ const { createSystem, raceFastestEndpoint, endpointsQuery, awaitConnected } = vi
   endpointsQuery: vi.fn(),
   awaitConnected: vi.fn(),
 }))
-vi.mock('@camstack/sdk', () => ({ createSystem }))
+vi.mock('@dominevo/sdk', () => ({ createSystem }))
 
 const PUBLIC_URL = 'https://hub.example.top:4443'
 const LAN_URL = 'https://192.0.2.10:4443'

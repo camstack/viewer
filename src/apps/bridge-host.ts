@@ -1,12 +1,12 @@
 /**
  * bridge-host — the shell's end of the `app-bridge` postMessage envelope (D1096).
  *
- * The schema and the parser live in `@camstack/types` (`app-bridge`); this file
+ * The schema and the parser live in `@dominevo/types` (`app-bridge`); this file
  * only builds what the shell SENDS and narrows what it RECEIVES. Anything that
  * is not an app-to-shell message — unknown, malformed, another protocol, or the
  * shell's own message echoed back by a webview — is `null` and is ignored.
  */
-import { parseAppBridgeMessage, type AppToShellMessage, type ShellToAppMessage } from '@camstack/types/client'
+import { parseAppBridgeMessage, type AppToShellMessage, type ShellToAppMessage } from '@dominevo/types/client'
 
 const ENVELOPE = { camstack: 'app-bridge', v: 1 } as const
 

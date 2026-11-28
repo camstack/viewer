@@ -23,7 +23,7 @@
  *  4. nothing translates on the way to the broker any more.
  */
 import { describe, expect, it } from 'vitest'
-import { CamProfileSchema } from '@camstack/types/client'
+import { CamProfileSchema } from '@dominevo/types/client'
 
 import { isStreamQuality } from '../settings-store.js'
 import { parseGrids, resolveGridOptions } from '../grid-store.js'

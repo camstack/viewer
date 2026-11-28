@@ -1,13 +1,13 @@
 import { execFileSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { navigationCapability, networkLinkCapability, expandCapMethods } from '@camstack/types'
+import { navigationCapability, networkLinkCapability, expandCapMethods } from '@dominevo/types'
 
 const repoRoot = fileURLToPath(new URL('../../..', import.meta.url))
 
 /**
  * `scripts/check-cap-query-names.mjs` validates every literal
- * `(capability, method)` pair against `@camstack/types`. Its first version
+ * `(capability, method)` pair against `@dominevo/types`. Its first version
  * compared them against `def.methods` ALONE, which is not the surface the hub
  * mounts: `expandCapMethods` injects `getStatus` for every cap carrying a
  * `status` block (and the settings-contribution trio for

@@ -2,7 +2,7 @@
  * hero-parse — the boundary of the hub's hero model (D1023).
  *
  * The viewer reaches `hero-layout` through the untyped cap client, and the
- * schemas that validate it live in `@camstack/types` (not in the `/client`
+ * schemas that validate it live in `@dominevo/types` (not in the `/client`
  * entry, which a bundle may import values from). The hub already validated the
  * answer against `HeroModelSchema` / `HeroRowModelSchema`; what is checked here
  * is only what the renderer would otherwise crash on, so a malformed entry
@@ -10,7 +10,7 @@
  *
  * Types are `import type` from the published package: the shape is declared once.
  */
-import type { HeroControl, HeroModel, HeroRowModel, HeroText } from '@camstack/types'
+import type { HeroControl, HeroModel, HeroRowModel, HeroText } from '@dominevo/types'
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
@@ -45,7 +45,7 @@ export function isHeroRowModel(value: unknown): value is HeroRowModel {
 
 /**
  * True when the hub says the row's primary exists but is gated (read-only). Read from
- * the parsed row, so it needs no `@camstack/types` bump: an older hub sends no field
+ * the parsed row, so it needs no `@dominevo/types` bump: an older hub sends no field
  * and reads `false`, and the legacy fallback control still draws for an uncovered type.
  */
 export function isPrimaryGated(model: HeroRowModel): boolean {

@@ -35,14 +35,14 @@
  * keeps latching exactly as it used to instead of gaining a retry loop nobody
  * tested it against.
  *
- * ## Why these numbers live here AND in `@camstack/ui-library` (D573)
+ * ## Why these numbers live here AND in `@dominevo/ui-library` (D573)
  *
  * They are a deliberate duplicate, not an oversight. The admin UI's copy is
  * `packages/ui-library/src/composites/clips/clip-still-retry.ts`. This app
- * resolves `@camstack/*` from the PUBLISHED packages by design, and the
- * published `@camstack/types` it holds (1.2.235) predates D563's header
+ * resolves `@dominevo/*` from the PUBLISHED packages by design, and the
+ * published `@dominevo/types` it holds (1.2.235) predates D563's header
  * constants entirely — so sharing the rule is a types publish plus a dependency
- * bump plus an OTA, not an import. `@camstack/ui-library` is a DOM component
+ * bump plus an OTA, not an import. `@dominevo/ui-library` is a DOM component
  * library and `src/**` is React Native, so that direction is closed outright.
  *
  * What must not drift is the CONTRACT — which disposition comes back, that a

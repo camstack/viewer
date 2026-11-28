@@ -16,7 +16,7 @@
 import React, { useMemo } from 'react'
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
-import type { DeviceSearchFacets, DeviceSearchItem } from '@camstack/types'
+import type { DeviceSearchFacets, DeviceSearchItem } from '@dominevo/types'
 
 import { useTheme } from '../../theme/theme-provider.js'
 import { SPACING, TYPOGRAPHY } from '../../theme/tokens.js'

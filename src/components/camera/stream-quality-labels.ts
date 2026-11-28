@@ -3,7 +3,7 @@
  * Shared by the quality pickers (single-player overlay, grid bar popover).
  * Reuses the existing settings quality strings.
  */
-import { CamProfileSchema } from '@camstack/types/client'
+import { CamProfileSchema } from '@dominevo/types/client'
 
 import type { StreamQuality } from '../../store/settings-store.js'
 

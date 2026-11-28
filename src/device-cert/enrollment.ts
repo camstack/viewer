@@ -13,7 +13,7 @@
  * failure or a crash deletes only the spare: an existing credential is never
  * touched by an enrollment that did not complete.
  */
-import type { DevicePlatform } from '@camstack/types'
+import type { DevicePlatform } from '@dominevo/types'
 import { activeAliasOf, spareAliasFor } from './cert-store.js'
 import { loginWithCertificate, type DeviceCertDeps, type DeviceLoginOutcome } from './device-session.js'
 import { deviceWire, type IssuedCertificate, type WireDeps } from './device-wire.js'

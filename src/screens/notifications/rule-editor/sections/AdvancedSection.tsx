@@ -18,7 +18,7 @@
 import React from 'react'
 import { View } from 'react-native'
 import { useTranslation } from 'react-i18next'
-import { ruleKindSpec } from '@camstack/types/client'
+import { ruleKindSpec } from '@dominevo/types/client'
 import { Section } from '../../../../components/ui/Section.js'
 import { StepperRow } from '../../../../components/ui/StepperRow.js'
 import { AdvancedConditionFields } from './AdvancedConditionFields.js'

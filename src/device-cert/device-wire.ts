@@ -6,7 +6,7 @@
  * transport failure is none.
  */
 import { z } from 'zod'
-import { deviceRefusalFromMessage } from '@camstack/types/client'
+import { deviceRefusalFromMessage } from '@dominevo/types/client'
 import { postTrpcMutation, type FetchLike, type WireOutcome } from '../auth/hub-auth-wire.js'
 import { isDefinitiveReason } from './revocation-policy.js'
 import { isSecureHub } from './transport.js'

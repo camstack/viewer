@@ -3,7 +3,7 @@
  * id, the name the operator picks, and the steps the alarm and snooze
  * questions read. Anything else on the entry is the Actions page's.
  */
-import type { ActionStep } from '@camstack/types'
+import type { ActionStep } from '@dominevo/types'
 import { z } from 'zod'
 
 export interface NcListedAction {

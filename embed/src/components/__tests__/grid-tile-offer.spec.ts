@@ -4,7 +4,7 @@ import type {
   ClientStreamHints,
   PlayerWebrtcTarget,
   WebrtcTarget,
-} from '@camstack/ui-library'
+} from '@dominevo/ui-library'
 import { createTileOfferBridge, type TileHandleOffer } from '../grid-tile-offer'
 
 interface Call {

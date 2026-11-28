@@ -13,7 +13,7 @@
  * single-screen editor does.
  */
 import { create } from 'zustand'
-import type { NcRuleKind } from '@camstack/types'
+import type { NcRuleKind } from '@dominevo/types'
 import type { NcRuleFormState } from '../components/notifications/rule-editor.js'
 import type { NcRuleAiFormState } from '../components/notifications/rule-ai-form.js'
 import type { NcViewerRule } from '../data/notification-center.js'

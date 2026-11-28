@@ -44,7 +44,7 @@
  * `Timelapse` and `Summary` sit at the end of the strip and are backed by their
  * own stores and their own bridge actions — a timelapse rides no `NcDelivery`
  * member at all, and a digest rule's schema does not even live in
- * `@camstack/types`. So they are never passed through `rulesOfKind` /
+ * `@dominevo/types`. So they are never passed through `rulesOfKind` /
  * `ruleKindOf` (which files anything it does not recognise as a detection
  * rule, and would therefore show the whole detection list under Timelapse);
  * their counts come from their own queries, and `NcRulesStripKey` keeps the

@@ -13,7 +13,7 @@
  * Pure (no React, no client): unit tested in `__tests__/account-tokens.spec.ts`.
  */
 import { z } from 'zod'
-import type { CredentialScope } from '@camstack/types'
+import type { CredentialScope } from '@dominevo/types'
 
 // ── wire ────────────────────────────────────────────────────────────────────
 
@@ -21,7 +21,7 @@ import type { CredentialScope } from '@camstack/types'
 export const SHARE_VIEW_KINDS = ['grid-view', 'events-view'] as const
 export type ShareViewKind = (typeof SHARE_VIEW_KINDS)[number]
 
-/** Mirrors `SHARE_VIEW_MAX_DEVICES` (`@camstack/types`, not in the client entry). */
+/** Mirrors `SHARE_VIEW_MAX_DEVICES` (`@dominevo/types`, not in the client entry). */
 export const SHARE_VIEW_MAX_DEVICES = 64
 
 const MethodAccessSchema = z.enum(['view', 'create', 'delete'])

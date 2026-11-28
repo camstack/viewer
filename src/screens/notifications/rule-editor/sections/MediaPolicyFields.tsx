@@ -6,7 +6,7 @@
 import React from 'react'
 import { Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
-import type { NcRuleKind } from '@camstack/types'
+import type { NcRuleKind } from '@dominevo/types'
 import { SelectRow, type SelectOption } from '../../../../components/ui/SelectRow.js'
 import { StepperRow } from '../../../../components/ui/StepperRow.js'
 import { ToggleRow } from '../../../../components/ui/ToggleRow.js'

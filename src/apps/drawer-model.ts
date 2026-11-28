@@ -7,7 +7,7 @@
  * is made only from a list that answered (D315): pending and a failed read draw
  * no app rows at all rather than a wrong one.
  */
-import type { AppInfo, AppLabel } from '@camstack/types'
+import type { AppInfo, AppLabel } from '@dominevo/types'
 
 import { hostedAppOf, orderApps, type AppCatalog } from './app-catalog.js'
 import type { AppId } from './app-launch.js'

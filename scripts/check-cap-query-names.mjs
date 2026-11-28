@@ -28,7 +28,7 @@
  *
  * ── What it checks ─────────────────────────────────────────────────────────
  * Every literal `(cap, method)` pair in `src/` against the capability
- * definitions in the `@camstack/types` this app actually resolves — the
+ * definitions in the `@dominevo/types` this app actually resolves — the
  * PUBLISHED package, which is what metro, vitest and CI resolve too, not the
  * workspace source. So the guard fails exactly when the app would 412 at
  * runtime, and passes only once the published types carry the new name.
@@ -45,7 +45,7 @@ import { join } from 'node:path'
 import { createRequire } from 'node:module'
 
 const require = createRequire(import.meta.url)
-const types = require('@camstack/types')
+const types = require('@dominevo/types')
 const { expandCapMethods } = types
 
 /**
@@ -186,7 +186,7 @@ if (failures.length > 0) {
   console.error(
     `\n  These are STRING literals: TypeScript cannot see them, and capQuery\n` +
       `  answers null rather than throwing — so the screen goes empty instead\n` +
-      `  of failing. Check @camstack/types (the PUBLISHED one, which is what\n` +
+      `  of failing. Check @dominevo/types (the PUBLISHED one, which is what\n` +
       `  this app resolves) and publish the server package if the name is new.\n`,
   )
   process.exit(1)

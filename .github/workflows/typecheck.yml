@@ -45,5 +45,5 @@ jobs:
         run: npm run test:v2
       - name: Embed build
         # The vite embed (web + OTA) is otherwise built only by the Railway
-        # image: a stale @camstack/ui-library broke it there, after the push.
+        # image: a stale @dominevo/ui-library broke it there, after the push.
         run: npm run build:embed:web && npm run build:embed:ota

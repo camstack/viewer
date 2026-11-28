@@ -19,7 +19,7 @@ import { ChevronRight, History } from '../../lib/icons.js'
 import { useTheme } from '../../theme/theme-provider.js'
 import { SPACING, type ColorTokens } from '../../theme/tokens.js'
 import { capturedLabel } from '../../data/nc-artifact-format.js'
-import type { NcHistoryStatus } from '@camstack/types'
+import type { NcHistoryStatus } from '@dominevo/types'
 import type { RuleLastRunLine } from './rule-last-run.js'
 
 export interface RuleLastRunRowProps {

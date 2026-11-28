@@ -17,7 +17,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, screen as dom, within } from '@testing-library/react'
 import React, { useState } from 'react'
-import type { NcSystemEventFamily } from '@camstack/types'
+import type { NcSystemEventFamily } from '@dominevo/types'
 
 import { mountScreen } from '../../../testing/mount.js'
 import { routerCalls } from '../../../testing/native-stubs/expo-router.js'

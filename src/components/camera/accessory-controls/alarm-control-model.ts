@@ -21,7 +21,7 @@
  * needs answered: until it is, Disarm goes through the cap. And an unreadable
  * panel is UNKNOWN — never "disarmed" — so Disarm stays reachable (D49, D393).
  */
-import type { AlarmState } from '@camstack/types'
+import type { AlarmState } from '@dominevo/types'
 import type { AdminVerdict } from '../../../data/use-me.js'
 import type { AlarmArmMode, AlarmStatus } from '../../../data/use-accessory-controls.js'
 import type {

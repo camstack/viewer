@@ -14,7 +14,7 @@
  *     rather than drop it (D62).
  */
 import { describe, it, expect } from 'vitest'
-import { CLIP_PLAYBACK_OPTIONS } from '@camstack/types'
+import { CLIP_PLAYBACK_OPTIONS } from '@dominevo/types'
 
 import {
   clipControlDisabled,

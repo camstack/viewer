@@ -6,7 +6,7 @@
  * `zoneCrop`); the hub now renders the picture at send time and the rule says
  * only what it wants to SEE: `image` (`scene-boxes` | `crop` | `clean` |
  * `none`) plus `showTriggerZone` and `showSubjectPath` (D901). The functions are mirrored rather than
- * imported because they are published on the bare `@camstack/types` entry
+ * imported because they are published on the bare `@dominevo/types` entry
  * only, which this app imports for types alone; `rule-media-image-parity.spec.ts`
  * runs both copies over the same inputs, so a hub change turns it red on the
  * next types bump.
@@ -15,8 +15,8 @@
  * is read through `normalizeMediaPolicy` when the form opens, and the save
  * (`pruneMediaPolicy`) never writes the triple back.
  */
-import { ruleKindOf, ruleKindSpec } from '@camstack/types/client'
-import type { NcRuleKind } from '@camstack/types'
+import { ruleKindOf, ruleKindSpec } from '@dominevo/types/client'
+import type { NcRuleKind } from '@dominevo/types'
 import type { NcConditions, NcDelivery, NcMediaImage, NcMediaPolicy } from '../../data/notification-center.js'
 
 /** Every mode, in the order the editor offers them. */

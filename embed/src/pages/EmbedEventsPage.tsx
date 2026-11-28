@@ -30,7 +30,7 @@
  * to 0, and the operator loses their place. See `events-feed.ts`.
  */
 
-import { createSystem } from '@camstack/sdk'
+import { createSystem } from '@dominevo/sdk'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { EventsCard } from '../components/EventsCard'
 import { PaletteBridge } from '../embed/PaletteBridge'

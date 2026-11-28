@@ -10,7 +10,7 @@
 import React, { useMemo } from 'react'
 import { Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
-import { systemFamilyOfKind } from '@camstack/types/client'
+import { systemFamilyOfKind } from '@dominevo/types/client'
 import { useTheme } from '../../../../theme/theme-provider.js'
 import { SPACING } from '../../../../theme/tokens.js'
 import { useNcConditionTaxonomy } from '../../../../data/use-notification-center.js'

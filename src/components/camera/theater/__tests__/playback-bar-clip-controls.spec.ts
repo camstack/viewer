@@ -21,7 +21,7 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import React from 'react'
 import { render, cleanup, fireEvent } from '@testing-library/react'
-import { CLIP_PLAYBACK_OPTIONS } from '@camstack/types'
+import { CLIP_PLAYBACK_OPTIONS } from '@dominevo/types'
 
 import { ThemeProvider } from '../../../../theme/theme-provider.js'
 import '../../../../app/i18n.js'

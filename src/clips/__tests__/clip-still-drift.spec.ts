@@ -13,10 +13,10 @@ import {
  * The tripwire on a DELIBERATE duplicate (D573).
  *
  * One retry policy, two surfaces. The admin UI's copy is in
- * `@camstack/ui-library`, which this app can neither import (a DOM component
+ * `@dominevo/ui-library`, which this app can neither import (a DOM component
  * library against a React Native bundle) nor reach at a useful version (this
- * app resolves `@camstack/*` from the PUBLISHED packages, and the published
- * `@camstack/types` it holds predates D563's header constants entirely). So
+ * app resolves `@dominevo/*` from the PUBLISHED packages, and the published
+ * `@dominevo/types` it holds predates D563's header constants entirely). So
  * the numbers are copied, and this spec is what keeps the two copies honest:
  * it reads the OTHER copy's source and compares.
  *

@@ -13,7 +13,7 @@ import type {
   RetrainFrame,
   RetrainFrameList,
   RetrainTrack,
-} from '@camstack/types'
+} from '@dominevo/types'
 import { useConnection } from '../connection/ConnectionProvider.js'
 import { BULK_QUERY_DEADLINE_MS, capMutateOrThrow, capQuery } from './cap-query.js'
 import { RETRAIN_CORPUS_QUERY_KEY, withFrameComplete } from './use-retrain-corpus.js'

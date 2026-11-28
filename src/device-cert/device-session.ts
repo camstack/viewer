@@ -18,8 +18,8 @@
  *    ends a device's sessions is not undone within seconds. (True lock-out is
  *    revoking the device in Identity -> Certificates.)
  */
-import { DEVICE_CERT_RENEW_WINDOW_DAYS, buildDeviceSignatureMessage } from '@camstack/types/client'
-import type { DeviceSignaturePurpose } from '@camstack/types'
+import { DEVICE_CERT_RENEW_WINDOW_DAYS, buildDeviceSignatureMessage } from '@dominevo/types/client'
+import type { DeviceSignaturePurpose } from '@dominevo/types'
 import type { FetchLike } from '../auth/hub-auth-wire.js'
 import { sameHubOrigin } from '../connection/hub-origin.js'
 import { log } from '../lib/logger.js'

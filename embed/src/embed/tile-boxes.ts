@@ -11,7 +11,7 @@
  *
  * Pure + unit-tested; the React glue lives in `components/TileBoxesOverlay`.
  */
-import type { FrameResult } from '@camstack/types'
+import type { FrameResult } from '@dominevo/types'
 import { getPaletteView, paintKind, type PaletteView } from '../../../shared/palette'
 
 /** One detection box, normalized 0..1 to the source frame (x1<=x2, y1<=y2). */

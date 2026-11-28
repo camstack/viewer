@@ -1,7 +1,7 @@
 /**
  * The viewer's half of the shared rule-KIND / rule-SECTION model.
  *
- * The model itself is pinned in `@camstack/types`
+ * The model itself is pinned in `@dominevo/types`
  * (`src/notification/__tests__/rule-kinds.spec.ts`). What is asserted HERE is
  * the part that is the viewer's own decision and that nothing upstream can
  * check:
@@ -15,8 +15,8 @@
  *  - every string the new surface asks for exists in BOTH locales.
  */
 import { describe, expect, it } from 'vitest'
-import { NC_RULE_KIND_SPECS } from '@camstack/types/client'
-import { NC_RULE_SECTIONS } from '@camstack/types'
+import { NC_RULE_KIND_SPECS } from '@dominevo/types/client'
+import { NC_RULE_SECTIONS } from '@dominevo/types'
 import {
   isFamilySection,
   NC_CONDITION_GROUP_ORDER,

@@ -1,6 +1,6 @@
 /**
  * The words that name a capability, in ONE place — the viewer's twin of the
- * admin's `capability-label.ts` (`@camstack/ui-library`).
+ * admin's `capability-label.ts` (`@dominevo/ui-library`).
  *
  * A cap definition carries no label, so every surface that names a capability
  * ("No device provides Temperature") asks here: the locale key

@@ -1,4 +1,4 @@
-/** The connection states the SDK emits. Mirrors `@camstack/sdk`'s
+/** The connection states the SDK emits. Mirrors `@dominevo/sdk`'s
  *  `BackendConnectionState` exactly ('connecting' | 'connected' | 'disconnected');
  *  kept structural so this module has no SDK import. A reconnect cycle surfaces
  *  as connected → disconnected → connecting → connected. */

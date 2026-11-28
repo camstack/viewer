@@ -31,8 +31,8 @@
  * footage failure and everything thrown by code that never heard of the enum.
  *
  * The parse is spelled here rather than imported: `clipExportFailureOf` is not
- * in the installed `@camstack/types` (1.2.235 predates D558's landing), and
- * this checkout resolves `@camstack/*` from the published packages.
+ * in the installed `@dominevo/types` (1.2.235 predates D558's landing), and
+ * this checkout resolves `@dominevo/*` from the published packages.
  *
  * Pure: no React, no i18n, no network.
  */

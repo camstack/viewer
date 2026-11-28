@@ -10,7 +10,7 @@
  *  - an edit is the diff plus the clears (`timelapse-form.ts`), and an edit
  *    that changed nothing is `unchanged`, so the screen sends no request.
  */
-import type { TimelapseRuleInput, TimelapseRulePatch } from '@camstack/types'
+import type { TimelapseRuleInput, TimelapseRulePatch } from '@dominevo/types'
 import type {
   NcTimelapseRuleClearableKey,
   NcViewerTimelapseRule,

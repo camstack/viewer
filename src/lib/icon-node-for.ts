@@ -4,7 +4,7 @@
  * `undefined` for a value the catalog does not know — the caller draws nothing
  * rather than a placeholder that reads as an icon.
  */
-import { canonicalIconKey } from '@camstack/types/client'
+import { canonicalIconKey } from '@dominevo/types/client'
 
 import type { IconNode } from './icon-nodes.generated.js'
 

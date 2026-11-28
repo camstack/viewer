@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { DEFINITIVE_DEVICE_REFUSALS, DEVICE_DEFINITIVE_REFUSALS_BEFORE_DELETE } from '@camstack/types/client'
+import { DEFINITIVE_DEVICE_REFUSALS, DEVICE_DEFINITIVE_REFUSALS_BEFORE_DELETE } from '@dominevo/types/client'
 import { judgeAnswer, isDefinitiveReason } from '../revocation-policy.js'
 
 describe('revocation counter', () => {

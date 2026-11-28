@@ -9,7 +9,7 @@
  * two rows. "All except these" only where the hub serves the exclusion.
  */
 import React, { useMemo } from 'react'
-import { systemFamilyOfKind } from '@camstack/types/client'
+import { systemFamilyOfKind } from '@dominevo/types/client'
 import { useNcConditionTaxonomy } from '../../../../data/use-notification-center.js'
 import { ConditionForm } from '../../../../components/notifications/ConditionForm.js'
 import { conditionsForSection } from '../../../../components/notifications/rule-editor-sections.js'

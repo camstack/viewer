@@ -1,8 +1,8 @@
 /**
- * Every value this app imports from `@camstack/types/client` exists in that
+ * Every value this app imports from `@dominevo/types/client` exists in that
  * entry at RUNTIME, and no bundled file takes a value from the bare root.
  *
- * The code names `@camstack/types/client` explicitly (D721 in camstack-server):
+ * The code names `@dominevo/types/client` explicitly (D721 in camstack-server):
  * the bare entry is one pre-bundled module carrying every capability schema,
  * and Metro does not tree-shake it. tsc already refuses a name `client.d.ts`
  * does not declare; this checks the module itself, so a declaration that
@@ -22,10 +22,10 @@ import { describe, expect, it } from 'vitest'
 
 const ROOT = join(__dirname, '..', '..')
 const SCANNED = ['src', 'app', join('embed', 'src')]
-const CLIENT = '@camstack/types/client'
-const BARE = '@camstack/types'
+const CLIENT = '@dominevo/types/client'
+const BARE = '@dominevo/types'
 /**
- * Values `@camstack/sdk` imports at runtime. The published SDK still names the
+ * Values `@dominevo/sdk` imports at runtime. The published SDK still names the
  * BARE entry (`dist/index.js`), so these must exist in `/client` for the SDK to
  * switch to it.
  */
@@ -90,7 +90,7 @@ const files: ScannedFile[] = SCANNED.flatMap((dir) => sourceFiles(join(ROOT, dir
 const imported = [...new Set([...files.flatMap((f) => valueNamesFrom(f, CLIENT)), ...SDK_RUNTIME_IMPORTS])].sort()
 const exported = Object.keys(createRequire(join(ROOT, 'package.json'))(CLIENT) as Record<string, unknown>)
 
-describe('@camstack/types/client', () => {
+describe('@dominevo/types/client', () => {
   it('finds the imports it checks', () => {
     expect(imported.length).toBeGreaterThan(20)
     // A namespace or default import cannot be checked name by name.
@@ -100,7 +100,7 @@ describe('@camstack/types/client', () => {
 
   it('exports every value the app imports from it', () => {
     const missing = imported.filter((name) => !exported.includes(name))
-    expect(missing, 'add these to packages/types/src/client.ts in camstack-server and publish @camstack/types').toEqual(
+    expect(missing, 'add these to packages/types/src/client.ts in camstack-server and publish @dominevo/types').toEqual(
       [],
     )
   })

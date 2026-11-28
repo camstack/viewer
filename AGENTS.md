@@ -25,7 +25,7 @@ Guidance for coding agents working in this repository. `CLAUDE.md` is a one-line
 
 ## Project Overview
 
-CamStack Viewer is the universal client (iOS, Android, Web/PWA) for the CamStack hub, built with Expo ~54 / React Native 0.81.5 / React 19 / TypeScript 5.9. It talks to the hub exclusively over the `@camstack/sdk` tRPC client and owns the WebRTC embed player used by native, web, and external iframe integrations.
+CamStack Viewer is the universal client (iOS, Android, Web/PWA) for the CamStack hub, built with Expo ~54 / React Native 0.81.5 / React 19 / TypeScript 5.9. It talks to the hub exclusively over the `@dominevo/sdk` tRPC client and owns the WebRTC embed player used by native, web, and external iframe integrations.
 
 `src/` is the live app (renamed from `srcV2` on 2026-07-17; the legacy multi-backend app that previously lived in `src/` — adapters for an external hub and a separate NVR, sharedRtcConnection, SQLite/IndexedDB layer — was deleted the same day; recover it from git history if ever needed).
 
@@ -42,7 +42,7 @@ npm run run:android        # Build and run on Android emulator/device
 ### Code Quality & Tests
 ```bash
 npm run verify:push        # BEFORE every commit/push — TypeScript Check gates on the changed set + ui:check
-npm run ts-check           # guards + tsc, resolving @camstack/* like the APP does (CI runs this)
+npm run ts-check           # guards + tsc, resolving @dominevo/* like the APP does (CI runs this)
 npx tsc -p tsconfig.workspace.json --noEmit   # same, but against the server SOURCE next door
 npm run lint               # ESLint via expo lint
 npm run test:v2            # Vitest unit suite (src/**/__tests__/*.spec.ts, scripts/**/__tests__/*.spec.ts)
@@ -77,7 +77,7 @@ The proven ship chain for an app change: whats-new entry → `npm run update:pat
 
 ### Path Aliases
 - `@/*` maps to `./src/*` (tsconfig only; the codebase uses relative NodeNext-style `.js` import specifiers that point at TS sources — metro strips the `.js` for relative imports inside `src/`)
-- `@camstack/sdk` maps to `../camstack-server/packages/sdk/src/index.ts`
+- `@dominevo/sdk` maps to `../camstack-server/packages/sdk/src/index.ts`
 
 ### Routing (Expo Router)
 File-based routing in `app/`:
@@ -119,7 +119,7 @@ File-based routing in `app/`:
 - CI runs `npm run ts-check` on every push/PR to main
 - **This checkout can see types it does not declare, because it usually lives
   INSIDE camstack-server.** Two separate leaks, and only one is closed:
-  - `@camstack/*` — **CLOSED.** `tsconfig.json` now resolves them from
+  - `@dominevo/*` — **CLOSED.** `tsconfig.json` now resolves them from
     `node_modules`, the PUBLISHED packages, exactly as metro, vitest and CI do.
     The old default mapped them to `../camstack-server/packages/*/src`, so
     anything written in the workspace and not yet published type-checked green
@@ -134,7 +134,7 @@ File-based routing in `app/`:
     commit that was clean locally. Every `@types/*` an import needs must be in
     THIS `package.json`; CI catches a miss because it checks the repo
     standalone, and that remains the only thing that does.
-- **Values from `@camstack/types` come from `@camstack/types/client`** (or
+- **Values from `@dominevo/types` come from `@dominevo/types/client`** (or
   `/enums`); the bare entry is for `import type` only. The bare entry is the
   whole ~2.7 MB barrel and Metro does not tree-shake it. Enforced by
   `scripts/check-types-client-imports.mjs` (in `ts-check`), ESLint and

@@ -13,7 +13,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, screen as dom } from '@testing-library/react'
 import React, { useState } from 'react'
-import type { NcRuleKind } from '@camstack/types'
+import type { NcRuleKind } from '@dominevo/types'
 
 import { mountScreen } from '../../../testing/mount.js'
 import { hubCalls } from '../../../testing/hub-stub.js'

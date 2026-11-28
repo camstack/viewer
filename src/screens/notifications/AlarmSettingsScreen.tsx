@@ -33,8 +33,8 @@ import { ActivityIndicator, Pressable, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useIsFocused, useNavigation, useRouter } from 'expo-router'
 import { usePreventRemove } from 'expo-router/react-navigation'
-import { alarmPatchLanded } from '@camstack/types/client'
-import type { AlarmArmMode, NcAlarmConfig, NcAlarmSettings } from '@camstack/types'
+import { alarmPatchLanded } from '@dominevo/types/client'
+import type { AlarmArmMode, NcAlarmConfig, NcAlarmSettings } from '@dominevo/types'
 import { useMe, useAdminVerdict } from '../../data/use-me.js'
 import {
   useFetchFreshAlarmConfig,

@@ -18,7 +18,7 @@ const { switchServerUrl, createSystem } = vi.hoisted(() => {
   }
 })
 
-vi.mock('@camstack/sdk', () => ({ createSystem }))
+vi.mock('@dominevo/sdk', () => ({ createSystem }))
 
 const LAN_HTTP = 'http://192.0.2.10:4480'
 const TUNNEL = 'https://camstack.example.top'

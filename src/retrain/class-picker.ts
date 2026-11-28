@@ -3,7 +3,7 @@
  * rules use (`classPickerItems`), walked in two steps: the MACRO class first
  * (only those the trainer uses), then a sub-class of that macro as the label.
  */
-import type { RetrainMacroClass } from '@camstack/types'
+import type { RetrainMacroClass } from '@dominevo/types'
 import type { NcTaxonomy } from '../data/notification-center.js'
 import { RETRAIN_OFFERED_MACROS } from '../data/retrain-parse.js'
 import { classPickerItems } from '../components/notifications/rule-scope-form.js'

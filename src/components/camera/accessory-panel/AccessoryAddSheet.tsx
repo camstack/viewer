@@ -42,7 +42,7 @@
 import React, { memo, useMemo } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
-import type { DeviceSearchItem } from '@camstack/types'
+import type { DeviceSearchItem } from '@dominevo/types'
 
 import { X } from '../../../lib/icons.js'
 import { PickerSheet, PickerSheetButton } from '../../ui/PickerSheet.js'

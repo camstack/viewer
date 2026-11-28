@@ -15,7 +15,7 @@
  * a face crop and a plate read, and the highlight has always been selectable
  * on them.
  */
-import { MACRO_LABELS } from '@camstack/types/client'
+import { MACRO_LABELS } from '@dominevo/types/client'
 
 export const HIGHLIGHT_DETECTION_CLASSES: readonly string[] = [...MACRO_LABELS.map((l) => l.id), 'face', 'plate']
 

@@ -15,8 +15,8 @@ import {
   type NcViewerRule,
 } from '../../../data/notification-center.js'
 import { NcSummaryNotKeptError } from '../../../data/nc-errors.js'
-import { ruleKindOf, ruleKindSpec } from '@camstack/types/client'
-import type { NcRuleKind } from '@camstack/types'
+import { ruleKindOf, ruleKindSpec } from '@dominevo/types/client'
+import type { NcRuleKind } from '@dominevo/types'
 import { splitRuleScopes } from '../../../components/notifications/rule-scope-form.js'
 import {
   emptyRuleForm,

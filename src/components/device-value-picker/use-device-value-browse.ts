@@ -7,7 +7,7 @@
  * byte-identical with the admin's); this hook only wires it to the reads.
  */
 import { useMemo, useState } from 'react'
-import type { DeviceSearchItem, DeviceSearchRequires, DeviceSearchResult } from '@camstack/types'
+import type { DeviceSearchItem, DeviceSearchRequires, DeviceSearchResult } from '@dominevo/types'
 
 import {
   buildSections,

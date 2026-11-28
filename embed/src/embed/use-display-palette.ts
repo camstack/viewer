@@ -5,7 +5,7 @@
  * system refreshes the row for its server URL.
  */
 import { useEffect } from 'react'
-import type { BackendConnectionState, System } from '@camstack/sdk'
+import type { BackendConnectionState, System } from '@dominevo/sdk'
 import { emitHost } from './host-bridge'
 import {
   bundledView,

@@ -7,7 +7,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react'
 import React from 'react'
-import type { HeroControl, HeroRowModel } from '@camstack/types'
+import type { HeroControl, HeroRowModel } from '@dominevo/types'
 import { mountScreen } from '../../testing/mount.js'
 import { HeroControlView } from '../HeroControlView.js'
 import { HeroRowBody } from '../HeroRowBody.js'

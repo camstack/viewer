@@ -40,7 +40,7 @@ import type {
   RetrainMacroClass,
   RetrainOrigin,
   RetrainPipelineBox,
-} from '@camstack/types'
+} from '@dominevo/types'
 import type { NormBox } from './boxes.js'
 
 /** What a verifier said about a box (the LLM assist's flag). */

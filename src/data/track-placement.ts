@@ -11,7 +11,7 @@
  * Diagnostic: the detail shows it to an admin only (the node ids and device
  * keys say nothing to a household member). Pure — no React.
  */
-import type { TrackPlacement } from '@camstack/types'
+import type { TrackPlacement } from '@dominevo/types'
 
 export type { TrackPlacement }
 

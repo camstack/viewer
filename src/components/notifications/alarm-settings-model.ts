@@ -29,7 +29,7 @@ import {
   NC_ALARM_DELAY_MAX_SEC,
   NC_ALARM_TRIGGERED_MAX_SEC,
   resolveModeDelays,
-} from '@camstack/types/client'
+} from '@dominevo/types/client'
 import type {
   AlarmArmMode,
   NcAlarmModeCoverage,
@@ -37,7 +37,7 @@ import type {
   NcAlarmModeDelaysEdit,
   NcAlarmSettings,
   NcAlarmSettingsPatch,
-} from '@camstack/types'
+} from '@dominevo/types'
 import { AlarmArmModeSchema, type NcAlarmLive } from '../../data/nc-alarm.js'
 import type { SelectedDeviceRow } from './device-selection.js'
 

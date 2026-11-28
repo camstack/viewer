@@ -11,7 +11,7 @@
 import {
   DEFINITIVE_DEVICE_REFUSALS,
   DEVICE_DEFINITIVE_REFUSALS_BEFORE_DELETE,
-} from '@camstack/types/client'
+} from '@dominevo/types/client'
 
 export type DeviceAnswer =
   | { readonly kind: 'success' }

@@ -1,12 +1,12 @@
 /**
  * condition-taxonomy — the CANONICAL copy, re-exported.
  *
- * This file was a local duplicate of `@camstack/types` →
+ * This file was a local duplicate of `@dominevo/types` →
  * `src/notification/condition-taxonomy.ts` (the logic was written here and
  * hoisted there so the admin UI stopped rendering every list condition as a
  * free-text box). Its own header carried the TODO that ends it: *"collapse it
  * into a re-export as soon as that dependency is bumped"*. The dependency was
- * pinned at `@camstack/types@0.1.42`, which predates the hoist; it is
+ * pinned at `@dominevo/types@0.1.42`, which predates the hoist; it is
  * `^1.2.89` now (`camstack/package.json`), and the installed package ships
  * `dist/notification/condition-taxonomy`. So the copy is gone.
  *
@@ -19,5 +19,5 @@
  * the `defaultValue` — that binding lives at the call site (`ConditionField`),
  * not in the model, which is why nothing about it had to be hoisted.
  */
-export { knownValues, pickerForCondition } from '@camstack/types/client'
-export type { TaxonomyGroup, TaxonomyOption, TaxonomyPicker } from '@camstack/types'
+export { knownValues, pickerForCondition } from '@dominevo/types/client'
+export type { TaxonomyGroup, TaxonomyOption, TaxonomyPicker } from '@dominevo/types'

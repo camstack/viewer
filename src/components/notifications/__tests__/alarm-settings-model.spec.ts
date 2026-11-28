@@ -3,7 +3,7 @@
  * and sends — the decisions a mount test cannot pin cheaply.
  */
 import { describe, expect, it } from 'vitest'
-import type { NcAlarmModeCoverage, NcAlarmSettings } from '@camstack/types'
+import type { NcAlarmModeCoverage, NcAlarmSettings } from '@dominevo/types'
 import type { NcAlarmLive } from '../../../data/nc-alarm.js'
 import { resolveSelectedDevices } from '../device-selection.js'
 import {

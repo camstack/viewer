@@ -40,8 +40,8 @@
  *
  * ## Why the shapes are mirrored here and not imported
  *
- * `ExportClipSubjectSchema` is not in the installed `@camstack/types` (1.2.235
- * predates D558's landing), and this checkout resolves `@camstack/*` from the
+ * `ExportClipSubjectSchema` is not in the installed `@dominevo/types` (1.2.235
+ * predates D558's landing), and this checkout resolves `@dominevo/*` from the
  * PUBLISHED packages exactly as metro and CI do. Mirroring the shape is the
  * convention `use-exports.ts` already states for this cap; re-pointing the
  * alias to the workspace would type-check green and throw on first evaluation.

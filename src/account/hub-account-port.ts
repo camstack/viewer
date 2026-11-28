@@ -29,7 +29,7 @@
  * row's `value` is untrusted until the stores parse it.
  */
 import { z } from 'zod'
-import type { PreferenceRow } from '@camstack/types'
+import type { PreferenceRow } from '@dominevo/types'
 import { isMissingProcedureError, trpcErrorCode } from '../auth/missing-procedure.js'
 import {
   AccountUnavailableError,
@@ -65,7 +65,7 @@ export interface PreferencesClient {
   }
 }
 
-// Mirrors `PreferenceRowSchema` (`@camstack/types`, not in the client entry);
+// Mirrors `PreferenceRowSchema` (`@dominevo/types`, not in the client entry);
 // `satisfies` keeps the two from drifting apart silently.
 const RowSchema = z.object({
   namespace: z.string(),

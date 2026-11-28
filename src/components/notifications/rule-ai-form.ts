@@ -47,8 +47,8 @@
  * nothing authorable reaches them. There is no field here that could override
  * it, and that absence is the feature.
  */
-import { ruleKindSpec } from '@camstack/types/client'
-import type { NcRuleKind } from '@camstack/types'
+import { ruleKindSpec } from '@dominevo/types/client'
+import type { NcRuleKind } from '@dominevo/types'
 import {
   NC_RULE_AI_WORDS_MAX,
   NC_RULE_AI_WORDS_MIN,

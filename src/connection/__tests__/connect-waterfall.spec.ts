@@ -31,7 +31,7 @@ const { createSystem, raceFastestEndpoint, endpointsQuery, awaitConnected } = vi
   awaitConnected: vi.fn(),
 }))
 
-vi.mock('@camstack/sdk', () => ({ createSystem }))
+vi.mock('@dominevo/sdk', () => ({ createSystem }))
 
 /** Carries its port: against a hub that declares no `localPort` (pre-D226) the
  *  port is echoed back, so a portless configured URL has its LAN candidates

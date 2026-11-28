@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { CLIP_BROKER_PACED_RATES } from '@camstack/types/client'
+import { CLIP_BROKER_PACED_RATES } from '@dominevo/types/client'
 import * as transport from '../recorded-transport.js'
 import {
   formatRateLabel,
@@ -40,7 +40,7 @@ describe('the rate ladder belongs to the HUB, not to this file', () => {
 
   it('every rate the hub paces survives the hub’s own clamp unchanged', () => {
     // Ladder-agnostic on purpose: this asserted `<= 4` against a six-element
-    // literal, so bumping `@camstack/types` turned it red on a commit that had
+    // literal, so bumping `@dominevo/types` turned it red on a commit that had
     // nothing to do with playback.
     for (const rate of CLIP_BROKER_PACED_RATES) {
       expect(clampPlaybackRate(rate), `${rate}`).toBe(rate)
@@ -131,7 +131,7 @@ describe('recorded-transport — rate labels', () => {
 
   it('labels WHATEVER ladder the hub declares, one distinct label per rate', () => {
     // This used to compare against a six-element literal of the ladder's
-    // labels, so it went red on the commit that bumped `@camstack/types` —
+    // labels, so it went red on the commit that bumped `@dominevo/types` —
     // a file with nothing to do with the bump. What it actually has to prove
     // is that the formatter covers the ladder: every rate gets a label, the
     // labels are distinct, and each one reads back as the rate it names.

@@ -31,7 +31,7 @@ import {
 } from '../../../../components/notifications/rule-editor.js'
 import { ruleHasRecognitionScope } from '../../../../components/notifications/recognition-scope.js'
 import { formScopedConditions } from '../../../../components/notifications/rule-scope-form.js'
-import { NC_GROUPING_DEFAULT_SEC } from '@camstack/types/client'
+import { NC_GROUPING_DEFAULT_SEC } from '@dominevo/types/client'
 import { NC_GROUPING_STEPPER } from '../../../../components/notifications/rule-field-choices.js'
 import { useNcTargets } from '../../../../data/use-notification-center.js'
 import {

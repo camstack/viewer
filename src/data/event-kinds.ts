@@ -2,7 +2,7 @@
  * Event-kind taxonomy (viewer side) — types + pure helpers over the descriptors
  * returned by the hub's `pipelineAnalytics.listEventKinds`.
  *
- * The server owns the unified taxonomy (`@camstack/types` `EVENT_TAXONOMY`) and
+ * The server owns the unified taxonomy (`@dominevo/types` `EVENT_TAXONOMY`) and
  * ships every UI-relevant field INLINE on each descriptor. Glyphs come from
  * `iconId` (see `event-kind-icons`) and labels from `labelKey`. The taxonomy
  * `color` is not the cluster palette (D939), so the stored `color` is always

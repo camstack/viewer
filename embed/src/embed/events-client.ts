@@ -6,7 +6,7 @@
  * surfaces here as a compile error rather than rotting behind a hand-written
  * interface somewhere in the render tree.
  */
-import type { System } from '@camstack/sdk'
+import type { System } from '@dominevo/sdk'
 import type { EventsDataClient } from '../../../shared/events/events-client.js'
 
 export type {

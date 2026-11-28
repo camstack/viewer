@@ -14,7 +14,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { Pressable } from 'react-native'
 import { useTranslation } from 'react-i18next'
-import type { HeroRowModel, HeroTone } from '@camstack/types'
+import type { HeroRowModel, HeroTone } from '@dominevo/types'
 import {
   useCoverStatus, useLockStatus, useSwitchStatus, useCapMutator,
 } from '../data/use-accessory-controls.js'

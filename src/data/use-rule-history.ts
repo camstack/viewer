@@ -21,8 +21,8 @@
  * claimed from a method that is not there.
  */
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
-import { NcHistoryEntrySchema, NcRuleLastRunsSchema } from '@camstack/types/client'
-import type { NcHistoryEntry, NcRuleLastRuns } from '@camstack/types'
+import { NcHistoryEntrySchema, NcRuleLastRunsSchema } from '@dominevo/types/client'
+import type { NcHistoryEntry, NcRuleLastRuns } from '@dominevo/types'
 import { useConnection } from '../connection/ConnectionProvider.js'
 import { log } from '../lib/logger.js'
 import { BULK_QUERY_DEADLINE_MS, capQuery, isRecord } from './cap-query.js'

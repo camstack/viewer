@@ -16,7 +16,7 @@
  *
  * Mirrors the admin table's `notification-rule-last-run.ts`, in i18n keys.
  */
-import type { NcHistoryStatus, NcRuleLastRuns } from '@camstack/types'
+import type { NcHistoryStatus, NcRuleLastRuns } from '@dominevo/types'
 
 /** How far the ONE list-wide `getRuleLastRuns` read has got, for this viewer. */
 export type RuleLastRunsRead =

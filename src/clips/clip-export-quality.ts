@@ -53,14 +53,14 @@
  * Pure: no React, no i18n, no network.
  */
 
-import { RECORDING_EXPORT_MAX_READ_BYTES } from '@camstack/types/client'
+import { RECORDING_EXPORT_MAX_READ_BYTES } from '@dominevo/types/client'
 import { CLIP_PROFILE_HIGH, CLIP_PROFILE_LOW, type ClipProfile } from './clip-quality.js'
 import type { Clip, ClipStream } from './clip-model.js'
 
 /**
  * The transfer ceiling, as this surface reads it.
  *
- * Imported, never re-spelled: it is a published value in `@camstack/types`
+ * Imported, never re-spelled: it is a published value in `@dominevo/types`
  * (52 428 800) and a local copy would drift the day the hub raises it, in the
  * direction that hides options the export path would have accepted.
  */

@@ -66,7 +66,7 @@ import { isDeviceOffline } from '../../device/device-reachability.js'
 import { heroRowKeepsShortcuts, pickAccessoryControl } from '../accessory-controls/control-registry.js'
 import { HeroRowBody, rowControls } from '../../../hero/HeroRowBody.js'
 import { HeroToggleSegments } from '../../../hero/HeroToggleSegments.js'
-import type { HeroRowModel } from '@camstack/types'
+import type { HeroRowModel } from '@dominevo/types'
 import { deviceRoute } from '../../../remote/device-route.js'
 
 export interface AccessoryRowProps {

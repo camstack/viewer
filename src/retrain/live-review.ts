@@ -3,7 +3,7 @@
  * proposals so far, computed on the editor's state before anything is saved.
  *
  * The saved diff comes from the server (`RetrainFrame.review`); this is the
- * same classification (`classifyRetrainReview`, one rule, `@camstack/types`)
+ * same classification (`classifyRetrainReview`, one rule, `@dominevo/types`)
  * run over the editor boxes, so a box turns "adjusted" the moment it is moved
  * and "removed" the moment it is deleted — not after Save. A DRAFT is not a
  * verdict yet (nothing is saved until it is accepted), so it has its own kind.
@@ -11,14 +11,14 @@
  * Pure: the canvas, the list and the summary strip all read this one answer.
  */
 
-import { classifyRetrainReview, RETRAIN_REVIEW_STATUSES } from '@camstack/types/client'
+import { classifyRetrainReview, RETRAIN_REVIEW_STATUSES } from '@dominevo/types/client'
 import type {
   RetrainAnnotationSource,
   RetrainMacroClass,
   RetrainPipelineBox,
   RetrainReviewSavedBox,
   RetrainReviewStatusName,
-} from '@camstack/types'
+} from '@dominevo/types'
 import type { NormBox } from './boxes.js'
 import { type EditorState, pipelineOrigin } from './editor.js'
 

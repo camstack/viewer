@@ -15,7 +15,7 @@
  * Pure — no React, no I/O. The React binding is `useGrantedFeatures` /
  * `useHasFeature` in `data/use-me.ts`.
  */
-import type { ViewerFeatureId } from '@camstack/types'
+import type { ViewerFeatureId } from '@dominevo/types'
 
 export type { ViewerFeatureId }
 

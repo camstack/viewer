@@ -33,7 +33,7 @@ const { switchServerUrl, reconnect, authMe, createSystem, raceFastestEndpoint } 
   }
 })
 
-vi.mock('@camstack/sdk', () => ({ createSystem }))
+vi.mock('@dominevo/sdk', () => ({ createSystem }))
 
 
 /**

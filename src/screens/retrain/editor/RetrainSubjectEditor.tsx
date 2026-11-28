@@ -8,7 +8,7 @@
 import React, { useMemo } from 'react'
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
-import type { RetrainMacroClass } from '@camstack/types'
+import type { RetrainMacroClass } from '@dominevo/types'
 import { ItemPicker } from '../../../components/notifications/ItemPicker.js'
 import { FilterChip } from '../../../components/ui/FilterChip.js'
 import { ToggleRow } from '../../../components/ui/ToggleRow.js'

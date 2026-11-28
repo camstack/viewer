@@ -2,7 +2,7 @@
  * clip-mapping — the boundary between the hub's `videoclips` rows and the
  * ribbon's {@link Clip}.
  *
- * Structural, not typed, on purpose: `@camstack/sdk` lags the hub (the same
+ * Structural, not typed, on purpose: `@dominevo/sdk` lags the hub (the same
  * reason `use-recording.ts` reaches through `capQuery`), so an unknown field must degrade rather than throw. A row the
  * viewer cannot understand is DROPPED, never rendered half-parsed — a segment
  * with a nonsense time range is worse than a missing one, because the operator

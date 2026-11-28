@@ -20,7 +20,7 @@ import {
   alarmSwitchPress,
   readAlarmSensorsChunked,
 } from '../use-nc-alarm.js'
-import { NC_ALARM_SENSORS_MAX } from '@camstack/types/client'
+import { NC_ALARM_SENSORS_MAX } from '@dominevo/types/client'
 import type { AlarmSensorRow, AlarmSwitchWrite } from '../../components/notifications/alarm-sensor-table-model.js'
 import {
   NC_ALARM_FAST_POLL_MS,

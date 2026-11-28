@@ -1,12 +1,12 @@
 /**
- * Refuse a VALUE import from the bare `@camstack/types` in bundled code.
+ * Refuse a VALUE import from the bare `@dominevo/types` in bundled code.
  *
  * The bare entry is one pre-bundled module carrying every capability schema
  * the hub knows (~2.7 MB unminified), and Metro does not tree-shake — not
  * even with Expo's experimental tree shaking. One value import from it puts
- * ~1.2 MB into the web bundle. `@camstack/types/client` (D721 in
+ * ~1.2 MB into the web bundle. `@dominevo/types/client` (D721 in
  * camstack-server) exports exactly the values a client reads, and the tiny
- * `@camstack/types/enums` carries `EventCategory` / `EventSourceType`.
+ * `@dominevo/types/enums` carries `EventCategory` / `EventSourceType`.
  *
  * Until 2026-10 Metro silently aliased the bare entry to `/client`. That hid
  * which entry the code really used and turned a name missing from `/client`
@@ -29,9 +29,9 @@ import ts from 'typescript'
 
 const ROOT = process.cwd()
 const SCANNED = ['src', 'app', 'embed/src']
-const BARE = '@camstack/types'
+const BARE = '@dominevo/types'
 /** Entries a VALUE may come from. */
-const VALUE_ENTRIES = new Set(['@camstack/types/client', '@camstack/types/enums'])
+const VALUE_ENTRIES = new Set(['@dominevo/types/client', '@dominevo/types/enums'])
 
 function walk(dir, out = []) {
   if (!fs.existsSync(dir)) return out
@@ -113,8 +113,8 @@ for (const file of SCANNED.flatMap((dir) => walk(path.join(ROOT, dir)))) {
 
 if (offenders.length > 0) {
   console.error(
-    `${offenders.length} value import(s) from a non-client @camstack/types entry — import values from '@camstack/types/client' (or '/enums'); only \`import type\` may name the bare entry. A value missing from /client is added to packages/types/src/client.ts in camstack-server:\n  ${offenders.join('\n  ')}`,
+    `${offenders.length} value import(s) from a non-client @dominevo/types entry — import values from '@dominevo/types/client' (or '/enums'); only \`import type\` may name the bare entry. A value missing from /client is added to packages/types/src/client.ts in camstack-server:\n  ${offenders.join('\n  ')}`,
   )
   process.exit(1)
 }
-console.log('@camstack/types ok — every bundled value comes from /client or /enums')
+console.log('@dominevo/types ok — every bundled value comes from /client or /enums')

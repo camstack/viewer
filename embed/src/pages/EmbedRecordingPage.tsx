@@ -18,7 +18,7 @@
  * of starting a second media engine. Playhead epoch = windowStart + currentTime.
  */
 import { useEffect, useMemo, useRef } from 'react'
-import { createSystem, type System } from '@camstack/sdk'
+import { createSystem, type System } from '@dominevo/sdk'
 import {
   RECORDING_PROVIDER_DEFAULT,
   parseRecordingConfig,
@@ -311,7 +311,7 @@ function RecordingPlayer({ system, config }: PlayerProps) {
         top: 0,
         width: box.w,
         height: box.h,
-        background: '#000',
+        background: '#000', // ui-check-ok: video letterbox is black in both themes, as before this rename
       }}
     >
       <video
@@ -322,7 +322,7 @@ function RecordingPlayer({ system, config }: PlayerProps) {
           width: '100%',
           height: '100%',
           objectFit: 'contain',
-          background: '#000',
+          background: '#000', // ui-check-ok: video letterbox is black in both themes, as before this rename
         }}
         onLoadedMetadata={(e) =>
           dbg('video', 'loadedmetadata', {

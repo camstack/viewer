@@ -5,7 +5,7 @@
  * `navigate` / `search` through here without holding a reference to a webview.
  * `send` says whether a frame took the message.
  */
-import type { ShellToAppMessage } from '@camstack/types/client'
+import type { ShellToAppMessage } from '@dominevo/types/client'
 
 type Sender = (message: ShellToAppMessage) => void
 

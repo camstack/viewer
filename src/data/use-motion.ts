@@ -39,12 +39,12 @@ import { RECONCILE_MS } from './reconcile.js'
 export const MOTION_CATEGORY = 'motion.on-motion-changed'
 
 /** Per-analysed-frame motion result — the regions PLUS the frame dimensions
- *  they are expressed in. `EventCategory.MotionAnalysis` in `@camstack/types`
+ *  they are expressed in. `EventCategory.MotionAnalysis` in `@dominevo/types`
  *  (`packages/types/src/enums/event-category.ts`). */
 export const MOTION_ANALYSIS_CATEGORY = 'detection.motion-analysis'
 
 /** Every changed area of an analysed frame BEFORE the area bar — the motion
- *  overlay's neutral layer. `EventCategory.MotionZonesRaw` in `@camstack/types`
+ *  overlay's neutral layer. `EventCategory.MotionZonesRaw` in `@dominevo/types`
  *  (payload `MotionZonesRawPayload`). The hub forwards it to viewer clients
  *  exactly as it does `detection.motion-analysis`. */
 export const MOTION_ZONES_RAW_CATEGORY = 'detection.motion-zones-raw'

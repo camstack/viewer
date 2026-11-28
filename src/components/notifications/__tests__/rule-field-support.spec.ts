@@ -2,7 +2,7 @@
  * Which message fields the rule editor shows for the selected targets (#483).
  *
  * The viewer's port of the hub's `deliverableFields` / `fieldSupportForTargets`
- * (`@camstack/types`, not on the `/client` entry): the fields come from each
+ * (`@dominevo/types`, not on the `/client` entry): the fields come from each
  * target kind's DECLARATION (`caps`), never from its kind string — a kind named
  * anything that declares "title only" is treated as a speaker.
  */

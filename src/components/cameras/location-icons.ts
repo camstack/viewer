@@ -1,12 +1,12 @@
 /**
  * Which catalog icon a location wears, on the phone.
  *
- * A location or zone icon is a key of the `@camstack/types` icon catalog
+ * A location or zone icon is a key of the `@dominevo/types` icon catalog
  * (D854) and nothing else; `CatalogIcon` draws it. The viewer keeps no list of
  * its own, so a catalog bump needs no change here.
  */
-import { canonicalIconKey, LOCATION_ICON_FALLBACK, locationIconKey } from '@camstack/types/client'
-import type { IconKey } from '@camstack/types'
+import { canonicalIconKey, LOCATION_ICON_FALLBACK, locationIconKey } from '@dominevo/types/client'
+import type { IconKey } from '@dominevo/types'
 
 export type DrawableLocationIcon = IconKey
 

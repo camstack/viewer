@@ -2,7 +2,7 @@
  * Recording data hooks — timeline coverage + authoritative recorder mode.
  *
  * Cap calls go through the tRPC client structurally:
- * the viewer's `@camstack/sdk` types may not yet carry the `recording` cap
+ * the viewer's `@dominevo/sdk` types may not yet carry the `recording` cap
  * (added on the backend branch `feat/recording-modes-and-videoclips`), so we
  * access it defensively and validate the shape, rather than depend on a types
  * regen. Both hooks degrade to a safe empty/off value when not connected.

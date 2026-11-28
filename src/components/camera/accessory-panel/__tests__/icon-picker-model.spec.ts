@@ -3,7 +3,7 @@
  * words, and a layout that never loses or repeats an icon.
  */
 import { describe, expect, it } from 'vitest'
-import { ICON_KEYS } from '@camstack/types/client'
+import { ICON_KEYS } from '@dominevo/types/client'
 
 import { iconListRows, iconSections } from '../icon-picker-model.js'
 

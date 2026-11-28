@@ -11,13 +11,13 @@
  */
 import { matchesDetectionClass } from '../../../shared/highlight-classes'
 import { useEffect, useRef, useState } from 'react'
-import { useLiveEvent } from '@camstack/ui-library'
-import { EventCategory } from '@camstack/types/enums'
+import { useLiveEvent } from '@dominevo/ui-library'
+import { EventCategory } from '@dominevo/types/enums'
 import type {
   MotionOnMotionChangedData,
   DetectionResultPayload,
   PipelineAudioInferenceResultPayload,
-} from '@camstack/types'
+} from '@dominevo/types'
 import type { GridHighlightConfig } from './embed-grid-config'
 
 /** Motion has no explicit hold setting; keep a tile up briefly so a momentary

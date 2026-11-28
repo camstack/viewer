@@ -19,7 +19,7 @@ import {
 } from 'react-native'
 import { FlashList } from '@shopify/flash-list'
 import { useTranslation } from 'react-i18next'
-import type { RetrainFrame } from '@camstack/types'
+import type { RetrainFrame } from '@dominevo/types'
 import { LibraryFilterBar, type LibraryFilterDef } from '../../components/ui/LibraryFilterBar.js'
 import type { OverflowMenuItem } from '../../components/ui/HeaderOverflowMenu.js'
 import { libraryGridRows } from '../../components/ui/library-grid-rows.js'

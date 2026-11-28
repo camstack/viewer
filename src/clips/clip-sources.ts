@@ -83,8 +83,8 @@ function toState(raw: unknown): ClipSourceState {
  * Parse a `listSources` response.
  *
  * Structural, for the reason `clip-mapping.ts` is: the viewer resolves
- * `@camstack/*` from the PUBLISHED packages, which lag the hub — installed
- * `@camstack/types` does not describe `listSources` at all. A row this build
+ * `@dominevo/*` from the PUBLISHED packages, which lag the hub — installed
+ * `@dominevo/types` does not describe `listSources` at all. A row this build
  * cannot fully read still lists; a row with no addon to ask is dropped, because
  * the picker could offer it and then never satisfy it.
  */

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { DEVICE_CERT_RENEW_WINDOW_DAYS } from '@camstack/types/client'
+import { DEVICE_CERT_RENEW_WINDOW_DAYS } from '@dominevo/types/client'
 import { keyAliasFor } from '../cert-store.js'
 import {
   AUTO_RELOGIN_COOLDOWN_MS,

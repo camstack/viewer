@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   knownValues as sharedKnownValues,
   pickerForCondition as sharedPickerForCondition,
-} from '@camstack/types/client'
+} from '@dominevo/types/client'
 import { pickerForCondition, knownValues } from '../condition-taxonomy.js'
 import type { NcTaxonomy } from '../../../data/notification-center.js'
 
@@ -98,7 +98,7 @@ describe('pickerForCondition', () => {
  * assertion a copy cannot satisfy: the module is the shared one or it is not.
  */
 describe('it IS the shared module, not a copy that agrees', () => {
-  it('re-exports @camstack/types', () => {
+  it('re-exports @dominevo/types', () => {
     expect(pickerForCondition).toBe(sharedPickerForCondition)
     expect(knownValues).toBe(sharedKnownValues)
   })

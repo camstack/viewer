@@ -5,9 +5,9 @@
  * battery kinds sat under a liveness `deviceTypes` filter and went silent for
  * two weeks (D636). A rule now answers ONE family's question — devices, the
  * installation, or the alarm panel — and the editor offers only that family's
- * kinds and filters. The tables are the shared ones in `@camstack/types`.
+ * kinds and filters. The tables are the shared ones in `@dominevo/types`.
  */
-import { NC_SYSTEM_EVENT_KIND_GROUP_SPECS } from '@camstack/types/client'
+import { NC_SYSTEM_EVENT_KIND_GROUP_SPECS } from '@dominevo/types/client'
 import { describe, expect, it } from 'vitest'
 import enLocale from '../../../../locales/en.json'
 import itLocale from '../../../../locales/it.json'

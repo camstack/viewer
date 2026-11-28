@@ -34,7 +34,7 @@ import {
   type ClipControlsView,
   type ClipSourceControls,
 } from '../../../../clips/clip-controls.js'
-import { CLIP_PLAYBACK_OPTIONS } from '@camstack/types'
+import { CLIP_PLAYBACK_OPTIONS } from '@dominevo/types'
 import type { ClipProgressBinding } from '../../../../clips/clip-progress.js'
 
 afterEach(cleanup)

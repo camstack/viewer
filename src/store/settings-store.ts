@@ -22,8 +22,8 @@
  * via `hydrate()` (called once at app start).
  */
 import { create } from 'zustand'
-import { CamProfileSchema } from '@camstack/types/client'
-import type { CamProfile } from '@camstack/types'
+import { CamProfileSchema } from '@dominevo/types/client'
+import type { CamProfile } from '@dominevo/types'
 import { log } from '../lib/logger.js'
 import { TILE_LABEL_MODES, isTileLabelMode, type TileLabelMode } from '../../shared/events/events-tile-display.js'
 import {
@@ -63,7 +63,7 @@ function isToolbarDensity(raw: unknown): raw is ToolbarDensity {
 /**
  * A stream PROFILE, as the whole system spells it.
  *
- * Not a local union: it is `CamProfileSchema` in `@camstack/types`
+ * Not a local union: it is `CamProfileSchema` in `@dominevo/types`
  * (`z.enum(['high','mid','low'])`), the enum the hub uses in `stream-selection`,
  * `stream-broker.cap`, `snapshot.cap` and `streamProbe`. Aliasing it here — and
  * NOT redeclaring it — is what makes a divergence a type error rather than a

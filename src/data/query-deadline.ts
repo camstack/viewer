@@ -3,7 +3,7 @@
  *
  * ## Why this exists
  *
- * The viewer's tRPC client is `wsLink` over one WebSocket (`@camstack/sdk`
+ * The viewer's tRPC client is `wsLink` over one WebSocket (`@dominevo/sdk`
  * `system.ts`). `wsLink` has NO per-operation timeout, and no query in this app
  * passes an `AbortSignal`. So a hub procedure that never answers produces a
  * promise that never settles, and React Query treats a never-settling promise

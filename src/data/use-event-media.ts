@@ -19,7 +19,7 @@
  */
 
 import { useCallback, useEffect, useState } from 'react'
-import type { MediaOwnerType } from '@camstack/types'
+import type { MediaOwnerType } from '@dominevo/types'
 import { useConnection } from '../connection/ConnectionProvider.js'
 import { isRecord } from './cap-query.js'
 import { buildMediaIdUrl, buildMediaOwnerUrl, type EventMediaUrlOptions } from './event-media-url.js'

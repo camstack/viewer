@@ -16,7 +16,7 @@
  *   run), then everything else newest first — the order the device's own list
  *   already used, with hub jobs placed by their creation time.
  */
-import type { JobState } from '@camstack/types'
+import type { JobState } from '@dominevo/types'
 
 import { orderForDisplay } from './activity-jobs.js'
 import {

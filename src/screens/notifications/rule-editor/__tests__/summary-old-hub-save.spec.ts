@@ -16,12 +16,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup } from '@testing-library/react'
 import React, { useEffect } from 'react'
 import { useQueryClient, type QueryClient } from '@tanstack/react-query'
-import { systemEventDeliveryProblems } from '@camstack/types/client'
+import { systemEventDeliveryProblems } from '@dominevo/types/client'
 import {
   describeSystemEventDeliveryProblem,
   NcRuleSchema as PublishedRuleSchema,
   servedTemplateVars,
-} from '@camstack/types'
+} from '@dominevo/types'
 
 import { mountScreen } from '../../../../testing/mount.js'
 import { resetRuleDrafts } from '../../../../testing/rule-draft-harness.js'

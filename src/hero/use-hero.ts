@@ -13,7 +13,7 @@
  */
 import { useCallback, useEffect, useMemo } from 'react'
 import { useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query'
-import type { HeroAction, HeroCall, HeroModel, HeroRowModel } from '@camstack/types'
+import type { HeroAction, HeroCall, HeroModel, HeroRowModel } from '@dominevo/types'
 import { useConnection } from '../connection/ConnectionProvider.js'
 import { capQuery } from '../data/cap-query.js'
 import { useCapMutator } from '../data/use-accessory-controls.js'

@@ -18,7 +18,7 @@
  */
 import { act, renderHook } from '@testing-library/react'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
-import { CLIP_PLAYBACK_OPTIONS } from '@camstack/types'
+import { CLIP_PLAYBACK_OPTIONS } from '@dominevo/types'
 
 import type { Clip } from '../clip-model.js'
 import {

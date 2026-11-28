@@ -28,8 +28,8 @@
  * cross-surface audio-ownership rule on it.)
  */
 import { useEffect, useMemo, useRef, useState} from 'react'
-import { SystemProvider, trpc } from '@camstack/ui-library'
-import { createSystem, type System } from '@camstack/sdk'
+import { SystemProvider, trpc } from '@dominevo/ui-library'
+import { createSystem, type System } from '@dominevo/sdk'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import {
   gridQualitySchema,

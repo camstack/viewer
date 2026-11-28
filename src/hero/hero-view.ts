@@ -12,7 +12,7 @@
  * this, each device type drew its own: a switch a pill, a media player a text
  * label ("Acceso"), a climate control a filled "Spento" pill that read as active.
  */
-import type { HeroAction, HeroControl, HeroFact, HeroRowModel, HeroText, HeroTone } from '@camstack/types'
+import type { HeroAction, HeroControl, HeroFact, HeroRowModel, HeroText, HeroTone } from '@dominevo/types'
 import type { ColorTokens } from '../theme/tokens.js'
 
 export type HeroLocale = 'en' | 'it'

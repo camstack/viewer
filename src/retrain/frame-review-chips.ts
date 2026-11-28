@@ -11,7 +11,7 @@
  * The class is the box's CURRENT `macroClass` (newer hubs), else its origin's
  * (older hubs); a box with neither is classless.
  */
-import type { RetrainFrame, RetrainMacroClass } from '@camstack/types'
+import type { RetrainFrame, RetrainMacroClass } from '@dominevo/types'
 import { isRetrainMacroClass } from '../data/retrain-parse.js'
 import { pipelineOriginRef } from './editor.js'
 import { BOX_DIFF_KINDS, type BoxDiffKind } from './live-review.js'

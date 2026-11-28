@@ -8,7 +8,7 @@
  * loads — which is why every binding here must be a plain wrapper.
  */
 import { describe, expect, it } from 'vitest'
-import type { System } from '@camstack/sdk'
+import type { System } from '@dominevo/sdk'
 import { createEventsDataClient } from '../events-client'
 
 /**

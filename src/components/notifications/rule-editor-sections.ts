@@ -2,7 +2,7 @@
  * rule-editor-sections — which sections the summary screen lists for a rule.
  *
  * The ORDER and the SET come from `ruleEditorSectionsForKind` in
- * `@camstack/types`, the same call the admin's tabs are checked against — the
+ * `@dominevo/types`, the same call the admin's tabs are checked against — the
  * viewer never re-lists them. The viewer decides only three things: the i18n
  * keys, which form fields each section edits (the claim map, checked
  * exhaustive in the spec so a new field cannot live nowhere), and which
@@ -13,8 +13,8 @@ import {
   NC_RULE_EDITOR_SECTION_ORDER,
   conditionVisibleForKind,
   ruleEditorSectionsForKind,
-} from '@camstack/types/client'
-import type { NcKindVisibilitySubject, NcRuleEditorSectionKey, NcRuleKind } from '@camstack/types'
+} from '@dominevo/types/client'
+import type { NcKindVisibilitySubject, NcRuleEditorSectionKey, NcRuleKind } from '@dominevo/types'
 import type { NcRuleFormState } from './rule-editor.js'
 import { isKindLockedOut } from './rule-kind-nav.js'
 

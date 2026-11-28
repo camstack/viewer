@@ -8,7 +8,7 @@
  * name. An app is absent only from a list that ANSWERED (D315): pending and a
  * failed read are their own states.
  */
-import type { AppDeclaration, AppEntry, AppInfo, AppLabel, AppNavItem, AppNavSection } from '@camstack/types'
+import type { AppDeclaration, AppEntry, AppInfo, AppLabel, AppNavItem, AppNavSection } from '@dominevo/types'
 
 import { isRecord } from '../data/cap-query.js'
 

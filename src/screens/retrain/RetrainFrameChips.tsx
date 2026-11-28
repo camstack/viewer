@@ -6,7 +6,7 @@
  */
 import React from 'react'
 import { StyleSheet, View } from 'react-native'
-import type { RetrainMacroClass } from '@camstack/types'
+import type { RetrainMacroClass } from '@dominevo/types'
 import { Badge } from '../../components/ui/Badge.js'
 import {
   Box,

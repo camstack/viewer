@@ -9,7 +9,7 @@
  *   • targets  → `addonId: 'notifiers'` (`integrationInstances` pinned to `notifiers`; `nc.listTargetKinds` for the kind catalogue)
  *
  * The Zod schemas below are viewer-LOCAL mirrors of the server contracts
- * (`@camstack/types` `notification-rules.cap.ts` / `notification-output.cap.ts`
+ * (`@dominevo/types` `notification-rules.cap.ts` / `notification-output.cap.ts`
  * plus the A1 additive fields: `ownerUserId`, `disabledTargetIds`, inline
  * `customZones` polygons, and the `polygonDraw` catalog widget). They validate
  * every bridge response at the boundary — Zod strips unknown keys, so a server
@@ -40,10 +40,10 @@ import {
   isSystemRuleKind,
   systemEventKindsOfFamily,
   systemFamilyOfKind,
-} from '@camstack/types/client'
-import type { TimelapseRuleInput, TimelapseRulePatch } from '@camstack/types'
+} from '@dominevo/types/client'
+import type { TimelapseRuleInput, TimelapseRulePatch } from '@dominevo/types'
 
-// ── Geometry (mirrors @camstack/types mask-shape.ts) ───────────────────────
+// ── Geometry (mirrors @dominevo/types mask-shape.ts) ───────────────────────
 
 /** A normalized 0..1 point (top-left origin). */
 export const NcMaskPointSchema = z.object({ x: z.number(), y: z.number() })
@@ -519,7 +519,7 @@ export const NcConditionsSchema = z.object({
    * is both edges — there is no `'both'` member, and picking "both" deletes
    * the key. DEVICE-EVENT sensor rules only, and only while every
    * {@link sensorKinds} member raises and clears (`sensorTransitionOffered`
-   * from `@camstack/types`); the editor prunes it on save otherwise.
+   * from `@dominevo/types`); the editor prunes it on save otherwise.
    */
   sensorTransition: z.enum(['raised', 'cleared']).optional(),
   packagePhase: z.enum(['delivered', 'picked-up', 'both']).optional(),
@@ -1036,7 +1036,7 @@ export type NcViewerRule = z.infer<typeof NcViewerRuleSchema>
 // A SIDE TABLE on the hub, keyed by rule id, read and written through its own
 // pair of bridge actions — NOT a field on `NcRule`. The addon's reason is worth
 // repeating here because it decides how this app has to save: `NcRule` lives in
-// `@camstack/types`, which the addon resolves from the `@camstack/server`
+// `@dominevo/types`, which the addon resolves from the `@camstack/server`
 // closure at runtime, so a new key on `NcRuleInputSchema` is silently STRIPPED
 // at save until a framework train lands. The AI block lives in the addon
 // instead, which is why `nc.setRuleAi` is a second call after the rule save and
@@ -1201,7 +1201,7 @@ export const NcConditionDescriptorSchema = z.object({
 })
 export type NcConditionDescriptor = z.infer<typeof NcConditionDescriptorSchema>
 
-// ── Picker taxonomy (mirrors @camstack/types catalogs/nc-taxonomy.ts) ───────
+// ── Picker taxonomy (mirrors @dominevo/types catalogs/nc-taxonomy.ts) ───────
 //
 // The fixed class/label vocabulary the rule editor renders as pickers instead
 // of free text. Served ADDITIVELY on the getConditionCatalog response, so it is
@@ -1409,7 +1409,7 @@ export type NcRuleResult = z.infer<typeof NcRuleResultSchema>
 // ── Template-variable catalog (mirrors notification-rules.cap.ts) ─────────
 //
 // `NcTemplateVarDescriptorSchema` below is a field-for-field mirror of
-// `NcTemplateVarDescriptorSchema` in `@camstack/types` (the source of
+// `NcTemplateVarDescriptorSchema` in `@dominevo/types` (the source of
 // `NC_TEMPLATE_VARS`) — pinned by the spec that parses the shared catalog
 // through it. Resolved from PUBLISHED `node_modules`, per this file's header;
 // never imported here directly. A field this mirror does not accept is a
@@ -1468,7 +1468,7 @@ export const NcTemplateVarGroupSchema = z.enum([
 export type NcTemplateVarGroup = z.infer<typeof NcTemplateVarGroupSchema>
 
 /**
- * Mirror of `NcTemplateVarDescriptorSchema` in `@camstack/types` — pinned by
+ * Mirror of `NcTemplateVarDescriptorSchema` in `@dominevo/types` — pinned by
  * the spec that parses the shared catalog through it.
  *
  * `families` / `fields` / `kinds` / `deliveries` / `systemEventKinds` say
@@ -1539,7 +1539,7 @@ export type NcTemplatePreviewResult = z.infer<typeof NcTemplatePreviewResultSche
 // ── Scheduled timelapse (the SHARED schema, not a mirror) ─────────────────
 //
 // The one rule family whose schema this file does NOT mirror, and deliberately:
-// `TimelapseRule` lives in `@camstack/types` (`notification/timelapse-rule.ts`)
+// `TimelapseRule` lives in `@dominevo/types` (`notification/timelapse-rule.ts`)
 // and the viewer already depends on the package, so mirroring it would be a
 // second copy of a shape the server and this app can simply share. It is not the
 // exception to the mirroring rule so much as the reason the rule exists — the
@@ -1585,7 +1585,7 @@ export type NcTimelapseRuleResult = z.infer<typeof NcTimelapseRuleResultSchema>
 // ── Multi-camera digest (mirrors the ADDON's summary-rule.ts) ─────────────
 //
 // A mirror, unlike the timelapse above, because that schema deliberately lives
-// in `addon-post-analysis` and NOT in `@camstack/types` — so a field added to it
+// in `addon-post-analysis` and NOT in `@dominevo/types` — so a field added to it
 // is live on the next `camstack deploy` rather than on the next framework train
 // (see `summary/summary-rule.ts`). This app therefore cannot import it and would
 // not want to: it ships on a THIRD train (EAS OTA) and has to tolerate a hub

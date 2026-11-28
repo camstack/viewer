@@ -7,7 +7,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, screen, within } from '@testing-library/react'
 import React from 'react'
-import type { HeroAction, HeroControl, HeroRowModel } from '@camstack/types'
+import type { HeroAction, HeroControl, HeroRowModel } from '@dominevo/types'
 import { mountScreen } from '../../testing/mount.js'
 import type { AccessoryControlKind } from '../../components/camera/accessory-controls/control-registry.js'
 import { HeroRowBody, rowControls } from '../HeroRowBody.js'
@@ -107,7 +107,7 @@ describe('the fallback control', () => {
       { hub: {} },
     )
   }
-  // `primaryGated` is newer than the pinned @camstack/types: add it without a cast.
+  // `primaryGated` is newer than the pinned @dominevo/types: add it without a cast.
   const withGated = (gated: boolean): HeroRowModel => Object.assign({}, base, { primaryGated: gated })
   it('is drawn for a type the hero does not cover yet', () => {
     mount(withGated(false))

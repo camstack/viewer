@@ -8,7 +8,7 @@
  * `string | { pathname, params }` and these objects are that shape.
  */
 import type { Href } from 'expo-router'
-import type { NcRuleEditorSectionKey, NcRuleKind } from '@camstack/types'
+import type { NcRuleEditorSectionKey, NcRuleKind } from '@dominevo/types'
 
 export type RuleHref = Href
 

@@ -10,15 +10,15 @@
  *  - `sensor` (a `device-event` rule) fires on a sensor / control event →
  *    the devices bound to an eventful sensor / control cap, narrowed to the
  *    caps of the rule's `sensorKinds` when it names any. The cap table is the
- *    shared one (`EVENT_KIND_BY_CAP`, `@camstack/types`) — the same map the hub
+ *    shared one (`EVENT_KIND_BY_CAP`, `@dominevo/types`) — the same map the hub
  *    turns a device's caps into event kinds with — so nothing is re-listed here.
  *    PLUS every CAMERA (fix round 1, 2026-10-01, `ruleDeviceCompatCapQueries`
- *    `@camstack/types` 1.2.281): the engine matches a sensor rule scoped to a
+ *    `@dominevo/types` 1.2.281): the engine matches a sensor rule scoped to a
  *    CAMERA — a per-camera row carries the camera's id, and a linked set
  *    matches on `rowCameraIds` (D630 §6) — so a camera-scoped sensor rule is
  *    legitimate and the picker offers the union of the two cap queries
  *    (`extraCapNames` below), never just the sensor/control one.
- *  - every other kind reads `ruleDeviceCompatCapNames` (`@camstack/types`,
+ *  - every other kind reads `ruleDeviceCompatCapNames` (`@dominevo/types`,
  *    operator ruling 2026-10-01): `detection` (`package-event` included) and
  *    `occupancy` need the `detection-pipeline` cap, `sound` needs
  *    `audio-metrics` — never a camera-TYPE guess. Before this change the
@@ -44,8 +44,8 @@ import {
   EVENTFUL_CAP_NAMES,
   NC_CAMERA_SCOPE_CAP_NAME,
   ruleDeviceCompatCapNames,
-} from '@camstack/types/client'
-import type { DeviceSearchRequires, NcRuleKind } from '@camstack/types'
+} from '@dominevo/types/client'
+import type { DeviceSearchRequires, NcRuleKind } from '@dominevo/types'
 
 /** The most cap names one `listDeviceIdsByCaps` call takes. */
 export const MAX_CAPS_PER_QUERY = 16
@@ -59,7 +59,7 @@ export type RuleDeviceSource =
       readonly capNames: readonly string[]
       /**
        * A SECOND `listDeviceIdsByCaps` query, unioned into the first
-       * (`ruleDeviceCompatCapQueries`, `@camstack/types`) — a sensor rule's
+       * (`ruleDeviceCompatCapQueries`, `@dominevo/types`) — a sensor rule's
        * camera-streams query, kept separate from `capNames` because
        * `listDeviceIdsByCaps` takes at most 16 names and `EVENTFUL_CAP_NAMES`
        * is already exactly 16 (fix round 1, 2026-10-01). Absent for every

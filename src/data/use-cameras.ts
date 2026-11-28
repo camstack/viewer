@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useSyncExternalStore } from 'react'
 import { useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query'
-import type { DeviceInfo } from '@camstack/sdk'
+import type { DeviceInfo } from '@dominevo/sdk'
 import { useConnection } from '../connection/ConnectionProvider.js'
 import { hydrateCameraList, writeCameraListCache } from './camera-list-cache.js'
 import { useCameraPrefs } from './use-camera-prefs.js'

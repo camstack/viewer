@@ -8,7 +8,7 @@
  */
 import React, { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { RetrainFrame } from '@camstack/types'
+import type { RetrainFrame } from '@dominevo/types'
 import { useServer } from '../../app/ServerProvider.js'
 import { useConnection } from '../../connection/ConnectionProvider.js'
 import { hubImageSource } from '../../components/camera/theater/hub-image-source.js'

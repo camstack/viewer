@@ -8,7 +8,7 @@
  * builds a backlog behind its per-device lock. A send that did not land
  * (`false`) ends the repeat; so does release, unmount and a disabled key.
  */
-import type { RemoteKnownRole } from '@camstack/types'
+import type { RemoteKnownRole } from '@dominevo/types'
 
 /** Roles that repeat while held: arrows, volume, channel, seek. Never power, digits, ok, sources or custom keys. */
 const REPEATABLE: ReadonlySet<RemoteKnownRole> = new Set<RemoteKnownRole>([

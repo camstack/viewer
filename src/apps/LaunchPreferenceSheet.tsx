@@ -4,7 +4,7 @@
  */
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import type { AppLabel } from '@camstack/types'
+import type { AppLabel } from '@dominevo/types'
 
 import { MenuRow } from '../components/ui/MenuRow.js'
 import { PickerSheet, PickerSheetButton } from '../components/ui/PickerSheet.js'

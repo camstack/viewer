@@ -17,7 +17,7 @@ import type { NcInstanceMethod } from './nc-target-instances.js'
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query'
 import { useConnection } from '../connection/ConnectionProvider.js'
 import { useDebouncedValue } from '../hooks/use-debounced-value.js'
-import type { TimelapseRule, TimelapseRuleInput, TimelapseRulePatch } from '@camstack/types'
+import type { TimelapseRule, TimelapseRuleInput, TimelapseRulePatch } from '@dominevo/types'
 import {
   makeNcClient,
   type NcAiProfile,

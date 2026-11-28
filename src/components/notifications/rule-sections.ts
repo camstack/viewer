@@ -2,7 +2,7 @@
  * rule-sections — the VIEWER's projection of the shared rule-kind / rule-section
  * model. Pure, RN-free, i18n-key-only.
  *
- * The model itself lives in `@camstack/types`
+ * The model itself lives in `@dominevo/types`
  * (`src/notification/rule-kinds.ts`): which kind a rule is, which fields that
  * kind can actually use, which list section it belongs to, and what a seeded
  * "New <kind> rule" opens on. Both editors read that one copy — the admin UI
@@ -31,7 +31,7 @@
  * The two FAMILY tabs — and they are not kinds of the rule list at all.
  *
  * A timelapse rule rides no `NcDelivery` member and a digest rule's schema does
- * not even live in `@camstack/types`; each is its own store behind its own
+ * not even live in `@dominevo/types`; each is its own store behind its own
  * `nc.*` bridge actions. So `ruleKindOf` has no opinion about them and
  * must never be asked: it treats anything it does not recognise as a DETECTION
  * rule (the deliberate catch-all that keeps a rule with an unknown trigger

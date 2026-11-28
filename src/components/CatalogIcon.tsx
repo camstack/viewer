@@ -1,5 +1,5 @@
 /**
- * CatalogIcon — draws any key of the `@camstack/types` icon catalog (D854).
+ * CatalogIcon — draws any key of the `@dominevo/types` icon catalog (D854).
  *
  * The 1,684 glyphs are DATA (`lib/icon-nodes.generated.ts`, lucide's own icon
  * nodes), not 1,684 imports Metro could not tree-shake. This draws a node with

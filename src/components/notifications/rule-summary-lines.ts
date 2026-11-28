@@ -6,7 +6,7 @@
  * opening them all. Pure, and it returns an i18n key plus params — never
  * English — so the phone says it in the operator's language.
  */
-import type { NcRuleEditorSectionKey } from '@camstack/types'
+import type { NcRuleEditorSectionKey } from '@dominevo/types'
 import {
   isConditionValueEmpty,
   groupingIsSent,

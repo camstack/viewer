@@ -1,11 +1,11 @@
 /**
  * The viewer's `systemEventDelivery` mirror against the hub's shape (D1019).
  * The hub's source of truth is `NcSystemEventDeliverySchema` and
- * `systemEventDeliveryModesOf` in `@camstack/types`; the published copy may
+ * `systemEventDeliveryModesOf` in `@dominevo/types`; the published copy may
  * predate `modes`, so the hub's expected answers are pinned here by value and,
- * when the installed `@camstack/types` already ships the reader, compared to it.
+ * when the installed `@dominevo/types` already ships the reader, compared to it.
  */
-import * as hubTypes from '@camstack/types'
+import * as hubTypes from '@dominevo/types'
 import { describe, expect, it } from 'vitest'
 import { NcSystemEventDeliverySchema, type NcSystemEventDelivery } from '../../../data/notification-center.js'
 import { scheduleForSendTimes, systemEventDeliveryModesOf } from '../system-event-delivery.js'

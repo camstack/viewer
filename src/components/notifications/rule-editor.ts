@@ -15,7 +15,7 @@
  * caller's OWN target ids (re-validated server-side anyway) so a foreign/unknown
  * id can never ride along. The server remains the validation authority.
  */
-// `@camstack/types` is a RUNTIME import here (`DeviceType` feeds
+// `@dominevo/types` is a RUNTIME import here (`DeviceType` feeds
 // `NC_DEVICE_TYPE_OPTIONS` below). Which filter speaks about which system-event
 // kind is read from it too, never restated — see `familyFilterVisibility` in
 // `system-event-family.ts`, the one viewer reader of that scoping.
@@ -30,8 +30,8 @@ import {
   ruleKindOf,
   ruleKindSpec,
   systemFamilyOfKind,
-} from '@camstack/types/client'
-import type { NcDroppedCondition, NcRuleKind } from '@camstack/types'
+} from '@dominevo/types/client'
+import type { NcDroppedCondition, NcRuleKind } from '@dominevo/types'
 import { pruneSystemEventForFamily } from './system-event-family.js'
 import { reconcileOccupancyClasses } from './occupancy-condition.js'
 import { linkedCamerasApplies } from './rule-field-choices.js'
@@ -449,7 +449,7 @@ export function conditionApplies(descriptor: NcConditionDescriptor, delivery: Nc
 // of their own — an occupancy rule is `device-event` carrying
 // `conditions.occupancy`, a sound rule is `immediate` carrying
 // `conditions.audio` — and the ENGINE discriminates them on that condition. So
-// the editor asks the shared model (`@camstack/types`), which is the same table
+// the editor asks the shared model (`@dominevo/types`), which is the same table
 // the admin UI reads: which fields the kind can use, each exclusion carrying the
 // engine reason, and whether the kind's subject owns a frame at all.
 //
@@ -981,7 +981,7 @@ export function parsePackagePhase(value: string): NcConditions['packagePhase'] {
 //
 // VOCABULARY IS SHARED, DELIBERATELY. Which kinds are authorable, their
 // authoring order (`NC_SYSTEM_EVENT_KIND_GROUP_SPECS`) and the filter-visibility
-// rule come from `@camstack/types`, read here through `system-event-family.ts`
+// rule come from `@dominevo/types`, read here through `system-event-family.ts`
 // and in the admin UI through
 // `packages/addon-admin-ui/src/pages/system/notification-system-events.ts`.
 // Two surfaces that name the same event differently is how an operator
@@ -1014,7 +1014,7 @@ export interface NcSystemEventKindOption {
  * by the EDITOR's label for each box. The condition field each one writes is
  * `devices` → `deviceIds`, `deviceTypes` → `deviceTypes`, `nodes` → `nodeIds`,
  * `packages` → `packageNames`, `consumableThreshold` → `consumableLowPercent`. Which kinds it speaks about is stated once in
- * `@camstack/types`, never here — `familyFilterVisibility`
+ * `@dominevo/types`, never here — `familyFilterVisibility`
  * (`system-event-family.ts`) is the one reader.
  */
 export interface NcSystemEventFilterVisibility {

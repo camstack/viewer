@@ -37,7 +37,7 @@ import {
   planAdminFrame,
   shouldOfferLocalSwitch,
 } from './admin-frame.js'
-import type { AppInfo } from '@camstack/types'
+import type { AppInfo } from '@dominevo/types'
 
 import { AppFrame } from './AppFrame.js'
 import { AppTopStrip } from './AppTopStrip.js'

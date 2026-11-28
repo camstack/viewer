@@ -6,7 +6,7 @@
  * the hub's Actions page; a rule only names them. ADMIN-ONLY on the hub; the
  * Actions sub-screen is admin-only too.
  */
-import type { ActionStep } from '@camstack/types'
+import type { ActionStep } from '@dominevo/types'
 import { actionStepsResolver, type NcListedAction } from '../../data/listed-actions.js'
 import {
   NC_ACTION_BUTTON_ID_MAX,

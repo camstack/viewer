@@ -1,4 +1,4 @@
-import type { RetrainFrame } from '@camstack/types'
+import type { RetrainFrame } from '@dominevo/types'
 import { describe, expect, it } from 'vitest'
 import { pendingDrafts, summarizeFrameReview } from '../frame-review-chips.js'
 

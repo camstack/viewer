@@ -3,8 +3,8 @@
  * {@link PickedValue}. These two are the whole adapter — each device once,
  * order kept.
  */
-import { NC_CAMERA_SCOPE_CAP_NAME } from '@camstack/types/client'
-import type { DeviceSearchRequires } from '@camstack/types'
+import { NC_CAMERA_SCOPE_CAP_NAME } from '@dominevo/types/client'
+import type { DeviceSearchRequires } from '@dominevo/types'
 
 import type { PickedValue } from './device-value-picker-model.js'
 

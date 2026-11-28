@@ -23,8 +23,8 @@ import {
   NC_SYSTEM_EVENT_KIND_GROUP_SPECS,
   systemEventClassKinds,
   systemEventFilterAppliesToAnyKind,
-} from '@camstack/types/client'
-import type { NcSystemEventClassSpec, NcSystemEventFamily } from '@camstack/types'
+} from '@dominevo/types/client'
+import type { NcSystemEventClassSpec, NcSystemEventFamily } from '@dominevo/types'
 import type { NcSystemEventCondition, NcSystemEventKind } from '../../data/notification-center.js'
 // TYPE-only: `rule-editor.ts` imports this module at runtime (`formToInput`
 // prunes through `pruneSystemEventForFamily`), so a value import back would be

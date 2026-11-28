@@ -2,7 +2,7 @@
  * The Retrain grid's list — pure. Newest first and a date label per tile; the
  * grid's geometry is the Library-wide rule (`components/ui/library-grid.ts`).
  */
-import type { RetrainFrame } from '@camstack/types'
+import type { RetrainFrame } from '@dominevo/types'
 
 /** When the frame was captured; the copy time when the hub did not say. */
 export function frameTimeOf(frame: Pick<RetrainFrame, 'capturedAt' | 'copiedAt'>): number {

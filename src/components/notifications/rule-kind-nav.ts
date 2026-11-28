@@ -15,8 +15,8 @@ import {
   kindsForDiscriminator,
   ruleKindOf,
   ruleSeedForSection,
-} from '@camstack/types/client'
-import type { NcRuleKind, NcRuleSectionSubject, NcRuleSeed } from '@camstack/types'
+} from '@dominevo/types/client'
+import type { NcRuleKind, NcRuleSectionSubject, NcRuleSeed } from '@dominevo/types'
 import type { AdminVerdict } from '../../data/use-me.js'
 import type { NcConditions, NcDelivery } from '../../data/notification-center.js'
 import { isFamilySection, type NcViewerFamilySection } from './rule-sections.js'

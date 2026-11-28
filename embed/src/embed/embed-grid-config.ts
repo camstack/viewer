@@ -5,7 +5,7 @@ import { requireTokenUnlessTransportAuthenticated } from './transport-auth'
 /**
  * Stream-quality presets accepted from the host (grid-wide).
  *
- * The system's profile enum (`CamProfileSchema` in `@camstack/types`:
+ * The system's profile enum (`CamProfileSchema` in `@dominevo/types`:
  * `high|mid|low`) plus `auto`, which is not a profile — it is "you pick", and
  * `qualityToTarget` maps it to `{ kind: 'adaptive' }` instead of to a tier.
  *

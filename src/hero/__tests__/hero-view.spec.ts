@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { HeroAction, HeroControl, HeroRowModel } from '@camstack/types'
+import type { HeroAction, HeroControl, HeroRowModel } from '@dominevo/types'
 import { THEME } from '../../theme/tokens.js'
 import { parseHeroRowModels } from '../hero-parse.js'
 import {

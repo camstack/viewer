@@ -1,12 +1,12 @@
 /**
  * The two device-kind accessors the control pick reads (D1033).
  *
- * They live in `@camstack/types` (`device/device-kind.ts`) and are not on the
+ * They live in `@dominevo/types` (`device/device-kind.ts`) and are not on the
  * `/client` entry a phone bundle may import, so this file is that pair, the
  * same predicates: a climate device with no climate role is a room thermostat,
  * and a plug-in heater is a `switch` with role `switch-heater`.
  */
-import { DeviceType } from '@camstack/types/client'
+import { DeviceType } from '@dominevo/types/client'
 
 /** Hand copy of hub `CLIMATE_ROLES` (`device/device-kind.ts`); guarded by `device-kind.spec.ts`. */
 export const VIEWER_CLIMATE_ROLES = [

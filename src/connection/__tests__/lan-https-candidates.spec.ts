@@ -26,7 +26,7 @@ const { createSystem, endpointsQuery, viewerQuery, probeLog } = vi.hoisted(() =>
   probeLog: vi.fn(),
 }))
 
-vi.mock('@camstack/sdk', () => ({ createSystem }))
+vi.mock('@dominevo/sdk', () => ({ createSystem }))
 vi.mock('../lifecycle-trace.js', async (importOriginal) => {
   const original = await importOriginal<typeof import('../lifecycle-trace.js')>()
   return { ...original, traceCandidateProbe: probeLog }

@@ -12,7 +12,7 @@
 import React from 'react'
 import { Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
-import { systemFamilyOfKind } from '@camstack/types/client'
+import { systemFamilyOfKind } from '@dominevo/types/client'
 import { Section } from '../../../../components/ui/Section.js'
 import { ConditionField, type SetConditionField } from '../../../../components/notifications/ConditionField.js'
 import { advancedConditionsFor } from '../../../../components/notifications/rule-editor-sections.js'

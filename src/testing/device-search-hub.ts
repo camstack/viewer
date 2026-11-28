@@ -6,7 +6,7 @@
  * `includeIncompatible`, filters and text narrow, facets count the compatible
  * set, `suggested` is the context device's room. One page, no cursor.
  */
-import type { DeviceSearchItem, DeviceSearchResult } from '@camstack/types'
+import type { DeviceSearchItem, DeviceSearchResult } from '@dominevo/types'
 
 export interface FleetDevice {
   readonly id: number

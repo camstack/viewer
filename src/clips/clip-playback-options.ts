@@ -40,8 +40,8 @@
  * Pure: no React, no i18n, no network.
  */
 
-import { CLIP_BROKER_PACED_RATES } from '@camstack/types/client'
-import type { ClipPlaybackOptions } from '@camstack/types'
+import { CLIP_BROKER_PACED_RATES } from '@dominevo/types/client'
+import type { ClipPlaybackOptions } from '@dominevo/types'
 
 import { isRecord } from '../data/cap-query.js'
 

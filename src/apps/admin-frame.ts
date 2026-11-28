@@ -8,7 +8,7 @@
  * handed over; a viewer that is NOT on the hub's origin cannot frame it (the hub
  * answers `frame-ancestors 'self'`) and opens a tab instead.
  */
-import type { AppEntry } from '@camstack/types'
+import type { AppEntry } from '@dominevo/types'
 
 import { sameHubOrigin } from '../connection/hub-origin.js'
 

@@ -10,8 +10,8 @@ import {
   NC_GROUPING_MAX_SEC,
   NC_GROUPING_MIN_SEC,
   stepActuatesAlarmPanel,
-} from '@camstack/types/client'
-import type { ActionStep, NcRuleKind } from '@camstack/types'
+} from '@dominevo/types/client'
+import type { ActionStep, NcRuleKind } from '@dominevo/types'
 import {
   NC_COMMAND_ACTOR_KINDS,
   NC_COMMAND_OUTCOMES,

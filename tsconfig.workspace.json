@@ -1,5 +1,5 @@
 {
-  // CROSS-REPO DEVELOPMENT ONLY — resolves `@camstack/*` to the workspace
+  // CROSS-REPO DEVELOPMENT ONLY — resolves `@dominevo/*` to the workspace
   // SOURCE next door, so a type added in camstack-server is visible here with
   // no publish in between.
   //
@@ -20,15 +20,15 @@
     // repeated here rather than inherited.
     "paths": {
       "@/*": ["./src/*"],
-      "@camstack/types": [
+      "@dominevo/types": [
         "../camstack-server/packages/types/src/index.ts",
         "../packages/types/src/index.ts"
       ],
-      "@camstack/types/client": [
+      "@dominevo/types/client": [
         "../camstack-server/packages/types/src/client.ts",
         "../packages/types/src/client.ts"
       ],
-      "@camstack/sdk": [
+      "@dominevo/sdk": [
         "../camstack-server/packages/sdk/src/index.ts",
         "../packages/sdk/src/index.ts"
       ]

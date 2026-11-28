@@ -11,8 +11,8 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { CLIP_BROKER_PACED_RATES } from '@camstack/types/client'
-import { CLIP_PLAYBACK_OPTIONS } from '@camstack/types'
+import { CLIP_BROKER_PACED_RATES } from '@dominevo/types/client'
+import { CLIP_PLAYBACK_OPTIONS } from '@dominevo/types'
 
 import {
   CLIP_LEGACY_RATE_LADDER,

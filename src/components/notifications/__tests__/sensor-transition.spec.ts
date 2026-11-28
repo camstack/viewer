@@ -11,8 +11,8 @@
  *  - the alarm case that can never fire is warned about.
  */
 import { describe, expect, it } from 'vitest'
-import { NC_SENSOR_TRANSITION_UNSUPPORTED_REASON } from '@camstack/types/client'
-import { NC_SENSOR_TRANSITION_NEVER_FIRES_WARNING } from '@camstack/types'
+import { NC_SENSOR_TRANSITION_UNSUPPORTED_REASON } from '@dominevo/types/client'
+import { NC_SENSOR_TRANSITION_NEVER_FIRES_WARNING } from '@dominevo/types'
 import type { NcConditionDescriptor } from '../../../data/notification-center.js'
 import { NcConditionsSchema } from '../../../data/notification-center.js'
 import {

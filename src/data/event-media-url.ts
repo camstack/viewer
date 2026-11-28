@@ -38,7 +38,7 @@
  * `__tests__/event-media-url.spec.ts`.
  */
 
-import type { MediaOwnerType } from '@camstack/types'
+import type { MediaOwnerType } from '@dominevo/types'
 
 /** The hub-proxied path prefix for pipeline-analytics event media. Mirrors the
  *  server's `eventMediaBaseUrl` (`/addon/<addonId>/event-media`, addonId =

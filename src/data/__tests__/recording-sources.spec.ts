@@ -6,7 +6,7 @@
  * resolves to NOTHING rather than falling back to ours. A fallback in either
  * direction silently swaps one camera's coverage bar for another's.
  */
-import { RecordingSourceSchema } from '@camstack/types'
+import { RecordingSourceSchema } from '@dominevo/types'
 import { describe, expect, it } from 'vitest'
 import {
   RECORDING_SOURCE_CAMSTACK,

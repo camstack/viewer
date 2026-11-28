@@ -21,7 +21,7 @@
  *    (`Bark`, `dog_bark`), or a COCO package proxy.
  *
  * A dictionary of what the hub happened to advertise is therefore the wrong
- * shape for this question. The catalogs are STATIC data in `@camstack/types`,
+ * shape for this question. The catalogs are STATIC data in `@dominevo/types`,
  * they travel with the app, and they answer it without a round trip.
  *
  * ## The rule
@@ -57,7 +57,7 @@ import {
   EVENT_TAXONOMY,
   MACRO_LABELS,
   YAMNET_TO_MACRO,
-} from '@camstack/types/client'
+} from '@dominevo/types/client'
 import { audioKindId } from './event-kinds.js'
 
 /** Single-key lookup returning a string. Compatible with react-i18next's `t`:

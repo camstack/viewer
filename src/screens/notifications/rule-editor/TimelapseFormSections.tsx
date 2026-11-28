@@ -68,8 +68,8 @@ import type {
   NcTemplateVarDescriptor,
 } from '../../../data/notification-center.js'
 import { LabeledControl, Problem } from './FamilyFormBits.js'
-import { DEFAULT_TIMELAPSE_PREVIEW_TEXT } from '@camstack/types/client'
-import type { TimelapsePreviewMode } from '@camstack/types'
+import { DEFAULT_TIMELAPSE_PREVIEW_TEXT } from '@dominevo/types/client'
+import type { TimelapsePreviewMode } from '@dominevo/types'
 import { SectionLabel } from '../../../components/ui/SectionLabel.js'
 
 /**

@@ -30,7 +30,7 @@ const { createSystem, raceFastestEndpoint, endpointsQuery, awaitConnected, logIn
   }),
 )
 
-vi.mock('@camstack/sdk', () => ({ createSystem }))
+vi.mock('@dominevo/sdk', () => ({ createSystem }))
 vi.mock('../../lib/logger.js', () => ({
   log: { info: logInfo, warn: logWarn, error: vi.fn(), debug: vi.fn() },
 }))

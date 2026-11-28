@@ -25,7 +25,7 @@ const { createSystem, endpointsQuery, viewerQuery } = vi.hoisted(() => ({
   viewerQuery: vi.fn(),
 }))
 
-vi.mock('@camstack/sdk', () => ({ createSystem }))
+vi.mock('@dominevo/sdk', () => ({ createSystem }))
 
 const TUNNEL = 'https://camstack.example.com'
 const LAN_HTTP = 'http://192.0.2.10:4480'

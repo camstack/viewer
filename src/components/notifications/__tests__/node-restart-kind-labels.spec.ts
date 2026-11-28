@@ -5,7 +5,7 @@ import itLocale from '../../../../locales/it.json'
 /**
  * Hub D723: a node restarting and a node updating are two system-event kinds.
  * Their words ship ahead of the kind mirror (`NcSystemEventKindSchema`), which
- * follows the `@camstack/types` bump that publishes them — a mirror ahead of
+ * follows the `@dominevo/types` bump that publishes them — a mirror ahead of
  * the published types does not type-check against the functions it feeds.
  */
 describe('node-restarting / node-updating have words in both languages', () => {

@@ -15,7 +15,7 @@
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { useRouter } from 'expo-router'
-import type { NcRuleEditorSectionKey } from '@camstack/types'
+import type { NcRuleEditorSectionKey } from '@dominevo/types'
 import { useAdminVerdict } from '../../../data/use-me.js'
 import { useNcConditionCatalog } from '../../../data/use-notification-center.js'
 import { editorSectionsFor, parseSectionKey } from '../../../components/notifications/rule-editor-sections.js'

@@ -12,7 +12,7 @@ import {
   servedTemplateVars,
   scheduleForSendTimes as publishedScheduleForSendTimes,
   sendTimesOfSchedule as publishedSendTimesOfSchedule,
-} from '@camstack/types'
+} from '@dominevo/types'
 import { describe, expect, it } from 'vitest'
 import enLocale from '../../../../locales/en.json'
 import itLocale from '../../../../locales/it.json'

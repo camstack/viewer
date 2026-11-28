@@ -26,8 +26,8 @@
  *    own default tomorrow still reaches a rule authored today.
  */
 import { describe, expect, it } from 'vitest'
-import { NC_RULE_KIND_SPECS } from '@camstack/types/client'
-import type { NcRuleKind } from '@camstack/types'
+import { NC_RULE_KIND_SPECS } from '@dominevo/types/client'
+import type { NcRuleKind } from '@dominevo/types'
 import enLocale from '../../../../locales/en.json'
 import itLocale from '../../../../locales/it.json'
 import {

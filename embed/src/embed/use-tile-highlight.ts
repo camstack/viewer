@@ -15,10 +15,10 @@
  */
 import { matchesDetectionClass } from '../../../shared/highlight-classes'
 import { useEffect, useRef, useState } from 'react'
-import { useDeviceDetections, useLiveEvent } from '@camstack/ui-library'
-import type { System } from '@camstack/sdk'
-import { EventCategory } from '@camstack/types/enums'
-import type { PipelineAudioInferenceResultPayload } from '@camstack/types'
+import { useDeviceDetections, useLiveEvent } from '@dominevo/ui-library'
+import type { System } from '@dominevo/sdk'
+import { EventCategory } from '@dominevo/types/enums'
+import type { PipelineAudioInferenceResultPayload } from '@dominevo/types'
 import type { GridHighlightConfig } from './embed-grid-config'
 import { paintKind, type PaletteView } from '../../../shared/palette'
 

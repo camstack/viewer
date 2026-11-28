@@ -14,7 +14,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, screen as dom, within } from '@testing-library/react'
 import React, { useState } from 'react'
-import { NC_CONDITION_CATALOG } from '@camstack/types'
+import { NC_CONDITION_CATALOG } from '@dominevo/types'
 
 import { mountScreen } from '../../../testing/mount.js'
 import { ConditionForm, type ConditionFormScopes } from '../ConditionForm.js'

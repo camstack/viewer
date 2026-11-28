@@ -10,7 +10,7 @@
 import React from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
-import type { HeroAction } from '@camstack/types'
+import type { HeroAction } from '@dominevo/types'
 import { CatalogIcon } from '../components/CatalogIcon.js'
 import { fireControlHaptic } from '../components/camera/accessory-controls/control-atoms.js'
 import { Minus, Plus, Power } from '../lib/icons.js'
@@ -18,7 +18,7 @@ import { useTheme } from '../theme/theme-provider.js'
 import { RADIUS, SPACING, TYPOGRAPHY } from '../theme/tokens.js'
 import { controlView, heroText, powerPaint, type ControlView, type HeroLocale } from './hero-view.js'
 import type { HeroCaller } from './use-hero.js'
-import type { HeroControl } from '@camstack/types'
+import type { HeroControl } from '@dominevo/types'
 import { HeroValueEditor } from './HeroValueEditor.js'
 
 export const ROW_BUTTON = 40

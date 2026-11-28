@@ -17,7 +17,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, screen as dom } from '@testing-library/react'
 import React, { useState } from 'react'
-import { NC_SENSOR_TRANSITION_NEVER_FIRES_WARNING } from '@camstack/types'
+import { NC_SENSOR_TRANSITION_NEVER_FIRES_WARNING } from '@dominevo/types'
 
 import { mountScreen } from '../../../testing/mount.js'
 import { ConditionForm, type ConditionFormScopes } from '../ConditionForm.js'

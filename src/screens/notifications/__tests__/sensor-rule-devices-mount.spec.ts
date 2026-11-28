@@ -12,7 +12,7 @@
  *
  * Changed 2026-10-01 (operator ruling): a detection rule now asks the SAME
  * `listDeviceIdsByCaps` method for the `detection-pipeline` cap
- * (`ruleDeviceCompatCapNames`, `@camstack/types`) instead of reading the
+ * (`ruleDeviceCompatCapNames`, `@dominevo/types`) instead of reading the
  * camera-TYPE list unconditionally — a camera with no detection-pipeline
  * binding is no longer offered for a rule that could never match it. The
  * picker still reads as a CAMERA scope ("Every camera", not "Every sensor")

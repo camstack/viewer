@@ -2,7 +2,7 @@
  * What every rule-editor sub-screen receives. The draft is the store's; a
  * section edits it only through `patch`, so its edits survive the pop.
  */
-import type { NcRuleKind } from '@camstack/types'
+import type { NcRuleKind } from '@dominevo/types'
 import type { NcRuleFormState } from '../../../../components/notifications/rule-editor.js'
 import type { NcConditionDescriptor, NcViewerRule } from '../../../../data/notification-center.js'
 import type { NcRuleDraft } from '../../../../store/nc-rule-draft-store.js'

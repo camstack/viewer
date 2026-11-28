@@ -7,7 +7,7 @@
  * a failed read as an empty worklist.
  *
  * Value schemas stay out of this file: the viewer may only import VALUES from
- * `@camstack/types/client`, and the retrain Zod schemas are not on that entry
+ * `@dominevo/types/client`, and the retrain Zod schemas are not on that entry
  * yet. Structural checks here keep the same refuse-on-malformed contract.
  */
 import { isRecord } from './cap-query.js'
@@ -20,7 +20,7 @@ import type {
   RetrainFrameSelection,
   RetrainMacroClass,
   RetrainTrack,
-} from '@camstack/types'
+} from '@dominevo/types'
 
 export const RETRAIN_MACROS: readonly RetrainMacroClass[] = [
   'person',

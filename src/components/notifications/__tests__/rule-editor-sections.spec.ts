@@ -7,8 +7,8 @@
  * sub-screens split the condition catalog without overlap.
  */
 import { describe, expect, it } from 'vitest'
-import { NC_RULE_EDITOR_SECTION_ORDER, ruleEditorSectionsForKind } from '@camstack/types/client'
-import type { NcRuleKind } from '@camstack/types'
+import { NC_RULE_EDITOR_SECTION_ORDER, ruleEditorSectionsForKind } from '@dominevo/types/client'
+import type { NcRuleKind } from '@dominevo/types'
 import { emptyRuleForm } from '../rule-editor.js'
 import {
   NC_VIEWER_SECTION_FIELDS,
@@ -19,7 +19,7 @@ import {
   kindBlurbKey,
   parseSectionKey,
 } from '../rule-editor-sections.js'
-import { NC_CONDITION_CATALOG } from '@camstack/types'
+import { NC_CONDITION_CATALOG } from '@dominevo/types'
 import enLocale from '../../../../locales/en.json'
 import itLocale from '../../../../locales/it.json'
 

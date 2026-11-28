@@ -164,7 +164,7 @@ explicit import's `@types/*` by walking `node_modules` upwards — no tsconfig
 setting stops it (`typeRoots` governs ambient globals only). Local `ts-check`
 can be green on a package the viewer does not declare; CI, which checks the
 repo standalone, goes red. Every `@types/*` an import needs must be in THIS
-`package.json`. (`@camstack/*` is already closed: `tsconfig.json` resolves the
+`package.json`. (`@dominevo/*` is already closed: `tsconfig.json` resolves the
 published packages; `tsconfig.workspace.json` is the deliberate opt-in to the
 server source.)
 

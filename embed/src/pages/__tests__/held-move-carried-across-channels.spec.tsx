@@ -24,7 +24,7 @@ interface CapturedPlayerProps {
 }
 const player: { props: CapturedPlayerProps | null } = { props: null }
 
-vi.mock('@camstack/ui-library', () => ({
+vi.mock('@dominevo/ui-library', () => ({
   SystemProvider: ({ children }: { children: ReactNode }) => children,
   trpc: { Provider: ({ children }: { children: ReactNode }) => children },
   CameraStreamPlayer: (props: CapturedPlayerProps) => {
@@ -43,7 +43,7 @@ vi.mock('@camstack/ui-library', () => ({
   }),
 }))
 
-vi.mock('@camstack/sdk', () => ({
+vi.mock('@dominevo/sdk', () => ({
   createSystem: () => ({
     serverUrl: 'http://hub.test',
     trpcClient: {},

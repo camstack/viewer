@@ -74,8 +74,8 @@ export interface ExportDownload {
  * the Library sorts and labels on (D558 § 2.2).
  *
  * Mirrored here, like every other shape in this file, because the installed
- * `@camstack/types` (1.2.235) predates D558's landing and this checkout
- * resolves `@camstack/*` from the PUBLISHED packages exactly as metro and CI
+ * `@dominevo/types` (1.2.235) predates D558's landing and this checkout
+ * resolves `@dominevo/*` from the PUBLISHED packages exactly as metro and CI
  * do. A workspace alias would type-check green and throw on first evaluation.
  *
  * Only the `clip` arm is spelled: the footage arm reaches the hub through the

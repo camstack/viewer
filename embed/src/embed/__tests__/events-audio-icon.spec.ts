@@ -13,7 +13,7 @@
  * from the label set: `animal` and `water` are BOTH a video class and an audio
  * class, and the two want different glyphs.
  */
-import { EVENT_KIND_ICONS, resolveEventKindIcon } from '@camstack/ui-library'
+import { EVENT_KIND_ICONS, resolveEventKindIcon } from '@dominevo/ui-library'
 import { describe, expect, it } from 'vitest'
 import { audioKindId, buildKindIconIds, iconIdForClass } from '../../../../shared/events/events-taxonomy'
 import { accentForClass } from '../events-theme'

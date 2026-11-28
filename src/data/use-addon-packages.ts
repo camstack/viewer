@@ -10,7 +10,7 @@
  */
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 import { z } from 'zod'
-import type { NcInstalledPackageLike } from '@camstack/types'
+import type { NcInstalledPackageLike } from '@dominevo/types'
 import { useConnection } from '../connection/ConnectionProvider.js'
 import { capQuery } from './cap-query.js'
 

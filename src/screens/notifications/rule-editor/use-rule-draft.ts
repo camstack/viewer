@@ -14,7 +14,7 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
-import type { NcRuleKind } from '@camstack/types'
+import type { NcRuleKind } from '@dominevo/types'
 import {
   useNcAiProfiles,
   useNcConditionCatalog,

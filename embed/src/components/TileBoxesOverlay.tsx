@@ -12,9 +12,9 @@
  * stops. Non-interactive (`pointerEvents: none`) — never steals tile taps.
  */
 import { useEffect, useRef, useState } from 'react'
-import { useLiveEvent } from '@camstack/ui-library'
-import { EventCategory } from '@camstack/types/enums'
-import type { DetectionResultPayload } from '@camstack/types'
+import { useLiveEvent } from '@dominevo/ui-library'
+import { EventCategory } from '@dominevo/types/enums'
+import type { DetectionResultPayload } from '@dominevo/types'
 import { usePaletteView } from '../../../shared/palette'
 import { THEME } from '../../../src/theme/tokens'
 import {
