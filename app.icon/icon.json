@@ -1,6 +1,6 @@
 {
   "fill": {
-    "automatic-gradient": "extended-srgb:0.16078,0.14510,0.14118,1.00000"
+    "solid": "srgb:0.90588,0.89804,0.89412,1.00000"
   },
   "groups": [
     {
@@ -19,7 +19,7 @@
         },
         {
           "glass": false,
-          "image-name": "orbit-front.svg",
+          "image-name": "orbit-front-light.svg",
           "name": "orbit-front",
           "position": {
             "scale": 1,
@@ -27,7 +27,17 @@
               0,
               0
             ]
-          }
+          },
+          "image-name-specializations": [
+            {
+              "appearance": "dark",
+              "value": "orbit-front.svg"
+            },
+            {
+              "appearance": "tinted",
+              "value": "orbit-front.svg"
+            }
+          ]
         }
       ],
       "shadow": {
@@ -92,7 +102,7 @@
       "layers": [
         {
           "glass": true,
-          "image-name": "orbit-back.svg",
+          "image-name": "orbit-back-light.svg",
           "name": "orbit-back",
           "position": {
             "scale": 1,
@@ -100,7 +110,17 @@
               0,
               0
             ]
-          }
+          },
+          "image-name-specializations": [
+            {
+              "appearance": "dark",
+              "value": "orbit-back.svg"
+            },
+            {
+              "appearance": "tinted",
+              "value": "orbit-back.svg"
+            }
+          ]
         }
       ],
       "shadow": {
@@ -118,5 +138,19 @@
       "watchOS"
     ],
     "squares": "shared"
-  }
+  },
+  "fill-specializations": [
+    {
+      "appearance": "dark",
+      "value": {
+        "automatic-gradient": "extended-srgb:0.16078,0.14510,0.14118,1.00000"
+      }
+    },
+    {
+      "appearance": "tinted",
+      "value": {
+        "solid": "srgb:0.16078,0.14510,0.14118,1.00000"
+      }
+    }
+  ]
 }
