@@ -181,8 +181,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     eas: {
       projectId: "b40de197-0a02-43f3-b141-3cf49c54e750",
     },
-    // TODO(operator, planning#757): eas.json submit.production.ios has no
-    // `ascAppId` until the new App Store Connect app exists; add it then.
   },
   updates: {
     url: "https://u.expo.dev/b40de197-0a02-43f3-b141-3cf49c54e750",
