@@ -41,7 +41,7 @@
  * ## Why the schema is a local mirror
  *
  * `NcSummaryRule` lives in `addon-post-analysis`, deliberately (a field added
- * there is live on the next `camstack deploy` rather than the next framework
+ * there is live on the next `dominevo deploy` rather than the next framework
  * train), so this app cannot import it — see `data/notification-center.ts`.
  */
 import type {

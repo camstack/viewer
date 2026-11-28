@@ -26,17 +26,17 @@ function getWebBasePath() {
  * The path the built web app is MOUNTED at, with a trailing slash — the ONE
  * value the shell (`public/index.html`), the manifest and Expo's
  * `experiments.baseUrl` must agree on. `/` at the root (`npm run web`); under a
- * base path the export is served at `<base>/camstack/` (the hub mounts
- * `/viewer/camstack/`).
+ * base path the export is served at `<base>/dominevo/` (the hub mounts
+ * `/viewer/dominevo/`).
  *
  * Derived here and nowhere else: the manifest used to prefix its icons with
- * `<base>/` while app.config.ts derived `<base>/camstack` on its own, so the
+ * `<base>/` while app.config.ts derived `<base>/dominevo` on its own, so the
  * built manifest named `/viewer/icon-192.png` for a file that lives at
- * `/viewer/camstack/icon-192.png` — and the hub answered with the HTML shell.
+ * `/viewer/dominevo/icon-192.png` — and the hub answered with the HTML shell.
  */
 function getWebMountPrefix() {
   const basePath = getWebBasePath();
-  return basePath ? `${basePath}/camstack/` : "/";
+  return basePath ? `${basePath}/dominevo/` : "/";
 }
 
 module.exports = {

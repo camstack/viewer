@@ -5,7 +5,7 @@
  * - `parseRecordingHostMessage`: validate an inbound WebView `onMessage` payload
  *   (page → host): playback state + playhead position.
  * - `recordingCommandScript`: build the guarded `injectJavaScript` string that
- *   drives the page's `window.__camstackRecording` command API (host → page).
+ *   drives the page's `window.__dominevoRecording` command API (host → page).
  */
 export type RecordingReportState = 'idle' | 'loading' | 'playing' | 'paused' | 'ended' | 'error'
 
@@ -249,9 +249,9 @@ export type RecordingCommand =
   | { readonly kind: 'scrubTo'; readonly epochMs: number }
   | { readonly kind: 'scrubEnd'; readonly epochMs: number }
 
-/** Build a guarded `injectJavaScript` string driving `window.__camstackRecording`. */
+/** Build a guarded `injectJavaScript` string driving `window.__dominevoRecording`. */
 export function recordingCommandScript(cmd: RecordingCommand): string {
-  const api = 'window.__camstackRecording'
+  const api = 'window.__dominevoRecording'
   const call =
     cmd.kind === 'seekTo'
       ? `${api}.seekTo(${cmd.epochMs})`

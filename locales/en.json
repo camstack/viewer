@@ -214,7 +214,7 @@
   },
   "settings": {
     "integrations": "Integrations",
-    "camstackProxy": "CamStack Proxy",
+    "dominevoProxy": "Dominevo Proxy",
     "scrypted": "External hub",
     "frigate": "Separate NVR",
     "rtsp": "RTSP",
@@ -439,7 +439,7 @@
       "restored": "Back online"
     },
     "palette": {
-      "unknown": "Palette unreadable ({{reason}}). Using the CamStack preset."
+      "unknown": "Palette unreadable ({{reason}}). Using the Dominevo preset."
     },
     "common": {
       "connecting": "Connecting…",
@@ -636,7 +636,7 @@
       "format": "Share as",
       "formatLink": "Link",
       "formatHa": "Home Assistant",
-      "haNotice": "Paste this card into a Home Assistant dashboard. The CamStack integration supplies the token.",
+      "haNotice": "Paste this card into a Home Assistant dashboard. The Dominevo integration supplies the token.",
       "nothingToShare": "Nothing to share yet: no hub, or no cameras in this view."
     },
     "gridControls": {
@@ -765,7 +765,7 @@
       "app": "App",
       "version": "Version",
       "noServer": "No server",
-      "footerNote": "Dominevo connects to a single CamStack hub. Cameras, grids and events are managed by the server.",
+      "footerNote": "Dominevo connects to a single Dominevo hub. Cameras, grids and events are managed by the server.",
       "language": "Language",
       "langSystem": "System",
       "gridDefaults": "Grid defaults",
@@ -1615,7 +1615,7 @@
             "targetsFailed": "Couldn't load your targets, so this rule can't be saved yet. Go back and open it again."
           },
           "notConnected": "Not connected to the hub. Reconnect and try again.",
-          "hubTooOldToClear": "This hub is too old to clear that field, so the change was not saved. Update CamStack on the hub, then save again.",
+          "hubTooOldToClear": "This hub is too old to clear that field, so the change was not saved. Update Dominevo on the hub, then save again.",
           "loadError": "Couldn't load this rule. Go back and open it again.",
           "targetsUnavailable": "Couldn't load your targets. Go back and open this again.",
           "sensorTransition": {
@@ -2517,9 +2517,9 @@
       "verifying": "Verifying…",
       "back": "Back",
       "or": "or",
-      "handoffFailed": "Sign-in with CamStack failed — try again or use username and password",
+      "handoffFailed": "Sign-in with Dominevo failed — try again or use username and password",
       "appError": {
-        "sso-not-linked": "This account is not linked to your CamStack user. Link it from your profile, or use your password.",
+        "sso-not-linked": "This account is not linked to your Dominevo user. Link it from your profile, or use your password.",
         "sso-state": "The sign-in was opened in a different browser. Start it again from this app.",
         "state-expired": "The sign-in took too long. Try again.",
         "idp-error": "The identity provider refused the sign-in.",
@@ -2539,7 +2539,7 @@
       "needsHttps": "This address needs a valid HTTPS certificate to work in the browser — use your tunnel or Tailscale address.",
       "unreachableFromBrowser": "Can't reach {{host}} — check the address. From the browser it needs a valid HTTPS certificate, e.g. your tunnel or Tailscale address.",
       "unreachable": "Can't reach {{host}} — check the address and that the hub is running.",
-      "notCamstackHub": "{{host}} answered, but it is not a CamStack server — check the address.",
+      "notDominevoHub": "{{host}} answered, but it is not a Dominevo server — check the address.",
       "stillTrying": "Still trying to reach {{host}}…",
       "signInTo": "Sign in to {{name}}",
       "signedOutOf": "You were signed out of {{server}}."
@@ -3398,7 +3398,7 @@
       "sourceMissing": "This camera no longer offers {{source}}. Showing {{fallback}} instead.",
       "sourceSetting": "Clip source",
       "recordingSourceSetting": "Recording source",
-      "recordingSourceOurs": "CamStack",
+      "recordingSourceOurs": "Dominevo",
       "sourceStateSleeping": "the camera is asleep",
       "sourceStateUnreachable": "the camera could not be reached",
       "sourceStateNoStorage": "the camera has no storage fitted",
@@ -4131,7 +4131,7 @@
         "scanBody": "Point the camera at the QR code shown in the admin page.",
         "allowCamera": "Allow camera",
         "tryAgain": "Try again",
-        "notAnEnrollmentCode": "That QR code is not a CamStack enrollment code.",
+        "notAnEnrollmentCode": "That QR code is not a Dominevo enrollment code.",
         "invalidHub": "This code names a hub that cannot be used. Hubs must be reached over https.",
         "confirmTitle": "Link this device to {{name}}?",
         "newHubWarning": "This hub is not one of your saved hubs. Continue only if the person who gave you this code is someone you trust."

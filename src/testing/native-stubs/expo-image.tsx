@@ -27,7 +27,7 @@ interface ImageProps extends ViewProps {
 // path for the spec that sets the predicate — two module instances of the
 // same file. A module-level variable would be set in one and read in the
 // other.
-const FAILING_KEY = '__camstackExpoImageFailing'
+const FAILING_KEY = '__dominevoExpoImageFailing'
 type FailPredicate = (uri: string) => boolean
 function readFailing(): FailPredicate {
   const fn = (globalThis as Record<string, unknown>)[FAILING_KEY]

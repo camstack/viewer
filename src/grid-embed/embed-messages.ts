@@ -5,7 +5,7 @@
  * - `parseGridHostMessage`: validate an inbound `WebView.onMessage` / iframe
  *   postMessage payload (page → host).
  * - `gridCommandScript`: build the `injectJavaScript` string that drives the
- *   page's `window.__camstackGrid` command API (host → page).
+ *   page's `window.__dominevoGrid` command API (host → page).
  */
 import type { GridQuality, GridLayout } from '../store/grid-store.js'
 import type { GridHighlightEmbedConfig, TileOverlayEmbedConfig } from './embed-config.js'
@@ -204,7 +204,7 @@ export type GridCommand =
   // ── Grid-wide recorded playback (the grid timeline) ────────────────────────
   //
   // The SAME verbs the single-camera player embed exposes on
-  // `window.__camstackEmbed` (see `live/live-control-map.ts`), applied by the
+  // `window.__dominevoEmbed` (see `live/live-control-map.ts`), applied by the
   // page to EVERY tile at once. Grid-wide rather than per-tile because that is
   // what the surface means: one timeline, one moment, N cameras.
   //
@@ -277,7 +277,7 @@ export interface GridCellSpan {
 export const GRID_SPANS_COMMAND = 'setSpans'
 
 /**
- * Build a guarded `injectJavaScript` string driving `window.__camstackGrid`.
+ * Build a guarded `injectJavaScript` string driving `window.__dominevoGrid`.
  *
  * The guard checks the METHOD, not just the object. The old form
  * (`api && api.foo(x)`) is only safe while every host command exists on every
@@ -288,6 +288,6 @@ export const GRID_SPANS_COMMAND = 'setSpans'
  * exactly what a host↔page version skew should do.
  */
 export function gridCommandScript(cmd: GridCommand): string {
-  const api = 'window.__camstackGrid'
+  const api = 'window.__dominevoGrid'
   return `${api} && typeof ${api}.${cmd.kind} === 'function' && ${api}.${cmd.kind}(${gridCommandArgs(cmd)}); true;`
 }

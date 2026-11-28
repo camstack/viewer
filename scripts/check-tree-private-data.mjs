@@ -2,7 +2,7 @@
  * Tree scrub guard — house names, hosts, addresses, rooms and camera ids.
  *
  * The values are stored as hashes so this file, which is public, does not
- * repeat them. Same lists as camstack-server `scripts/check-tree-private-data.ts`,
+ * repeat them. Same lists as dominevo-server `scripts/check-tree-private-data.ts`,
  * plus the home-directory stem, the employer stem, the store-account local-part
  * and one LAN host that only this repo's still fixtures used.
  *

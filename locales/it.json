@@ -214,7 +214,7 @@
   },
   "settings": {
     "integrations": "Integrazioni",
-    "camstackProxy": "CamStack Proxy",
+    "dominevoProxy": "Dominevo Proxy",
     "scrypted": "Hub esterno",
     "frigate": "NVR separato",
     "rtsp": "RTSP",
@@ -439,7 +439,7 @@
       "restored": "Di nuovo online"
     },
     "palette": {
-      "unknown": "Tavolozza illeggibile ({{reason}}). Uso il preset CamStack."
+      "unknown": "Tavolozza illeggibile ({{reason}}). Uso il preset Dominevo."
     },
     "common": {
       "connecting": "Connessione…",
@@ -636,7 +636,7 @@
       "format": "Condividi come",
       "formatLink": "Link",
       "formatHa": "Home Assistant",
-      "haNotice": "Incolla questa scheda in una dashboard di Home Assistant. Il token lo fornisce l'integrazione CamStack.",
+      "haNotice": "Incolla questa scheda in una dashboard di Home Assistant. Il token lo fornisce l'integrazione Dominevo.",
       "nothingToShare": "Niente da condividere: nessun hub, o nessuna telecamera in questa vista."
     },
     "gridControls": {
@@ -765,7 +765,7 @@
       "app": "App",
       "version": "Versione",
       "noServer": "Nessun server",
-      "footerNote": "Dominevo si connette a un singolo hub CamStack. Telecamere, griglie ed eventi sono gestiti dal server.",
+      "footerNote": "Dominevo si connette a un singolo hub Dominevo. Telecamere, griglie ed eventi sono gestiti dal server.",
       "language": "Lingua",
       "langSystem": "Sistema",
       "gridDefaults": "Impostazioni griglia",
@@ -1615,7 +1615,7 @@
             "targetsFailed": "Impossibile caricare le tue destinazioni, quindi questa regola non si può ancora salvare. Torna indietro e riaprila."
           },
           "notConnected": "Non connesso all'hub. Riconnettiti e riprova.",
-          "hubTooOldToClear": "Questo hub è troppo vecchio per svuotare quel campo, quindi la modifica non è stata salvata. Aggiorna CamStack sull'hub, poi salva di nuovo.",
+          "hubTooOldToClear": "Questo hub è troppo vecchio per svuotare quel campo, quindi la modifica non è stata salvata. Aggiorna Dominevo sull'hub, poi salva di nuovo.",
           "loadError": "Impossibile caricare questa regola. Torna indietro e riaprila.",
           "targetsUnavailable": "Impossibile caricare le tue destinazioni. Torna indietro e riapri.",
           "sensorTransition": {
@@ -2517,9 +2517,9 @@
       "verifying": "Verifica…",
       "back": "Indietro",
       "or": "oppure",
-      "handoffFailed": "Accesso con CamStack non riuscito — riprova oppure usa nome utente e password",
+      "handoffFailed": "Accesso con Dominevo non riuscito — riprova oppure usa nome utente e password",
       "appError": {
-        "sso-not-linked": "Questo account non è collegato al tuo utente CamStack. Collegalo dal profilo, oppure usa la password.",
+        "sso-not-linked": "Questo account non è collegato al tuo utente Dominevo. Collegalo dal profilo, oppure usa la password.",
         "sso-state": "L'accesso è stato aperto in un altro browser. Riavvialo da questa app.",
         "state-expired": "L'accesso ha impiegato troppo tempo. Riprova.",
         "idp-error": "Il provider di identità ha rifiutato l'accesso.",
@@ -2539,7 +2539,7 @@
       "needsHttps": "Questo indirizzo richiede un certificato HTTPS valido per funzionare nel browser — usa l’indirizzo del tunnel o di Tailscale.",
       "unreachableFromBrowser": "Impossibile raggiungere {{host}} — controlla l’indirizzo. Dal browser serve un certificato HTTPS valido, ad esempio l’indirizzo del tunnel o di Tailscale.",
       "unreachable": "Impossibile raggiungere {{host}} — controlla l’indirizzo e che l’hub sia acceso.",
-      "notCamstackHub": "{{host}} ha risposto, ma non è un server CamStack — controlla l’indirizzo.",
+      "notDominevoHub": "{{host}} ha risposto, ma non è un server Dominevo — controlla l’indirizzo.",
       "stillTrying": "Sto ancora provando a raggiungere {{host}}…",
       "signInTo": "Accedi a {{name}}",
       "signedOutOf": "Sei stato disconnesso da {{server}}."
@@ -3398,7 +3398,7 @@
       "sourceMissing": "Questa telecamera non offre più {{source}}. Mostro {{fallback}}.",
       "sourceSetting": "Sorgente clip",
       "recordingSourceSetting": "Sorgente registrazioni",
-      "recordingSourceOurs": "CamStack",
+      "recordingSourceOurs": "Dominevo",
       "sourceStateSleeping": "la telecamera sta dormendo",
       "sourceStateUnreachable": "la telecamera non è raggiungibile",
       "sourceStateNoStorage": "la telecamera non ha memoria installata",
@@ -4131,7 +4131,7 @@
         "scanBody": "Inquadra il QR mostrato nella pagina di amministrazione.",
         "allowCamera": "Consenti la fotocamera",
         "tryAgain": "Riprova",
-        "notAnEnrollmentCode": "Questo QR non è un codice di registrazione CamStack.",
+        "notAnEnrollmentCode": "Questo QR non è un codice di registrazione Dominevo.",
         "invalidHub": "Questo codice indica un hub non utilizzabile. Gli hub devono essere raggiunti via https.",
         "confirmTitle": "Collegare questo dispositivo a {{name}}?",
         "newHubWarning": "Questo hub non è tra quelli salvati. Continua solo se ti fidi di chi ti ha dato questo codice."

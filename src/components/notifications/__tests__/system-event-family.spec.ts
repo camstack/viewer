@@ -182,9 +182,9 @@ describe('pruneSystemEventForFamily (D637)', () => {
       pruneSystemEventForFamily('system', {
         kinds: ['node-offline', 'server-update-available'],
         nodeIds: ['hub'],
-        packageNames: ['@camstack/server'],
+        packageNames: ['@dominevo/server'],
         deviceIds: [102],
       }),
-    ).toEqual({ kinds: ['node-offline', 'server-update-available'], nodeIds: ['hub'], packageNames: ['@camstack/server'] })
+    ).toEqual({ kinds: ['node-offline', 'server-update-available'], nodeIds: ['hub'], packageNames: ['@dominevo/server'] })
   })
 })

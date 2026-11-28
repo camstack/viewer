@@ -5,7 +5,7 @@ Guidance for coding agents working in this repository. `CLAUDE.md` is a one-line
 ## UI work
 
 <!-- camstack-ui-pointer:begin — written by `node scripts/ui/cli.mjs pointers`; edit the generator, not this block -->
-**UI work here** (a screen, sheet, row, the embed player): follow the `camstack-ui` then `camstack-ui-viewer` skills. They live in the server repository — `../.claude/skills/camstack-ui/SKILL.md` and `../.claude/skills/camstack-ui-viewer/SKILL.md` when this repo is its `camstack/` submodule, else https://github.com/camstack/server/blob/main/.claude/skills/camstack-ui-viewer/SKILL.md — with the rules in `docs/ui/viewer.md` there.
+**UI work here** (a screen, sheet, row, the embed player): follow the `camstack-ui` then `camstack-ui-viewer` skills. They live in the server repository — `../.claude/skills/camstack-ui/SKILL.md` and `../.claude/skills/camstack-ui-viewer/SKILL.md` when this repo is its `dominevo/` submodule, else https://github.com/dominevo/server/blob/main/.claude/skills/camstack-ui-viewer/SKILL.md — with the rules in `docs/ui/viewer.md` there.
 
 - **Layout changes are co-designed with the operator: ask before restructuring a screen.**
 - Search before building: `npm run ui:find -- "<need>"`, `npm run ui:show -- <Name>`, `npm run ui:tokens`.
@@ -20,12 +20,12 @@ Guidance for coding agents working in this repository. `CLAUDE.md` is a one-line
 **Shipping a release** (OTA `update:*`, `release:ios:*` / `release:android:*`, a version bump, `build:orchestrator`, the submodule pin): load `.claude/skills/camstack-viewer-release/SKILL.md` first.
 
 - **Write the `src/app/whats-new.ts` entry FIRST** — one short line per change, en + it, under 90 characters. The ship scripts run `scripts/lib/check-whats-new.js` and refuse to bump without it.
-- Check viewer CI (`gh run list --repo camstack/viewer`) before shipping; a red CI does not stop an OTA.
+- Check viewer CI (`gh run list --repo dominevo/viewer`) before shipping; a red CI does not stop an OTA.
 - `runtimeVersion` stays fixed on an OTA and moves only on a native release.
 
 ## Project Overview
 
-CamStack Viewer is the universal client (iOS, Android, Web/PWA) for the CamStack hub, built with Expo ~54 / React Native 0.81.5 / React 19 / TypeScript 5.9. It talks to the hub exclusively over the `@dominevo/sdk` tRPC client and owns the WebRTC embed player used by native, web, and external iframe integrations.
+Dominevo Viewer is the universal client (iOS, Android, Web/PWA) for the Dominevo hub, built with Expo ~54 / React Native 0.81.5 / React 19 / TypeScript 5.9. It talks to the hub exclusively over the `@dominevo/sdk` tRPC client and owns the WebRTC embed player used by native, web, and external iframe integrations.
 
 `src/` is the live app (renamed from `srcV2` on 2026-07-17; the legacy multi-backend app that previously lived in `src/` — adapters for an external hub and a separate NVR, sharedRtcConnection, SQLite/IndexedDB layer — was deleted the same day; recover it from git history if ever needed).
 
@@ -55,7 +55,7 @@ npm run ui:pointers           # regenerate the UI block above + .cursor/rules (t
 ```
 
 **Before every commit (and before push):** `npm run verify:push` must be GREEN.
-It mirrors camstack-server's `verify:push` for this repo: changed files vs
+It mirrors dominevo-server's `verify:push` for this repo: changed files vs
 `origin/main` (working tree included) → `ts-check` + full `test:v2` + embed
 build when `embed/` moved + `ui:check` on touched UI sources. One green vitest
 file is not the CI gate.
@@ -71,7 +71,7 @@ npm run release:ios:patch  # Full iOS release (bump + EAS build + submit)
 npm run release:android:patch  # Full Android release
 ```
 
-The proven ship chain for an app change: whats-new entry → `npm run update:patch` (OTA) → `npm run build:orchestrator` → `camstack deploy packages/addon-pipeline-orchestrator` (from camstack-server) → commit the submodule pin + embedded bundle in camstack-server and push. Details: `.claude/skills/camstack-viewer-release/SKILL.md`.
+The proven ship chain for an app change: whats-new entry → `npm run update:patch` (OTA) → `npm run build:orchestrator` → `dominevo deploy packages/addon-pipeline-orchestrator` (from dominevo-server) → commit the submodule pin + embedded bundle in dominevo-server and push. Details: `.claude/skills/camstack-viewer-release/SKILL.md`.
 
 ## Architecture
 
@@ -87,7 +87,7 @@ File-based routing in `app/`:
 - `app/(app)/grid/[id]/index.tsx` + `edit.tsx`, `app/(app)/grid/adhoc.tsx` — grids (adhoc via `?devices=`)
 - `app/(app)/settings/cameras.tsx` — camera settings
 - `app/(app)/rule/new.tsx`, `app/(app)/rule/[id]/index.tsx`, `app/(app)/rule/[id]/[section].tsx` — notification rule editor: kind picker / summary / one section (memory-only draft in `src/store/nc-rule-draft-store.ts`; hrefs only from `src/navigation/rule-routes.ts`)
-- `app/(app)/timelapse-rule/[id].tsx`, `app/(app)/summary-rule/[id].tsx` — timelapse and digest editors (`id` = `new` to create). Why routes: D631 in camstack-server `docs/decisions/`
+- `app/(app)/timelapse-rule/[id].tsx`, `app/(app)/summary-rule/[id].tsx` — timelapse and digest editors (`id` = `new` to create). Why routes: D631 in dominevo-server `docs/decisions/`
 - `app/embed/` — embedded player routes
 
 ### `src/` layout
@@ -100,8 +100,8 @@ File-based routing in `app/`:
 
 ### Embed application
 - `embed/` owns the browser player, grid, Events, recording and scrub sources.
-- `npm run sync:embed` produces `assets/embed/camstack-embed.html` for native OTA and `public/embed/` for web/iframe use.
-- Server-hosted iframe URLs use `/viewer/camstack/embed/index.html?mode=...`; the Pipeline addon has no embed source or route.
+- `npm run sync:embed` produces `assets/embed/dominevo-embed.html` for native OTA and `public/embed/` for web/iframe use.
+- Server-hosted iframe URLs use `/viewer/dominevo/embed/index.html?mode=...`; the Pipeline addon has no embed source or route.
 
 ### State & Data
 - **Zustand** for client state, **TanStack React Query** for server state (all data comes from the hub tRPC API; no local database)
@@ -113,12 +113,12 @@ File-based routing in `app/`:
 - **New Architecture** is enabled (`newArchEnabled: true`); React Compiler enabled (experimental)
 - **expo-dev-client** is required for development — Expo Go won't work (native modules: WebRTC, react-native-video)
 - After changing `app.config.ts` or plugins, run `npm run prebuild:clean` and rebuild
-- Open iOS project via **camstack.xcworkspace**, not .xcodeproj
+- Open iOS project via **dominevo.xcworkspace**, not .xcodeproj
 - i18n: English + Italian (`locales/en.json`, `locales/it.json`) via i18next + react-i18next
   - `npm run check:i18n` (in `ts-check`) refuses hard-coded user-visible text in `src/` and `app/`, a `t()` / `…Key:` key missing in either locale, and the two locales drifting apart (keys, empty values, `{{placeholders}}`). Text that reads the same in every language goes in its `PINNED_TEXT`; anything else that must stay carries `// i18n-ok: <reason>` (a transport/diagnostic module: `// i18n-ok-file: <reason>`). `--list` prints every finding.
 - CI runs `npm run ts-check` on every push/PR to main
 - **This checkout can see types it does not declare, because it usually lives
-  INSIDE camstack-server.** Two separate leaks, and only one is closed:
+  INSIDE dominevo-server.** Two separate leaks, and only one is closed:
   - `@dominevo/*` — **CLOSED.** `tsconfig.json` now resolves them from
     `node_modules`, the PUBLISHED packages, exactly as metro, vitest and CI do.
     The old default mapped them to `../camstack-server/packages/*/src`, so
@@ -139,6 +139,6 @@ File-based routing in `app/`:
   whole ~2.7 MB barrel and Metro does not tree-shake it. Enforced by
   `scripts/check-types-client-imports.mjs` (in `ts-check`), ESLint and
   `src/__tests__/types-client-entry.spec.ts`; specs are exempt. A value missing
-  from `/client` is added to `packages/types/src/client.ts` in camstack-server
+  from `/client` is added to `packages/types/src/client.ts` in dominevo-server
   and published — never imported from the root.
-- Custom native modules: `modules/camstack-webrtc-audio/`, `plugins/withAudioSessionControl`, `plugins/withNativeLogCapture`
+- Custom native modules: `modules/dominevo-webrtc-audio/`, `plugins/withAudioSessionControl`, `plugins/withNativeLogCapture`

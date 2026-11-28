@@ -446,7 +446,7 @@ export function useSnapshot(
    *
    * Dropping the Bearer on a hub-served page is what puts the tile back on the
    * browser's own `<img>` loader, and it is right for as long as the httpOnly
-   * `camstack_session` cookie is valid. That cookie has its own lifetime and can
+   * `dominevo_session` cookie is valid. That cookie has its own lifetime and can
    * expire while this app still holds a live JWT — an app that never signs out
    * is exactly the long web session where that happens. Rather than let the
    * whole grid go "Unavailable" on a cookie nobody can inspect from here, ONE

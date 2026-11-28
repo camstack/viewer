@@ -94,7 +94,7 @@ describe('a malformed server URL is refused before anything is sent', () => {
   })
 })
 
-describe('a host that answers but is not a CamStack hub', () => {
+describe('a host that answers but is not a Dominevo hub', () => {
   it.each([
     ['an HTML page', htmlPageError()],
     ['JSON that is not a tRPC envelope', TRPCClientError.from(new Error('Unable to transform response from server'))],
@@ -105,7 +105,7 @@ describe('a host that answers but is not a CamStack hub', () => {
     await signIn()
 
     expect(
-      await screen.findByText('hub.example.com:4443 answered, but it is not a CamStack server — check the address.'),
+      await screen.findByText('hub.example.com:4443 answered, but it is not a Dominevo server — check the address.'),
     ).toBeTruthy()
     expectSpinnerOff()
   })
@@ -121,7 +121,7 @@ describe('a host that answers but is not a CamStack hub', () => {
     await signIn()
 
     expect(await screen.findByText('Invalid username or password')).toBeTruthy()
-    expect(screen.queryByText(/not a CamStack server/)).toBeNull()
+    expect(screen.queryByText(/not a Dominevo server/)).toBeNull()
     expectSpinnerOff()
   })
 })

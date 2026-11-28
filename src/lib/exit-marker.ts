@@ -40,7 +40,7 @@ export interface ExitMarkerPort {
   write: (value: string) => Promise<void>
 }
 
-export const EXIT_MARKER_STORAGE_KEY = 'camstack.runtime.exit-marker.v1'
+export const EXIT_MARKER_STORAGE_KEY = 'dominevo.runtime.exit-marker.v1'
 
 /** Bind the port to AsyncStorage. */
 export function createExitMarkerPort(): ExitMarkerPort {

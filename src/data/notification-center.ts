@@ -1036,7 +1036,7 @@ export type NcViewerRule = z.infer<typeof NcViewerRuleSchema>
 // A SIDE TABLE on the hub, keyed by rule id, read and written through its own
 // pair of bridge actions — NOT a field on `NcRule`. The addon's reason is worth
 // repeating here because it decides how this app has to save: `NcRule` lives in
-// `@dominevo/types`, which the addon resolves from the `@camstack/server`
+// `@dominevo/types`, which the addon resolves from the `@dominevo/server`
 // closure at runtime, so a new key on `NcRuleInputSchema` is silently STRIPPED
 // at save until a framework train lands. The AI block lives in the addon
 // instead, which is why `nc.setRuleAi` is a second call after the rule save and
@@ -1586,7 +1586,7 @@ export type NcTimelapseRuleResult = z.infer<typeof NcTimelapseRuleResultSchema>
 //
 // A mirror, unlike the timelapse above, because that schema deliberately lives
 // in `addon-post-analysis` and NOT in `@dominevo/types` — so a field added to it
-// is live on the next `camstack deploy` rather than on the next framework train
+// is live on the next `dominevo deploy` rather than on the next framework train
 // (see `summary/summary-rule.ts`). This app therefore cannot import it and would
 // not want to: it ships on a THIRD train (EAS OTA) and has to tolerate a hub
 // that is ahead of it.

@@ -64,7 +64,7 @@ describe('the browser handoff', () => {
   })
 
   it('marks the page as framed by the viewer before it loads', () => {
-    expect(EMBEDDED_BY_VIEWER_SCRIPT).toContain('__CAMSTACK_VIEWER_EMBED__')
+    expect(EMBEDDED_BY_VIEWER_SCRIPT).toContain('__DOMINEVO_VIEWER_EMBED__')
   })
 })
 

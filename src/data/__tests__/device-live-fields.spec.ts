@@ -93,7 +93,7 @@ describe('cap-status readings become pickable fields', () => {
   })
 
   it('every mapped value key matches its cap schema field name', () => {
-    // Field names come from camstack-server's *.cap.ts status schemas; a rename
+    // Field names come from dominevo-server's *.cap.ts status schemas; a rename
     // there silently empties every chip. Pin the pairs this module relies on.
     expect(CAP_STATUS_FIELDS['temperature-sensor']?.valueKey).toBe('temperature')
     expect(CAP_STATUS_FIELDS['humidity-sensor']?.valueKey).toBe('humidity')

@@ -67,8 +67,8 @@ describe('parseGridHostMessage', () => {
 })
 
 describe('gridCommandScript', () => {
-  it('serializes each grid-wide command to a window.__camstackGrid call', () => {
-    expect(gridCommandScript({ kind: 'setMutedAll', value: true })).toContain('window.__camstackGrid')
+  it('serializes each grid-wide command to a window.__dominevoGrid call', () => {
+    expect(gridCommandScript({ kind: 'setMutedAll', value: true })).toContain('window.__dominevoGrid')
     expect(gridCommandScript({ kind: 'setMutedAll', value: true })).toContain('setMutedAll(true)')
     expect(gridCommandScript({ kind: 'setPaused', value: [1, 2] })).toContain('setPaused([1,2])')
     expect(gridCommandScript({ kind: 'setShowMotion', value: true })).toContain('setShowMotion(true)')
@@ -83,14 +83,14 @@ describe('gridCommandScript', () => {
 
   it('serializes the argument-less reconnect command', () => {
     const s = gridCommandScript({ kind: 'reconnect' })
-    expect(s).toContain('window.__camstackGrid')
+    expect(s).toContain('window.__dominevoGrid')
     expect(s).toContain('reconnect()')
     expect(s.trim().endsWith('true;')).toBe(true)
   })
 
   it('guards the call (no throw if the API is not mounted yet) and ends with `true;`', () => {
     const s = gridCommandScript({ kind: 'setPaused', value: [] })
-    expect(s).toMatch(/window\.__camstackGrid\s*&&/)
+    expect(s).toMatch(/window\.__dominevoGrid\s*&&/)
     expect(s.trim().endsWith('true;')).toBe(true)
   })
 })

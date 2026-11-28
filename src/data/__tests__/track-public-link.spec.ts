@@ -7,16 +7,16 @@ const target = { path: '/events', queryParams: { trackId: 't1', deviceId: '7', t
 describe('buildPublicLink', () => {
   it('joins public base, web viewer base, path and query', () => {
     expect(buildPublicLink('https://hub.example.com', target)).toBe(
-      'https://hub.example.com/viewer/camstack/events?trackId=t1&deviceId=7&ts=1000',
+      'https://hub.example.com/viewer/dominevo/events?trackId=t1&deviceId=7&ts=1000',
     )
   })
   it('tolerates trailing slashes and a path without a leading slash', () => {
     expect(buildPublicLink('https://hub.example.com:8443//', { ...target, path: 'events' })).toBe(
-      'https://hub.example.com:8443/viewer/camstack/events?trackId=t1&deviceId=7&ts=1000',
+      'https://hub.example.com:8443/viewer/dominevo/events?trackId=t1&deviceId=7&ts=1000',
     )
   })
   it('omits the ? with no params', () => {
-    expect(buildPublicLink('https://h.io', { path: '/events', queryParams: {} })).toBe('https://h.io/viewer/camstack/events')
+    expect(buildPublicLink('https://h.io', { path: '/events', queryParams: {} })).toBe('https://h.io/viewer/dominevo/events')
   })
   it('is null without a public endpoint', () => {
     expect(buildPublicLink(null, target)).toBeNull()

@@ -1,6 +1,6 @@
 /**
  * Web-only iframe bridge for the stream-broker embed. Loads
- * `/viewer/camstack/embed/index.html?mode=…`, runs the `embed-ready`→`embed-config`
+ * `/viewer/dominevo/embed/index.html?mode=…`, runs the `embed-ready`→`embed-config`
  * handshake, posts `embed-command` messages, and forwards inbound host data.
  * Imported ONLY by `.web.tsx` files (uses DOM APIs). Mirrors the native
  * injectedJavaScript/onMessage plumbing.
@@ -22,7 +22,7 @@ export interface EmbedLocationInput {
   /** `window.location.origin` of the host page, or null off-browser. */
   readonly pageOrigin: string | null
   /** The path this web build is mounted at, with a trailing slash (`/` for the
-   *  hosted PWA, `/viewer/camstack/` on a hub). */
+   *  hosted PWA, `/viewer/dominevo/` on a hub). */
   readonly mountPrefix: string
 }
 
@@ -52,7 +52,7 @@ export function resolveEmbedLocation(input: EmbedLocationInput): EmbedLocation {
 /** This web build's mount — the same rule as `config-web-base.js`. */
 function webMountPrefix(): string {
   const base = (process.env.EXPO_PUBLIC_WEB_BASE_PATH ?? '').replace(/\/+$/, '')
-  return base === '' ? '/' : `${base}/camstack/`
+  return base === '' ? '/' : `${base}/dominevo/`
 }
 
 function currentPageOrigin(): string | null {

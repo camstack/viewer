@@ -17,7 +17,7 @@ class NativeLogModule(reactContext: ReactApplicationContext) :
     override fun getName(): String = "NativeLogModule"
 
     private val logFile: File
-        get() = File(reactApplicationContext.filesDir, "camstack-native-logs.json")
+        get() = File(reactApplicationContext.filesDir, "dominevo-native-logs.json")
 
     @ReactMethod
     fun readLogs(promise: Promise) {

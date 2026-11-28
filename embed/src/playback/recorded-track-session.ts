@@ -5,7 +5,7 @@
  * WebRTC track with a moving SOURCE POINTER owned by the broker's per-viewer
  * `TimelineSession`. This class is the client's entire recorded surface:
  * every intent — play from an epoch, seek, rate, frame-step, drag, commit,
- * go-live — is one pointer-move message on the `camstack-control` data
+ * go-live — is one pointer-move message on the `dominevo-control` data
  * channel, and every picture arrives on the track the viewer is already
  * watching, decoded by the browser. There is no client decode tier, no canvas
  * overlay and no choreography between two surfaces, which is precisely the

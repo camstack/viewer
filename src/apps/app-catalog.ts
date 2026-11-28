@@ -13,7 +13,7 @@ import type { AppDeclaration, AppEntry, AppInfo, AppLabel, AppNavItem, AppNavSec
 import { isRecord } from '../data/cap-query.js'
 
 /** Where the hub serves the viewer web build. A path, not an app id. */
-export const VIEWER_WEB_MOUNT = '/viewer/camstack'
+export const VIEWER_WEB_MOUNT = '/viewer/dominevo'
 
 export type AppCatalog =
   | { readonly status: 'pending' }

@@ -7,7 +7,7 @@
  * A second set of strings living in here would be a set nobody checks, and drift
  * between two sets is the ordinary way one string stays behind. So the host
  * injects them in the config it already sends at the handshake
- * (`window.__CAMSTACK_EVENTS__`).
+ * (`window.__DOMINEVO_EVENTS__`).
  *
  * Which makes the fallback load-bearing, exactly like `kindLabels`: an older
  * host OTA, or an external iframe embedding this page with a config of its own,

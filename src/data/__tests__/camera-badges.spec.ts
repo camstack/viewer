@@ -7,7 +7,7 @@ import { BADGE_CAPS, parseBadgeBatch, resolveBadgeSlice } from '../use-camera-ba
  * The badge aggregate collapses N per-card procedures into one — and must
  * degrade to those N when the hub does not have it.
  *
- * The batch is a FRAMEWORK change, so it is not live until a `@camstack/server`
+ * The batch is a FRAMEWORK change, so it is not live until a `@dominevo/server`
  * containing it is installed. Every hub in the field answers NOT_FOUND today,
  * which makes the fallback the path that actually runs — not a defensive
  * flourish. The two properties worth pinning are therefore: the payload is

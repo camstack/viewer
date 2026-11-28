@@ -4,7 +4,7 @@
  * The viewer carried two spellings of one thing: `StreamQuality`
  * (`auto|high|mid|low`, settings + per-camera prefs) and `GridQuality`
  * (`auto|high|medium|low`, per-grid options + the share link + the embed
- * protocol). `medium` was a word no other part of CamStack said — the hub's
+ * protocol). `medium` was a word no other part of Dominevo said — the hub's
  * `CamProfileSchema` is `high|mid|low` everywhere — and `quality-target.ts`
  * translated between them on the way to the broker, which is precisely what let
  * the second spelling survive upstream.

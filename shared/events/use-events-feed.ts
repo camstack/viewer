@@ -129,7 +129,7 @@ export interface EventsFeedParams {
   readonly devicesResolved: boolean
   /**
    * The host the embed is talking to — `lan:192.0.2.10:4443` or
-   * `public:camstack.example.top`, from `describeFeedChannel` (embed) or the app's route channel.
+   * `public:dominevo.example.top`, from `describeFeedChannel` (embed) or the app's route channel.
    *
    * On every request line, because "am I on the LAN or on the tunnel?" is a
    * per-request question and the answer moves: the host app races its own

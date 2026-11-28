@@ -22,8 +22,8 @@ describe('renewed access token reaches the embed player (native)', () => {
     expect(src).toContain("PAGE_CAP_SET_TOKEN = 'setToken'")
   })
 
-  it('pushes setToken onto __camstackEmbedPage when the host token slides', () => {
-    expect(src).toContain('__camstackEmbedPage.setToken')
+  it('pushes setToken onto __dominevoEmbedPage when the host token slides', () => {
+    expect(src).toContain('__dominevoEmbedPage.setToken')
     expect(src).toContain('pushedTokenRef')
   })
 })

@@ -10,7 +10,7 @@
  * ## Auth: the admin's stored session, seeded before the page boots
  *
  * The page sits behind the admin's `ProtectedRoute`, which signs in from the
- * session the admin keeps in localStorage (`camstack_admin_token`). The httpOnly
+ * session the admin keeps in localStorage (`dominevo_admin_token`). The httpOnly
  * cookie alone does not sign the page in. So the viewer seeds that key with its
  * own LIVE access token before the page's scripts run — the same channel the
  * camera player uses for its token (`injectedJavaScriptBeforeContentLoaded`),
@@ -24,9 +24,9 @@
 import type { ThemeMode } from '../theme/tokens.js'
 
 /** The admin's stored-session keys (`addon-admin-ui/src/lib/admin-session.ts`). */
-export const ADMIN_ACCESS_TOKEN_KEY = 'camstack_admin_token'
-export const ADMIN_REFRESH_TOKEN_KEY = 'camstack_admin_refresh'
-export const ADMIN_TOKEN_EXPIRES_KEY = 'camstack_admin_token_expires'
+export const ADMIN_ACCESS_TOKEN_KEY = 'dominevo_admin_token'
+export const ADMIN_REFRESH_TOKEN_KEY = 'dominevo_admin_refresh'
+export const ADMIN_TOKEN_EXPIRES_KEY = 'dominevo_admin_token_expires'
 
 /** The languages the embed page takes on `?lang=`. */
 export type DeviceEmbedLang = 'en' | 'it'

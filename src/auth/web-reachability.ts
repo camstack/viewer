@@ -71,7 +71,7 @@ const NOT_TRPC_RESPONSE =
   /unable to transform response from server|is not valid json|unexpected token|unexpected end of json|json parse error|json\.parse/i
 
 /**
- * True when the address ANSWERED, but not as a CamStack hub would: a web page,
+ * True when the address ANSWERED, but not as a Dominevo hub would: a web page,
  * a reverse proxy's 404, some other service's JSON.
  *
  * A real hub refusing the login (wrong password, rate limit) answers with a
@@ -80,7 +80,7 @@ const NOT_TRPC_RESPONSE =
  * envelope, whose chain names an unreadable body, is classified here; a request
  * that got no answer at all is {@link isHubUnreachable}'s, never this.
  */
-export function isNotCamstackHub(error: unknown): boolean {
+export function isNotDominevoHub(error: unknown): boolean {
   if (!(error instanceof Error)) return false
   if (hasHubErrorShape(error) || isHubUnreachable(error)) return false
   let current: unknown = error

@@ -17,7 +17,7 @@ const answer = (json: unknown, status = 200) => async () =>
 describe('server name (D861)', () => {
   it('is shown only when the operator set one', () => {
     expect(customServerName({ name: 'Casa', isDefault: false })).toBe('Casa')
-    expect(customServerName({ name: 'CamStack', isDefault: true })).toBeNull()
+    expect(customServerName({ name: 'Dominevo', isDefault: true })).toBeNull()
     expect(customServerName({ name: '  ', isDefault: false })).toBeNull()
     expect(customServerName({ nope: 1 })).toBeNull()
   })

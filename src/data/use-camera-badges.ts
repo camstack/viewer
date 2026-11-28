@@ -16,7 +16,7 @@
  * ## Why the fallback is not optional
  *
  * The batch is a framework change, and a framework change is not live until a
- * `@camstack/server` containing it is installed — regardless of what is in the
+ * `@dominevo/server` containing it is installed — regardless of what is in the
  * registry (see `docs/architecture/update-and-release.md`). Every hub in the
  * field today answers NOT_FOUND, so the fallback is not a defensive flourish:
  * it is the path that actually runs until that release lands. `supported`

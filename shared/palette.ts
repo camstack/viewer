@@ -2,13 +2,13 @@
  * The one kind→colour read (D939).
  *
  * The hub's `displayPalette.getPalette` is the table. This module holds the
- * answer the screens paint from, and the bundled CamStack preset for the two
+ * answer the screens paint from, and the bundled Dominevo preset for the two
  * moments the hub has not given one: before the first read, and when the read
  * is `unknown`. No hex lives here — the preset is `@dominevo/types/client`.
  */
 import { useCallback, useSyncExternalStore } from 'react'
 import {
-  bundledCamstack,
+  bundledDominevo,
   paintHex,
   paletteResultSchema,
   type PaletteReady,
@@ -30,7 +30,7 @@ export interface AudioPaint {
 
 export type KindPaint = (kind: string) => string
 
-const BUNDLED: PaletteReady = bundledCamstack()
+const BUNDLED: PaletteReady = bundledDominevo()
 
 const PENDING: PaletteView = {
   ready: BUNDLED,
@@ -47,7 +47,7 @@ const listeners = new Set<Listener>()
 function bundledAudioAlphas(): readonly number[] {
   const audio = BUNDLED.swatches.audio
   if (audio === undefined || audio.form !== 'gradient') {
-    throw new Error('bundled CamStack palette has no audio gradient')
+    throw new Error('bundled Dominevo palette has no audio gradient')
   }
   return audio.alphas
 }

@@ -117,5 +117,5 @@ export function eventStillFilename(
   kind: EventStillKind,
 ): string {
   const owner = (target.trackId ?? target.bestEventId ?? 'event').replace(/[^a-z0-9]+/gi, '-').toLowerCase()
-  return `camstack-${owner}-${kind}`
+  return `dominevo-${owner}-${kind}`
 }

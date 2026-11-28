@@ -29,7 +29,7 @@ function fakeFetch(status: number, body: string): { fetchFn: FetchLike; calls: u
 describe('shouldAttemptHubSessionExchange', () => {
   const base = {
     platform: 'web',
-    pathname: '/viewer/camstack/',
+    pathname: '/viewer/dominevo/',
     webBasePath: '/viewer',
     hasServerConfigured: false,
     standalone: false,
@@ -39,7 +39,7 @@ describe('shouldAttemptHubSessionExchange', () => {
     expect(shouldAttemptHubSessionExchange(base)).toBe(true)
     expect(shouldAttemptHubSessionExchange({ ...base, pathname: '/viewer' })).toBe(true)
     expect(
-      shouldAttemptHubSessionExchange({ ...base, pathname: '/viewer/camstack/cameras' }),
+      shouldAttemptHubSessionExchange({ ...base, pathname: '/viewer/dominevo/cameras' }),
     ).toBe(true)
   })
 
@@ -60,7 +60,7 @@ describe('shouldAttemptHubSessionExchange', () => {
 
   it('falls back to the well-known /viewer/ prefix when no base path was baked in', () => {
     expect(
-      shouldAttemptHubSessionExchange({ ...base, webBasePath: null, pathname: '/viewer/camstack/' }),
+      shouldAttemptHubSessionExchange({ ...base, webBasePath: null, pathname: '/viewer/dominevo/' }),
     ).toBe(true)
     expect(shouldAttemptHubSessionExchange({ ...base, webBasePath: '', pathname: '/other/' })).toBe(
       false,
@@ -77,7 +77,7 @@ describe('shouldAttemptHubSessionExchange', () => {
 /**
  * An installed iOS web app has its own cookie jar, so its first launch is
  * always unauthenticated. Bouncing it to `/login` — OUTSIDE the manifest
- * scope `/viewer/camstack/` — opened the admin login in the in-app browser
+ * scope `/viewer/dominevo/` — opened the admin login in the in-app browser
  * sheet, whose cookies are Safari's, not the app's: the login could not
  * provision the PWA, the redirect back loaded a second viewer inside the
  * sheet, and the app itself came back with `bounced=1` and showed the manual
@@ -146,8 +146,8 @@ describe('exchangeHubSession', () => {
 
 describe('buildHubLoginUrl', () => {
   it('targets the admin-ui login with the encoded return path', () => {
-    expect(buildHubLoginUrl('https://hub.example', '/viewer/camstack/')).toBe(
-      'https://hub.example/login?redirect=%2Fviewer%2Fcamstack%2F',
+    expect(buildHubLoginUrl('https://hub.example', '/viewer/dominevo/')).toBe(
+      'https://hub.example/login?redirect=%2Fviewer%2Fdominevo%2F',
     )
   })
 })

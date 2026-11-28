@@ -532,7 +532,7 @@ export const TrackDetailView = memo(function TrackDetailView({
     [],
   )
 
-  // Copy link opens a two-entry choice: the app link (opens the CamStack app) or
+  // Copy link opens a two-entry choice: the app link (opens the Dominevo app) or
   // the public link (the hub's public web viewer).
   const copyRef = useRef<ViewInstance>(null)
   const [copyAnchor, setCopyAnchor] = useState<AnchorRect | null>(null)

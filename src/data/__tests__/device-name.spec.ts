@@ -1,6 +1,6 @@
 /**
  * The viewer copy of the device-name rule. The byte check
- * (`scripts/check-device-name-in-sync.ts` in camstack-server) is the parity
+ * (`scripts/check-device-name-in-sync.ts` in dominevo-server) is the parity
  * with the canonical file. These cases are the two branches a screen will
  * hit first: the only meaningful child of a container, and a siren under a
  * camera (the camera is not a container, so the line stays `camera · noun`).

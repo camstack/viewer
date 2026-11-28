@@ -11,10 +11,10 @@ import { AASA_COMPONENTS, buildAppLinkFiles, parseCertFingerprints } from '../ap
 import { acceptedEncodings, etagMatches, isContentHashed } from '../http-cache.ts'
 
 const FP = 'AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99'
-const INDEX = '<!doctype html><title>CamStack</title><div id="root"></div>'
+const INDEX = '<!doctype html><title>Dominevo</title><div id="root"></div>'
 const BUNDLE = `console.log(${JSON.stringify('x'.repeat(4096))})`
 const EMBED_BUNDLE = `export const a = ${JSON.stringify('y'.repeat(4096))}`
-const EMBED_INDEX = '<!doctype html><title>CamStack Embed</title><script src="./assets/index-DD2L4J6W.js"></script>'
+const EMBED_INDEX = '<!doctype html><title>Dominevo Embed</title><script src="./assets/index-DD2L4J6W.js"></script>'
 const EXPO_ASSET = 'arrow_down.017bc6ba3fc25503e5eb5e53826d48a8.png'
 const WASM = Buffer.from([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00])
 
@@ -46,7 +46,7 @@ let base = ''
 beforeAll(async () => {
   dist = mkdtempSync(join(tmpdir(), 'viewer-dist-'))
   writeFileSync(join(dist, 'index.html'), INDEX)
-  writeFileSync(join(dist, 'manifest.json'), '{"name":"CamStack"}')
+  writeFileSync(join(dist, 'manifest.json'), '{"name":"Dominevo"}')
   mkdirSync(join(dist, '_expo', 'static', 'js', 'web'), { recursive: true })
   writeFileSync(join(dist, '_expo', 'static', 'js', 'web', 'entry-abc123.js'), BUNDLE)
   mkdirSync(join(dist, 'embed', 'assets'), { recursive: true })
@@ -56,7 +56,7 @@ beforeAll(async () => {
   writeFileSync(join(dist, 'assets', 'node_modules', 'expo-router', 'assets', EXPO_ASSET), 'png')
   writeFileSync(join(dist, 'icon-192.png'), 'png')
   writeFileSync(join(dist, 'decoder.wasm'), WASM)
-  writeFileSync(join(dist, 'site.webmanifest'), '{"name":"CamStack"}')
+  writeFileSync(join(dist, 'site.webmanifest'), '{"name":"Dominevo"}')
   server = await createApp({ distDir: dist, certFingerprints: [FP], awaitPrecompression: true })
   await new Promise<void>((resolve) => server?.listen(0, '127.0.0.1', () => resolve()))
   const address = server.address()

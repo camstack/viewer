@@ -27,13 +27,13 @@ describe('buildLocalEmbedUri', () => {
 describe('buildRemoteEmbedUri', () => {
   it('addresses the hub copy, query and all — it is not a file URL', () => {
     expect(buildRemoteEmbedUri('https://hub:4443', 'grid')).toBe(
-      'https://hub:4443/viewer/camstack/embed/index.html?mode=grid',
+      'https://hub:4443/viewer/dominevo/embed/index.html?mode=grid',
     )
   })
 
   it('does not double the slash on a server url that ends with one', () => {
     expect(buildRemoteEmbedUri('https://hub:4443/', 'player')).toBe(
-      'https://hub:4443/viewer/camstack/embed/index.html?mode=player',
+      'https://hub:4443/viewer/dominevo/embed/index.html?mode=player',
     )
   })
 })

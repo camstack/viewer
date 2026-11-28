@@ -81,7 +81,7 @@ const FORBIDDEN = [
   'parsePipDepartureReport',
   'PipDepartureReport',
   'pipdeparture',
-  '__camstackPipOnLeave',
+  '__dominevoPipOnLeave',
 ] as const
 
 describe('the PiP-on-close automatism is gone from the app', () => {

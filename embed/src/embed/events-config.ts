@@ -1,9 +1,9 @@
 /**
  * events-config — the configuration contract of the EVENTS embed
- * (`/viewer/camstack/embed/index.html?mode=events`).
+ * (`/viewer/dominevo/embed/index.html?mode=events`).
  *
  * Same three-source model as the grid embed (see `host-bridge.ts`):
- *   1. native WebView  → `window.__CAMSTACK_EVENTS__` injected before load;
+ *   1. native WebView  → `window.__DOMINEVO_EVENTS__` injected before load;
  *   2. browser iframe  → the `embed-ready` → `embed-config` handshake;
  *   3. standalone/URL  → query params + `#t=<token>` (see `events-url-config.ts`).
  *
@@ -575,11 +575,11 @@ function resolveClearable(
   return patched ?? current
 }
 
-/** Read + validate `window.__CAMSTACK_EVENTS__` (set by a native host before load). */
+/** Read + validate `window.__DOMINEVO_EVENTS__` (set by a native host before load). */
 export function readEventsConfig(): EventsConfigResult {
-  const raw = (window as unknown as { __CAMSTACK_EVENTS__?: unknown }).__CAMSTACK_EVENTS__
+  const raw = (window as unknown as { __DOMINEVO_EVENTS__?: unknown }).__DOMINEVO_EVENTS__
   if (raw === undefined || raw === null) {
-    return { ok: false, error: 'window.__CAMSTACK_EVENTS__ is not set' }
+    return { ok: false, error: 'window.__DOMINEVO_EVENTS__ is not set' }
   }
   return parseEventsConfig(raw)
 }

@@ -1,4 +1,4 @@
-# Development Build Setup - Camstack
+# Development Build Setup - Dominevo
 
 The app uses **expo-dev-client** because it includes native modules (WebRTC, react-native-video) that do not work with Expo Go.
 
@@ -63,5 +63,5 @@ Profiles are defined in `eas.json`:
 
 ## Notes
 
-- Use **camstack.xcworkspace** (not .xcodeproj) to open the project in Xcode
+- Use **dominevo.xcworkspace** (not .xcodeproj) to open the project in Xcode
 - After changes to `app.json` or plugins, run `npm run prebuild:clean` and rebuild

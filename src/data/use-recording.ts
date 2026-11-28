@@ -14,7 +14,7 @@ import type { TimeRange } from '../timeline/coverage.js'
 import { log } from '../lib/logger.js'
 import { capQuery, isRecord } from './cap-query.js'
 import { parseScopeRowHeads, isReadRow } from './scope-rows.js'
-import { RECORDING_SOURCE_CAMSTACK_ADDON } from './recording-sources.js'
+import { RECORDING_SOURCE_DOMINEVO_ADDON } from './recording-sources.js'
 import {
   answerRows,
   fetchAvailabilityRows,
@@ -287,7 +287,7 @@ async function fetchScopeDays(
         'getDaysWithRecordings',
         {
           deviceId: plan.ours[0],
-          provider: RECORDING_SOURCE_CAMSTACK_ADDON,
+          provider: RECORDING_SOURCE_DOMINEVO_ADDON,
           fromMs,
           toMs,
           tzOffsetMinutes,
@@ -344,7 +344,7 @@ export function useRecordingProfiles(
   const plan = useRecordingProviderPlan(singleId(deviceId))
   const provider =
     plan.pinned[0]?.provider ??
-    (plan.ours.length === 1 ? RECORDING_SOURCE_CAMSTACK_ADDON : null)
+    (plan.ours.length === 1 ? RECORDING_SOURCE_DOMINEVO_ADDON : null)
   return useQuery<string[]>({
     queryKey: ['v2', 'recording', 'profiles', deviceId, recordingPlanKey(plan), fromMs, toMs],
     enabled: enabled && state === 'connected' && provider !== null,

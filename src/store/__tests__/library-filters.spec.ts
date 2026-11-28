@@ -106,10 +106,10 @@ describe('stale ids', () => {
 describe('levels', () => {
   it('every section is a DEVICE key, one copy per hub', () => {
     for (const section of ['events', 'artifacts', 'faces', 'plates', 'retrain', 'timeline']) {
-      const entry = storageLevelOf(`camstack.v2.library-filter.${section}@hub-a`)
+      const entry = storageLevelOf(`dominevo.v2.library-filter.${section}@hub-a`)
       expect(entry?.level, section).toBe('device')
       expect(entry?.match, section).toBe('per-hub')
     }
-    expect(STORAGE_KEY_LEVELS.filter((e) => e.key.startsWith('camstack.v2.library-filter.'))).toHaveLength(6)
+    expect(STORAGE_KEY_LEVELS.filter((e) => e.key.startsWith('dominevo.v2.library-filter.'))).toHaveLength(6)
   })
 })

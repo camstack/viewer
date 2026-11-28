@@ -68,7 +68,7 @@ describe('track URL shares the events config path', () => {
       '?mode=track&v=1&id=t-1&device=7&theme=dark',
       '',
       'https://ha.test',
-      '/api/camstack/p/grant/viewer/camstack/embed/index.html',
+      '/api/dominevo/p/grant/viewer/dominevo/embed/index.html',
     )
     expect(r?.ok).toBe(true)
   })

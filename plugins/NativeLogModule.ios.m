@@ -9,7 +9,7 @@
 #import <React/RCTLog.h>
 #import <Foundation/Foundation.h>
 
-static NSString *const kLogFileName = @"camstack-native-logs.json";
+static NSString *const kLogFileName = @"dominevo-native-logs.json";
 static NSFileHandle *_logFileHandle = nil;
 static NSLock *_logLock = nil;
 

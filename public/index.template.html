@@ -2,7 +2,7 @@
 <!--
   TEMPLATE. `public/index.html` is rendered from this file by
   scripts/write-manifest-for-build.js, which replaces __WEB_MOUNT_PREFIX__ with
-  the mount the build targets (`/` for `npm run web`, `/viewer/camstack/` on
+  the mount the build targets (`/` for `npm run web`, `/viewer/dominevo/` on
   the hub). Edit THIS file; a hand edit of index.html is lost at the next build.
 -->
 <html lang="%LANG_ISO_CODE%">
@@ -35,7 +35,7 @@
     <!--
       Absolute, under the mount: the hub serves this shell for every
       extension-less route, so a relative `./manifest.json` resolved from
-      /viewer/camstack/camera/101 to a 404 and "Add to Home Screen" from any
+      /viewer/dominevo/camera/101 to a 404 and "Add to Home Screen" from any
       deep route produced a bookmark instead of an app.
     -->
     <link rel="icon" type="image/png" href="__WEB_MOUNT_PREFIX__favicon.png" />
@@ -61,7 +61,7 @@
         flex: 1;
       }
     </style>
-    <style id="camstack-shell">
+    <style id="dominevo-shell">
       /* The OS bands (status bar, home indicator) show the body behind the
          translucent status bar: paint them with the app background, per
          scheme, instead of the default white. */

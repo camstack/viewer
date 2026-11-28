@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * CamStack iOS release: version bump + EAS build + submit
+ * Dominevo iOS release: version bump + EAS build + submit
  * Usage: node scripts/release-ios.js [patch|minor|major]
  * Default: patch
  * Uses production profile (APP_VARIANT=production from eas.json).
@@ -94,7 +94,7 @@ if (fs.existsSync(pkgPath)) {
   ok("package.json updated");
 }
 // The newest native build, for the app to compare itself with: the web build
-// carries this file and the hub serves it at /viewer/camstack/native-release.json
+// carries this file and the hub serves it at /viewer/dominevo/native-release.json
 // (src/app/native-release.ts). Written BEFORE the build so the commit below
 // carries it; it reaches the hub with the next `build:orchestrator`.
 fs.writeFileSync(

@@ -2,7 +2,7 @@
  * Every value this app imports from `@dominevo/types/client` exists in that
  * entry at RUNTIME, and no bundled file takes a value from the bare root.
  *
- * The code names `@dominevo/types/client` explicitly (D721 in camstack-server):
+ * The code names `@dominevo/types/client` explicitly (D721 in dominevo-server):
  * the bare entry is one pre-bundled module carrying every capability schema,
  * and Metro does not tree-shake it. tsc already refuses a name `client.d.ts`
  * does not declare; this checks the module itself, so a declaration that
@@ -100,7 +100,7 @@ describe('@dominevo/types/client', () => {
 
   it('exports every value the app imports from it', () => {
     const missing = imported.filter((name) => !exported.includes(name))
-    expect(missing, 'add these to packages/types/src/client.ts in camstack-server and publish @dominevo/types').toEqual(
+    expect(missing, 'add these to packages/types/src/client.ts in dominevo-server and publish @dominevo/types').toEqual(
       [],
     )
   })

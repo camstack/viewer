@@ -9,7 +9,7 @@ const outDir = resolve(__dirname, '../embed-ota-dist')
 
 function inlineEmbedAssets(): Plugin {
   return {
-    name: 'camstack-inline-ota-embed',
+    name: 'dominevo-inline-ota-embed',
     closeBundle() {
       const indexPath = resolve(outDir, 'index.html')
       let html = readFileSync(indexPath, 'utf8')
@@ -32,7 +32,7 @@ function inlineEmbedAssets(): Plugin {
         throw new Error('OTA embed still references external build assets')
       }
 
-      writeFileSync(resolve(outDir, 'camstack-embed.html'), `${html.trimEnd()}\n`)
+      writeFileSync(resolve(outDir, 'dominevo-embed.html'), `${html.trimEnd()}\n`)
     },
   }
 }

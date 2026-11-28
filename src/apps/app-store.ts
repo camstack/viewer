@@ -19,7 +19,7 @@ import {
   type LaunchPreference,
 } from './app-launch.js'
 
-export const APP_SWITCHER_STORAGE_KEY = '@camstack/v2/app-switcher'
+export const APP_SWITCHER_STORAGE_KEY = '@dominevo/v2/app-switcher'
 
 /** What fills the screen: one app (`null` = the app the shell hosts itself). */
 export interface ActiveApp {

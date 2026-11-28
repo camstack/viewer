@@ -6,7 +6,7 @@
  * the embed URL with the params in the query and a `{TOKEN}` placeholder in
  * the `#t=` fragment, which the token panel below resolves (a token minted
  * here for the link's cameras replaces it; an existing one covering every
- * camera keeps it, with a note), or the `camstack-events-card` YAML, which
+ * camera keeps it, with a note), or the `dominevo-events-card` YAML, which
  * needs no token because the integration injects its own.
  *
  * The token is an `events-view` share grant, NOT the grid's: the two are

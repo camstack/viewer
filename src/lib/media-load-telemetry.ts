@@ -3,7 +3,7 @@
  *
  * ## Why this exists
  *
- * Every reel card showed the broken-image icon (camstack/server#14) and the
+ * Every reel card showed the broken-image icon (dominevo/server#14) and the
  * viewer said nothing: `TileHero`'s `onError` only swaps the icon in. With no
  * line, "the hub refused the request", "the host is unreachable from this
  * page" and "the bytes are not an image" were the same silence.

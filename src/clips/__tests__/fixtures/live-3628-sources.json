@@ -2,7 +2,7 @@
   {
     "source": "analytics",
     "addonId": "recorder",
-    "label": "CamStack recordings",
+    "label": "Dominevo recordings",
     "availability": {
       "state": "ok"
     }

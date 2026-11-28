@@ -30,7 +30,7 @@
  *
  * Without the header, `expo-image` hands the URL straight to an `<img>`: the
  * browser loads it natively, in parallel, from its own cache when the frame has
- * not moved, and attaches the httpOnly `camstack_session` cookie the hub-served
+ * not moved, and attaches the httpOnly `dominevo_session` cookie the hub-served
  * viewer already holds (`server/backend/src/auth/session-cookie.ts` — the
  * addon-route catch-all accepts it for `authenticated` routes).
  *
@@ -90,7 +90,7 @@ function originOf(uri: string): string | null {
  * including a web page on its own hub's origin.
  *
  * Same-origin web used to skip the header on the assumption that the
- * `camstack_session` cookie authenticates the `<img>`. That holds only for a
+ * `dominevo_session` cookie authenticates the `<img>`. That holds only for a
  * cookie-bootstrapped session; a viewer signed in with a viewer token (the
  * Electron app loading the hub-served bundle) has no cookie and every
  * thumbnail answered 401. The app does not record which mode a session is in,

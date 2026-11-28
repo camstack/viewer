@@ -14,7 +14,7 @@ import {
   type DebugStatus,
 } from './debug-status.js'
 
-const STORAGE_KEY = 'camstack.v2.debug-status'
+const STORAGE_KEY = 'dominevo.v2.debug-status'
 
 interface DebugStatusState {
   readonly statuses: Readonly<Record<string, DebugStatus>>

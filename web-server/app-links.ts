@@ -3,7 +3,7 @@
  * vouch for: `/.well-known/apple-app-site-association` and
  * `/.well-known/assetlinks.json`.
  *
- * Ported from camstack-link (`src/app-links.mjs`), which this server
+ * Ported from dominevo-link (`src/app-links.mjs`), which this server
  * supersedes: the hosted viewer PWA at https://dominevo.app IS the link
  * domain now (operator decision 2026-10-06). The team id and bundle ids are
  * REDECLARED from `app.config.ts` (`ios.bundleIdentifier`, `android.package`)
@@ -96,7 +96,7 @@ export function buildAppLinkFiles(androidCertSha256: readonly string[]): AppLink
 
 const FINGERPRINT = /^[0-9A-F]{2}(:[0-9A-F]{2}){31}$/
 
-/** `CAMSTACK_ANDROID_CERT_SHA256`: comma-separated SHA-256 fingerprints.
+/** `DOMINEVO_ANDROID_CERT_SHA256`: comma-separated SHA-256 fingerprints.
  *  Junk and empties are dropped; none at all is a VALID (if unverifiable) file. */
 export function parseCertFingerprints(raw: string | undefined): readonly string[] {
   if (raw === undefined) return []

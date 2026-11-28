@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <!--
   TEMPLATE. `public/index.html` is rendered from this file by
-  scripts/write-manifest-for-build.js, which replaces /viewer/camstack/ with
-  the mount the build targets (`/` for `npm run web`, `/viewer/camstack/` on
+  scripts/write-manifest-for-build.js, which replaces /viewer/dominevo/ with
+  the mount the build targets (`/` for `npm run web`, `/viewer/dominevo/` on
   the hub). Edit THIS file; a hand edit of index.html is lost at the next build.
 -->
 <html lang="%LANG_ISO_CODE%">
@@ -35,12 +35,12 @@
     <!--
       Absolute, under the mount: the hub serves this shell for every
       extension-less route, so a relative `./manifest.json` resolved from
-      /viewer/camstack/camera/101 to a 404 and "Add to Home Screen" from any
+      /viewer/dominevo/camera/101 to a 404 and "Add to Home Screen" from any
       deep route produced a bookmark instead of an app.
     -->
-    <link rel="icon" type="image/png" href="/viewer/camstack/favicon.png" />
-    <link rel="apple-touch-icon" href="/viewer/camstack/icon-192.png" />
-    <link rel="manifest" href="/viewer/camstack/manifest.json" />
+    <link rel="icon" type="image/png" href="/viewer/dominevo/favicon.png" />
+    <link rel="apple-touch-icon" href="/viewer/dominevo/icon-192.png" />
+    <link rel="manifest" href="/viewer/dominevo/manifest.json" />
     <!-- The `react-native-web` recommended style reset: https://necolas.github.io/react-native-web/docs/setup/#root-element -->
     <style id="expo-reset">
       /* These styles make the body full-height */
@@ -61,7 +61,7 @@
         flex: 1;
       }
     </style>
-    <style id="camstack-shell">
+    <style id="dominevo-shell">
       /* The OS bands (status bar, home indicator) show the body behind the
          translucent status bar: paint them with the app background, per
          scheme, instead of the default white. */

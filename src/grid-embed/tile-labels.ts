@@ -10,7 +10,7 @@
  * everything around it moved. This app has already resolved the operator's
  * language and already owns every other string in the product, so the labels
  * ride in the config the page already receives at the handshake
- * (`window.__CAMSTACK_GRID__`) and the keys live in `locales/` like all the rest.
+ * (`window.__DOMINEVO_GRID__`) and the keys live in `locales/` like all the rest.
  *
  * ## The page keeps its English, and that is not a leftover
  *

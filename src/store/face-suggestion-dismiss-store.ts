@@ -18,7 +18,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { log } from '../lib/logger.js'
 
 /** AsyncStorage key for the persisted dismissed-faceId list. */
-export const FACE_SUGGESTION_DISMISS_STORAGE_KEY = '@camstack/v2/face-suggestion-dismissed'
+export const FACE_SUGGESTION_DISMISS_STORAGE_KEY = '@dominevo/v2/face-suggestion-dismissed'
 
 // ── Pure reducers / parsing (unit-tested) ─────────────────────────────────────
 

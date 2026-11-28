@@ -89,7 +89,7 @@ export function stepScale(mainScale: number, step: number): number {
   return s < 0 ? Math.max(OVERLAY_STEP_MIN_SCALE, scaled) : scaled
 }
 
-/** The stream aspect every CamStack surface lays out for. */
+/** The stream aspect every Dominevo surface lays out for. */
 export const DEFAULT_VIDEO_ASPECT = 16 / 9
 
 export interface Size {

@@ -8,7 +8,7 @@
  * hits are indistinguishable from the outside:
  *
  *   - the LAN endpoint is reachable but serves a certificate the device does
- *     not trust (this deployment's hub presents a self-signed `CN=camstack.local`),
+ *     not trust (this deployment's hub presents a self-signed `CN=dominevo.local`),
  *     so a phone can NEVER elect it and will sit on the public tunnel forever
  *     while its owner is standing next to the hub on WiFi;
  *   - the LAN endpoint is genuinely not routable (mobile data, guest VLAN),

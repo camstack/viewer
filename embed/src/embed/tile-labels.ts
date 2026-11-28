@@ -8,7 +8,7 @@
  * second set of strings in this artifact would be a set nobody diffs against
  * the first, and drift between two sets is the ordinary way one label stays in
  * English after everything else moved. So the host sends them in the config it
- * already injects at the handshake (`window.__CAMSTACK_GRID__`), the app side
+ * already injects at the handshake (`window.__DOMINEVO_GRID__`), the app side
  * builds them from its own keys (`src/grid-embed/tile-labels.ts`), and the keys
  * live in `locales/` with every other string in the product.
  *

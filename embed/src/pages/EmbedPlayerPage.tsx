@@ -1,21 +1,21 @@
 /**
  * EmbedPlayerPage — login-bypassing, chrome-less live WebRTC player.
  *
- * Served with the Viewer at `/viewer/camstack/embed/index.html?mode=player`
+ * Served with the Viewer at `/viewer/dominevo/embed/index.html?mode=player`
  * (see `EmbedApp`), loaded inside a native iOS WKWebView: WebKit's WebRTC stack
  * decodes H.265, which the React-Native app's native libwebrtc cannot, so the
  * native app draws its own chrome and hosts this page purely as the video surface.
  *
  * Auth comes from a JWT injected by the WebView (NOT a login form): the native
- * side sets `window.__CAMSTACK_EMBED__` BEFORE the page loads. We build a fresh
+ * side sets `window.__DOMINEVO_EMBED__` BEFORE the page loads. We build a fresh
  * `System` SDK from that `{ serverUrl, token }` and reuse the REAL ui-library
  * client-offer player (`CameraStreamPlayer` + `useDeviceWebrtc`); no hand-rolled
  * WebRTC signaling.
  *
  * Contract (fixed — the WebView side depends on it exactly):
- *   IN  (set before load / web handshake): window.__CAMSTACK_EMBED__ = { serverUrl, token, deviceId, target, muted }
+ *   IN  (set before load / web handshake): window.__DOMINEVO_EMBED__ = { serverUrl, token, deviceId, target, muted }
  *   OUT (every state change): emitHost({ type:'state', state, message? }) — RN postMessage or parent.postMessage
- *   IN  (once mounted):     window.__camstackEmbed = { setMuted(b), setTarget(t), …, setMic(on) }
+ *   IN  (once mounted):     window.__dominevoEmbed = { setMuted(b), setTarget(t), …, setMic(on) }
  */
 import { useEffect, useMemo, useRef, useState} from 'react'
 import { createClipOfferIntent, opensInRecorded } from './clip-offer-intent'
@@ -140,10 +140,10 @@ const PAGE_CAPABILITIES: readonly string[] = [
 
 declare global {
   interface Window {
-    __CAMSTACK_EMBED__?: unknown
+    __DOMINEVO_EMBED__?: unknown
     /** Page-level command surface — survives player remounts (the per-player
-     *  `__camstackEmbed` below is torn down on every camera swap). */
-    __camstackEmbedPage?: {
+     *  `__dominevoEmbed` below is torn down on every camera swap). */
+    __dominevoEmbedPage?: {
       /** In-place camera swap. Untrusted input — validated by
        *  `parseSetDeviceCommand`; malformed payloads no-op. */
       setDevice: (raw: unknown) => void
@@ -154,7 +154,7 @@ declare global {
        */
       setToken: (token: unknown) => void
     }
-    __camstackEmbed?: {
+    __dominevoEmbed?: {
       setMuted: (muted: boolean) => void
       setTarget: (target: EmbedTarget) => void
       setStats: (stats: boolean) => void
@@ -714,7 +714,7 @@ function EmbedPlayer({
       emit: emitHost,
       getVideo: () => videoElRef.current,
     })
-    window.__camstackEmbed = {
+    window.__dominevoEmbed = {
       setMuted: (next) => setMuted(next),
       setTarget: (next) => {
         const parsed = embedTargetSchema.safeParse(next)
@@ -741,7 +741,7 @@ function EmbedPlayer({
         // Every outcome of this call is reported, including the two that used
         // to be silent. A clip that does not play is the operator's report of
         // 2026-09-21, and the app could not tell whether the command had even
-        // ARRIVED here: the host injects it into `window.__camstackEmbed`, and
+        // ARRIVED here: the host injects it into `window.__dominevoEmbed`, and
         // when the local embed does not start the app falls back to the hub's
         // copy, which may be a different build entirely.
         //
@@ -875,7 +875,7 @@ function EmbedPlayer({
     }
     return () => {
       capture.abort()
-      if (window.__camstackEmbed) delete window.__camstackEmbed
+      if (window.__dominevoEmbed) delete window.__dominevoEmbed
     }
     // deviceId is stable for the lifetime of this player; fitBox is stable.
   }, [deviceId, fitBox])
@@ -891,7 +891,7 @@ function EmbedPlayer({
   useEffect(
     () =>
       onHostCommand((command) => {
-        const api = window.__camstackEmbed
+        const api = window.__dominevoEmbed
         if (!api) return
         const kind = command.kind as string
         switch (kind) {
@@ -1256,7 +1256,7 @@ function EmbedPlayer({
 export function EmbedPlayerPage() {
   // Config IN: native resolves synchronously from the injected global; web does
   // the `embed-ready`→`embed-config` handshake (null while in flight).
-  const configResult = useEmbedConfig('player', () => window.__CAMSTACK_EMBED__, parseEmbedConfig)
+  const configResult = useEmbedConfig('player', () => window.__DOMINEVO_EMBED__, parseEmbedConfig)
 
   // In-place camera swap (`setDevice`): the host changes the camera on this
   // ALREADY-BOOTED page instead of loading a fresh one — the SDK system
@@ -1288,7 +1288,7 @@ export function EmbedPlayerPage() {
       const cmd = parseSetDeviceCommand(raw)
       if (cmd) setSwap(cmd)
     }
-    window.__camstackEmbedPage = { setDevice: applyDevice, setToken: applyToken }
+    window.__dominevoEmbedPage = { setDevice: applyDevice, setToken: applyToken }
     // Web (iframe) path: the same commands arrive as `embed-command`
     // messages. Dormant on native (commands are injected JS there).
     const offWeb = onHostCommand((command) => {
@@ -1301,7 +1301,7 @@ export function EmbedPlayerPage() {
       }
     })
     return () => {
-      if (window.__camstackEmbedPage) delete window.__camstackEmbedPage
+      if (window.__dominevoEmbedPage) delete window.__dominevoEmbedPage
       offWeb()
     }
   }, [])

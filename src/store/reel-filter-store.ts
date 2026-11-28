@@ -59,7 +59,7 @@ const REEL_PRESET: FilterPreset = 'detection-macros'
 
 /** Base key; an ACCOUNT setting, so one cached copy per hub
  *  (`scopedStorageKey`), synced by `account/account-settings-sync.ts`. */
-export const REEL_FILTER_STORAGE_KEY = 'camstack.v2.reel-filter'
+export const REEL_FILTER_STORAGE_KEY = 'dominevo.v2.reel-filter'
 
 export interface ReelFilter {
   /** Taxonomy kinds to KEEP. `null` = the default preset. `[]` = everything.

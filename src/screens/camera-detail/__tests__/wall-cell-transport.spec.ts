@@ -149,7 +149,7 @@ describe('the wall answers its own per-cell transport', () => {
     // a battery camera" — says nothing about how the wall was opened, and a
     // camera added to a VIEW used to wake immediately.
     const held = injectedWebViewScripts().filter((s) => s.includes('setPaused'))
-    const boot = bootedWebViewConfigs().filter((c) => c.includes('__CAMSTACK_GRID__'))
+    const boot = bootedWebViewConfigs().filter((c) => c.includes('__DOMINEVO_GRID__'))
     expect(`${boot[boot.length - 1] ?? ''}${held.join('')}`).toContain('5')
   })
 

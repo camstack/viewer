@@ -51,7 +51,7 @@ export interface CameraPref {
    * (`analytics`, `native:reolink:onboard`, …). Open vocabulary: the hub owns
    * it, so a pick this build has never heard of is kept, not scrubbed.
    *
-   * Absence is the default and means CamStack — which is also exactly what the
+   * Absence is the default and means Dominevo — which is also exactly what the
    * app drew before this setting existed, so a camera merely looked at carries
    * no document.
    *
@@ -78,7 +78,7 @@ export interface CameraPref {
    * whose clips come from the card may still have its continuous bar painted
    * by us, and the operator ruled that recordings default to ours ALWAYS.
    *
-   * Absence is that default and means the RESERVED source id `camstack`, which
+   * Absence is that default and means the RESERVED source id `dominevo`, which
    * no other addon may mint (D625) — so there is nowhere for a "first row"
    * fallback to creep in and silently swap one camera's coverage for another's.
    *
@@ -114,7 +114,7 @@ export const DEFAULTS: AppCameraPrefs = Object.freeze({
 }) as AppCameraPrefs
 
 /** AsyncStorage key for the persisted camera-prefs document. */
-export const CAMERA_PREFS_STORAGE_KEY = '@camstack/v2/camera-prefs'
+export const CAMERA_PREFS_STORAGE_KEY = '@dominevo/v2/camera-prefs'
 
 /** Fresh, mutable copy equal to DEFAULTS (callers may mutate the returned shell). */
 export function resetCameraPrefsEntry(): AppCameraPrefs {
@@ -371,7 +371,7 @@ interface CameraPrefsState {
   setHidden: (id: number, hidden: boolean) => void
   setCameraHighlight: (id: number, highlight: GridHighlightSettings) => void
   /** Choose which ONE of this camera's clip sources the clip surface reads.
-   *  `undefined` clears the pick back to the default (CamStack). */
+   *  `undefined` clears the pick back to the default (Dominevo). */
   setCameraClipProvider: (id: number, sourceId: string | undefined) => void
   /** The same, for the RECORDING timeline's source. */
   setCameraRecordingProvider: (id: number, sourceId: string | undefined) => void

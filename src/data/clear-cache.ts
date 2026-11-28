@@ -3,10 +3,10 @@ import { Image } from 'expo-image'
 import type { QueryClient } from '@tanstack/react-query'
 
 /** Conservative AsyncStorage key prefixes considered "cache" and safe to drop.
- *  We deliberately do NOT touch auth/server keys (`@camstack/v2/server*`,
- *  tokens) nor user prefs (`v2.language`, theme, `@camstack/v2/settings`,
- *  `@camstack/v2/grids`). Only ephemeral, regenerable data lives here. */
-const CACHE_KEY_PREFIXES: readonly string[] = ['@camstack/v2/cache/', '@camstack/v2/snapshot/']
+ *  We deliberately do NOT touch auth/server keys (`@dominevo/v2/server*`,
+ *  tokens) nor user prefs (`v2.language`, theme, `@dominevo/v2/settings`,
+ *  `@dominevo/v2/grids`). Only ephemeral, regenerable data lives here. */
+const CACHE_KEY_PREFIXES: readonly string[] = ['@dominevo/v2/cache/', '@dominevo/v2/snapshot/']
 
 /** Best-effort cache clear: react-query cache + expo-image disk/memory caches +
  *  any AsyncStorage keys under known cache prefixes. Never throws — failures are

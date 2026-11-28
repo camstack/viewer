@@ -81,7 +81,7 @@ describe('the Account screen', () => {
 
 describe('Account → Active sessions', () => {
   const SESSIONS = [
-    { id: 'ls_me', userId: 'u1', method: 'handoff', refreshable: true, createdAt: 1, lastUsedAt: 30, expiresAt: 99, client: 'CamStack/1 CFNetwork/1568 Darwin/24.1.0', ip: '10.0.0.5', current: true },
+    { id: 'ls_me', userId: 'u1', method: 'handoff', refreshable: true, createdAt: 1, lastUsedAt: 30, expiresAt: 99, client: 'Dominevo/1 CFNetwork/1568 Darwin/24.1.0', ip: '10.0.0.5', current: true },
     { id: 'ls_mac', userId: 'u1', method: 'password', refreshable: true, createdAt: 1, lastUsedAt: 20, expiresAt: 99, client: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Safari/605.1.15', ip: '10.0.0.9', current: false },
   ]
 

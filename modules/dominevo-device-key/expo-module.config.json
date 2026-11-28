@@ -1,0 +1,17 @@
+{
+  "platforms": [
+    "apple",
+    "android"
+  ],
+  "apple": {
+    "podspecPath": "dominevo-device-key.podspec",
+    "modules": [
+      "DominevoDeviceKeyModule"
+    ]
+  },
+  "android": {
+    "modules": [
+      "expo.modules.dominevodevicekey.DominevoDeviceKeyModule"
+    ]
+  }
+}

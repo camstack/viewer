@@ -246,7 +246,7 @@ describe('widening the window does not empty the body', () => {
 
     deferListClips = () => {}
     await act(async () => {
-      rerender({ chosenSourceId: 'camstack:recorder' })
+      rerender({ chosenSourceId: 'dominevo:recorder' })
     })
 
     expect(result.current.clips).toHaveLength(0)

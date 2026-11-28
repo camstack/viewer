@@ -59,6 +59,6 @@ describe('the file and the links', () => {
     expect(storeUrlFor(latest, 'web', 'x')).toBeNull()
   })
   it('is served under the viewer mount', () => {
-    expect(nativeReleasePath('https://192.0.2.10:4443/')).toBe('https://192.0.2.10:4443/viewer/camstack/native-release.json')
+    expect(nativeReleasePath('https://192.0.2.10:4443/')).toBe('https://192.0.2.10:4443/viewer/dominevo/native-release.json')
   })
 })

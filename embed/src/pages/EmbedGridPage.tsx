@@ -1,7 +1,7 @@
 /**
  * EmbedGridPage — chrome-less N-camera WebRTC grid.
  *
- * Served with the Viewer at `/viewer/camstack/embed/index.html?mode=grid`
+ * Served with the Viewer at `/viewer/dominevo/embed/index.html?mode=grid`
  * (see `EmbedApp`). One SPA boot renders N players (one WebRTC peer per device),
  * which is the whole point of the shared embed: on iOS each WKWebView booting
  * the full SPA + its own peer doesn't scale, so the grid lives in ONE WebView.
@@ -12,9 +12,9 @@
  * the native overlays anchor without pixel measurement.
  *
  * Contract:
- *   IN  (set before load):  window.__CAMSTACK_GRID__ = { serverUrl, token, devices, layout, quality, showName, showBadges, muted, paused }
+ *   IN  (set before load):  window.__DOMINEVO_GRID__ = { serverUrl, token, devices, layout, quality, showName, showBadges, muted, paused }
  *   OUT (postMessage):      state / layout / tileOpen / audioToggle (see grid-messages)
- *   IN  (once mounted):     window.__camstackGrid = { setAudioOn, setMutedAll, setActiveMic, setPaused, setDevices, setQuality, setLayout, setShowName, setShowBadges, setShowBoxes, setShowMotion, setOverlays, fit }
+ *   IN  (once mounted):     window.__dominevoGrid = { setAudioOn, setMutedAll, setActiveMic, setPaused, setDevices, setQuality, setLayout, setShowName, setShowBadges, setShowBoxes, setShowMotion, setOverlays, fit }
  *
  * Tap a tile to reveal in-tile controls (auto-hide): center pause/play (per
  * tile), bottom-left audio + mic, bottom-right open (→ host navigates via the
@@ -67,8 +67,8 @@ import { useHostBox } from '../embed/use-host-box.js'
 
 declare global {
   interface Window {
-    __CAMSTACK_GRID__?: unknown
-    __camstackGrid?: {
+    __DOMINEVO_GRID__?: unknown
+    __dominevoGrid?: {
       setMutedAll: (b: boolean) => void
       setAudioOn: (ids: readonly number[]) => void
       setActiveMic: (deviceId: number | null) => void
@@ -255,7 +255,7 @@ function Grid({ system, config }: GridProps) {
   }, [system, devices, cameraWord])
 
   useEffect(() => {
-    window.__camstackGrid = {
+    window.__dominevoGrid = {
       // Replace the whole combinable audio set (host-owned). Back-compat:
       // setMutedAll(true) clears it (silence all).
       setAudioOn: (ids) => setAudioOnIds(new Set(ids)),
@@ -283,14 +283,14 @@ function Grid({ system, config }: GridProps) {
     }
     postToHost(gridStateMsg('ready', undefined, IMPLEMENTED_COMMANDS))
     return () => {
-      if (window.__camstackGrid) delete window.__camstackGrid
+      if (window.__dominevoGrid) delete window.__dominevoGrid
     }
   }, [fitBox])
 
   useEffect(
     () =>
       onHostCommand((command) => {
-        const api = window.__camstackGrid
+        const api = window.__dominevoGrid
         if (!api) return
         const kind = command.kind as string
         switch (kind) {
@@ -477,7 +477,7 @@ export function EmbedGridPage() {
   // the query, token in the stripped `#t=` fragment — see embed-url-config).
   const configResult = useEmbedConfig(
     'grid',
-    () => (window as unknown as { __CAMSTACK_GRID__?: unknown }).__CAMSTACK_GRID__,
+    () => (window as unknown as { __DOMINEVO_GRID__?: unknown }).__DOMINEVO_GRID__,
     parseGridConfig,
     readGridUrlConfig,
   )

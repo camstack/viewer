@@ -2,7 +2,7 @@
  * hub-origin — the ONE gate a hub URL arriving from a LINK must pass.
  *
  * Same rule as the link domain's `parseHubUrl`
- * (camstack-server `apps/link/public/link-logic.mjs`): `https:` only, an origin
+ * (dominevo-server `apps/link/public/link-logic.mjs`): `https:` only, an origin
  * and nothing else — no credentials, no path, no query, no fragment. A link is
  * attacker-writable; a hub it names is at most a SUGGESTION the operator
  * confirms, and this is what keeps that suggestion to a bare origin.

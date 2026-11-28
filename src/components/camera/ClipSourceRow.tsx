@@ -21,7 +21,7 @@
  * It must never write a hub authority. Sources are not enabled or disabled
  * here: each one exists because of a configuration that lives somewhere else —
  * HKSV because the camera is exported to HomeKit, the Reolink source because
- * Reolink is that camera's provider, CamStack's because it is always there. A
+ * Reolink is that camera's provider, Dominevo's because it is always there. A
  * knob over somebody else's decision is D62's failure reached from the
  * direction D62 does not describe, and D557 § 3 rejected exactly this control
  * on the admin side for exactly this reason.
@@ -41,7 +41,7 @@ import { Clapperboard } from '../../lib/icons.js'
 import { SelectRow, type SelectOption } from '../ui/SelectRow.js'
 import { useCameraClipProvider } from '../../data/use-camera-prefs.js'
 import { useClipSourceRows } from '../../data/use-camera-clips.js'
-import { clipSourcePickerOptions, CLIP_PROVIDER_CAMSTACK_SOURCE } from '../../clips/clip-sources.js'
+import { clipSourcePickerOptions, CLIP_PROVIDER_DOMINEVO_SOURCE } from '../../clips/clip-sources.js'
 
 export interface ClipSourceRowProps {
   readonly deviceId: number
@@ -72,10 +72,10 @@ export function ClipSourceRow({ deviceId, last }: ClipSourceRowProps): React.JSX
 
   if (options.length < 2) return null
 
-  // Absence means CamStack, which is also what the clips list defaults to. The
+  // Absence means Dominevo, which is also what the clips list defaults to. The
   // row shows that rather than an empty value, so the control never looks
   // unset when it is merely at its default.
-  const value = pref.chosen ?? CLIP_PROVIDER_CAMSTACK_SOURCE
+  const value = pref.chosen ?? CLIP_PROVIDER_DOMINEVO_SOURCE
 
   return (
     <SelectRow
@@ -84,10 +84,10 @@ export function ClipSourceRow({ deviceId, last }: ClipSourceRowProps): React.JSX
       options={options}
       value={value}
       onChange={(next) =>
-        // The default is stored as ABSENCE, so a camera left on CamStack carries
+        // The default is stored as ABSENCE, so a camera left on Dominevo carries
         // no document at all — and a future change to that default is not
         // silently pinned to today's value on every camera ever opened.
-        pref.setChosen(next === CLIP_PROVIDER_CAMSTACK_SOURCE ? undefined : next)
+        pref.setChosen(next === CLIP_PROVIDER_DOMINEVO_SOURCE ? undefined : next)
       }
       {...(last !== undefined ? { last } : {})}
     />

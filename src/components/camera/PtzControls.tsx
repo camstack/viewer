@@ -1,7 +1,7 @@
 /**
- * PtzControls — directional pad + zoom for a PTZ camera, hooked to the camstack
+ * PtzControls — directional pad + zoom for a PTZ camera, hooked to the dominevo
  * `ptz` cap via `usePtz`. Layout ported from the V1 `PtzPanel` (d-pad + zoom
- * column) but re-themed (camstack Warm Amber/Stone) with lucide icons and
+ * column) but re-themed (dominevo Warm Amber/Stone) with lucide icons and
  * re-hooked to relative `ptz.move` calls.
  *
  * When the camera advertises no PTZ axes (cap absent or all-false options), the

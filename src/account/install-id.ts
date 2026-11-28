@@ -9,7 +9,7 @@
  */
 import type { AccountSyncStorage } from './account-settings-sync.js'
 
-export const INSTALL_ID_KEY = '@camstack/v2/install-id'
+export const INSTALL_ID_KEY = '@dominevo/v2/install-id'
 
 /** The hub's bound on a writer's id (`PREFERENCES_MAX_DEVICE_ID_LENGTH`). */
 const MAX_LENGTH = 64

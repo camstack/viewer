@@ -10,14 +10,14 @@ import { join } from 'node:path'
  * the `muted` PROP changed (a replaced <video> was born unmuted and nothing
  * re-asserted the silence), then again because recorded playback's audio never
  * touches a <video> at all — it is PCM scheduled into an AudioContext inside
- * the embed, reachable ONLY through the `__camstackEmbed.setMuted` handoff to
+ * the embed, reachable ONLY through the `__dominevoEmbed.setMuted` handoff to
  * the embed's own muted state (which gates the recorded audio pipeline's gain).
  * The first fix shipped without a guard, which is part of why it came back.
  *
  * The viewer cannot mount components (vitest runs `node`, no renderer — see
  * `docs/roadmap.md`), so these are source assertions in the style of
  * `theater/__tests__/zone-shape-wiring.spec.ts`. The embed-side halves are
- * guarded in camstack-server: `embed/src/playback/__tests__/audio-pipeline.spec.ts`,
+ * guarded in dominevo-server: `embed/src/playback/__tests__/audio-pipeline.spec.ts`,
  * `embed/src/playback/__tests__/webcodecs-playback-tier.spec.ts` and
  * `embed/src/pages/__tests__/recorded-mute-wiring.spec.ts`.
  */
@@ -45,7 +45,7 @@ describe('mute reaches every audio surface (iOS/native WebView player)', () => {
     expect(src).toContain('v.muted=${m}')
     // Handoff: the ONLY route to replacement elements, the embed enforcer, and
     // recorded (AudioContext) audio. Dropping it re-opens the playback leak.
-    expect(src).toContain('window.__camstackEmbed.setMuted&&window.__camstackEmbed.setMuted(${m})')
+    expect(src).toContain('window.__dominevoEmbed.setMuted&&window.__dominevoEmbed.setMuted(${m})')
   })
 
   it('the mute effect re-asserts on element replacement, not only on the muted value', () => {

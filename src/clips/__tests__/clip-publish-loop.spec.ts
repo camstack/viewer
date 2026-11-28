@@ -13,7 +13,7 @@
  * `useCameraClips` builds its empty list as a fresh `[]` inside a `useMemo`
  * whose deps include the react-query RESULT objects — which change identity on
  * every render. So on a camera whose clip query has not answered (or one on the
- * CamStack source, where `askCap` is false), `clips.clips` is a NEW array every
+ * Dominevo source, where `askCap` is false), `clips.clips` is a NEW array every
  * render. `derivedClips` lists it as a dep, so it recomputes; `cameraClips`
  * recomputes; the publish effect fires; the screen sets state; the screen
  * re-renders; the timeline re-renders; around again, at frame rate, forever.

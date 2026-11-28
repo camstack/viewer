@@ -1,6 +1,6 @@
 /**
  * `android.usesCleartextTraffic` is not on ExpoConfig.Android — tsc --noEmit
- * fails CI (https://github.com/camstack/viewer/actions/runs/32653142722).
+ * fails CI (https://github.com/dominevo/viewer/actions/runs/32653142722).
  * LAN HTTP belongs on the AndroidManifest via a config plugin.
  */
 import { readFileSync } from 'node:fs'

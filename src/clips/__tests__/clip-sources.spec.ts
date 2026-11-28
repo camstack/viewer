@@ -2,17 +2,17 @@ import { describe, it, expect } from 'vitest'
 import {
   parseClipSources,
   resolveClipProvider,
-  CLIP_PROVIDER_CAMSTACK_SOURCE,
+  CLIP_PROVIDER_DOMINEVO_SOURCE,
   clipSourcePickerOptions,
   type ClipSourceRow,
 } from '../clip-sources.js'
 
 /**
  * Rows exactly as `videoclips.listSources({deviceId:107})` answered on the live
- * hub, 2026-09-20 — two sources, one CamStack, one onboard, both `ok`.
+ * hub, 2026-09-20 — two sources, one Dominevo, one onboard, both `ok`.
  */
 const LIVE_592: readonly unknown[] = [
-  { source: 'analytics', addonId: 'recorder', label: 'CamStack recordings', availability: { state: 'ok' } },
+  { source: 'analytics', addonId: 'recorder', label: 'Dominevo recordings', availability: { state: 'ok' } },
   {
     source: 'native:reolink:onboard',
     addonId: 'provider-reolink',
@@ -32,7 +32,7 @@ describe('parseClipSources', () => {
     expect(parsed[0]).toMatchObject({
       sourceId: 'analytics',
       addonId: 'recorder',
-      label: 'CamStack recordings',
+      label: 'Dominevo recordings',
       state: 'ok',
     })
     expect(parsed[1]).toMatchObject({
@@ -68,7 +68,7 @@ describe('parseClipSources', () => {
   it('drops a row with no addon to ask — it can never be selected', () => {
     // `listClips` takes an ADDON id. A row that names no addon is a row the
     // picker could offer and then never satisfy.
-    expect(rows([{ source: 'analytics', label: 'CamStack', availability: { state: 'ok' } }])).toHaveLength(0)
+    expect(rows([{ source: 'analytics', label: 'Dominevo', availability: { state: 'ok' } }])).toHaveLength(0)
   })
 
   it('answers [] for anything that is not a list', () => {
@@ -78,16 +78,16 @@ describe('parseClipSources', () => {
 })
 
 describe('resolveClipProvider — no choice made yet', () => {
-  it('defaults to CamStack and keeps the DERIVED clips', () => {
-    // The operator: "di default va su camstack". Absence must reproduce exactly
+  it('defaults to Dominevo and keeps the DERIVED clips', () => {
+    // The operator: "di default va su dominevo". Absence must reproduce exactly
     // what the app drew before this setting existed — the timeline's own
     // clusters ∩ availability — not a cap read nobody asked for.
     //
-    // The onboard row is FIRST on purpose: "the default is CamStack" and "the
+    // The onboard row is FIRST on purpose: "the default is Dominevo" and "the
     // default is whatever the hub listed first" agree on the live ordering, and
     // a test that cannot tell them apart proves neither.
     const choice = resolveClipProvider({ sources: rows([LIVE_592[1], LIVE_592[0]]) })
-    expect(choice.sourceId).toBe(CLIP_PROVIDER_CAMSTACK_SOURCE)
+    expect(choice.sourceId).toBe(CLIP_PROVIDER_DOMINEVO_SOURCE)
     expect(choice.addonId).toBe('recorder')
     expect(choice.derivation).toBe('derived')
     expect(choice.chosenMissing).toBe(false)
@@ -101,7 +101,7 @@ describe('resolveClipProvider — no choice made yet', () => {
     expect(choice.derivation).toBe('derived')
   })
 
-  it('falls to the camera’s only source when it has no CamStack row', () => {
+  it('falls to the camera’s only source when it has no Dominevo row', () => {
     // A camera with nothing but an onboard catalog must not be told it has no
     // clips — that is the "no clips on a camera full of them" defect (D554 4).
     const choice = resolveClipProvider({
@@ -127,7 +127,7 @@ describe('resolveClipProvider — the operator picked one', () => {
     expect(choice.derivation).toBe('cap')
   })
 
-  it('picking CamStack back is the derived list again, not a cap read of it', () => {
+  it('picking Dominevo back is the derived list again, not a cap read of it', () => {
     // "Non devono avere alcuna connessione": our own recordings reach the clips
     // surface the way they always have. Routing them through `listClips` would
     // restore the SECOND clusterer whose deletion this app already paid for.
@@ -141,7 +141,7 @@ describe('resolveClipProvider — the operator picked one', () => {
     // preference into a red timeline for ever.
     const choice = resolveClipProvider({ chosen: 'hksv', sources: rows() })
     expect(choice.chosenMissing).toBe(true)
-    expect(choice.sourceId).toBe(CLIP_PROVIDER_CAMSTACK_SOURCE)
+    expect(choice.sourceId).toBe(CLIP_PROVIDER_DOMINEVO_SOURCE)
     expect(choice.derivation).toBe('derived')
   })
 
@@ -154,12 +154,12 @@ describe('resolveClipProvider — the operator picked one', () => {
 
   it('honours a source whose state is not ok — the rows say why, the pick stands', () => {
     // A sleeping camera is still the camera the operator chose. Silently
-    // swapping him back to CamStack would be the merge D549 rejected, arriving
+    // swapping him back to Dominevo would be the merge D549 rejected, arriving
     // through the picker.
     const choice = resolveClipProvider({
       chosen: 'native:reolink:onboard',
       sources: rows([
-        { source: 'analytics', addonId: 'recorder', label: 'CamStack', availability: { state: 'ok' } },
+        { source: 'analytics', addonId: 'recorder', label: 'Dominevo', availability: { state: 'ok' } },
         {
           source: 'native:reolink:onboard',
           addonId: 'provider-reolink',

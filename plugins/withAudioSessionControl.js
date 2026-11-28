@@ -168,14 +168,14 @@ function withWebRTCEarlySetup(config) {
       if (fs.existsSync(appDelegatePath)) {
         let contents = fs.readFileSync(appDelegatePath, "utf8");
 
-        if (!contents.includes("camstack_webrtc_audio")) {
+        if (!contents.includes("dominevo_webrtc_audio")) {
           // Swift 6 (Expo SDK 57) emits `internal import Expo` and requires a
           // consistent access level across imports of the same module — a bare
-          // `import camstack_webrtc_audio` fails with "ambiguous implicit access
+          // `import dominevo_webrtc_audio` fails with "ambiguous implicit access
           // level ... imported as 'internal' elsewhere". Match the access level.
           contents = contents.replace(
             /import Expo\s/,
-            "import Expo\ninternal import camstack_webrtc_audio\n"
+            "import Expo\ninternal import dominevo_webrtc_audio\n"
           );
         }
 

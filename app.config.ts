@@ -6,7 +6,7 @@ const { getWebMountPrefix } = require("./config-web-base.js");
 const { ALTERNATE_ICONS } = require("./config-alternate-icons.js");
 
 
-// Web mount prefix: "/" = standalone (app at root); "<base>/camstack/" under
+// Web mount prefix: "/" = standalone (app at root); "<base>/dominevo/" under
 // EXPO_PUBLIC_WEB_BASE_PATH (External hub, HA ingress, the hub's /viewer). The SAME
 // helper renders public/index.html and public/manifest.json, so what Expo
 // serves under and what the manifest names cannot drift apart again.

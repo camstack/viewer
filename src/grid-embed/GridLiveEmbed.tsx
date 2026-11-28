@@ -2,12 +2,12 @@
  * GridLiveEmbed (iOS/native) — the shared multi-camera grid rendered inside ONE
  * `WKWebView` loading the OTA-bundled embed page (N WebRTC peers, one SPA boot).
  * Mirrors `LiveViewWebView` but for the
- * grid: it injects `window.__CAMSTACK_GRID__`, forwards grid-wide commands via
- * `window.__camstackGrid`, and routes per-tile tap/long-press back to the host.
+ * grid: it injects `window.__DOMINEVO_GRID__`, forwards grid-wide commands via
+ * `window.__dominevoGrid`, and routes per-tile tap/long-press back to the host.
  *
  * AUTH: the embed bundle is served `access:'public'` (a non-sensitive app shell).
  * It loads the public app shell with no token on the navigation or cookie. The
- * token lives ONLY in the injected body config (`window.__CAMSTACK_GRID__`) and
+ * token lives ONLY in the injected body config (`window.__DOMINEVO_GRID__`) and
  * gates the actual data at the SDK/tRPC layer; with no token the page renders a
  * config-error and fetches nothing.
  *
@@ -150,7 +150,7 @@ export function GridLiveEmbed({
   // Auth rides in the injected body config, never on the local asset URI.
   const { source, readAccessUri, reportLoadFailure, reportEmbedAlive } = useNativeEmbedSource(serverUrl, 'grid')
 
-  // The embed injects `window.__CAMSTACK_GRID__` (incl. the device list) ONCE,
+  // The embed injects `window.__DOMINEVO_GRID__` (incl. the device list) ONCE,
   // before content loads — so the set the CURRENT document booted with is the
   // set at its last (re)load, not the current prop. `setDevices` moves the
   // difference across without touching the document: the tiles that stay keep
@@ -182,7 +182,7 @@ export function GridLiveEmbed({
   // devices) identity — option changes are pushed via commands, not re-injection.
   const injectedBefore =
     serverUrl !== null
-      ? `window.__CAMSTACK_EMBED_MODE__ = 'grid'; window.__CAMSTACK_GRID__ = ${JSON.stringify(
+      ? `window.__DOMINEVO_EMBED_MODE__ = 'grid'; window.__DOMINEVO_GRID__ = ${JSON.stringify(
           buildGridEmbedConfig({
             serverUrl,
             token: token ?? '',

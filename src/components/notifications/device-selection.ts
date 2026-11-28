@@ -21,7 +21,7 @@
  * device-selection.ts` (viewer) and `packages/addon-admin-ui/src/pages/system/
  * device-selection.ts` (admin). The viewer resolves `@dominevo/types` from a
  * published release, so a helper added to the workspace would not exist
- * there. `scripts/check-device-selection-in-sync.ts` (camstack-server) fails
+ * there. `scripts/check-device-selection-in-sync.ts` (dominevo-server) fails
  * the commit when the copies differ; edit both.
  */
 

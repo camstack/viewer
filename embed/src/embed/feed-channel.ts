@@ -20,7 +20,7 @@ export function describeFeedChannel(serverUrl: string): string {
   let host: string
   try {
     // A base is needed for the RELATIVE `serverUrl` a relayed embed carries
-    // (`/api/camstack/p/<grant>` — see `transport-auth.ts`); without it the
+    // (`/api/dominevo/p/<grant>` — see `transport-auth.ts`); without it the
     // channel of every Home Assistant card would read `unknown`. It is applied
     // ONLY to a same-origin path: a mangled or empty string must keep saying
     // "unparseable" rather than silently naming the page's own host.

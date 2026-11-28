@@ -66,7 +66,7 @@ export function originGuardedScript(script: string | undefined, frameOrigin: str
  * is forwarded, and the shell ignores anything that is not an app-to-shell message.
  */
 export const BRIDGE_FORWARDER_SCRIPT =
-  "window.addEventListener('message', function (e) { var d = e.data; if (d && d.camstack === 'app-bridge' && window.ReactNativeWebView) { window.ReactNativeWebView.postMessage(JSON.stringify(d)); } }); true;"
+  "window.addEventListener('message', function (e) { var d = e.data; if (d && d.dominevo === 'app-bridge' && window.ReactNativeWebView) { window.ReactNativeWebView.postMessage(JSON.stringify(d)); } }); true;"
 
 /** The script a native frame runs to hand one shell message to the page. */
 export function deliverToPageScript(message: unknown): string {

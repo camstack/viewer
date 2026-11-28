@@ -1,7 +1,7 @@
 /**
  * hub-language — the app's current UI language, as the hub should see it.
  *
- * The SDK calls this getter on EVERY request (the `x-camstack-lang` header on
+ * The SDK calls this getter on EVERY request (the `x-dominevo-lang` header on
  * the tRPC http link, the `lang` connection param on the WebSocket), so a
  * language switch in Settings reaches the hub on the next call with no
  * reconnect. Reads the shared i18next instance the app initialises in

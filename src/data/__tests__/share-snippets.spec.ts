@@ -18,7 +18,7 @@ describe('gridCardYaml', () => {
     })
     expect(yaml).toBe(
       [
-        'type: custom:camstack-grid-card',
+        'type: custom:dominevo-grid-card',
         'title: "Front: door #1"',
         'device_ids:',
         '  - 7',
@@ -98,7 +98,7 @@ describe('eventsCardYaml', () => {
       eventsCardYaml({ view: 'reel', rows: 2, thumb: 'small', deviceIds: [], fields: DEFAULT_EVENTS_FIELDS, theme: 'auto' }),
     ).toBe(
       [
-        'type: custom:camstack-events-card',
+        'type: custom:dominevo-events-card',
         'view: reel',
         'thumb: small',
         'rows: 2',

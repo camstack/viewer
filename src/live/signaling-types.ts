@@ -22,7 +22,7 @@ export interface ClientStreamHints {
   readonly devicePixelRatio?: number
   readonly downlinkMbps?: number
   /** Why the session opens. `'clip'` on the FIRST offer tells the hub to serve
-   *  a CamStack-recorded clip without demanding live from the camera (a
+   *  a Dominevo-recorded clip without demanding live from the camera (a
    *  sleeping battery camera's clips then play). Never set on a re-offer: the
    *  re-offer after going live must be a normal live offer. */
   readonly intent?: 'live' | 'clip'
@@ -54,7 +54,7 @@ export interface MediaStreamLike {
   readonly id: string
 }
 
-/** The subset of the camstack `webrtcSession` + `turnProvider` caps the
+/** The subset of the dominevo `webrtcSession` + `turnProvider` caps the
  *  orchestrator calls. Implemented in the app by an adapter over the SDK. */
 export interface SignalingClient {
   getTurnServers(): Promise<readonly IceServer[]>

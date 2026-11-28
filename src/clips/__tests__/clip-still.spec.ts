@@ -15,7 +15,7 @@ import {
 } from '../clip-still.js'
 
 /**
- * The wire, captured from the LIVE hub on 2026-09-20 — `@camstack/server@1.2.357`
+ * The wire, captured from the LIVE hub on 2026-09-20 — `@dominevo/server@1.2.357`
  * with `provider-reolink` deployed — by firing ONE page of 60 mint URLs in
  * parallel, exactly as a first paint does, and then coming back under D563's
  * ladder until every tile was answered.
@@ -28,9 +28,9 @@ import {
 const FIXTURE = join(process.cwd(), 'src', 'clips', '__tests__', 'fixtures', 'live-592-first-paint-stills.json')
 
 interface WireHeaders {
-  readonly 'x-camstack-disposition': string | null
-  readonly 'x-camstack-reason-code': string | null
-  readonly 'x-camstack-reason': string | null
+  readonly 'x-dominevo-disposition': string | null
+  readonly 'x-dominevo-reason-code': string | null
+  readonly 'x-dominevo-reason': string | null
   readonly 'retry-after': string | null
 }
 
@@ -76,7 +76,7 @@ describe('a real first paint of 60 tiles', () => {
 
   it('reads the code and the wait off the headers, never off the prose', () => {
     // The live defect this guards: the route sends the whole SENTENCE in
-    // `x-camstack-reason` — `queue-full: 16 thumbnail mints already waiting
+    // `x-dominevo-reason` — `queue-full: 16 thumbnail mints already waiting
     // for host …` — while the surface keyed its table on the bare token. No
     // key ever matched. Assert from the real bytes that the two differ, so a
     // client that went back to matching the prose goes red here.

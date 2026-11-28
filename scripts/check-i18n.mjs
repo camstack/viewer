@@ -79,10 +79,10 @@ const I18N_DEFAULT_KEYS = new Set(['fallback', 'fallbackLabel', 'defaultValue'])
  * literal; a reason per entry.
  */
 export const PINNED_TEXT = new Map([
-  ['CamStack', 'product name'],
   ['Dominevo', 'product name'],
-  ['CamStack Viewer', 'product name'],
-  ['CamStack desktop', 'product name of the desktop app'],
+  ['Dominevo', 'product name'],
+  ['Dominevo Viewer', 'product name'],
+  ['Dominevo desktop', 'product name of the desktop app'],
   ['HH:MM', 'time-of-day format, written the same in both languages'],
   ['Home Assistant', 'product name of the integration the operator installed'],
   ['MQTT', 'protocol name'],

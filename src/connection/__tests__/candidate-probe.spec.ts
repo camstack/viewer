@@ -181,12 +181,12 @@ describe('summariseProbe', () => {
   it('keeps a 2xx as OK with status', () => {
     expect(
       summariseProbe({
-        url: 'https://camstack.example.com',
+        url: 'https://dominevo.example.com',
         ok: true,
         ms: 151,
         status: 200,
         error: null,
       }),
-    ).toBe('host https camstack.example.com OK 200 151ms')
+    ).toBe('host https dominevo.example.com OK 200 151ms')
   })
 })

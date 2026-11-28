@@ -8,7 +8,7 @@
  */
 import { parseAppBridgeMessage, type AppToShellMessage, type ShellToAppMessage } from '@dominevo/types/client'
 
-const ENVELOPE = { camstack: 'app-bridge', v: 1 } as const
+const ENVELOPE = { dominevo: 'app-bridge', v: 1 } as const
 
 export function helloMessage(): ShellToAppMessage {
   return { ...ENVELOPE, type: 'hello' }

@@ -84,7 +84,7 @@ describe('resolveClipsStatus', () => {
 
   it('names a stored pick this camera no longer has, ahead of everything else', () => {
     // The operator chose a source, and the camera stopped offering it. Showing
-    // CamStack's clips under his own choice of "Camera storage" without a word
+    // Dominevo's clips under his own choice of "Camera storage" without a word
     // is the silent substitution D549 rejected at the catalog layer.
     expect(
       resolveClipsStatus(input({ clipCount: 0, chosenMissing: true, sourceState: 'ok' })),

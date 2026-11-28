@@ -10,7 +10,7 @@
 import { ADMIN_ACCESS_TOKEN_KEY } from './device-embed-url.js'
 
 /** Where the viewer remembers the token it seeded. */
-export const VIEWER_SEEDED_TOKEN_KEY = 'camstack_viewer_seeded_access_token'
+export const VIEWER_SEEDED_TOKEN_KEY = 'dominevo_viewer_seeded_access_token'
 
 /** The part of `Storage` this module uses. */
 export interface SessionStorageLike {

@@ -142,7 +142,7 @@ export type ActivityStore = UseBoundStore<StoreApi<ActivityState>>
 
 /** The storage key of one server's hub acknowledgement. */
 export function hubAckStorageKey(serverId: string): string {
-  return `camstack.activity.hub-ack.v1.${serverId}`
+  return `dominevo.activity.hub-ack.v1.${serverId}`
 }
 
 function parseAck(raw: string | null): HubAck {

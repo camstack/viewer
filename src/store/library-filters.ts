@@ -50,11 +50,11 @@ export const LIBRARY_FILTER_SECTIONS: readonly LibraryFilterSection[] = [
 ]
 
 // One base key per section, each stored per hub (`storage-levels.ts`, device).
-export const ARTIFACTS_FILTER_STORAGE_KEY = 'camstack.v2.library-filter.artifacts'
-export const FACES_FILTER_STORAGE_KEY = 'camstack.v2.library-filter.faces'
-export const PLATES_FILTER_STORAGE_KEY = 'camstack.v2.library-filter.plates'
-export const RETRAIN_FILTER_STORAGE_KEY = 'camstack.v2.library-filter.retrain'
-export const TIMELINE_FILTER_STORAGE_KEY = 'camstack.v2.library-filter.timeline'
+export const ARTIFACTS_FILTER_STORAGE_KEY = 'dominevo.v2.library-filter.artifacts'
+export const FACES_FILTER_STORAGE_KEY = 'dominevo.v2.library-filter.faces'
+export const PLATES_FILTER_STORAGE_KEY = 'dominevo.v2.library-filter.plates'
+export const RETRAIN_FILTER_STORAGE_KEY = 'dominevo.v2.library-filter.retrain'
+export const TIMELINE_FILTER_STORAGE_KEY = 'dominevo.v2.library-filter.timeline'
 
 export const LIBRARY_FILTER_STORAGE_KEYS: Readonly<Record<LibraryFilterSection, string>> = {
   artifacts: ARTIFACTS_FILTER_STORAGE_KEY,

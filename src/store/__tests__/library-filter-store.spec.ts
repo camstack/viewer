@@ -75,7 +75,7 @@ describe('library filter store', () => {
     await settle()
     useLibraryFilterStore.getState().clear('retrain')
     await settle()
-    expect(await disk(scopedStorageKey('camstack.v2.library-filter.retrain', 'hub-a'))).toBeNull()
+    expect(await disk(scopedStorageKey('dominevo.v2.library-filter.retrain', 'hub-a'))).toBeNull()
     await restartLibrary()
     expect(useLibraryFilterStore.getState().values.retrain).toBeUndefined()
     expect(useLibraryFilterStore.getState().values.artifacts).toEqual({ kinds: ['export'], deviceIds: [101] })

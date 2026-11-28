@@ -26,7 +26,7 @@ import { REEL_HIGHLIGHT_DEFAULTS } from './reel-highlight.js'
 
 /** Base key; an ACCOUNT setting, so one cached copy per hub
  *  (`scopedStorageKey`), synced by `account/account-settings-sync.ts`. */
-export const REEL_HIGHLIGHT_STORAGE_KEY = 'camstack.v2.reel-highlight'
+export const REEL_HIGHLIGHT_STORAGE_KEY = 'dominevo.v2.reel-highlight'
 
 /**
  * Merge a stored blob onto the REEL's defaults.

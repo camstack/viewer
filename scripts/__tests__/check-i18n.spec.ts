@@ -38,7 +38,7 @@ describe('hard-coded text', () => {
     expect(texts("throw new Error('Device certificates need https')", 'src/x.ts')).toEqual([])
     expect(texts("if (m.includes('No procedure found')) {}", 'src/x.ts')).toEqual([])
     expect(texts("const o = { label: 'auto' }", 'src/x.ts')).toEqual([])
-    expect(texts('const A = () => <Text>CamStack</Text>')).toEqual([])
+    expect(texts('const A = () => <Text>Dominevo</Text>')).toEqual([])
     expect(texts('const A = () => <Text>{n} fps</Text>')).toEqual([])
     expect(texts('const A = () => <Text>· —</Text>')).toEqual([])
   })

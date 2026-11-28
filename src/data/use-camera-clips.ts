@@ -16,7 +16,7 @@
  * > diversi."*
  *
  * One camera, one source, chosen in that camera's settings. When the source is
- * CamStack the clips are the derived ones and this hook asks nothing at all;
+ * Dominevo the clips are the derived ones and this hook asks nothing at all;
  * when it is the camera's own storage the clips are these rows and the derived
  * list is not built. There is never a second answer to disagree with the first
  * (D569).

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Copies camstack web dist to external-hub-notifier/fs-camstack.
+ * Copies dominevo web dist to external-hub-notifier/fs-dominevo.
  * Run with: COPY_TO_EXTERNAL_HUB=1 npm run build:web && node scripts/copy-to-external-hub.js
  * Or: npm run build:web:embedded
  */
@@ -10,7 +10,7 @@ const { execSync } = require("child_process");
 
 const root = path.resolve(__dirname, "..");
 const distDir = path.join(root, "dist");
-const destDir = path.join(root, "../external-hub-notifier/fs/camstack");
+const destDir = path.join(root, "../external-hub-notifier/fs/dominevo");
 
 if (process.env.COPY_TO_EXTERNAL_HUB !== "1") {
   console.log("COPY_TO_EXTERNAL_HUB not set, skipping copy");
@@ -28,4 +28,4 @@ if (fs.existsSync(destDir)) {
 fs.mkdirSync(destDir, { recursive: true });
 
 execSync(`cp -r dist/* "${destDir}/"`, { cwd: root, stdio: "inherit" });
-console.log("Camstack dist copied to external-hub-notifier/fs/camstack");
+console.log("Dominevo dist copied to external-hub-notifier/fs/dominevo");

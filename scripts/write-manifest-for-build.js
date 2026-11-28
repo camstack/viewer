@@ -5,17 +5,17 @@
  *   public/index.template.html    → public/index.html
  *   public/manifest.template.json → public/manifest.json
  *
- * Both from ONE prefix, `getWebMountPrefix()` (`/` at the root; `<base>/camstack/`
+ * Both from ONE prefix, `getWebMountPrefix()` (`/` at the root; `<base>/dominevo/`
  * under EXPO_PUBLIC_WEB_BASE_PATH — the same value app.config.ts hands to Expo
  * as `experiments.baseUrl`). Run before `expo export --platform web`, and it is
  * what `npm run web` serves too, so the committed outputs are the root render.
  *
  * Why the shell is rendered at all: the hub serves the SPA shell for every
- * extension-less route under `/viewer/camstack/`, so a RELATIVE manifest link
- * (`./manifest.json`) resolved from `/viewer/camstack/camera/101` to a 404 and
+ * extension-less route under `/viewer/dominevo/`, so a RELATIVE manifest link
+ * (`./manifest.json`) resolved from `/viewer/dominevo/camera/101` to a 404 and
  * an install from any deep route became a bookmark, not an app. And the
  * manifest's icons were prefixed with `<base>/` while the files live under
- * `<base>/camstack/` — the hub answered those with the HTML shell.
+ * `<base>/dominevo/` — the hub answered those with the HTML shell.
  *
  * Pure `renderWebShell` is exported for the spec (`src/__tests__/web-shell.spec.ts`);
  * nothing is written unless this file is the entry point.

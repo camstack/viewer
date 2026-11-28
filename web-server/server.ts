@@ -95,7 +95,7 @@ async function precompress(assets: Iterable<Asset>): Promise<void> {
 export interface WebServerOptions {
   /** The static export to serve. Defaults to `<repo>/dist`. */
   readonly distDir?: string
-  /** Defaults to `CAMSTACK_ANDROID_CERT_SHA256`. */
+  /** Defaults to `DOMINEVO_ANDROID_CERT_SHA256`. */
   readonly certFingerprints?: readonly string[]
   /** Resolve only once every br/gzip body is ready (tests). Production boots
    *  at once and compresses in the background. */
@@ -200,7 +200,7 @@ function looksLikeFile(path: string): boolean {
 export async function createApp(options: WebServerOptions = {}): Promise<Server> {
   const distDir = options.distDir ?? fileURLToPath(new URL('../dist/', import.meta.url))
   const assets = await loadAssets(distDir)
-  const fingerprints = options.certFingerprints ?? parseCertFingerprints(process.env.CAMSTACK_ANDROID_CERT_SHA256)
+  const fingerprints = options.certFingerprints ?? parseCertFingerprints(process.env.DOMINEVO_ANDROID_CERT_SHA256)
   const { appleAppSiteAssociation, assetLinks } = buildAppLinkFiles(fingerprints)
   const aasa = makeAsset(Buffer.from(JSON.stringify(appleAppSiteAssociation, null, 2)), WELL_KNOWN_TYPE)
   const assetLinksAsset = makeAsset(Buffer.from(JSON.stringify(assetLinks, null, 2)), WELL_KNOWN_TYPE)
@@ -216,7 +216,7 @@ export async function createApp(options: WebServerOptions = {}): Promise<Server>
 
   if (fingerprints.length === 0) {
     log('warn', 'no android cert fingerprints — assetlinks.json will not auto-verify', {
-      env: 'CAMSTACK_ANDROID_CERT_SHA256',
+      env: 'DOMINEVO_ANDROID_CERT_SHA256',
     })
   }
 
@@ -275,7 +275,7 @@ export async function startServer(): Promise<Server> {
   const host = process.env.HOST ?? '0.0.0.0'
   const server = await createApp()
   await new Promise<void>((resolve) => server.listen(port, host, () => resolve()))
-  log('info', 'camstack viewer web listening', { port, host })
+  log('info', 'dominevo viewer web listening', { port, host })
   for (const signal of ['SIGTERM', 'SIGINT'] as const) {
     process.on(signal, () => {
       log('info', 'shutting down', { signal })

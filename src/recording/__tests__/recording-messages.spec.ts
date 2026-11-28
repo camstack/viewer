@@ -49,8 +49,8 @@ describe('parseRecordingHostMessage', () => {
 })
 
 describe('recordingCommandScript', () => {
-  it('serializes each command to a window.__camstackRecording call', () => {
-    expect(recordingCommandScript({ kind: 'seekTo', epochMs: 1700000000000 })).toContain('window.__camstackRecording')
+  it('serializes each command to a window.__dominevoRecording call', () => {
+    expect(recordingCommandScript({ kind: 'seekTo', epochMs: 1700000000000 })).toContain('window.__dominevoRecording')
     expect(recordingCommandScript({ kind: 'seekTo', epochMs: 1700000000000 })).toContain('seekTo(1700000000000)')
     expect(recordingCommandScript({ kind: 'play' })).toContain('play()')
     expect(recordingCommandScript({ kind: 'pause' })).toContain('pause()')
@@ -63,7 +63,7 @@ describe('recordingCommandScript', () => {
 
   it('guards the call (no throw if the API is not mounted yet) and ends with `true;`', () => {
     const s = recordingCommandScript({ kind: 'play' })
-    expect(s).toMatch(/window\.__camstackRecording\s*&&/)
+    expect(s).toMatch(/window\.__dominevoRecording\s*&&/)
     expect(s.trim().endsWith('true;')).toBe(true)
   })
 

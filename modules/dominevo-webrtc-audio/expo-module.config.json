@@ -1,0 +1,7 @@
+{
+  "platforms": ["apple"],
+  "apple": {
+    "podspecPath": "dominevo-webrtc-audio.podspec",
+    "appDelegateSubscribers": ["WebRTCAudioDeviceAppDelegateSubscriber"]
+  }
+}

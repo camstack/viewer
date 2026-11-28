@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest'
 import { qrPath } from '../qr-path.js'
 
 describe('qrPath', () => {
-  const url = 'otpauth://totp/CamStack:operator?secret=JBSWY3DPEHPK3PXP&issuer=CamStack'
+  const url = 'otpauth://totp/Dominevo:operator?secret=JBSWY3DPEHPK3PXP&issuer=Dominevo'
   const { size, d } = qrPath(url)
 
   it('is a square symbol of a legal QR size', () => {

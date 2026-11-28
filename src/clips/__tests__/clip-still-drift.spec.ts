@@ -78,7 +78,7 @@ describe('the admin UI’s ladder and this one are the same ladder', () => {
   })
 
   it.runIf(!present)('says why it could not compare, rather than passing quietly', () => {
-    // Standalone CI: `camstack-server` is not checked out beside this repo, so
+    // Standalone CI: `dominevo-server` is not checked out beside this repo, so
     // there is no second copy to diff. Named, not skipped invisibly.
     expect(existsSync(OTHER)).toBe(false)
   })

@@ -1,6 +1,6 @@
 {
   // CROSS-REPO DEVELOPMENT ONLY — resolves `@dominevo/*` to the workspace
-  // SOURCE next door, so a type added in camstack-server is visible here with
+  // SOURCE next door, so a type added in dominevo-server is visible here with
   // no publish in between.
   //
   // It is the right tool for exactly one job: writing a server-side type and
@@ -13,7 +13,7 @@
   // publish the server package, never to re-point this alias.
   //
   // The paths carry two candidates each because this checkout lives inside
-  // camstack-server in the usual layout and beside it in some others.
+  // dominevo-server in the usual layout and beside it in some others.
   "extends": "./tsconfig.json",
   "compilerOptions": {
     // Redefined WHOLE — `paths` does not merge, so the in-repo alias is

@@ -1,6 +1,6 @@
 /**
  * TrackCopyLinkMenu — the choice behind "Copy link" on the track detail:
- * the app link (opens the CamStack app) or the public link (the hub's public
+ * the app link (opens the Dominevo app) or the public link (the hub's public
  * web viewer). The public entry is disabled with its reason when the hub has no
  * public address, and says it is checking while the hub has not answered.
  */

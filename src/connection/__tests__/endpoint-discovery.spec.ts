@@ -66,9 +66,9 @@ describe('endpointsToCandidates', () => {
 
   it('keeps hub-advertised HTTP LAN URLs even when the configured URL is HTTPS', () => {
     const eps = [ep({ baseUrl: 'http://192.0.2.10:4480', priority: 1 })]
-    expect(endpointsToCandidates(eps, 'https://camstack.example.top')).toEqual([
+    expect(endpointsToCandidates(eps, 'https://dominevo.example.top')).toEqual([
       'http://192.0.2.10:4480',
-      'https://camstack.example.top',
+      'https://dominevo.example.top',
     ])
   })
 })
@@ -94,12 +94,12 @@ describe('dropIpv6Endpoints', () => {
     const kept = dropIpv6Endpoints([
       ep({ baseUrl: 'http://192.0.2.10:4480', kind: 'lan-ipv4', priority: 0 }),
       ep({ baseUrl: 'http://[2a02:908:3614:bfa0::2]:4480', kind: 'lan-ipv6', priority: 11 }),
-      ep({ baseUrl: 'https://camstack.example.top', kind: 'public', interfaceKind: 'public', priority: 100 }),
+      ep({ baseUrl: 'https://dominevo.example.top', kind: 'public', interfaceKind: 'public', priority: 100 }),
       ep({ baseUrl: 'https://hub.tail.ts.net:4443', kind: 'public', interfaceKind: 'vpn', priority: 150 }),
     ])
     expect(kept.map((e) => e.baseUrl)).toEqual([
       'http://192.0.2.10:4480',
-      'https://camstack.example.top',
+      'https://dominevo.example.top',
       'https://hub.tail.ts.net:4443',
     ])
   })
@@ -108,14 +108,14 @@ describe('dropIpv6Endpoints', () => {
 describe('filterViewerRaceEndpoints', () => {
   const palette = [
     ep({ baseUrl: 'http://192.0.2.10:4480', kind: 'lan-ipv4', priority: 0 }),
-    ep({ baseUrl: 'https://camstack.example.top', kind: 'public', interfaceKind: 'public', priority: 100 }),
+    ep({ baseUrl: 'https://dominevo.example.top', kind: 'public', interfaceKind: 'public', priority: 100 }),
     ep({ baseUrl: 'https://hub.tail.ts.net:4443', kind: 'public', interfaceKind: 'vpn', priority: 150 }),
   ]
 
   it('with no hub resolved set, AUTO is LAN IPv4 + public tunnel', () => {
     expect(filterViewerRaceEndpoints(palette, null).map((e) => e.baseUrl)).toEqual([
       'http://192.0.2.10:4480',
-      'https://camstack.example.top',
+      'https://dominevo.example.top',
     ])
   })
 
@@ -238,7 +238,7 @@ describe('discoverEndpoints', () => {
     const query = vi.fn(async () => ({
       endpoints: [
         ep({ baseUrl: 'http://192.0.2.10:4480', kind: 'lan-ipv4', priority: 0 }),
-        ep({ baseUrl: 'https://camstack.example.top', kind: 'public', interfaceKind: 'public', priority: 100 }),
+        ep({ baseUrl: 'https://dominevo.example.top', kind: 'public', interfaceKind: 'public', priority: 100 }),
         ep({ baseUrl: 'https://hub.tail.ts.net:4443', kind: 'public', interfaceKind: 'vpn', priority: 150 }),
       ],
     }))
@@ -269,11 +269,11 @@ describe('parsePortScheme — was the port THERE, or did we make it up?', () => 
   })
 
   it('marks a scheme-derived port as INFERRED — this is the whole bug', () => {
-    // `https://camstack.example.top` → 443, which is right for the tunnel's
+    // `https://dominevo.example.top` → 443, which is right for the tunnel's
     // proxy and wrong for the hub's LAN socket. The hub echoes whatever it is
     // given, so this 443 came back as `https://192.0.2.10:443` for a hub
     // listening on 4443.
-    expect(parsePortScheme('https://camstack.example.top')).toEqual({
+    expect(parsePortScheme('https://dominevo.example.top')).toEqual({
       port: 443,
       scheme: 'https',
       explicitPort: false,

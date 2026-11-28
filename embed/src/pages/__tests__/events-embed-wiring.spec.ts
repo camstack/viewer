@@ -397,7 +397,7 @@ describe('events embed wiring', () => {
     expect(document.querySelector('[title="debug"]')).toBeNull()
 
     act(() => {
-      window.__camstackEvents?.setTrackFlagPatches({
+      window.__dominevoEvents?.setTrackFlagPatches({
         a: { debug: true, markForTrain: false, favourited: false },
       })
     })
@@ -420,12 +420,12 @@ describe('events embed wiring', () => {
     await waitFor(() => expect(document.querySelectorAll('[data-track-id]')).toHaveLength(2))
 
     act(() => {
-      window.__camstackEvents?.setConfig({ filterDebug: true })
+      window.__dominevoEvents?.setConfig({ filterDebug: true })
     })
     await waitFor(() => expect(document.querySelectorAll('[data-track-id]')).toHaveLength(0))
 
     act(() => {
-      window.__camstackEvents?.setTrackFlagPatches({
+      window.__dominevoEvents?.setTrackFlagPatches({
         a: { debug: true, markForTrain: false, favourited: false },
       })
     })
@@ -443,7 +443,7 @@ describe('events embed wiring', () => {
 
     act(() => {
       // The camera name is a search TOKEN even where it is not rendered.
-      window.__camstackEvents?.setConfig({ search: 'Driveway' })
+      window.__dominevoEvents?.setConfig({ search: 'Driveway' })
     })
 
     await waitFor(() => expect(document.querySelectorAll('[data-track-id]')).toHaveLength(1))
@@ -463,7 +463,7 @@ describe('events embed wiring', () => {
     await waitFor(() => expect(document.querySelectorAll('[data-track-id]')).toHaveLength(1))
 
     act(() => {
-      window.__camstackEvents?.loadMore()
+      window.__dominevoEvents?.loadMore()
     })
 
     await waitFor(() => expect(document.querySelectorAll('[data-track-id]')).toHaveLength(2))
@@ -497,7 +497,7 @@ describe('events embed wiring', () => {
 
     await waitFor(() => expect(requests.length).toBe(1))
     act(() => {
-      window.__camstackEvents?.loadMore()
+      window.__dominevoEvents?.loadMore()
     })
     expect(requests.length).toBe(1) // still in flight — correctly not re-entered
 
@@ -519,7 +519,7 @@ describe('events embed wiring', () => {
     await waitFor(() => expect(document.querySelectorAll('[data-track-id]')).toHaveLength(1))
 
     act(() => {
-      window.__camstackEvents?.refresh()
+      window.__dominevoEvents?.refresh()
     })
 
     await waitFor(() => expect(requests.length).toBe(2))
@@ -556,7 +556,7 @@ describe('events embed wiring', () => {
     await waitFor(() => expect(requests.length).toBe(1))
 
     act(() => {
-      window.__camstackEvents?.setConfig({ showStationary: true })
+      window.__dominevoEvents?.setConfig({ showStationary: true })
     })
 
     await waitFor(() => expect(requests.length).toBe(2))
@@ -598,7 +598,7 @@ describe('events embed wiring', () => {
     await waitFor(() => expect(requests.length).toBe(1))
 
     act(() => {
-      window.__camstackEvents?.setConfig({ excludeSources: ['audio', 'sensor'] })
+      window.__dominevoEvents?.setConfig({ excludeSources: ['audio', 'sensor'] })
     })
 
     await waitFor(() => expect(requests.length).toBe(2))
@@ -631,7 +631,7 @@ describe('events embed wiring', () => {
     expect(requests[0]?.until).toBeUndefined()
 
     act(() => {
-      window.__camstackEvents?.setWindow({ sinceMs: 500, untilMs: 900 })
+      window.__dominevoEvents?.setWindow({ sinceMs: 500, untilMs: 900 })
     })
 
     await waitFor(() => expect(requests.length).toBe(2))
@@ -650,7 +650,7 @@ describe('events embed wiring', () => {
     await waitFor(() => expect(requests.length).toBe(1))
 
     act(() => {
-      window.__camstackEvents?.setWindow({ sinceMs: null, untilMs: null })
+      window.__dominevoEvents?.setWindow({ sinceMs: null, untilMs: null })
     })
 
     await waitFor(() => expect(requests.length).toBe(2))
@@ -679,7 +679,7 @@ describe('events embed wiring', () => {
     // A host built while the order existed still sends it; it is not a knob.
     const legacy = { sort: 'importance' }
     act(() => {
-      window.__camstackEvents?.setConfig(legacy)
+      window.__dominevoEvents?.setConfig(legacy)
     })
     await act(async () => {
       await Promise.resolve()
@@ -713,7 +713,7 @@ describe('events embed wiring', () => {
     await waitFor(() => expect(document.querySelectorAll('[data-track-id]')).toHaveLength(1))
 
     act(() => {
-      window.__camstackEvents?.setConfig({ searchMode: 'semantic', search: 'red car' })
+      window.__dominevoEvents?.setConfig({ searchMode: 'semantic', search: 'red car' })
     })
 
     await waitFor(() => {
@@ -747,7 +747,7 @@ describe('events embed wiring', () => {
     await waitFor(() => expect(document.querySelectorAll('[data-track-id]')).toHaveLength(1))
 
     act(() => {
-      window.__camstackEvents?.setConfig({ search: 'person' })
+      window.__dominevoEvents?.setConfig({ search: 'person' })
     })
 
     await waitFor(() => expect(document.querySelectorAll('[data-track-id]')).toHaveLength(1))
@@ -780,7 +780,7 @@ describe('events embed wiring', () => {
     await waitFor(() => expect(document.querySelectorAll('[data-track-id]')).toHaveLength(2))
 
     act(() => {
-      window.__camstackEvents?.setConfig({ classes: ['vehicle'] })
+      window.__dominevoEvents?.setConfig({ classes: ['vehicle'] })
     })
 
     // Selecting the family keeps the truck — the reported gap.
@@ -824,7 +824,7 @@ describe('events embed wiring', () => {
     const before = requests.length
 
     act(() => {
-      window.__camstackEvents?.setConfig({ deviceNames: { '101': 'Cortile' } })
+      window.__dominevoEvents?.setConfig({ deviceNames: { '101': 'Cortile' } })
     })
 
     await waitFor(() =>
@@ -846,7 +846,7 @@ describe('events embed wiring', () => {
     await waitFor(() => expect(document.querySelectorAll('[data-track-id]')).toHaveLength(2))
 
     act(() => {
-      window.__camstackEvents?.setConfig({ search: 'Front door' })
+      window.__dominevoEvents?.setConfig({ search: 'Front door' })
     })
 
     await waitFor(() => {
@@ -1090,7 +1090,7 @@ describe('events embed wiring', () => {
     expect(document.querySelector('[data-testid="tail-loading"]')).toBeNull()
 
     act(() => {
-      window.__camstackEvents?.loadMore()
+      window.__dominevoEvents?.loadMore()
     })
 
     // In flight ⇒ the user can see that more is coming.
@@ -1151,7 +1151,7 @@ describe('events embed wiring', () => {
     await waitFor(() => expect(document.querySelector('[data-track-id]')).toBeTruthy())
 
     act(() => {
-      window.__camstackEvents?.setConfig({ searchMode: 'semantic', search: 'car' })
+      window.__dominevoEvents?.setConfig({ searchMode: 'semantic', search: 'car' })
     })
 
     await waitFor(() => {
@@ -1266,7 +1266,7 @@ describe('events embed wiring', () => {
 
     failing = false
     act(() => {
-      window.__camstackEvents?.refresh()
+      window.__dominevoEvents?.refresh()
     })
 
     await waitFor(() => expect(document.querySelector('[data-track-id]')).toBeTruthy())
@@ -1749,7 +1749,7 @@ describe('events embed wiring', () => {
       )
       await waitFor(() => expect(document.querySelectorAll('[data-track-id]').length).toBe(2))
       await act(async () => {
-        window.__camstackEvents?.loadMore()
+        window.__dominevoEvents?.loadMore()
       })
       await waitFor(() => expect(document.querySelectorAll('[data-track-id]').length).toBe(4))
 
@@ -1762,7 +1762,7 @@ describe('events embed wiring', () => {
         0,
       )
       await act(async () => {
-        window.__camstackEvents?.reload()
+        window.__dominevoEvents?.reload()
       })
       await waitFor(() => expect(requests.length).toBeGreaterThan(2))
       await waitFor(() => expect(document.querySelectorAll('[data-track-id]').length).toBe(4))
@@ -1787,13 +1787,13 @@ describe('events embed wiring', () => {
       )
       await waitFor(() => expect(document.querySelectorAll('[data-track-id]').length).toBe(2))
       await act(async () => {
-        window.__camstackEvents?.loadMore()
+        window.__dominevoEvents?.loadMore()
       })
       await waitFor(() => expect(document.querySelectorAll('[data-track-id]').length).toBe(4))
 
       requests.length = 0
       await act(async () => {
-        window.__camstackEvents?.reload()
+        window.__dominevoEvents?.reload()
       })
       // Page 1 of the new generation is uncursored; the rebuild then follows
       // its own cursor rather than the replaced generation's.
@@ -1813,7 +1813,7 @@ describe('events embed wiring', () => {
       )
       await waitFor(() => expect(document.querySelectorAll('[data-track-id]').length).toBe(2))
       await act(async () => {
-        window.__camstackEvents?.loadMore()
+        window.__dominevoEvents?.loadMore()
       })
       await waitFor(() => expect(document.querySelectorAll('[data-track-id]').length).toBe(4))
 
@@ -1826,7 +1826,7 @@ describe('events embed wiring', () => {
         nextCursor: 'c1',
       })
       await act(async () => {
-        window.__camstackEvents?.reload()
+        window.__dominevoEvents?.reload()
       })
       await waitFor(() => expect(screen.queryAllByText('Marco').length).toBeGreaterThan(0))
     })
@@ -1841,7 +1841,7 @@ describe('events embed wiring', () => {
       )
       await waitFor(() => expect(document.querySelectorAll('[data-track-id]').length).toBe(2))
       await act(async () => {
-        window.__camstackEvents?.loadMore()
+        window.__dominevoEvents?.loadMore()
       })
       await waitFor(() => expect(document.querySelectorAll('[data-track-id]').length).toBe(4))
 
@@ -1849,7 +1849,7 @@ describe('events embed wiring', () => {
       // answer to another question and must go.
       pages.set(null, { tracks: [track('z', 101, 900)], nextCursor: null })
       await act(async () => {
-        window.__camstackEvents?.setWindow({ sinceMs: 500, untilMs: 950 })
+        window.__dominevoEvents?.setWindow({ sinceMs: 500, untilMs: 950 })
       })
       await waitFor(() => expect(document.querySelectorAll('[data-track-id]').length).toBe(1))
     })

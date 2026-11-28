@@ -1,5 +1,5 @@
-/** Native device key (Secure Enclave / Android Keystore); see `camstack-device-key`. */
-import native from 'camstack-device-key'
+/** Native device key (Secure Enclave / Android Keystore); see `dominevo-device-key`. */
+import native from 'dominevo-device-key'
 import type { DeviceKeyModule } from './types.js'
 
 /** False when this binary lacks the module (a mistaken OTA): the whole feature stays hidden. */

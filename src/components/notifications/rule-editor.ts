@@ -629,7 +629,7 @@ export interface FormToInputOptions {
    * known (older hub, catalog unanswered) = not cleared: an older hub then
    * keeps the active hours with the rule it keeps instant, and a D647 hub
    * refuses the save by name, which is loud and loses nothing. Verified in
-   * camstack-server (b33c00c30), all paths under
+   * dominevo-server (b33c00c30), all paths under
    * packages/addon-post-analysis/src/notification-center/ unless stated:
    *  - nc-actions.ts:1289 — `nc.updateRule` calls
    *    `guardPatchSystemEventDelivery(existing, patch, clear, {…})` (the cap

@@ -1,5 +1,5 @@
 /**
- * settings-store — camstack app preferences persistence (srcV2).
+ * settings-store — dominevo app preferences persistence (srcV2).
  *
  * Holds user-tunable DEFAULTS that other features consume: how grids render
  * (names/state badges, columns, stream quality, ordering), how a camera opens
@@ -508,11 +508,11 @@ export const DEFAULTS: AppSettings = Object.freeze({
 }) as AppSettings
 
 /** AsyncStorage key of the DEVICE half of the settings document. */
-export const SETTINGS_STORAGE_KEY = '@camstack/v2/settings'
+export const SETTINGS_STORAGE_KEY = '@dominevo/v2/settings'
 
 /** AsyncStorage base key of the ACCOUNT half — one copy per hub
  *  (`scopedStorageKey`), the local cache of the account document. */
-export const SETTINGS_ACCOUNT_STORAGE_KEY = '@camstack/v2/settings-account'
+export const SETTINGS_ACCOUNT_STORAGE_KEY = '@dominevo/v2/settings-account'
 
 // ── Pure reducers (unit-tested) ──────────────────────────────────────────────
 // Each returns a NEW AppSettings; none mutate their input (immutability rule).

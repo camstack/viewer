@@ -22,8 +22,8 @@ describe('parseNodeDirectory', () => {
 describe('parseInstalledPackages', () => {
   it('keeps name and version, drops the rest', () => {
     expect(
-      parseInstalledPackages([{ name: '@camstack/addon-x', version: '1.0.0', dir: '/data/x' }]),
-    ).toEqual([{ name: '@camstack/addon-x', version: '1.0.0' }])
+      parseInstalledPackages([{ name: '@dominevo/addon-x', version: '1.0.0', dir: '/data/x' }]),
+    ).toEqual([{ name: '@dominevo/addon-x', version: '1.0.0' }])
   })
 
   it('is null for anything else — never an empty list', () => {

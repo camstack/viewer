@@ -1,6 +1,6 @@
 # Events embed — host integration reference
 
-`/viewer/camstack/embed/index.html?mode=events`
+`/viewer/dominevo/embed/index.html?mode=events`
 
 An embeddable, chrome-less track/event surface served by the **stream-broker**
 addon out of the same bundle as the live grid and the player. Same data plane,
@@ -32,13 +32,13 @@ Three sources, in precedence order.
 **a. Native WebView** — inject before load:
 
 ```js
-window.__CAMSTACK_EVENTS__ = { serverUrl: 'https://hub:4443', token: '<jwt>', view: 'reel' }
+window.__DOMINEVO_EVENTS__ = { serverUrl: 'https://hub:4443', token: '<jwt>', view: 'reel' }
 ```
 
 **b. URL** — works standalone *and* inside an `<iframe>`:
 
 ```
-https://hub:4443/viewer/camstack/embed/index.html?mode=events&v=1&view=gallery&thumb=medium&cols=auto#t=<jwt>
+https://hub:4443/viewer/dominevo/embed/index.html?mode=events&v=1&view=gallery&thumb=medium&cols=auto#t=<jwt>
 ```
 
 The token rides the **fragment**, never the query string: a fragment is not sent
@@ -138,7 +138,7 @@ know); removing or retyping one requires `v: 2`.
 Web: `iframe.contentWindow.postMessage({ type:'embed-command', command }, origin)`.
 Native: call the API the page installs on `window` from injected JS.
 
-| Command | `window.__camstackEvents` |
+| Command | `window.__dominevoEvents` |
 | --- | --- |
 | `{type:'setConfig', patch}` | `setConfig(patch)` |
 | `{type:'setWindow', sinceMs?, untilMs?}` | `setWindow({sinceMs, untilMs})` |

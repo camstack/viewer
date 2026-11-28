@@ -21,14 +21,14 @@ export interface ExportedGrid {
 }
 
 /** A versioned envelope wrapping one or many grids, so the importer can tell a
- *  CamStack grid export apart from arbitrary JSON. */
+ *  Dominevo grid export apart from arbitrary JSON. */
 export interface GridExportEnvelope {
-  readonly type: 'camstack-grids'
+  readonly type: 'dominevo-grids'
   readonly version: 1
   readonly grids: readonly ExportedGrid[]
 }
 
-const ENVELOPE_TYPE = 'camstack-grids' as const
+const ENVELOPE_TYPE = 'dominevo-grids' as const
 const ENVELOPE_VERSION = 1 as const
 
 /** Strip a `Grid` down to its exportable fields (drops the volatile `id` and any

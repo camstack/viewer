@@ -114,7 +114,7 @@ export interface AccountSync {
 export const ACCOUNT_PUSH_DEBOUNCE_MS = 2_000
 
 /** The bookkeeping key of one hub (device level: it describes this install). */
-export const ACCOUNT_SYNC_META_KEY = '@camstack/v2/account-sync'
+export const ACCOUNT_SYNC_META_KEY = '@dominevo/v2/account-sync'
 
 interface NamespaceMeta {
   readonly revision: number | null

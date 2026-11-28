@@ -1,7 +1,7 @@
 /**
  * Shared compact primitives for accessory inline controls — a small pill button
  * and an icon-only round button. Both honour a disabled state (offline row or
- * in-flight mutation) and use camstack theme tokens.
+ * in-flight mutation) and use dominevo theme tokens.
  */
 import React, { useEffect, useState } from 'react'
 // ui-check-ok: compact option menu over the accessory row; SheetModal is a layout change (pre-existing)

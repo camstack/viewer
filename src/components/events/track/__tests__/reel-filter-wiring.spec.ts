@@ -101,8 +101,8 @@ describe('three stores, one shape, three values', () => {
   })
 
   it('and keep separate storage keys, so neither can move the other', () => {
-    expect(reelStore).toContain("'camstack.v2.reel-filter'")
-    expect(eventsStore).toContain("'camstack.v2.events-filter'")
+    expect(reelStore).toContain("'dominevo.v2.reel-filter'")
+    expect(eventsStore).toContain("'dominevo.v2.events-filter'")
   })
 
   it('the reel never reads the events page filter', () => {

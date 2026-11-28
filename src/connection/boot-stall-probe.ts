@@ -18,7 +18,7 @@
  * keeps and ships only while debug mode is on — so a production launch adds no
  * line and no traffic. In a dev client (`__DEV__`) the same line is `info`, so
  * it is visible without turning anything on. The numbers are also left on the
- * User Timing buffer as `camstack:boot:stall-*` measures where the runtime has
+ * User Timing buffer as `dominevo:boot:stall-*` measures where the runtime has
  * one, for a profiler or a web trace to read.
  *
  * The recorder is pure (an injected clock, no timers), so the arithmetic is
@@ -109,7 +109,7 @@ export function startBootStallProbe(): void {
     if (now - startedAt < PROBE_WINDOW_MS) return
     clearInterval(timer)
     const summary = recorder.summary()
-    markUserTiming(`camstack:boot:stall-blocked-${String(summary.blockedMs)}ms`)
+    markUserTiming(`dominevo:boot:stall-blocked-${String(summary.blockedMs)}ms`)
     const emit = __DEV__ ? log.info : log.debug
     emit(BOOT_SCOPE, 'js-thread stalls in the first seconds', { windowMs: PROBE_WINDOW_MS, ...summary })
   }, PROBE_INTERVAL_MS)

@@ -3,7 +3,7 @@ import { z } from 'zod'
 /** The addon that serves OUR recordings — what `provider` defaults to. */
 export const RECORDING_PROVIDER_DEFAULT = 'recorder'
 
-/** Injected as window.__CAMSTACK_RECORDING__ before the page loads (host-set). */
+/** Injected as window.__DOMINEVO_RECORDING__ before the page loads (host-set). */
 export const recordingConfigSchema = z.object({
   serverUrl: z.string().min(1),
   token: z.string().min(1),
@@ -41,8 +41,8 @@ export function parseRecordingConfig(raw: unknown): RecordingConfigResult {
 }
 
 export function readRecordingConfig(): RecordingConfigResult {
-  const raw = (window as unknown as { __CAMSTACK_RECORDING__?: unknown }).__CAMSTACK_RECORDING__
+  const raw = (window as unknown as { __DOMINEVO_RECORDING__?: unknown }).__DOMINEVO_RECORDING__
   if (raw === undefined || raw === null)
-    return { ok: false, error: 'window.__CAMSTACK_RECORDING__ is not set' }
+    return { ok: false, error: 'window.__DOMINEVO_RECORDING__ is not set' }
   return parseRecordingConfig(raw)
 }

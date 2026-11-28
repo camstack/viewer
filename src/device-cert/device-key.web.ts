@@ -7,7 +7,7 @@
 import { bytesToBase64Url } from './base64url.js'
 import type { DeviceKeyModule } from './types.js'
 
-const DB_NAME = 'camstack-device-key'
+const DB_NAME = 'dominevo-device-key'
 const STORE = 'keys'
 
 function openDb(): Promise<IDBDatabase> {

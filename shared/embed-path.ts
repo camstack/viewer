@@ -1,1 +1,1 @@
-export const VIEWER_EMBED_PATH = '/viewer/camstack/embed/index.html'
+export const VIEWER_EMBED_PATH = '/viewer/dominevo/embed/index.html'

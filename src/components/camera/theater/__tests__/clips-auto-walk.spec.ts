@@ -3,7 +3,7 @@
  * (operator, 2026-11-17).
  *
  *  1. A camera with rare detections (the last one three days ago) opened in
- *     clips mode drew an empty list on CamStack's own recordings: the empty-day
+ *     clips mode drew an empty list on Dominevo's own recordings: the empty-day
  *     walk only ran for a camera's own source (`nativeMode`). It now runs on
  *     both bodies and STOPS at the first answer that holds a clip, or at
  *     `MAX_AUTO_LOOKBACK_DAYS`.

@@ -10,7 +10,7 @@
  * ## The default is ours, and it is structural
  *
  * The operator's ruling is *"Il default va SEMPRE su quello attuale di
- * sistema"*. That is not a sort order here: `camstack` is a RESERVED source id
+ * sistema"*. That is not a sort order here: `dominevo` is a RESERVED source id
  * only the recorder may mint (D625), absence of a pick MEANS it, and clearing
  * the pick stores ABSENCE rather than the string. So a future change to the
  * default is not silently pinned to today's value on every camera ever opened.
@@ -39,7 +39,7 @@ import { SelectRow, type SelectOption } from '../ui/SelectRow.js'
 import { useCameraRecordingProvider } from '../../data/use-camera-prefs.js'
 import { useRecordingSourceRows } from '../../data/use-recording-provider-plan.js'
 import {
-  RECORDING_SOURCE_CAMSTACK,
+  RECORDING_SOURCE_DOMINEVO,
   recordingSourcePickerOptions,
 } from '../../data/recording-sources.js'
 
@@ -70,7 +70,7 @@ export function RecordingSourceRow({
   // Absence means ours, which is what the timeline already draws. Showing that
   // rather than an empty value keeps the control from looking unset when it is
   // merely at its default.
-  const value = pref.chosen ?? RECORDING_SOURCE_CAMSTACK
+  const value = pref.chosen ?? RECORDING_SOURCE_DOMINEVO
 
   return (
     <SelectRow
@@ -79,7 +79,7 @@ export function RecordingSourceRow({
       options={options}
       value={value}
       onChange={(next) =>
-        pref.setChosen(next === RECORDING_SOURCE_CAMSTACK ? undefined : next)
+        pref.setChosen(next === RECORDING_SOURCE_DOMINEVO ? undefined : next)
       }
       {...(last !== undefined ? { last } : {})}
     />

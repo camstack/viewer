@@ -28,7 +28,7 @@
  * screen — including any future box nobody remembers to pass a prop to.
  */
 
-/** The stream aspect every CamStack surface lays out for. */
+/** The stream aspect every Dominevo surface lays out for. */
 export const STREAM_ASPECT = 16 / 9
 
 /**

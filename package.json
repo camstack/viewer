@@ -1,5 +1,5 @@
 {
-  "name": "camstack",
+  "name": "dominevo",
   "main": "index.js",
   "version": "0.1.1",
   "scripts": {
@@ -44,7 +44,7 @@
     "export:web": "npm run sync:embed && node scripts/write-manifest-for-build.js && npx expo export --platform web --output-dir dist",
     "build:web": "npm run sync:embed && node scripts/write-manifest-for-build.js && npx expo export --platform web --output-dir dist",
     "build:web:embedded": "EXPO_PUBLIC_EMBEDDED=1 node scripts/write-manifest-for-build.js && EXPO_PUBLIC_EMBEDDED=1 COPY_TO_EXTERNAL_HUB=1 npx expo export --platform web --output-dir dist && COPY_TO_EXTERNAL_HUB=1 node scripts/copy-to-external-hub.js",
-    "build:ha-addon": "EXPO_PUBLIC_WEB_BASE_PATH=/api/hassio_ingress/camstack npm run build:web && node scripts/copy-dist-to-ha-addon.js",
+    "build:ha-addon": "EXPO_PUBLIC_WEB_BASE_PATH=/api/hassio_ingress/dominevo npm run build:web && node scripts/copy-dist-to-ha-addon.js",
     "build:orchestrator": "EXPO_PUBLIC_WEB_BASE_PATH=/viewer npm run build:web && node scripts/copy-dist-to-orchestrator.js",
     "build:web:all-targets": "npm run build:web:embedded && npm run build:ha-addon",
     "regen:icons": "node scripts/regen-icons.js",
@@ -85,8 +85,8 @@
     "@trpc/react-query": "^11.18.0",
     "@trpc/server": "^11.18.0",
     "buffer": "^6.0.3",
-    "camstack-device-key": "file:./modules/camstack-device-key",
-    "camstack-webrtc-audio": "file:./modules/camstack-webrtc-audio",
+    "dominevo-device-key": "file:./modules/dominevo-device-key",
+    "dominevo-webrtc-audio": "file:./modules/dominevo-webrtc-audio",
     "date-fns": "^4.4.0",
     "events": "^3.3.0",
     "expo": "~58.1.0",

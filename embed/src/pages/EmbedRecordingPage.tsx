@@ -1,15 +1,15 @@
 /**
  * EmbedRecordingPage — chrome-less recorded-footage HLS VOD player.
  *
- * Served with the Viewer at `/viewer/camstack/embed/index.html?mode=recording`
+ * Served with the Viewer at `/viewer/dominevo/embed/index.html?mode=recording`
  * (see EmbedApp), loaded inside the native WKWebView. The native app draws the
- * timeline/chrome and drives this page via `window.__camstackRecording`; the page
+ * timeline/chrome and drives this page via `window.__dominevoRecording`; the page
  * is purely the recorded-video surface (mirrors EmbedPlayerPage for live).
  *
  * Contract:
- *   IN  (set before load):  window.__CAMSTACK_RECORDING__ = { serverUrl, token, deviceId, startMs? }
+ *   IN  (set before load):  window.__DOMINEVO_RECORDING__ = { serverUrl, token, deviceId, startMs? }
  *   OUT (postMessage):      { type:'state', state, message? } / { type:'position', positionMs }
- *   IN  (once mounted):     window.__camstackRecording = { seekTo, play, pause, setRate, fit }
+ *   IN  (once mounted):     window.__dominevoRecording = { seekTo, play, pause, setRate, fit }
  *
  * Each seekTo(epochMs) fetches a fresh HLS master for [epochMs, epochMs+WINDOW_MS]
  * via recording.getPlayback (the `hls` arm) and plays from the window start.
@@ -51,8 +51,8 @@ declare global {
     getStartDate?(): Date
   }
   interface Window {
-    __CAMSTACK_RECORDING__?: unknown
-    __camstackRecording?: {
+    __DOMINEVO_RECORDING__?: unknown
+    __dominevoRecording?: {
       seekTo: (epochMs: number) => void
       play: () => void
       pause: () => void
@@ -222,7 +222,7 @@ function RecordingPlayer({ system, config }: PlayerProps) {
       })
       post({ type: 'state', state: 'error', message: SCRUB_UNAVAILABLE })
     }
-    window.__camstackRecording = {
+    window.__dominevoRecording = {
       seekTo: (epochMs) => {
         dbg('cmd', 'seekTo', { epochMs })
         void loadAt(epochMs)
@@ -258,17 +258,17 @@ function RecordingPlayer({ system, config }: PlayerProps) {
     }
     if (config.startMs && config.startMs > 0) void loadAt(config.startMs)
     return () => {
-      if (window.__camstackRecording) delete window.__camstackRecording
+      if (window.__dominevoRecording) delete window.__dominevoRecording
     }
   }, [loadAt, config.startMs, config.deviceId, fitBox])
 
   // Web (iframe) command channel: route `embed-command` messages to the SAME
-  // window.__camstackRecording handlers the native host drives via injected JS.
+  // window.__dominevoRecording handlers the native host drives via injected JS.
   // Dormant on native (no embed-command messages are posted there).
   useEffect(
     () =>
       onHostCommand((command) => {
-        const api = window.__camstackRecording
+        const api = window.__dominevoRecording
         if (!api) return
         const kind = command.kind as string
         switch (kind) {
@@ -367,7 +367,7 @@ export function EmbedRecordingPage() {
   // the `embed-ready`→`embed-config` handshake (null while in flight).
   const result = useEmbedConfig(
     'recording',
-    () => (window as unknown as { __CAMSTACK_RECORDING__?: unknown }).__CAMSTACK_RECORDING__,
+    () => (window as unknown as { __DOMINEVO_RECORDING__?: unknown }).__DOMINEVO_RECORDING__,
     parseRecordingConfig,
   )
   const built = useMemo(() => {
@@ -377,7 +377,7 @@ export function EmbedRecordingPage() {
     // header). Mirror the injected token into the hub session cookie so the
     // `authenticated` recorder playback data-plane lets them through. WKWebView
     // shares this JS-set cookie with its network stack for same-origin requests.
-    document.cookie = `camstack_session=${result.config.token}; path=/; SameSite=Lax`
+    document.cookie = `dominevo_session=${result.config.token}; path=/; SameSite=Lax`
     return createSystem({
       serverUrl: result.config.serverUrl,
       token: result.config.token,

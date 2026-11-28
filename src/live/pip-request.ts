@@ -158,8 +158,8 @@ export interface PipModeReport {
 export const PIP_MODE_WATCH_SCRIPT: string =
   `(function(){` +
   `var v=document.querySelector('video');` +
-  `if(!v||v.__camstackPipWatch){return;}` +
-  `v.__camstackPipWatch=1;` +
+  `if(!v||v.__dominevoPipWatch){return;}` +
+  `v.__dominevoPipWatch=1;` +
   `var post=function(mode){` +
   `window.ReactNativeWebView&&window.ReactNativeWebView.postMessage(` +
   `JSON.stringify({type:'pipmode',mode:String(mode)}));};` +

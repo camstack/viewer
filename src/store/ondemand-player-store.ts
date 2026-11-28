@@ -52,7 +52,7 @@ import {
 } from '../live/ondemand-geometry.js'
 import { resolveOnDemandOnFocus, type OnDemandRequest } from '../live/ondemand-player.js'
 
-const STORAGE_KEY = 'camstack.v2.ondemand-player'
+const STORAGE_KEY = 'dominevo.v2.ondemand-player'
 
 /** The persisted half: the operator's box. Both fields ABSENT ⇒ the default. */
 export interface OnDemandBoxPrefs {

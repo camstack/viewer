@@ -1,7 +1,7 @@
 /**
  * clip-offer-intent — mark the FIRST WebRTC offer of a page opened on a clip.
  *
- * With `intent: 'clip'` the hub serves a CamStack-recorded clip without
+ * With `intent: 'clip'` the hub serves a Dominevo-recorded clip without
  * demanding live from the camera, so a sleeping battery camera's clips play.
  * The server then asks for a re-offer when the viewer goes live, and that
  * re-offer must be a plain live offer: the intent rides the first offer only,

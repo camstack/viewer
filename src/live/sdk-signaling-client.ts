@@ -1,5 +1,5 @@
 /**
- * sdk-signaling-client — adapts the camstack SDK `System` to the orchestrator's
+ * sdk-signaling-client — adapts the dominevo SDK `System` to the orchestrator's
  * transport-agnostic `SignalingClient` seam.
  *
  * Delegates to the device-scoped `webrtcSession` cap (client-offer flow) and the

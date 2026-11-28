@@ -6,7 +6,7 @@
  * operator picks the other:
  *
  *  - the **source id** is what a `listSources` row calls itself and what
- *    `CameraPref.recordingProvider` stores (`camstack`, `native:reolink:card`);
+ *    `CameraPref.recordingProvider` stores (`dominevo`, `native:reolink:card`);
  *  - the **addonId** is what every `recording` method's `provider` field takes
  *    — the cap says so by name: *"the `addonId` a RecordingSourceSchema row
  *    carries, never a source id and never a list"*.
@@ -17,7 +17,7 @@
  *
  * ## The default costs no round trip
  *
- * `camstack` is a RESERVED id (D625): only the `recorder` addon may mint it,
+ * `dominevo` is a RESERVED id (D625): only the `recorder` addon may mint it,
  * enforced in `device-collection-dispatch.ts` and in CI. That is what lets
  * absence MEAN ours without first asking `listSources` — a timeline paints on
  * mount, and a default that had to wait for a list would be a blank bar on
@@ -35,7 +35,7 @@
 import { isRecord } from './cap-query.js'
 
 /**
- * The source id CamStack's own recorder serves. RESERVED — no other addon may
+ * The source id Dominevo's own recorder serves. RESERVED — no other addon may
  * spell it (`packages/types/src/capabilities/reserved-collection-sources.ts`).
  *
  * Spelled here rather than imported from `@dominevo/types` on purpose: this
@@ -44,10 +44,10 @@ import { isRecord } from './cap-query.js'
  * type-check green against a tsconfig nobody ships with and throw on first
  * evaluation. The server-side guard is what keeps the two spellings honest.
  */
-export const RECORDING_SOURCE_CAMSTACK = 'camstack'
+export const RECORDING_SOURCE_DOMINEVO = 'dominevo'
 
-/** The one addon allowed to serve {@link RECORDING_SOURCE_CAMSTACK}. */
-export const RECORDING_SOURCE_CAMSTACK_ADDON = 'recorder'
+/** The one addon allowed to serve {@link RECORDING_SOURCE_DOMINEVO}. */
+export const RECORDING_SOURCE_DOMINEVO_ADDON = 'recorder'
 
 /** One row of `recording.listSources`, parsed structurally. */
 export interface RecordingSourceRow {
@@ -81,8 +81,8 @@ export interface RecordingProviderChoice {
 
 /** The default choice: ours, resolved without a list. */
 export const RECORDING_PROVIDER_DEFAULT: RecordingProviderChoice = Object.freeze({
-  sourceId: RECORDING_SOURCE_CAMSTACK,
-  addonId: RECORDING_SOURCE_CAMSTACK_ADDON,
+  sourceId: RECORDING_SOURCE_DOMINEVO,
+  addonId: RECORDING_SOURCE_DOMINEVO_ADDON,
   derivation: 'default',
 }) as RecordingProviderChoice
 
@@ -92,7 +92,7 @@ export const RECORDING_PROVIDER_DEFAULT: RecordingProviderChoice = Object.freeze
  * The wire field is **`source`**, not `sourceId` — `RecordingSourceSchema`
  * spells it that way and so does `videoclips.listSources`, which
  * `parseClipSources` has always read correctly. Measured on the live hub:
- * `{ source: 'camstack', label: 'CamStack recordings', addonId: 'recorder' }`.
+ * `{ source: 'dominevo', label: 'Dominevo recordings', addonId: 'recorder' }`.
  *
  * A row this build cannot read is dropped rather than guessed at — an unusable
  * row is not a source. A row with no `addonId` is dropped for the reason the
@@ -135,7 +135,7 @@ export function resolveRecordingProvider(
   // No pick, or the reserved id spelled out: ours, and no list is consulted.
   // Deliberately BEFORE the list lookup — our row must resolve identically on
   // a camera whose `listSources` is slow, failing, or absent entirely.
-  if (chosen === undefined || chosen === RECORDING_SOURCE_CAMSTACK) {
+  if (chosen === undefined || chosen === RECORDING_SOURCE_DOMINEVO) {
     return RECORDING_PROVIDER_DEFAULT
   }
   if (!sourcesKnown) return { sourceId: chosen, addonId: null, derivation: 'pending' }
@@ -164,10 +164,10 @@ export function recordingSourcePickerOptions(
   ourLabel: string,
 ): readonly RecordingSourcePickerOption[] {
   const out: RecordingSourcePickerOption[] = [
-    { value: RECORDING_SOURCE_CAMSTACK, label: ourLabel },
+    { value: RECORDING_SOURCE_DOMINEVO, label: ourLabel },
   ]
   for (const row of sources) {
-    if (row.sourceId === RECORDING_SOURCE_CAMSTACK) continue
+    if (row.sourceId === RECORDING_SOURCE_DOMINEVO) continue
     out.push({ value: row.sourceId, label: row.label ?? row.sourceId })
   }
   return out

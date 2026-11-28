@@ -11,7 +11,7 @@
  * directly — consumers import `LiveView` unchanged.
  *
  * The embed page implements a fixed contract (see EMBED_PATH + the injected
- * `window.__CAMSTACK_EMBED__` config and the `onMessage` state protocol below).
+ * `window.__DOMINEVO_EMBED__` config and the `onMessage` state protocol below).
  *
  * TLS caveat: WKWebView enforces ATS and rejects untrusted (self-signed / local)
  * certificates. If `serverUrl` is plain `http://` the page loads fine; with
@@ -188,7 +188,7 @@ function parseRecState(raw: string): PlaybackMode | null {
 function buildBeforeContentScript(config: EmbedConfig): string {
   // JSON.stringify is safe to inline: it emits a valid JS object literal and
   // escapes any string content (token/serverUrl) inside the injected source.
-  return `window.__CAMSTACK_EMBED__ = ${JSON.stringify(config)}; true;`
+  return `window.__DOMINEVO_EMBED__ = ${JSON.stringify(config)}; true;`
 }
 
 export const LiveViewWebView = forwardRef<LiveViewHandle, LiveViewProps>(function LiveViewWebView(
@@ -304,11 +304,11 @@ const FIT_MAX_TRIES = 30
  * which happened.
  *
  * The retry lives IN the page rather than in the host because only the page can
- * see `window.__camstackEmbed` appear, and a host-side poll would have to
+ * see `window.__dominevoEmbed` appear, and a host-side poll would have to
  * re-inject — one script per attempt — for the same answer.
  */
 function fitScript(w: number, h: number): string {
-  return `(function(){var t=0;function go(){var a=window.__camstackEmbed;
+  return `(function(){var t=0;function go(){var a=window.__dominevoEmbed;
 if(a&&a.fit){a.fit(${w},${h});post({type:'fit-ack',w:${w},h:${h},tries:t});return;}
 if(++t>${FIT_MAX_TRIES}){post({type:'fit-unconfirmed',w:${w},h:${h},tries:t});return;}
 setTimeout(go,${FIT_RETRY_MS});}
@@ -328,7 +328,7 @@ go();})(); true;`
     // lifts the bare <video> to a max z-index (that occluded the embed's own
     // overlays: stats / highlight border).
     //
-    // It used to be one line: `window.__camstackEmbed && …fit(w,h)`. When the
+    // It used to be one line: `window.__dominevoEmbed && …fit(w,h)`. When the
     // page's API was not installed YET — an ordinary race on a slow device, and
     // this runs on `onLoadEnd` — the expression was simply false, nothing
     // happened, and nobody found out: `adoptFrame` dedupes on (w,h), so the box
@@ -520,7 +520,7 @@ go();})(); true;`
     : undefined
 
   // Route a recorded-playback command to the embed's control channel by injecting
-  // the guarded script (no-op until the page mounts `window.__camstackEmbed`).
+  // the guarded script (no-op until the page mounts `window.__dominevoEmbed`).
   const inject = useCallback((cmd: PlaybackCommand): void => {
     webViewRef.current?.injectJavaScript(playbackCommandToScript(cmd))
   }, [])
@@ -737,7 +737,7 @@ go();})(); true;`
   const reconnect = useCallback((): void => {
     log.debug('live:reconnect', 'inject reconnect()')
     webViewRef.current?.injectJavaScript(
-      `window.__camstackEmbed && window.__camstackEmbed.reconnect && window.__camstackEmbed.reconnect(); true;`,
+      `window.__dominevoEmbed && window.__dominevoEmbed.reconnect && window.__dominevoEmbed.reconnect(); true;`,
     )
   }, [])
 
@@ -801,7 +801,7 @@ go();})(); true;`
     if (pushedTokenRef.current === token) return
     pushedTokenRef.current = token
     webViewRef.current?.injectJavaScript(
-      `window.__camstackEmbedPage&&window.__camstackEmbedPage.setToken&&window.__camstackEmbedPage.setToken(${JSON.stringify(token)}); true;`,
+      `window.__dominevoEmbedPage&&window.__dominevoEmbedPage.setToken&&window.__dominevoEmbedPage.setToken(${JSON.stringify(token)}); true;`,
     )
   }, [token])
 
@@ -811,7 +811,7 @@ go();})(); true;`
   //    (on unmute it also re-issues play() — WebKit may have started the stream
   //    muted under its autoplay policy, and play() right after clearing muted is
   //    the best chance to get audio without an in-webview user gesture);
-  //  - `__camstackEmbed.setMuted` hands the value to the embed page's own muted
+  //  - `__dominevoEmbed.setMuted` hands the value to the embed page's own muted
   //    state — the single embed-side OWNER of mute. That state renders any
   //    REPLACEMENT <video> muted and arms the embed's 1 s re-mute enforcer;
   //    recorded audio rides that same WebRTC element.
@@ -824,7 +824,7 @@ go();})(); true;`
     webViewRef.current?.injectJavaScript(
       `(function(){var v=document.querySelector('video');if(v){v.muted=${m};v.defaultMuted=${m};` +
         `if(!${m}){v.volume=1;try{var p=v.play&&v.play();if(p&&p.catch)p.catch(function(){});}catch(e){}}}` +
-        `window.__camstackEmbed&&window.__camstackEmbed.setMuted&&window.__camstackEmbed.setMuted(${m});})(); true;`,
+        `window.__dominevoEmbed&&window.__dominevoEmbed.setMuted&&window.__dominevoEmbed.setMuted(${m});})(); true;`,
     )
   }, [muted, target, state])
 
@@ -849,14 +849,14 @@ go();})(); true;`
   // React to `target` changes without reloading the page.
   useEffect(() => {
     webViewRef.current?.injectJavaScript(
-      `window.__camstackEmbed && window.__camstackEmbed.setTarget(${JSON.stringify(target)}); true;`,
+      `window.__dominevoEmbed && window.__dominevoEmbed.setTarget(${JSON.stringify(target)}); true;`,
     )
   }, [target])
 
   // Toggle the embed's client-side stats overlay (option A).
   useEffect(() => {
     webViewRef.current?.injectJavaScript(
-      `window.__camstackEmbed && window.__camstackEmbed.setStats && window.__camstackEmbed.setStats(${showStats ? 'true' : 'false'}); true;`,
+      `window.__dominevoEmbed && window.__dominevoEmbed.setStats && window.__dominevoEmbed.setStats(${showStats ? 'true' : 'false'}); true;`,
     )
   }, [showStats])
 
@@ -875,7 +875,7 @@ go();})(); true;`
   useEffect(() => {
     if (!snapshot) return
     webViewRef.current?.injectJavaScript(
-      `window.__camstackEmbed && window.__camstackEmbed.setSnapshot && window.__camstackEmbed.setSnapshot(${JSON.stringify(snapshot)}); true;`,
+      `window.__dominevoEmbed && window.__dominevoEmbed.setSnapshot && window.__dominevoEmbed.setSnapshot(${JSON.stringify(snapshot)}); true;`,
     )
   }, [snapshot])
 
@@ -884,7 +884,7 @@ go();})(); true;`
   useEffect(() => {
     if (highlight) {
       webViewRef.current?.injectJavaScript(
-        `window.__camstackEmbed && window.__camstackEmbed.setHighlight && window.__camstackEmbed.setHighlight(${JSON.stringify(highlight)}); true;`,
+        `window.__dominevoEmbed && window.__dominevoEmbed.setHighlight && window.__dominevoEmbed.setHighlight(${JSON.stringify(highlight)}); true;`,
       )
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

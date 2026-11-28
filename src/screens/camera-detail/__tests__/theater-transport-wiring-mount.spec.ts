@@ -106,7 +106,7 @@ interface PlayerCall {
   readonly args: readonly unknown[]
 }
 
-const EMBED_CALL = /^try\{window\.__camstackEmbed\.(\w+)\((.*)\)\}catch\(e\)\{\}; true;$/
+const EMBED_CALL = /^try\{window\.__dominevoEmbed\.(\w+)\((.*)\)\}catch\(e\)\{\}; true;$/
 
 function playerCallsSince(from: number): readonly PlayerCall[] {
   return injectedWebViewScripts()

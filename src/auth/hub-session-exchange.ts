@@ -2,7 +2,7 @@
  * Web same-origin hub session reuse (Phase 1 of viewer auth forwarding).
  *
  * When the viewer WEB build is served BY the hub (mounted under
- * `/viewer/camstack/`, same origin as the admin-ui) and no server is
+ * `/viewer/dominevo/`, same origin as the admin-ui) and no server is
  * configured yet, the boot gate calls the hub's PUBLIC
  * `auth.exchangeSession` mutation with the browser's httpOnly session
  * cookie (`credentials: 'include'` + the CSRF header). A logged-in
@@ -16,10 +16,10 @@
 import { postHubAuthMutation, type FetchLike, type HubAuthOutcome } from './hub-auth-wire.js'
 
 /** Must match the server's EXCHANGE_SESSION_HEADER (auth.router.ts). */
-export const EXCHANGE_SESSION_HEADER = 'x-camstack-exchange'
+export const EXCHANGE_SESSION_HEADER = 'x-dominevo-exchange'
 
 /** Fallback prefix when the build-time base path is unavailable — the hub
- *  mounts the viewer under `/viewer/camstack/` (EXPO_PUBLIC_WEB_BASE_PATH=/viewer). */
+ *  mounts the viewer under `/viewer/dominevo/` (EXPO_PUBLIC_WEB_BASE_PATH=/viewer). */
 const HUB_VIEWER_PATH_PREFIX = '/viewer/'
 
 export interface HubWebBootEnv {
@@ -62,7 +62,7 @@ export function shouldAttemptHubSessionExchange(env: HubWebBootEnv): boolean {
  * login. A browser tab shares its cookie jar with the admin-ui, so the bounce
  * returns authenticated. An installed iOS web app has its OWN jar: its first
  * launch is always unauthenticated, and `/login` lies outside the manifest
- * scope (`/viewer/camstack/`), so iOS opened it in the in-app browser sheet —
+ * scope (`/viewer/dominevo/`), so iOS opened it in the in-app browser sheet —
  * whose cookies are Safari's, not the app's. The login could not provision
  * the PWA, the redirect back loaded a second viewer inside the sheet, and the
  * app itself came back flagged `bounced` and showed the manual login it should
@@ -74,7 +74,7 @@ export function shouldBounceToHubLogin(env: HubBounceEnv): boolean {
 
 /**
  * Call `auth.exchangeSession` against the serving origin. The browser
- * attaches the httpOnly `camstack_session` cookie; the custom header is
+ * attaches the httpOnly `dominevo_session` cookie; the custom header is
  * the CSRF gate the server requires alongside it. Asks for a refreshing
  * session (D812); an older hub strips the flag.
  */

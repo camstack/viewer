@@ -2,7 +2,7 @@
  * embed-url-config — the THIRD grid-config source: a standalone share URL.
  *
  * A shared grid link opened directly in a browser tab is a top-level window
- * with no host — no injected `window.__CAMSTACK_GRID__` and no parent frame to
+ * with no host — no injected `window.__DOMINEVO_GRID__` and no parent frame to
  * run the `embed-ready` handshake. This module turns the URL itself (v1 schema
  * in `share-url.ts` + `#t=<token>` fragment) into the SAME `GridConfig` shape a
  * host would inject, so `EmbedGridPage` renders the frozen shared view.

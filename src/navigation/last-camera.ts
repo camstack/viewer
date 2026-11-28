@@ -33,7 +33,7 @@
  */
 
 /** AsyncStorage key for the remembered camera. */
-export const LAST_CAMERA_STORAGE_KEY = '@camstack/v2/last-camera'
+export const LAST_CAMERA_STORAGE_KEY = '@dominevo/v2/last-camera'
 
 /** What a navigation does to the remembered camera. */
 export type LastCameraEffect =

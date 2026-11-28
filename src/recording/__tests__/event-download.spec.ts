@@ -108,7 +108,7 @@ describe('pickEventStills', () => {
 
 describe('eventStillFilename', () => {
   it('names the owner and the kind', () => {
-    expect(eventStillFilename({ trackId: 'T_1/x', bestEventId: 'e1' }, 'keyframe')).toBe('camstack-t-1-x-keyframe')
-    expect(eventStillFilename({ trackId: null, bestEventId: 'E1' }, 'snapshot')).toBe('camstack-e1-snapshot')
+    expect(eventStillFilename({ trackId: 'T_1/x', bestEventId: 'e1' }, 'keyframe')).toBe('dominevo-t-1-x-keyframe')
+    expect(eventStillFilename({ trackId: null, bestEventId: 'E1' }, 'snapshot')).toBe('dominevo-e1-snapshot')
   })
 })

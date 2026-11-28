@@ -3,10 +3,10 @@
  * EmbedApp — the single entry for the stream-broker embed bundle.
  *
  * One html entry, no router: dispatch on the `?mode=` query param.
- *   ?mode=grid   (default) → EmbedGridPage     (reads window.__CAMSTACK_GRID__)
- *   ?mode=player           → EmbedPlayerPage    (reads window.__CAMSTACK_EMBED__)
- *   ?mode=recording        → EmbedRecordingPage (reads window.__CAMSTACK_RECORDING__)
- *   ?mode=events           → EmbedEventsPage    (reads window.__CAMSTACK_EVENTS__,
+ *   ?mode=grid   (default) → EmbedGridPage     (reads window.__DOMINEVO_GRID__)
+ *   ?mode=player           → EmbedPlayerPage    (reads window.__DOMINEVO_EMBED__)
+ *   ?mode=recording        → EmbedRecordingPage (reads window.__DOMINEVO_RECORDING__)
+ *   ?mode=events           → EmbedEventsPage    (reads window.__DOMINEVO_EVENTS__,
  *                                                or the v1 query params + `#t=`)
  *   ?mode=track            → EmbedTrackPage     (one track; events config + `id`/`device`)
  *
@@ -21,7 +21,7 @@ import { EmbedTrackPage } from './pages/EmbedTrackPage'
 
 export function EmbedApp() {
   const mode =
-    (window as Window & { __CAMSTACK_EMBED_MODE__?: string }).__CAMSTACK_EMBED_MODE__ ??
+    (window as Window & { __DOMINEVO_EMBED_MODE__?: string }).__DOMINEVO_EMBED_MODE__ ??
     new URLSearchParams(location.search).get('mode') ??
     // The FRAGMENT, for the bundled copy. A native host cannot put the mode in
     // the query: the WebView loads that file through `loadFileURL:`, and a file

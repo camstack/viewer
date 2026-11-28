@@ -48,8 +48,8 @@ describe('the clip read is ONE hook over ONE provider', () => {
     expect(src).not.toContain('native:reolink')
   })
 
-  it('does not ask the cap at all while CamStack is the source', () => {
-    // The derived list is the CamStack answer and stays the CamStack answer.
+  it('does not ask the cap at all while Dominevo is the source', () => {
+    // The derived list is the Dominevo answer and stays the Dominevo answer.
     // Routing our own recordings through `listClips` is the second clusterer
     // whose deletion this app already paid for.
     expect(code(HOOK)).toContain("choice.derivation === 'cap'")

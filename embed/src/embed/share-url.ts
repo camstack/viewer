@@ -3,7 +3,7 @@
  * encode/decode for the STANDALONE share link of the grid embed.
  *
  * A share link is:
- *   <serverUrl>/viewer/camstack/embed/index.html?mode=grid&v=1&devices=1,5,9
+ *   <serverUrl>/viewer/dominevo/embed/index.html?mode=grid&v=1&devices=1,5,9
  *     &layout=auto&q=auto&names=0[&audio=1,5][&activeOnly=1][&boxes=1]
  *     [&hl=<base64url JSON>]
  *   #t=<share token — a minted token whose only scope is a share-view grant>

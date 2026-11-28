@@ -187,7 +187,7 @@ describe('clips mode derives its cards from the timeline clusters', () => {
     // TOGETHER — and the operator settled that himself: *"La sorgente deve
     // essere selezionata … come provider di quella camera. Mai mischiate
     // provider diversi."* One camera has one source, picked in its settings.
-    // When it is CamStack the cards are `deriveClipsFromClusters` and the cap
+    // When it is Dominevo the cards are `deriveClipsFromClusters` and the cap
     // is not read at all; when it is the camera's own storage the cards are
     // that source's files and the derived list is not built. A camera whose
     // clips live on its SD card cannot be served by a derivation over footage

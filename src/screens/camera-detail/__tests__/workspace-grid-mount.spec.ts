@@ -125,7 +125,7 @@ function webViews(root: HTMLElement): readonly Element[] {
  *  operator actually got. Filtered on the grid marker: the single picture's
  *  player boots a config of its own on the same channel. */
 function bootedWallDevices(): readonly string[] {
-  return bootedWebViewConfigs().filter((c) => c.includes('__CAMSTACK_GRID__'))
+  return bootedWebViewConfigs().filter((c) => c.includes('__DOMINEVO_GRID__'))
 }
 
 function shelfVariant(root: HTMLElement): 'rows' | 'strip' | null {

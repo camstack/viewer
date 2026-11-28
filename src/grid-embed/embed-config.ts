@@ -1,5 +1,5 @@
 /**
- * Builder for the grid-embed page config injected as `window.__CAMSTACK_GRID__`.
+ * Builder for the grid-embed page config injected as `window.__DOMINEVO_GRID__`.
  *
  * The shape MUST match the server's `embed-grid-config` zod schema (hosted by the
  * stream-broker addon): `{ serverUrl, token, devices, layout, quality, showName,
@@ -109,7 +109,7 @@ export function buildTileOverlayMap(
   return map
 }
 
-/** The validated config the embed page reads from `window.__CAMSTACK_GRID__`. */
+/** The validated config the embed page reads from `window.__DOMINEVO_GRID__`. */
 export interface GridEmbedConfig {
   readonly serverUrl: string
   readonly token: string

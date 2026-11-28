@@ -3,7 +3,7 @@
  *
  * The v1 param set (all optional except the `v=1` gate):
  *
- *   /viewer/camstack/embed/index.html?mode=events&v=1
+ *   /viewer/dominevo/embed/index.html?mode=events&v=1
  *     &view=reel|gallery &rows=<1..6> &cols=auto|<1..12> &thumb=small|medium|large
  *     &devices=1,5,9 &classes=person,vehicle &attrs=face,plate &q=<text>
  *     &fields=label,sublabel,camera,time,badges,importance
@@ -20,7 +20,7 @@
  *    or a transport that authenticates for the page (see `transport-auth.ts`).
  *    `serverUrl` is the PREFIX the document itself was served under, not
  *    `location.origin`: behind Home Assistant's relay the bundle lives at
- *    `<ha>/api/camstack/p/<grant>/viewer/…`, and an origin-only base sends
+ *    `<ha>/api/dominevo/p/<grant>/viewer/…`, and an origin-only base sends
  *    `/trpc` to Home Assistant, which knows nothing about it. This is the
  *    standalone / share-link / relayed-card case.
  *  - {@link parseEventsUrlPatch} — layout only, no credentials. A web host can

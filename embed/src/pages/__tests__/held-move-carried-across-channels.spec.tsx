@@ -155,8 +155,8 @@ function newChannel(): FakeChannel {
   return ch
 }
 
-function host(): NonNullable<typeof window.__camstackEmbed> {
-  const api = window.__camstackEmbed
+function host(): NonNullable<typeof window.__dominevoEmbed> {
+  const api = window.__dominevoEmbed
   if (api === undefined) throw new Error('the page did not expose its host API')
   return api
 }

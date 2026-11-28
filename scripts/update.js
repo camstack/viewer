@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * CamStack OTA update: version bump + eas update + git push
+ * Dominevo OTA update: version bump + eas update + git push
  * Usage: node scripts/update.js [patch|minor|major]
  * Default: patch
  * Uses APP_VARIANT=production for the update channel.
@@ -180,7 +180,7 @@ async function main() {
       "package.json",
       "app.config.ts",
       "package-lock.json",
-      "assets/embed/camstack-embed.html",
+      "assets/embed/dominevo-embed.html",
       "public/embed",
     ]);
     await run("git", ["commit", "-m", `chore: bump version to v${newVersion} (OTA update)`], { shell: false });

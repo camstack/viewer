@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { bundledCamstack, paintHex } from '@dominevo/types/client'
+import { bundledDominevo, paintHex } from '@dominevo/types/client'
 import {
   audioScaleColors,
   failureReason,
@@ -9,7 +9,7 @@ import {
 
 describe('resolvePalettePaint', () => {
   it('keeps a ready hub swatch, and folds audio leaves onto the audio entry', () => {
-    const base = bundledCamstack()
+    const base = bundledDominevo()
     const person = base.swatches.person
     if (person === undefined || person.form !== 'solid') throw new Error('bundled person swatch missing')
     const raw = { ...base, swatches: { ...base.swatches, person: { ...person, hex: '#112233' } } }
@@ -21,7 +21,7 @@ describe('resolvePalettePaint', () => {
   })
 
   it('paints the bundled preset when the hub answers unknown, and keeps the reason', () => {
-    const bundled = bundledCamstack()
+    const bundled = bundledDominevo()
     const view = resolvePalettePaint({ status: 'unknown', reason: 'no-provider' })
     expect(view.origin).toBe('unknown')
     expect(view.reason).toBe('no-provider')
@@ -37,7 +37,7 @@ describe('resolvePalettePaint', () => {
 
 describe('audioScaleColors', () => {
   it('is six rising alphas on the audio hex', () => {
-    const view = resolvePalettePaint(bundledCamstack())
+    const view = resolvePalettePaint(bundledDominevo())
     const scale = audioScaleColors(view)
     expect(scale).toHaveLength(6)
     const hex = paintKind(view, 'audio')

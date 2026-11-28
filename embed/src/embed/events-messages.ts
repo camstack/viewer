@@ -27,7 +27,7 @@
  *
  * ── host → embed ─────────────────────────────────────────────────────────────
  * Web: `parent.postMessage({ type:'embed-command', command }, '*')`.
- * Native: call `window.__camstackEvents.<fn>(…)` from injected JS.
+ * Native: call `window.__dominevoEvents.<fn>(…)` from injected JS.
  *   { type:'setConfig', patch }   patch = EventsConfigPatch (validated)
  *   { type:'setWindow', sinceMs?, untilMs? }   day navigation; null CLEARS
  *   { type:'refresh' }            force an immediate DELTA refresh

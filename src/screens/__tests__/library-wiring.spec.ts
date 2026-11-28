@@ -422,9 +422,9 @@ describe('ArtifactsScreen is embeddable', () => {
   })
 })
 
-// Cross-REPO parity guard: it reads the admin-ui of camstack-server, which
+// Cross-REPO parity guard: it reads the admin-ui of dominevo-server, which
 // exists only in the nested working layout (this repo checked out inside
-// camstack-server). Standalone CI has no ../packages — the guard would fail on
+// dominevo-server). Standalone CI has no ../packages — the guard would fail on
 // ENOENT there, which says nothing about the wording it pins. skipIf keeps it
 // honest: enforced wherever the sibling exists, skipped where it cannot run.
 //

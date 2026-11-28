@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { THEME } from '../tokens.js'
 
-describe('camstack theme tokens', () => {
-  it('exposes dark and light modes with the camstack Warm Amber/Stone palette', () => {
+describe('dominevo theme tokens', () => {
+  it('exposes dark and light modes with the dominevo Warm Amber/Stone palette', () => {
     expect(THEME.dark.background).toBe('#0c0a09')
     expect(THEME.dark.primary).toBe('#f59e42')
     expect(THEME.light.background).toBe('#fafaf9')

@@ -83,7 +83,7 @@ describe('SnapshotBroker', () => {
 
 describe('the command reaches the page on both transports', () => {
   it('injects the embed call on native and posts the message on the web', () => {
-    expect(playbackCommandToScript({ kind: 'snapshot', id: 's9' })).toContain('window.__camstackEmbed.snapshot("s9")')
+    expect(playbackCommandToScript({ kind: 'snapshot', id: 's9' })).toContain('window.__dominevoEmbed.snapshot("s9")')
     expect(playbackCommandToMessage({ kind: 'snapshot', id: 's9' })).toEqual({ kind: 'snapshot', id: 's9' })
   })
 

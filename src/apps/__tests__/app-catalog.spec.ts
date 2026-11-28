@@ -100,8 +100,8 @@ describe('the app the shell hosts itself', () => {
     expect(isHostedEntry({ kind: 'native', route: '/cameras' })).toBe(true)
   })
   it('a web entry at the viewer mount is the shell too', () => {
-    expect(isHostedEntry({ kind: 'web', path: '/viewer/camstack/', auth: 'session-cookie' })).toBe(true)
-    expect(isHostedEntry({ kind: 'web', path: '/viewer/camstack', auth: 'session-cookie' })).toBe(true)
+    expect(isHostedEntry({ kind: 'web', path: '/viewer/dominevo/', auth: 'session-cookie' })).toBe(true)
+    expect(isHostedEntry({ kind: 'web', path: '/viewer/dominevo', auth: 'session-cookie' })).toBe(true)
   })
   it('any other entry is an embedded app', () => {
     expect(isHostedEntry({ kind: 'web', path: '/', auth: 'handoff' })).toBe(false)

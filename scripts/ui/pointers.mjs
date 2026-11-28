@@ -15,13 +15,13 @@ export const BLOCK_END = '<!-- camstack-ui-pointer:end -->'
 export const MDC_PATH = '.cursor/rules/camstack-ui-viewer.mdc'
 export const AGENTS_PATH = 'AGENTS.md'
 
-const SERVER = 'https://github.com/camstack/server/blob/main'
+const SERVER = 'https://github.com/dominevo/server/blob/main'
 
 export const VIEWER_UI_GLOBS = ['src/**', 'app/**', 'embed/src/**', 'locales/**']
 
 export function pointerLines() {
   return [
-    `**UI work here** (a screen, sheet, row, the embed player): follow the \`camstack-ui\` then \`camstack-ui-viewer\` skills. They live in the server repository — \`../.claude/skills/camstack-ui/SKILL.md\` and \`../.claude/skills/camstack-ui-viewer/SKILL.md\` when this repo is its \`camstack/\` submodule, else ${SERVER}/.claude/skills/camstack-ui-viewer/SKILL.md — with the rules in \`docs/ui/viewer.md\` there.`,
+    `**UI work here** (a screen, sheet, row, the embed player): follow the \`camstack-ui\` then \`camstack-ui-viewer\` skills. They live in the server repository — \`../.claude/skills/camstack-ui/SKILL.md\` and \`../.claude/skills/camstack-ui-viewer/SKILL.md\` when this repo is its \`dominevo/\` submodule, else ${SERVER}/.claude/skills/camstack-ui-viewer/SKILL.md — with the rules in \`docs/ui/viewer.md\` there.`,
     '',
     '- **Layout changes are co-designed with the operator: ask before restructuring a screen.**',
     '- Search before building: `npm run ui:find -- "<need>"`, `npm run ui:show -- <Name>`, `npm run ui:tokens`.',
@@ -56,7 +56,7 @@ export function spliceBlock(text, block) {
 export function renderMdc() {
   return [
     '---',
-    'description: CamStack viewer UI rules — the kit, tokens.ts, SheetModal, i18n en+it; layout changes need the operator',
+    'description: Dominevo viewer UI rules — the kit, tokens.ts, SheetModal, i18n en+it; layout changes need the operator',
     `globs: ${VIEWER_UI_GLOBS.join(', ')}`,
     'alwaysApply: false',
     '---',

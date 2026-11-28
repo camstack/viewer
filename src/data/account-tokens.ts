@@ -306,7 +306,7 @@ export function mintInput(request: MintRequest): MintInput {
 export const TOKEN_PLACEHOLDER = '{TOKEN}'
 
 /** A stand-in with no characters a URL encoder would touch. */
-const SENTINEL = 'CAMSTACKTOKENPLACEHOLDER'
+const SENTINEL = 'DOMINEVOTOKENPLACEHOLDER'
 
 /**
  * A snippet built by `build(token)` with the placeholder where the token goes.

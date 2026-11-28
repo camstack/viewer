@@ -2,7 +2,7 @@
  * Fetch the hub display palette and publish it to {@link setPaletteView}.
  *
  * One query per server URL. A reconnect invalidates it. `unknown` and an
- * unreadable payload paint the bundled CamStack preset and keep the reason —
+ * unreadable payload paint the bundled Dominevo preset and keep the reason —
  * they never pretend the preset was what the hub stored. A read that never got
  * an answer (UNAUTHORIZED before the session exists, a transport failure)
  * throws out of the query: the view stays `pending`, nothing is announced, and

@@ -31,12 +31,12 @@ import { EmbedApp } from '../EmbedApp.js'
 
 afterEach(() => {
   cleanup()
-  delete (window as Window & { __CAMSTACK_EMBED_MODE__?: string }).__CAMSTACK_EMBED_MODE__
+  delete (window as Window & { __DOMINEVO_EMBED_MODE__?: string }).__DOMINEVO_EMBED_MODE__
   window.history.replaceState({}, '', '/')
 })
 
 beforeEach(() => {
-  delete (window as Window & { __CAMSTACK_EMBED_MODE__?: string }).__CAMSTACK_EMBED_MODE__
+  delete (window as Window & { __DOMINEVO_EMBED_MODE__?: string }).__DOMINEVO_EMBED_MODE__
   window.history.replaceState({}, '', '/')
 })
 
@@ -69,9 +69,9 @@ describe('EmbedApp mount harness', () => {
     expect(screen.getByTestId('page-events')).toBeTruthy()
   })
 
-  it('prefers the injected __CAMSTACK_EMBED_MODE__ over the URL', () => {
+  it('prefers the injected __DOMINEVO_EMBED_MODE__ over the URL', () => {
     window.history.replaceState({}, '', '/?mode=grid')
-    ;(window as Window & { __CAMSTACK_EMBED_MODE__?: string }).__CAMSTACK_EMBED_MODE__ = 'events'
+    ;(window as Window & { __DOMINEVO_EMBED_MODE__?: string }).__DOMINEVO_EMBED_MODE__ = 'events'
     render(createElement(EmbedApp))
     expect(screen.getByTestId('page-events')).toBeTruthy()
   })

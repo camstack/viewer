@@ -16,7 +16,7 @@ import { buildClipAxis } from '../clip-axis.js'
 
 /**
  * The wire, captured from the LIVE hub on 2026-09-20 — three nodes on
- * `@camstack/server@1.2.357`, `provider-reolink` and the recorder deployed.
+ * `@dominevo/server@1.2.357`, `provider-reolink` and the recorder deployed.
  *
  * Every honest-state spec on this surface has a way of passing while the wire
  * lies, because a hand-written fixture is written to the reading the author
@@ -44,7 +44,7 @@ describe('the live source lists parse, and neither camera is told it has nothing
     ])
   })
 
-  it('defaults both cameras to CamStack and the DERIVED list', () => {
+  it('defaults both cameras to Dominevo and the DERIVED list', () => {
     for (const raw of [SOURCES_592, SOURCES_3628]) {
       const choice = resolveClipProvider({ sources: parseClipSources(raw) })
       expect(choice.derivation).toBe('derived')

@@ -8,10 +8,10 @@ describe('resolveEmbedLocation — never frame the hub from another origin', () 
         serverUrl: 'https://hub.example.com',
         mode: 'player',
         pageOrigin: 'https://hub.example.com',
-        mountPrefix: '/viewer/camstack/',
+        mountPrefix: '/viewer/dominevo/',
       }),
     ).toEqual({
-      src: 'https://hub.example.com/viewer/camstack/embed/index.html?mode=player',
+      src: 'https://hub.example.com/viewer/dominevo/embed/index.html?mode=player',
       origin: 'https://hub.example.com',
     })
   })
@@ -36,8 +36,8 @@ describe('resolveEmbedLocation — never frame the hub from another origin', () 
         serverUrl: 'https://tunnel.example.com',
         mode: 'events',
         pageOrigin: 'http://192.0.2.10:4480',
-        mountPrefix: '/viewer/camstack/',
+        mountPrefix: '/viewer/dominevo/',
       }).src,
-    ).toBe('http://192.0.2.10:4480/viewer/camstack/embed/index.html?mode=events')
+    ).toBe('http://192.0.2.10:4480/viewer/dominevo/embed/index.html?mode=events')
   })
 })

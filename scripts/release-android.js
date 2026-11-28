@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * CamStack Android release: version bump + EAS build + submit
+ * Dominevo Android release: version bump + EAS build + submit
  * Usage: node scripts/release-android.js [patch|minor|major]
  * Default: patch
  * Uses production profile (APP_VARIANT=production from eas.json).

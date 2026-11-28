@@ -25,7 +25,7 @@
  * disposition. Only the disposition decides whether the tile comes back, and
  * only the CODE keys the words we show. This is not a style preference: the
  * route sends `queue-full: 16 thumbnail mints already waiting for host
- * 192.0.2.80` in `x-camstack-reason` while the admin surface keyed its
+ * 192.0.2.80` in `x-dominevo-reason` while the admin surface keyed its
  * table on the bare token — no key ever matched, and every refusal on the
  * fleet rendered as `Refused: <prose>` with a passing spec that hand-fed the
  * token the route never sends.
@@ -54,11 +54,11 @@
 // ─── The wire ────────────────────────────────────────────────────────────────
 
 /** Says whether to come back. The ONLY thing that decides that. */
-export const CLIP_STILL_DISPOSITION_HEADER = 'x-camstack-disposition'
+export const CLIP_STILL_DISPOSITION_HEADER = 'x-dominevo-disposition'
 /** One token from the provider's refusal vocabulary. Keys the words we show. */
-export const CLIP_STILL_REASON_CODE_HEADER = 'x-camstack-reason-code'
+export const CLIP_STILL_REASON_CODE_HEADER = 'x-dominevo-reason-code'
 /** The provider's / camera's own sentence. Rendered verbatim, never parsed. */
-export const CLIP_STILL_REASON_HEADER = 'x-camstack-reason'
+export const CLIP_STILL_REASON_HEADER = 'x-dominevo-reason'
 /** Seconds. Sent on a `deferred` answer only. */
 export const CLIP_STILL_RETRY_AFTER_HEADER = 'retry-after'
 

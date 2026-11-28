@@ -54,9 +54,9 @@ function deferredResponse(): Response {
   return new Response(null, {
     status: 204,
     headers: {
-      'x-camstack-disposition': 'deferred',
-      'x-camstack-reason-code': 'queue-full',
-      'x-camstack-reason': 'queue-full: 16 thumbnail mints already waiting for host 192.0.2.80',
+      'x-dominevo-disposition': 'deferred',
+      'x-dominevo-reason-code': 'queue-full',
+      'x-dominevo-reason': 'queue-full: 16 thumbnail mints already waiting for host 192.0.2.80',
       'retry-after': '16',
     },
   })
@@ -66,9 +66,9 @@ function finalResponse(): Response {
   return new Response(null, {
     status: 204,
     headers: {
-      'x-camstack-disposition': 'final',
-      'x-camstack-reason-code': 'no-keyframe',
-      'x-camstack-reason': 'no-keyframe: nothing decodable in this window',
+      'x-dominevo-disposition': 'final',
+      'x-dominevo-reason-code': 'no-keyframe',
+      'x-dominevo-reason': 'no-keyframe: nothing decodable in this window',
     },
   })
 }

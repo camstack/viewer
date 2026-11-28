@@ -149,7 +149,7 @@ export function markBoot(stage: BootStage, meta?: Record<string, unknown>): void
   const mark = current.mark(stage)
   if (mark === null) return
   // User Timing entry for a profiler or a web trace; absent runtimes skip it.
-  markUserTiming(`camstack:boot:${stage}`)
+  markUserTiming(`dominevo:boot:${stage}`)
   log.info(BOOT_SCOPE, `stage ${stage}`, {
     stage,
     atMs: mark.atMs,

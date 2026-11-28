@@ -9,16 +9,16 @@
  * origin — the hub's, which is this page's origin too.
  *
  * The message contract mirrors admin-ui `lib/sso-popup.ts`
- * (`camstack:sso-return` → ack `camstack:sso-ack`); it is restated here
+ * (`dominevo:sso-return` → ack `dominevo:sso-ack`); it is restated here
  * because the viewer cannot import from admin-ui. Only `target: 'profile'`
  * (a link outcome) is accepted, from the popup this page opened, at this
  * page's origin. A closed popup with no message still refreshes the list —
  * the finish may have landed on another hub address that cannot post here.
  */
 
-export const SSO_POPUP_MESSAGE = 'camstack:sso-return'
-export const SSO_POPUP_ACK = 'camstack:sso-ack'
-const SSO_POPUP_NAME = 'camstack-sso'
+export const SSO_POPUP_MESSAGE = 'dominevo:sso-return'
+export const SSO_POPUP_ACK = 'dominevo:sso-ack'
+const SSO_POPUP_NAME = 'dominevo-sso'
 const POPUP_FEATURES = 'popup=yes,width=520,height=680,resizable=yes,scrollbars=yes'
 const POPUP_CLOSED_POLL_MS = 500
 

@@ -1,6 +1,6 @@
 /**
  * The newest native build, as the hub publishes it
- * (`/viewer/camstack/native-release.json`, written by `scripts/release-ios.js`).
+ * (`/viewer/dominevo/native-release.json`, written by `scripts/release-ios.js`).
  * Native only — a browser has no binary to be behind on. One read per hour;
  * an unreachable hub is `null`, never an error the UI has to explain.
  */

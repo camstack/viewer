@@ -71,7 +71,7 @@ export interface ServerStoreOptions {
   readonly now?: () => number
 }
 
-/** Persists the list of known camstack servers, which one is active, and one
+/** Persists the list of known dominevo servers, which one is active, and one
  *  auth token PER server. Tokens go through the injected secrets store (the
  *  platform secure store on native); everything else through `kv`. */
 export class ServerStore {

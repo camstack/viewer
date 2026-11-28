@@ -64,7 +64,7 @@ export function computeNetworkSample(
   }
 }
 
-/** Drives the camstack `webrtcSession` client-offer flow to receive a recvonly
+/** Drives the dominevo `webrtcSession` client-offer flow to receive a recvonly
  *  live stream. Transport-agnostic: all WebRTC + signaling are injected. The
  *  ICE/renegotiation polling methods are driven by the caller — the ONLY
  *  session-owned timer is the optional network-condition reporter

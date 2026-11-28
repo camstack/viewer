@@ -72,7 +72,7 @@ import { presetSelected, togglePreset } from './prompt-presets.js'
 import { systemConfirm, systemNotice } from './system-alert.js'
 
 /** Ties the multiline field to its UIKit keyboard bar (iOS only). */
-const KEYBOARD_ACCESSORY_ID = 'camstack-prompt-keyboard'
+const KEYBOARD_ACCESSORY_ID = 'dominevo-prompt-keyboard'
 
 export interface ConfirmOptions {
   readonly title: string

@@ -12,9 +12,9 @@
           "attempt": 0,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -28,9 +28,9 @@
           "attempt": 0,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -44,9 +44,9 @@
           "attempt": 0,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -60,9 +60,9 @@
           "attempt": 0,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -76,9 +76,9 @@
           "attempt": 0,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -92,9 +92,9 @@
           "attempt": 0,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -108,9 +108,9 @@
           "attempt": 0,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -124,9 +124,9 @@
           "attempt": 0,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -140,9 +140,9 @@
           "attempt": 0,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -156,9 +156,9 @@
           "attempt": 0,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -172,9 +172,9 @@
           "attempt": 0,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -188,9 +188,9 @@
           "attempt": 0,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -204,9 +204,9 @@
           "attempt": 0,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -220,9 +220,9 @@
           "attempt": 0,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -236,9 +236,9 @@
           "attempt": 0,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -252,9 +252,9 @@
           "attempt": 0,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -268,9 +268,9 @@
           "attempt": 0,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -284,9 +284,9 @@
           "attempt": 0,
           "status": 204,
           "headers": {
-            "x-camstack-disposition": "deferred",
-            "x-camstack-reason-code": "queue-full",
-            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "x-dominevo-disposition": "deferred",
+            "x-dominevo-reason-code": "queue-full",
+            "x-dominevo-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
             "retry-after": "16"
           }
         },
@@ -294,9 +294,9 @@
           "attempt": 1,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -310,9 +310,9 @@
           "attempt": 0,
           "status": 204,
           "headers": {
-            "x-camstack-disposition": "deferred",
-            "x-camstack-reason-code": "queue-full",
-            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "x-dominevo-disposition": "deferred",
+            "x-dominevo-reason-code": "queue-full",
+            "x-dominevo-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
             "retry-after": "16"
           }
         },
@@ -320,9 +320,9 @@
           "attempt": 1,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -336,9 +336,9 @@
           "attempt": 0,
           "status": 204,
           "headers": {
-            "x-camstack-disposition": "deferred",
-            "x-camstack-reason-code": "queue-full",
-            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "x-dominevo-disposition": "deferred",
+            "x-dominevo-reason-code": "queue-full",
+            "x-dominevo-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
             "retry-after": "16"
           }
         },
@@ -346,9 +346,9 @@
           "attempt": 1,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -362,9 +362,9 @@
           "attempt": 0,
           "status": 204,
           "headers": {
-            "x-camstack-disposition": "deferred",
-            "x-camstack-reason-code": "queue-full",
-            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "x-dominevo-disposition": "deferred",
+            "x-dominevo-reason-code": "queue-full",
+            "x-dominevo-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
             "retry-after": "16"
           }
         },
@@ -372,9 +372,9 @@
           "attempt": 1,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -388,9 +388,9 @@
           "attempt": 0,
           "status": 204,
           "headers": {
-            "x-camstack-disposition": "deferred",
-            "x-camstack-reason-code": "queue-full",
-            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "x-dominevo-disposition": "deferred",
+            "x-dominevo-reason-code": "queue-full",
+            "x-dominevo-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
             "retry-after": "16"
           }
         },
@@ -398,9 +398,9 @@
           "attempt": 1,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -414,9 +414,9 @@
           "attempt": 0,
           "status": 204,
           "headers": {
-            "x-camstack-disposition": "deferred",
-            "x-camstack-reason-code": "queue-full",
-            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "x-dominevo-disposition": "deferred",
+            "x-dominevo-reason-code": "queue-full",
+            "x-dominevo-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
             "retry-after": "16"
           }
         },
@@ -424,9 +424,9 @@
           "attempt": 1,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -440,9 +440,9 @@
           "attempt": 0,
           "status": 204,
           "headers": {
-            "x-camstack-disposition": "deferred",
-            "x-camstack-reason-code": "queue-full",
-            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "x-dominevo-disposition": "deferred",
+            "x-dominevo-reason-code": "queue-full",
+            "x-dominevo-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
             "retry-after": "16"
           }
         },
@@ -450,9 +450,9 @@
           "attempt": 1,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -466,9 +466,9 @@
           "attempt": 0,
           "status": 204,
           "headers": {
-            "x-camstack-disposition": "deferred",
-            "x-camstack-reason-code": "queue-full",
-            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "x-dominevo-disposition": "deferred",
+            "x-dominevo-reason-code": "queue-full",
+            "x-dominevo-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
             "retry-after": "16"
           }
         },
@@ -476,9 +476,9 @@
           "attempt": 1,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -492,9 +492,9 @@
           "attempt": 0,
           "status": 204,
           "headers": {
-            "x-camstack-disposition": "deferred",
-            "x-camstack-reason-code": "queue-full",
-            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "x-dominevo-disposition": "deferred",
+            "x-dominevo-reason-code": "queue-full",
+            "x-dominevo-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
             "retry-after": "16"
           }
         },
@@ -502,9 +502,9 @@
           "attempt": 1,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -518,9 +518,9 @@
           "attempt": 0,
           "status": 204,
           "headers": {
-            "x-camstack-disposition": "deferred",
-            "x-camstack-reason-code": "queue-full",
-            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "x-dominevo-disposition": "deferred",
+            "x-dominevo-reason-code": "queue-full",
+            "x-dominevo-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
             "retry-after": "16"
           }
         },
@@ -528,9 +528,9 @@
           "attempt": 1,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -544,9 +544,9 @@
           "attempt": 0,
           "status": 204,
           "headers": {
-            "x-camstack-disposition": "deferred",
-            "x-camstack-reason-code": "queue-full",
-            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "x-dominevo-disposition": "deferred",
+            "x-dominevo-reason-code": "queue-full",
+            "x-dominevo-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
             "retry-after": "16"
           }
         },
@@ -554,9 +554,9 @@
           "attempt": 1,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -570,9 +570,9 @@
           "attempt": 0,
           "status": 204,
           "headers": {
-            "x-camstack-disposition": "deferred",
-            "x-camstack-reason-code": "queue-full",
-            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "x-dominevo-disposition": "deferred",
+            "x-dominevo-reason-code": "queue-full",
+            "x-dominevo-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
             "retry-after": "16"
           }
         },
@@ -580,9 +580,9 @@
           "attempt": 1,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -596,9 +596,9 @@
           "attempt": 0,
           "status": 204,
           "headers": {
-            "x-camstack-disposition": "deferred",
-            "x-camstack-reason-code": "queue-full",
-            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "x-dominevo-disposition": "deferred",
+            "x-dominevo-reason-code": "queue-full",
+            "x-dominevo-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
             "retry-after": "16"
           }
         },
@@ -606,9 +606,9 @@
           "attempt": 1,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -622,9 +622,9 @@
           "attempt": 0,
           "status": 204,
           "headers": {
-            "x-camstack-disposition": "deferred",
-            "x-camstack-reason-code": "queue-full",
-            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "x-dominevo-disposition": "deferred",
+            "x-dominevo-reason-code": "queue-full",
+            "x-dominevo-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
             "retry-after": "16"
           }
         },
@@ -632,9 +632,9 @@
           "attempt": 1,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -648,9 +648,9 @@
           "attempt": 0,
           "status": 204,
           "headers": {
-            "x-camstack-disposition": "deferred",
-            "x-camstack-reason-code": "queue-full",
-            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "x-dominevo-disposition": "deferred",
+            "x-dominevo-reason-code": "queue-full",
+            "x-dominevo-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
             "retry-after": "16"
           }
         },
@@ -658,9 +658,9 @@
           "attempt": 1,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -674,9 +674,9 @@
           "attempt": 0,
           "status": 204,
           "headers": {
-            "x-camstack-disposition": "deferred",
-            "x-camstack-reason-code": "queue-full",
-            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "x-dominevo-disposition": "deferred",
+            "x-dominevo-reason-code": "queue-full",
+            "x-dominevo-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
             "retry-after": "16"
           }
         },
@@ -684,9 +684,9 @@
           "attempt": 1,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -700,9 +700,9 @@
           "attempt": 0,
           "status": 204,
           "headers": {
-            "x-camstack-disposition": "deferred",
-            "x-camstack-reason-code": "queue-full",
-            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "x-dominevo-disposition": "deferred",
+            "x-dominevo-reason-code": "queue-full",
+            "x-dominevo-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
             "retry-after": "16"
           }
         },
@@ -710,9 +710,9 @@
           "attempt": 1,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -726,9 +726,9 @@
           "attempt": 0,
           "status": 204,
           "headers": {
-            "x-camstack-disposition": "deferred",
-            "x-camstack-reason-code": "queue-full",
-            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "x-dominevo-disposition": "deferred",
+            "x-dominevo-reason-code": "queue-full",
+            "x-dominevo-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
             "retry-after": "16"
           }
         },
@@ -736,9 +736,9 @@
           "attempt": 1,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -752,9 +752,9 @@
           "attempt": 0,
           "status": 204,
           "headers": {
-            "x-camstack-disposition": "deferred",
-            "x-camstack-reason-code": "queue-full",
-            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "x-dominevo-disposition": "deferred",
+            "x-dominevo-reason-code": "queue-full",
+            "x-dominevo-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
             "retry-after": "16"
           }
         },
@@ -762,9 +762,9 @@
           "attempt": 1,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -778,9 +778,9 @@
           "attempt": 0,
           "status": 204,
           "headers": {
-            "x-camstack-disposition": "deferred",
-            "x-camstack-reason-code": "queue-full",
-            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "x-dominevo-disposition": "deferred",
+            "x-dominevo-reason-code": "queue-full",
+            "x-dominevo-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
             "retry-after": "16"
           }
         },
@@ -788,9 +788,9 @@
           "attempt": 1,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -804,9 +804,9 @@
           "attempt": 0,
           "status": 204,
           "headers": {
-            "x-camstack-disposition": "deferred",
-            "x-camstack-reason-code": "queue-full",
-            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "x-dominevo-disposition": "deferred",
+            "x-dominevo-reason-code": "queue-full",
+            "x-dominevo-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
             "retry-after": "16"
           }
         },
@@ -814,9 +814,9 @@
           "attempt": 1,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -830,9 +830,9 @@
           "attempt": 0,
           "status": 204,
           "headers": {
-            "x-camstack-disposition": "deferred",
-            "x-camstack-reason-code": "queue-full",
-            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "x-dominevo-disposition": "deferred",
+            "x-dominevo-reason-code": "queue-full",
+            "x-dominevo-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
             "retry-after": "16"
           }
         },
@@ -840,9 +840,9 @@
           "attempt": 1,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -856,9 +856,9 @@
           "attempt": 0,
           "status": 204,
           "headers": {
-            "x-camstack-disposition": "deferred",
-            "x-camstack-reason-code": "queue-full",
-            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "x-dominevo-disposition": "deferred",
+            "x-dominevo-reason-code": "queue-full",
+            "x-dominevo-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
             "retry-after": "16"
           }
         },
@@ -866,9 +866,9 @@
           "attempt": 1,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -882,9 +882,9 @@
           "attempt": 0,
           "status": 204,
           "headers": {
-            "x-camstack-disposition": "deferred",
-            "x-camstack-reason-code": "queue-full",
-            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "x-dominevo-disposition": "deferred",
+            "x-dominevo-reason-code": "queue-full",
+            "x-dominevo-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
             "retry-after": "16"
           }
         },
@@ -892,9 +892,9 @@
           "attempt": 1,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -908,9 +908,9 @@
           "attempt": 0,
           "status": 204,
           "headers": {
-            "x-camstack-disposition": "deferred",
-            "x-camstack-reason-code": "queue-full",
-            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "x-dominevo-disposition": "deferred",
+            "x-dominevo-reason-code": "queue-full",
+            "x-dominevo-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
             "retry-after": "16"
           }
         },
@@ -918,9 +918,9 @@
           "attempt": 1,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -934,9 +934,9 @@
           "attempt": 0,
           "status": 204,
           "headers": {
-            "x-camstack-disposition": "deferred",
-            "x-camstack-reason-code": "queue-full",
-            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "x-dominevo-disposition": "deferred",
+            "x-dominevo-reason-code": "queue-full",
+            "x-dominevo-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
             "retry-after": "16"
           }
         },
@@ -944,9 +944,9 @@
           "attempt": 1,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -960,9 +960,9 @@
           "attempt": 0,
           "status": 204,
           "headers": {
-            "x-camstack-disposition": "deferred",
-            "x-camstack-reason-code": "queue-full",
-            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "x-dominevo-disposition": "deferred",
+            "x-dominevo-reason-code": "queue-full",
+            "x-dominevo-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
             "retry-after": "16"
           }
         },
@@ -970,9 +970,9 @@
           "attempt": 1,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -986,9 +986,9 @@
           "attempt": 0,
           "status": 204,
           "headers": {
-            "x-camstack-disposition": "deferred",
-            "x-camstack-reason-code": "queue-full",
-            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "x-dominevo-disposition": "deferred",
+            "x-dominevo-reason-code": "queue-full",
+            "x-dominevo-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
             "retry-after": "16"
           }
         },
@@ -996,9 +996,9 @@
           "attempt": 1,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -1012,9 +1012,9 @@
           "attempt": 0,
           "status": 204,
           "headers": {
-            "x-camstack-disposition": "deferred",
-            "x-camstack-reason-code": "queue-full",
-            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "x-dominevo-disposition": "deferred",
+            "x-dominevo-reason-code": "queue-full",
+            "x-dominevo-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
             "retry-after": "16"
           }
         },
@@ -1022,9 +1022,9 @@
           "attempt": 1,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -1038,9 +1038,9 @@
           "attempt": 0,
           "status": 204,
           "headers": {
-            "x-camstack-disposition": "deferred",
-            "x-camstack-reason-code": "queue-full",
-            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "x-dominevo-disposition": "deferred",
+            "x-dominevo-reason-code": "queue-full",
+            "x-dominevo-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
             "retry-after": "16"
           }
         },
@@ -1048,9 +1048,9 @@
           "attempt": 1,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -1064,9 +1064,9 @@
           "attempt": 0,
           "status": 204,
           "headers": {
-            "x-camstack-disposition": "deferred",
-            "x-camstack-reason-code": "queue-full",
-            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "x-dominevo-disposition": "deferred",
+            "x-dominevo-reason-code": "queue-full",
+            "x-dominevo-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
             "retry-after": "16"
           }
         },
@@ -1074,9 +1074,9 @@
           "attempt": 1,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -1090,9 +1090,9 @@
           "attempt": 0,
           "status": 204,
           "headers": {
-            "x-camstack-disposition": "deferred",
-            "x-camstack-reason-code": "queue-full",
-            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "x-dominevo-disposition": "deferred",
+            "x-dominevo-reason-code": "queue-full",
+            "x-dominevo-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
             "retry-after": "16"
           }
         },
@@ -1100,9 +1100,9 @@
           "attempt": 1,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -1116,9 +1116,9 @@
           "attempt": 0,
           "status": 204,
           "headers": {
-            "x-camstack-disposition": "deferred",
-            "x-camstack-reason-code": "queue-full",
-            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "x-dominevo-disposition": "deferred",
+            "x-dominevo-reason-code": "queue-full",
+            "x-dominevo-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
             "retry-after": "16"
           }
         },
@@ -1126,9 +1126,9 @@
           "attempt": 1,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -1142,9 +1142,9 @@
           "attempt": 0,
           "status": 204,
           "headers": {
-            "x-camstack-disposition": "deferred",
-            "x-camstack-reason-code": "queue-full",
-            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "x-dominevo-disposition": "deferred",
+            "x-dominevo-reason-code": "queue-full",
+            "x-dominevo-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
             "retry-after": "16"
           }
         },
@@ -1152,9 +1152,9 @@
           "attempt": 1,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -1168,9 +1168,9 @@
           "attempt": 0,
           "status": 204,
           "headers": {
-            "x-camstack-disposition": "deferred",
-            "x-camstack-reason-code": "queue-full",
-            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "x-dominevo-disposition": "deferred",
+            "x-dominevo-reason-code": "queue-full",
+            "x-dominevo-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
             "retry-after": "16"
           }
         },
@@ -1178,9 +1178,9 @@
           "attempt": 1,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -1194,9 +1194,9 @@
           "attempt": 0,
           "status": 204,
           "headers": {
-            "x-camstack-disposition": "deferred",
-            "x-camstack-reason-code": "queue-full",
-            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "x-dominevo-disposition": "deferred",
+            "x-dominevo-reason-code": "queue-full",
+            "x-dominevo-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
             "retry-after": "16"
           }
         },
@@ -1204,9 +1204,9 @@
           "attempt": 1,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -1220,9 +1220,9 @@
           "attempt": 0,
           "status": 204,
           "headers": {
-            "x-camstack-disposition": "deferred",
-            "x-camstack-reason-code": "queue-full",
-            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "x-dominevo-disposition": "deferred",
+            "x-dominevo-reason-code": "queue-full",
+            "x-dominevo-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
             "retry-after": "16"
           }
         },
@@ -1230,9 +1230,9 @@
           "attempt": 1,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -1246,9 +1246,9 @@
           "attempt": 0,
           "status": 204,
           "headers": {
-            "x-camstack-disposition": "deferred",
-            "x-camstack-reason-code": "queue-full",
-            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "x-dominevo-disposition": "deferred",
+            "x-dominevo-reason-code": "queue-full",
+            "x-dominevo-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
             "retry-after": "16"
           }
         },
@@ -1256,9 +1256,9 @@
           "attempt": 1,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -1272,9 +1272,9 @@
           "attempt": 0,
           "status": 204,
           "headers": {
-            "x-camstack-disposition": "deferred",
-            "x-camstack-reason-code": "queue-full",
-            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "x-dominevo-disposition": "deferred",
+            "x-dominevo-reason-code": "queue-full",
+            "x-dominevo-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
             "retry-after": "16"
           }
         },
@@ -1282,9 +1282,9 @@
           "attempt": 1,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -1298,9 +1298,9 @@
           "attempt": 0,
           "status": 204,
           "headers": {
-            "x-camstack-disposition": "deferred",
-            "x-camstack-reason-code": "queue-full",
-            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "x-dominevo-disposition": "deferred",
+            "x-dominevo-reason-code": "queue-full",
+            "x-dominevo-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
             "retry-after": "16"
           }
         },
@@ -1308,9 +1308,9 @@
           "attempt": 1,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -1324,9 +1324,9 @@
           "attempt": 0,
           "status": 204,
           "headers": {
-            "x-camstack-disposition": "deferred",
-            "x-camstack-reason-code": "queue-full",
-            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "x-dominevo-disposition": "deferred",
+            "x-dominevo-reason-code": "queue-full",
+            "x-dominevo-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
             "retry-after": "16"
           }
         },
@@ -1334,9 +1334,9 @@
           "attempt": 1,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -1350,9 +1350,9 @@
           "attempt": 0,
           "status": 204,
           "headers": {
-            "x-camstack-disposition": "deferred",
-            "x-camstack-reason-code": "queue-full",
-            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "x-dominevo-disposition": "deferred",
+            "x-dominevo-reason-code": "queue-full",
+            "x-dominevo-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
             "retry-after": "16"
           }
         },
@@ -1360,9 +1360,9 @@
           "attempt": 1,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }
@@ -1376,9 +1376,9 @@
           "attempt": 0,
           "status": 204,
           "headers": {
-            "x-camstack-disposition": "deferred",
-            "x-camstack-reason-code": "queue-full",
-            "x-camstack-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
+            "x-dominevo-disposition": "deferred",
+            "x-dominevo-reason-code": "queue-full",
+            "x-dominevo-reason": "queue-full: 16 thumbnail mints already waiting for host 192.0.2.80",
             "retry-after": "16"
           }
         },
@@ -1386,9 +1386,9 @@
           "attempt": 1,
           "status": 200,
           "headers": {
-            "x-camstack-disposition": null,
-            "x-camstack-reason-code": null,
-            "x-camstack-reason": null,
+            "x-dominevo-disposition": null,
+            "x-dominevo-reason-code": null,
+            "x-dominevo-reason": null,
             "retry-after": null
           }
         }

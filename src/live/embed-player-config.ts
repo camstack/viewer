@@ -1,6 +1,6 @@
 /**
  * Shared single-camera embed config — the payload the player embed reads as
- * `window.__CAMSTACK_EMBED__`. The shape MUST match the server's
+ * `window.__DOMINEVO_EMBED__`. The shape MUST match the server's
  * `embedConfigSchema`. Pure. Used by `LiveViewWebView.tsx` (native) and
  * `LiveView.web.tsx` (web).
  */

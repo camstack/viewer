@@ -334,7 +334,7 @@ describe('grid-export', () => {
 
   it('buildGridExport wraps grids in a versioned envelope', () => {
     const env = buildGridExport([{ id: 'a', name: 'A', cameraIds: [1] }])
-    expect(env).toEqual({ type: 'camstack-grids', version: 1, grids: [{ name: 'A', cameraIds: [1] }] })
+    expect(env).toEqual({ type: 'dominevo-grids', version: 1, grids: [{ name: 'A', cameraIds: [1] }] })
   })
 
   it('parseGridExport round-trips a serialized envelope (id stripped)', () => {

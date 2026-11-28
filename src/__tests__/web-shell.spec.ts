@@ -21,9 +21,9 @@ import { THEME } from '../theme/tokens.js'
  *      The app's inset discipline was right; the shell starved it of numbers.
  *   2. The manifest link was RELATIVE (`./manifest.json`) and the manifest had
  *      no `scope`/`id`, a relative `start_url` and icon paths under
- *      `/viewer/` while the files live under `/viewer/camstack/`. The hub
+ *      `/viewer/` while the files live under `/viewer/dominevo/`. The hub
  *      serves the shell for every extension-less route, so an install started
- *      from `/viewer/camstack/camera/101` resolved the manifest to a 404 and
+ *      from `/viewer/dominevo/camera/101` resolved the manifest to a 404 and
  *      became a Safari bookmark, not an app.
  *
  * Both files are now rendered by `scripts/write-manifest-for-build.js` from
@@ -146,9 +146,9 @@ describe('the manifest template is one app, under the mount prefix', () => {
 
 /**
  * Operator report 2026-10-06, Chrome app on macOS: the window read
- * "camstack - camstack". Chrome titles an installed app's window
+ * "dominevo - dominevo". Chrome titles an installed app's window
  * "<manifest name> - <document title>" when they differ; the manifest said
- * "Camstack" and the shell said "CamStack". One name, spelled once per file,
+ * "Dominevo" and the shell said "Dominevo". One name, spelled once per file,
  * and equal — for the hosted PWA and the hub-embedded build alike (both
  * render these same templates).
  */
@@ -168,10 +168,10 @@ describe('renderWebShell', () => {
   const shell = read('public/index.template.html')
   const manifest = read('public/manifest.template.json')
 
-  it('renders the hub mount: /viewer → /viewer/camstack/', () => {
-    const out = script.renderWebShell(shell, '/viewer/camstack/')
-    expect(out).toContain('href="/viewer/camstack/manifest.json"')
-    expect(out).toContain('href="/viewer/camstack/icon-192.png"')
+  it('renders the hub mount: /viewer → /viewer/dominevo/', () => {
+    const out = script.renderWebShell(shell, '/viewer/dominevo/')
+    expect(out).toContain('href="/viewer/dominevo/manifest.json"')
+    expect(out).toContain('href="/viewer/dominevo/icon-192.png"')
     expect(out).not.toContain(MOUNT_TOKEN)
   })
 
@@ -183,16 +183,16 @@ describe('renderWebShell', () => {
   })
 
   it('renders the manifest with the same prefix', () => {
-    const out = parseManifest(script.renderWebShell(manifest, '/viewer/camstack/'))
-    expect(out.start_url).toBe('/viewer/camstack/')
-    expect(out.scope).toBe('/viewer/camstack/')
-    expect(out.icons?.[0]?.src).toBe('/viewer/camstack/icon-72.png')
+    const out = parseManifest(script.renderWebShell(manifest, '/viewer/dominevo/'))
+    expect(out.start_url).toBe('/viewer/dominevo/')
+    expect(out.scope).toBe('/viewer/dominevo/')
+    expect(out.icons?.[0]?.src).toBe('/viewer/dominevo/icon-72.png')
   })
 
   it('refuses a prefix that is not an absolute directory', () => {
-    // A prefix without its slashes silently glues `viewer/camstackmanifest.json`.
-    expect(() => script.renderWebShell(shell, 'viewer/camstack/')).toThrow()
-    expect(() => script.renderWebShell(shell, '/viewer/camstack')).toThrow()
+    // A prefix without its slashes silently glues `viewer/dominevomanifest.json`.
+    expect(() => script.renderWebShell(shell, 'viewer/dominevo/')).toThrow()
+    expect(() => script.renderWebShell(shell, '/viewer/dominevo')).toThrow()
   })
 })
 
@@ -206,9 +206,9 @@ describe('getWebMountPrefix — the one value the shell, the manifest and Expo s
 
   it('is the hub mount for the orchestrator build', () => {
     process.env.EXPO_PUBLIC_WEB_BASE_PATH = '/viewer'
-    expect(webBase.getWebMountPrefix()).toBe('/viewer/camstack/')
+    expect(webBase.getWebMountPrefix()).toBe('/viewer/dominevo/')
     process.env.EXPO_PUBLIC_WEB_BASE_PATH = '/viewer/'
-    expect(webBase.getWebMountPrefix()).toBe('/viewer/camstack/')
+    expect(webBase.getWebMountPrefix()).toBe('/viewer/dominevo/')
   })
 
   it('is the root when no base path is baked in', () => {
@@ -219,8 +219,8 @@ describe('getWebMountPrefix — the one value the shell, the manifest and Expo s
   it('feeds `experiments.baseUrl` in app.config.ts — no second derivation', () => {
     const appConfig = read('app.config.ts')
     expect(appConfig).toContain('getWebMountPrefix')
-    // The literal the manifest drifted from: `/viewer/` vs `/viewer/camstack/`.
-    expect(appConfig).not.toContain('`${webBasePath}/camstack`')
+    // The literal the manifest drifted from: `/viewer/` vs `/viewer/dominevo/`.
+    expect(appConfig).not.toContain('`${webBasePath}/dominevo`')
   })
 })
 

@@ -5,7 +5,7 @@
  * the hub knows (~2.7 MB unminified), and Metro does not tree-shake — not
  * even with Expo's experimental tree shaking. One value import from it puts
  * ~1.2 MB into the web bundle. `@dominevo/types/client` (D721 in
- * camstack-server) exports exactly the values a client reads, and the tiny
+ * dominevo-server) exports exactly the values a client reads, and the tiny
  * `@dominevo/types/enums` carries `EventCategory` / `EventSourceType`.
  *
  * Until 2026-10 Metro silently aliased the bare entry to `/client`. That hid
@@ -18,7 +18,7 @@
  * assert against server schemas `/client` deliberately leaves out.
  *
  * A value missing from `/client` is NOT a reason to import the root: add it to
- * `packages/types/src/client.ts` in camstack-server and publish.
+ * `packages/types/src/client.ts` in dominevo-server and publish.
  *
  * ESLint enforces the same rule (`eslint.config.js`); this guard runs in
  * `ts-check`, so CI fails even where lint is skipped.
@@ -113,7 +113,7 @@ for (const file of SCANNED.flatMap((dir) => walk(path.join(ROOT, dir)))) {
 
 if (offenders.length > 0) {
   console.error(
-    `${offenders.length} value import(s) from a non-client @dominevo/types entry — import values from '@dominevo/types/client' (or '/enums'); only \`import type\` may name the bare entry. A value missing from /client is added to packages/types/src/client.ts in camstack-server:\n  ${offenders.join('\n  ')}`,
+    `${offenders.length} value import(s) from a non-client @dominevo/types entry — import values from '@dominevo/types/client' (or '/enums'); only \`import type\` may name the bare entry. A value missing from /client is added to packages/types/src/client.ts in dominevo-server:\n  ${offenders.join('\n  ')}`,
   )
   process.exit(1)
 }

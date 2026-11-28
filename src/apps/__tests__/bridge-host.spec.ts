@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { helloMessage, interpretAppMessage, navigateMessage, searchMessage, themeMessage } from '../bridge-host.js'
 
-const ENV = { camstack: 'app-bridge', v: 1 } as const
+const ENV = { dominevo: 'app-bridge', v: 1 } as const
 
 describe('what the shell says to an app', () => {
   it('hello is the versioned envelope', () => {
@@ -32,7 +32,7 @@ describe('what an app says to the shell', () => {
   })
 
   it('ignores an unknown, malformed or foreign message', () => {
-    expect(interpretAppMessage({ camstack: 'app-bridge', v: 2, type: 'ready', path: '/' })).toBeNull()
+    expect(interpretAppMessage({ dominevo: 'app-bridge', v: 2, type: 'ready', path: '/' })).toBeNull()
     expect(interpretAppMessage({ ...ENV, type: 'teleport' })).toBeNull()
     expect(interpretAppMessage({ ...ENV, type: 'ready' })).toBeNull()
     expect(interpretAppMessage({ source: 'react-devtools' })).toBeNull()

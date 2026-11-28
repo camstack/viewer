@@ -28,7 +28,7 @@ export function qualityLabelKey(quality: StreamQuality): string {
  *
  * DERIVED from the system enum rather than typed out. Each of those three used
  * to carry its own array of literals, and that is exactly how the grid ended up
- * offering `medium` — a word no other part of CamStack said — for months
+ * offering `medium` — a word no other part of Dominevo said — for months
  * without anything noticing. A hand-written list here would be the fourth.
  *
  * `auto` leads because it is the default and is not a tier; the profiles follow

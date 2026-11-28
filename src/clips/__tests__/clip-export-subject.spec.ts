@@ -28,7 +28,7 @@ function clip(over: Partial<Clip> = {}): Clip {
 
 const REQUEST = {
   clip: clip(),
-  provider: '@camstack/addon-provider-reolink',
+  provider: '@dominevo/addon-provider-reolink',
   sourceLabel: 'SD card',
   catalogWindow: { sinceMs: 1_789_900_000_000, untilMs: 1_789_986_400_000 },
   profile: 'high',
@@ -106,7 +106,7 @@ describe('the subject names the source it was listed from', () => {
     expect(subject).toEqual({
       kind: 'clip',
       deviceId: 107,
-      provider: '@camstack/addon-provider-reolink',
+      provider: '@dominevo/addon-provider-reolink',
       source: 'native:reolink:onboard',
       sourceLabel: 'SD card',
       clipId: 'native:reolink:onboard:0:abc',

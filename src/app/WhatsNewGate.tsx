@@ -24,8 +24,8 @@ import { runningBuildNumber } from './running-bundle.js'
 import { shouldShowWhatsNew, whatsNewHistory, type WhatsNewEntry } from './whats-new.js'
 import { WhatsNewModal } from './WhatsNewModal.js'
 
-const SEEN_VERSION_KEY = 'camstack.v2.whats-new.seen'
-const PROMPTED_BUILD_KEY = 'camstack.v2.native-release.prompted'
+const SEEN_VERSION_KEY = 'dominevo.v2.whats-new.seen'
+const PROMPTED_BUILD_KEY = 'dominevo.v2.native-release.prompted'
 /** Let the first screen paint before a dialog asks for attention. */
 const ANNOUNCE_DELAY_MS = 2_500
 

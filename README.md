@@ -1,4 +1,4 @@
-# Camstack
+# Dominevo
 
 A multi-source camera app for React Native (Expo) supporting External hub, Separate NVR, ONVIF, and RTSP streams.
 
@@ -55,8 +55,8 @@ SPA fallback, `/health`, and the Universal/App Link pair
 base `/viewer`) is a different artifact and is not affected.
 
 ```bash
-docker build -t camstack-pwa .
-docker run -p 8080:8080 -e CAMSTACK_ANDROID_CERT_SHA256=<sha256,...> camstack-pwa
+docker build -t dominevo-pwa .
+docker run -p 8080:8080 -e DOMINEVO_ANDROID_CERT_SHA256=<sha256,...> dominevo-pwa
 # or, after npm run build:web:
 PORT=8080 node web-server/server.ts
 ```
@@ -64,12 +64,12 @@ PORT=8080 node web-server/server.ts
 ## Deployment (Railway)
 
 Deploys are done by Railway's native GitHub integration: the Railway service (project
-"Camstack", service `viewer-pwa`) has this repository (branch `main`, root `/`) as its source and
+"Dominevo", service `viewer-pwa`) has this repository (branch `main`, root `/`) as its source and
 builds the `Dockerfile` on every push (`railway.json`: healthcheck `/health`). No workflow deploys
 it — two mechanisms deploying one service is how you end up debugging which of them shipped.
 
 **Setup:** on the Railway service, `APP_VARIANT` + `EXPO_PUBLIC_APP_VARIANT` (`production`),
-`CAMSTACK_ANDROID_CERT_SHA256` (comma-separated SHA-256 signing-cert fingerprints; empty is a valid
+`DOMINEVO_ANDROID_CERT_SHA256` (comma-separated SHA-256 signing-cert fingerprints; empty is a valid
 file that simply fails Android auto-verification) and the custom domain `dominevo.app`
 (Cloudflare record DNS-only, so Railway can issue the certificate).
 

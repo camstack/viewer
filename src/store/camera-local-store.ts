@@ -87,7 +87,7 @@ export function persistedCameraLocal(local: AppCameraLocal): AppCameraLocal {
 }
 
 /** AsyncStorage key for the persisted document. */
-export const CAMERA_LOCAL_STORAGE_KEY = '@camstack/v2/camera-local'
+export const CAMERA_LOCAL_STORAGE_KEY = '@dominevo/v2/camera-local'
 
 /** A fresh, empty document. */
 export function resetCameraLocalEntry(): AppCameraLocal {

@@ -1,5 +1,5 @@
 /**
- * grid-store — camstack multi-camera grid persistence (srcV2).
+ * grid-store — dominevo multi-camera grid persistence (srcV2).
  *
  * A grid is a named, ordered set of camera device ids rendered as an
  * auto-layout wall of live tiles. v1 only supports auto-layout (no manual
@@ -227,7 +227,7 @@ export function findServerGrid(
 }
 
 /** AsyncStorage key for the persisted grid list. */
-export const GRIDS_STORAGE_KEY = '@camstack/v2/grids'
+export const GRIDS_STORAGE_KEY = '@dominevo/v2/grids'
 
 /** A grid's options as a wall renders them: the account options resolved, plus
  *  the layout THIS device keeps for it (`grid-local-store`). */

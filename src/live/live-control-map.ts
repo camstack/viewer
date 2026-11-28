@@ -50,8 +50,8 @@ export type PlaybackCommand =
    * config-carried seeking exists to remove.
    *
    * NOTE the different global: this is the only command that goes to
-   * `__camstackEmbedPage` rather than `__camstackEmbed`. The page's own
-   * docblock says why — `__camstackEmbed` is torn down and rebuilt on every
+   * `__dominevoEmbedPage` rather than `__dominevoEmbed`. The page's own
+   * docblock says why — `__dominevoEmbed` is torn down and rebuilt on every
    * camera swap, so the swap itself cannot live on it.
    */
   | {
@@ -104,42 +104,42 @@ export function setDeviceValue(
 export function playbackCommandToScript(cmd: PlaybackCommand): string {
   const call = ((): string => {
     switch (cmd.kind) {
-      case 'playRecorded': return `window.__camstackEmbed.playRecorded(${cmd.deviceId},${cmd.epochMs},${JSON.stringify(cmd.profile)})`
+      case 'playRecorded': return `window.__dominevoEmbed.playRecorded(${cmd.deviceId},${cmd.epochMs},${JSON.stringify(cmd.profile)})`
       case 'playClip':
         // The id is JSON-quoted, not interpolated bare: a real one is
         // `native:reolink:onboard:0:<base64>` — colons, `+`, `=` — and
         // unquoted it is a syntax error that kills the tap in silence.
         return cmd.profile !== undefined
-          ? `window.__camstackEmbed.playClip(${cmd.deviceId},${JSON.stringify(cmd.clipId)},${JSON.stringify(cmd.provider)},${Math.max(0, Math.round(cmd.offsetMs))},${JSON.stringify(cmd.profile)})`
-          : `window.__camstackEmbed.playClip(${cmd.deviceId},${JSON.stringify(cmd.clipId)},${JSON.stringify(cmd.provider)},${Math.max(0, Math.round(cmd.offsetMs))})`
-      case 'seek': return `window.__camstackEmbed.seek(${cmd.epochMs})`
+          ? `window.__dominevoEmbed.playClip(${cmd.deviceId},${JSON.stringify(cmd.clipId)},${JSON.stringify(cmd.provider)},${Math.max(0, Math.round(cmd.offsetMs))},${JSON.stringify(cmd.profile)})`
+          : `window.__dominevoEmbed.playClip(${cmd.deviceId},${JSON.stringify(cmd.clipId)},${JSON.stringify(cmd.provider)},${Math.max(0, Math.round(cmd.offsetMs))})`
+      case 'seek': return `window.__dominevoEmbed.seek(${cmd.epochMs})`
       case 'scrubStart':
         return cmd.dragId !== undefined
-          ? `window.__camstackEmbed.scrubStart(${JSON.stringify(cmd.dragId)})`
-          : `window.__camstackEmbed.scrubStart()`
+          ? `window.__dominevoEmbed.scrubStart(${JSON.stringify(cmd.dragId)})`
+          : `window.__dominevoEmbed.scrubStart()`
       case 'scrubTo':
         // The mapping hint rides as two positional scalars — both or neither
         // (the embed and the hub each drop half-hints whole).
         return cmd.m !== undefined && cmd.v !== undefined
-          ? `window.__camstackEmbed.scrubTo(${cmd.epochMs},${JSON.stringify(cmd.m)},${Math.round(cmd.v)})`
-          : `window.__camstackEmbed.scrubTo(${cmd.epochMs})`
-      case 'scrubEnd': return `window.__camstackEmbed.scrubEnd(${cmd.epochMs})`
-      case 'timelineWarm': return `window.__camstackEmbed.timelineWarm(${cmd.epochMs})`
+          ? `window.__dominevoEmbed.scrubTo(${cmd.epochMs},${JSON.stringify(cmd.m)},${Math.round(cmd.v)})`
+          : `window.__dominevoEmbed.scrubTo(${cmd.epochMs})`
+      case 'scrubEnd': return `window.__dominevoEmbed.scrubEnd(${cmd.epochMs})`
+      case 'timelineWarm': return `window.__dominevoEmbed.timelineWarm(${cmd.epochMs})`
       case 'scrubCommit':
         return cmd.dragId !== undefined
-          ? `window.__camstackEmbed.scrubCommit(${cmd.epochMs},${JSON.stringify(cmd.dragId)})`
-          : `window.__camstackEmbed.scrubCommit(${cmd.epochMs})`
-      case 'setRate': return `window.__camstackEmbed.setRate(${cmd.rate})`
-      case 'stepFrame': return `window.__camstackEmbed.stepFrame(${cmd.dir})`
-      case 'goLive': return `window.__camstackEmbed.goLive()`
-      case 'startLiveCapture': return `window.__camstackEmbed.startLiveCapture()`
-      case 'stopLiveCapture': return `window.__camstackEmbed.stopLiveCapture()`
-      case 'snapshot': return `window.__camstackEmbed.snapshot(${JSON.stringify(cmd.id)})`
-      // `__camstackEmbedPage`, not `__camstackEmbed` — see the command's docblock.
+          ? `window.__dominevoEmbed.scrubCommit(${cmd.epochMs},${JSON.stringify(cmd.dragId)})`
+          : `window.__dominevoEmbed.scrubCommit(${cmd.epochMs})`
+      case 'setRate': return `window.__dominevoEmbed.setRate(${cmd.rate})`
+      case 'stepFrame': return `window.__dominevoEmbed.stepFrame(${cmd.dir})`
+      case 'goLive': return `window.__dominevoEmbed.goLive()`
+      case 'startLiveCapture': return `window.__dominevoEmbed.startLiveCapture()`
+      case 'stopLiveCapture': return `window.__dominevoEmbed.stopLiveCapture()`
+      case 'snapshot': return `window.__dominevoEmbed.snapshot(${JSON.stringify(cmd.id)})`
+      // `__dominevoEmbedPage`, not `__dominevoEmbed` — see the command's docblock.
       // JSON.stringify: the payload may carry a nested `target`, and a hand-
       // built `{key:value}` literal cannot quote nested keys safely.
       case 'setDevice':
-        return `window.__camstackEmbedPage.setDevice(${JSON.stringify(setDeviceValue(cmd))})`
+        return `window.__dominevoEmbedPage.setDevice(${JSON.stringify(setDeviceValue(cmd))})`
     }
   })()
   return `try{${call}}catch(e){}; true;`

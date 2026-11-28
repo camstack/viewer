@@ -38,12 +38,12 @@ afterEach(() => {
   setTestPlatform('ios')
 })
 
-/** The `window.__CAMSTACK_GRID__` object the host injected before load. */
+/** The `window.__DOMINEVO_GRID__` object the host injected before load. */
 function bootConfig(): Record<string, unknown> {
   const scripts = bootedWebViewConfigs()
   if (scripts.length === 0) throw new Error('the host injected no boot config')
   const script = scripts[scripts.length - 1]
-  const match = /window\.__CAMSTACK_GRID__ = (\{.*\}); true;/s.exec(script)
+  const match = /window\.__DOMINEVO_GRID__ = (\{.*\}); true;/s.exec(script)
   if (match === null) throw new Error(`no grid config in the injected script: ${script}`)
   return JSON.parse(match[1]) as Record<string, unknown>
 }

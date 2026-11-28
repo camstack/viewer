@@ -44,8 +44,8 @@ const nativeAliases = [
   { find: /^react-native-reanimated$/, replacement: stub('reanimated.tsx') },
   { find: /^react-native-draggable-flatlist$/, replacement: stub('draggable-flatlist.tsx') },
   { find: /^react-native-volume-manager$/, replacement: stub('empty.tsx') },
-  { find: /^camstack-webrtc-audio$/, replacement: stub('empty.tsx') },
-  { find: /^camstack-device-key$/, replacement: stub('camstack-device-key.ts') },
+  { find: /^dominevo-webrtc-audio$/, replacement: stub('empty.tsx') },
+  { find: /^dominevo-device-key$/, replacement: stub('dominevo-device-key.ts') },
   { find: /^@shopify\/flash-list$/, replacement: stub('flash-list.tsx') },
   { find: /^@react-native-async-storage\/async-storage$/, replacement: stub('async-storage.ts') },
   { find: /^@react-native-community\/netinfo$/, replacement: stub('netinfo.ts') },
@@ -78,7 +78,7 @@ export default defineConfig({
          * few third-party packages that import a native module puts them back
          * under the alias table.
          */
-        inline: [/lucide-react-native/, /@camstack[/\\]ui-library/],
+        inline: [/lucide-react-native/, /@dominevo[/\\]ui-library/],
       },
     },
     /**

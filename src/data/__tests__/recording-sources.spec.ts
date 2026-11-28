@@ -9,8 +9,8 @@
 import { RecordingSourceSchema } from '@dominevo/types'
 import { describe, expect, it } from 'vitest'
 import {
-  RECORDING_SOURCE_CAMSTACK,
-  RECORDING_SOURCE_CAMSTACK_ADDON,
+  RECORDING_SOURCE_DOMINEVO,
+  RECORDING_SOURCE_DOMINEVO_ADDON,
   parseRecordingSources,
   resolveRecordingProvider,
   type RecordingSourceRow,
@@ -22,8 +22,8 @@ const CARD: RecordingSourceRow = {
   label: 'SD card',
 }
 const OURS: RecordingSourceRow = {
-  sourceId: RECORDING_SOURCE_CAMSTACK,
-  addonId: RECORDING_SOURCE_CAMSTACK_ADDON,
+  sourceId: RECORDING_SOURCE_DOMINEVO,
+  addonId: RECORDING_SOURCE_DOMINEVO_ADDON,
 }
 
 describe('resolveRecordingProvider — absence MEANS ours', () => {
@@ -32,13 +32,13 @@ describe('resolveRecordingProvider — absence MEANS ours', () => {
     // must still resolve, because a timeline paints on mount and a default
     // that waited for `listSources` would be a blank bar on every launch.
     const choice = resolveRecordingProvider(undefined, [], false)
-    expect(choice.sourceId).toBe(RECORDING_SOURCE_CAMSTACK)
-    expect(choice.addonId).toBe(RECORDING_SOURCE_CAMSTACK_ADDON)
+    expect(choice.sourceId).toBe(RECORDING_SOURCE_DOMINEVO)
+    expect(choice.addonId).toBe(RECORDING_SOURCE_DOMINEVO_ADDON)
     expect(choice.derivation).toBe('default')
   })
 
   it('resolves the reserved id spelled out the same way as absence', () => {
-    const spelled = resolveRecordingProvider(RECORDING_SOURCE_CAMSTACK, [], false)
+    const spelled = resolveRecordingProvider(RECORDING_SOURCE_DOMINEVO, [], false)
     expect(spelled).toEqual(resolveRecordingProvider(undefined, [], false))
   })
 
@@ -46,9 +46,9 @@ describe('resolveRecordingProvider — absence MEANS ours', () => {
     // `provider` takes "the addonId a row carries, never a source id" — and
     // for ours those two are DIFFERENT strings, which is the whole reason a
     // single translation point exists.
-    expect(RECORDING_SOURCE_CAMSTACK).not.toBe(RECORDING_SOURCE_CAMSTACK_ADDON)
+    expect(RECORDING_SOURCE_DOMINEVO).not.toBe(RECORDING_SOURCE_DOMINEVO_ADDON)
     expect(resolveRecordingProvider(undefined, [], true).addonId).toBe(
-      RECORDING_SOURCE_CAMSTACK_ADDON,
+      RECORDING_SOURCE_DOMINEVO_ADDON,
     )
   })
 })
@@ -116,14 +116,14 @@ describe('parseRecordingSources', () => {
     // Measured on the live hub for camera 107, 2026-09-24.
     const rows = parseRecordingSources([
       wireRow({
-        source: 'camstack',
-        label: 'CamStack recordings',
+        source: 'dominevo',
+        label: 'Dominevo recordings',
         addonId: 'recorder',
         availability: { state: 'ok', coverageAsOf: 1790261798809 },
       }),
     ])
     expect(rows).toEqual([
-      { sourceId: 'camstack', addonId: 'recorder', label: 'CamStack recordings' },
+      { sourceId: 'dominevo', addonId: 'recorder', label: 'Dominevo recordings' },
     ])
   })
 

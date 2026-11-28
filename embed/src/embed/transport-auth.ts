@@ -4,13 +4,13 @@
  * ## Why this exists
  *
  * Every other config source hands the embed a bearer token: a share link puts
- * it in `#t=`, a native host injects it into `window.__CAMSTACK_*__`, a web
+ * it in `#t=`, a native host injects it into `window.__DOMINEVO_*__`, a web
  * host posts it over the `embed-config` handshake. That token is a real hub
  * credential — device-scoped and short-lived, but usable by anyone who reads
  * it, from anywhere, for the rest of its hour.
  *
  * The Home Assistant integration reaches the hub through a RELAY on Home
- * Assistant's own origin (`/api/camstack/p/<grant>/…`). That relay strips the
+ * Assistant's own origin (`/api/dominevo/p/<grant>/…`). That relay strips the
  * incoming `Authorization` header and injects the share token itself, on the
  * server side, for every forwarded request — HTTP and the WebSocket upgrade
  * alike. On that path the copy of the token in the page buys nothing: the hub
@@ -35,7 +35,7 @@ import { z } from 'zod'
  * address — i.e. the page talks to the hub through a relay on its own origin,
  * and that relay supplies the credential.
  *
- * `/api/camstack/p/abc` → true. `//host/x` (protocol-relative) and
+ * `/api/dominevo/p/abc` → true. `//host/x` (protocol-relative) and
  * `https://hub:4443` → false: both leave this origin, so nothing on the way
  * injects anything.
  */
@@ -59,7 +59,7 @@ export function authorizationHeaders(token: string | undefined): Record<string, 
  * served from.
  *
  * `location.origin` alone is wrong behind the relay: the bundle is served at
- * `<ha-origin>/api/camstack/p/<grant>/viewer/camstack/embed/index.html`, and an
+ * `<ha-origin>/api/dominevo/p/<grant>/viewer/dominevo/embed/index.html`, and an
  * origin-only base sends `/trpc` to Home Assistant, which knows nothing about
  * it. The prefix the document was served under IS the relay path, so strip the
  * known embed path off the end of `pathname` and keep what is left.

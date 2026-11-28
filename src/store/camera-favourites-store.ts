@@ -21,7 +21,7 @@ import { create } from 'zustand'
  */
 /** The base key; each hub's copy lives at `<key>@<serverId>` (`server-scope.ts`):
  *  camera ids are per hub, so hub A's 101 is not hub B's 101. */
-export const CAMERA_FAVOURITES_STORAGE_KEY = 'camstack.camera-favourites.v1'
+export const CAMERA_FAVOURITES_STORAGE_KEY = 'dominevo.camera-favourites.v1'
 
 export interface CameraFavouritesState {
   /** Camera ids, in no particular order — membership is the whole question. */

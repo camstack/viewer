@@ -7,14 +7,14 @@
  * `loadFileURL:allowingReadAccessToURL:` (its iOS branch takes that path for
  * any URL with no host). A file URL with a QUERY is the fragile case: on the
  * Mac — where the app runs as an iOS app on Apple Silicon, from
- * `…/Wrapper/CamStack.app` — the load does not render and the URL escapes to
+ * `…/Wrapper/Dominevo.app` — the load does not render and the URL escapes to
  * the system, which opens the raw HTML in a browser. That is what the operator
  * saw: no stream, then Safari on
  * `file:///…/.expo-internal/<hash>.html`.
  *
  * A fragment is not part of the path a file loader resolves, so `#mode=player`
  * asks the same question without touching the filename. The embed reads both
- * (`EmbedApp.tsx`), and the injected `window.__CAMSTACK_EMBED_MODE__` still
+ * (`EmbedApp.tsx`), and the injected `window.__DOMINEVO_EMBED_MODE__` still
  * wins over either.
  *
  * ## The remote one is a FALLBACK, never the default
@@ -30,7 +30,7 @@ import type { NativeEmbedMode } from './use-native-embed-source.js'
 
 /** Where the hub serves the same embed. Query is fine over http(s). */
 export function buildRemoteEmbedUri(serverUrl: string, mode: NativeEmbedMode): string {
-  return `${serverUrl.replace(/\/+$/, '')}/viewer/camstack/embed/index.html?mode=${mode}`
+  return `${serverUrl.replace(/\/+$/, '')}/viewer/dominevo/embed/index.html?mode=${mode}`
 }
 
 /** The bundled asset, with the mode in the fragment. */

@@ -3,7 +3,7 @@
  *
  * `scripts/release-ios.js` writes `public/native-release.json` on every
  * native release; the web build carries it and the hub serves it at
- * `/viewer/camstack/native-release.json`. The app compares that with the
+ * `/viewer/dominevo/native-release.json`. The app compares that with the
  * binary it runs in and, when the file names a newer build, says so once per
  * build and offers the store. Pure here; the fetch is `use-native-release.ts`.
  */
@@ -75,5 +75,5 @@ export function storeUrlFor(release: NativeRelease, platform: 'ios' | 'android' 
 }
 
 export function nativeReleasePath(serverUrl: string): string {
-  return `${serverUrl.replace(/\/+$/, '')}/viewer/camstack/native-release.json`
+  return `${serverUrl.replace(/\/+$/, '')}/viewer/dominevo/native-release.json`
 }

@@ -29,7 +29,7 @@ export interface CertificateDetails {
   /** Epoch ms. */
   readonly notBefore: number
   readonly notAfter: number
-  /** `camstack:credential:*` and `camstack:user:*` URIs, and any other SAN. */
+  /** `dominevo:credential:*` and `dominevo:user:*` URIs, and any other SAN. */
   readonly subjectAltNames: readonly string[]
   /** Friendly names (`clientAuth`) or the raw OID. */
   readonly extendedKeyUsage: readonly string[]

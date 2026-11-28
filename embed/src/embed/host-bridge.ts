@@ -1,14 +1,14 @@
 /**
  * Host↔embed transport centraliser. The embed runs in two hosts:
- *  - an RN `WKWebView` (iOS): config injected as a `window.__CAMSTACK_*` global
- *    before load; commands arrive as injected JS calling `window.__camstack*`;
+ *  - an RN `WKWebView` (iOS): config injected as a `window.__DOMINEVO_*` global
+ *    before load; commands arrive as injected JS calling `window.__dominevo*`;
  *    events go out via `window.ReactNativeWebView.postMessage`.
  *  - a browser `<iframe>` (web): no global can be set before load (cross-origin),
  *    so config is fetched via an `embed-ready`→`embed-config` handshake; commands
  *    arrive as `message` events; events go out via `window.parent.postMessage`.
  *
  * Only the physical transport differs — the message vocabulary and the command
- * handlers (`window.__camstackGrid` / `window.__camstackEmbed`) are shared. Host
+ * handlers (`window.__dominevoGrid` / `window.__dominevoEmbed`) are shared. Host
  * OUT messages carry NO secrets (state / tile events), so '*' targetOrigin is
  * acceptable; all data stays token-gated at the SDK/tRPC layer.
  */
@@ -67,7 +67,7 @@ export function emitHost(rawMsg: unknown): void {
 }
 
 /** Listen for host→embed commands (browser iframe path). Returns a cleanup fn.
- *  On native, commands arrive as injected JS calling `window.__camstack*`
+ *  On native, commands arrive as injected JS calling `window.__dominevo*`
  *  directly, so no `embed-command` messages are posted and this is dormant. */
 export function onHostCommand(handler: (command: Record<string, unknown>) => void): () => void {
   const listener = (e: MessageEvent): void => {

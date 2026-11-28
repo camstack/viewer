@@ -1,4 +1,4 @@
-// Clean src root. The camstack-only client owns the app shell; the legacy
+// Clean src root. The dominevo-only client owns the app shell; the legacy
 // External hub polyfills/guards and legacy route tree were removed in the src
 // restart. The Buffer entry polyfill (for some transitive deps) still lives in
 // index.js. i18n is salvaged from v1 (self-contained: locales/ + expo-localization).

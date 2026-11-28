@@ -9,31 +9,31 @@ import {
 describe('buildGridEmbedUrl', () => {
   it('builds the grid embed URL on the stream-broker data-plane prefix', () => {
     expect(buildGridEmbedUrl('https://hub.local', 'grid')).toBe(
-      'https://hub.local/viewer/camstack/embed/index.html?mode=grid',
+      'https://hub.local/viewer/dominevo/embed/index.html?mode=grid',
     )
   })
 
   it('builds the player embed URL', () => {
     expect(buildGridEmbedUrl('https://hub.local', 'player')).toBe(
-      'https://hub.local/viewer/camstack/embed/index.html?mode=player',
+      'https://hub.local/viewer/dominevo/embed/index.html?mode=player',
     )
   })
 
   it('strips a trailing slash on the server URL', () => {
     expect(buildGridEmbedUrl('https://hub.local/', 'grid')).toBe(
-      'https://hub.local/viewer/camstack/embed/index.html?mode=grid',
+      'https://hub.local/viewer/dominevo/embed/index.html?mode=grid',
     )
   })
 
   it('appends devices as a csv when provided', () => {
     expect(buildGridEmbedUrl('https://hub.local', 'grid', { devices: [7, 8, 9] })).toBe(
-      'https://hub.local/viewer/camstack/embed/index.html?mode=grid&devices=7,8,9',
+      'https://hub.local/viewer/dominevo/embed/index.html?mode=grid&devices=7,8,9',
     )
   })
 
   it('omits devices when empty', () => {
     expect(buildGridEmbedUrl('https://hub.local', 'grid', { devices: [] })).toBe(
-      'https://hub.local/viewer/camstack/embed/index.html?mode=grid',
+      'https://hub.local/viewer/dominevo/embed/index.html?mode=grid',
     )
   })
 

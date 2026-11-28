@@ -12,7 +12,7 @@
  *          token panel below resolves it: a token minted here for the grid's
  *          cameras replaces it; an existing token covering every camera keeps
  *          it (its secret is never shown again) with a note.
- *   Home Assistant   the `camstack-grid-card` YAML. It needs no token: the
+ *   Home Assistant   the `dominevo-grid-card` YAML. It needs no token: the
  *          integration injects its own.
  *
  * Changing pickers here NEVER touches the grid's stored settings — the link is

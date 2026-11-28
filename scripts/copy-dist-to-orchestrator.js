@@ -1,17 +1,17 @@
 #!/usr/bin/env node
 /**
- * Copies the viewer's web export (dist/) into the CamStack server's
+ * Copies the viewer's web export (dist/) into the Dominevo server's
  * pipeline-orchestrator addon, which serves it as the `viewer-ui` capability
- * (hub mounts it at /viewer/camstack). Mirrors copy-dist-to-ha-addon.js /
+ * (hub mounts it at /viewer/dominevo). Mirrors copy-dist-to-ha-addon.js /
  * copy-to-external-hub.js.
  *
  * Run after:  EXPO_PUBLIC_WEB_BASE_PATH=/viewer npm run build:web
- * (the base path makes every asset URL /viewer/camstack/... — the hub mount).
+ * (the base path makes every asset URL /viewer/dominevo/... — the hub mount).
  *
- * The viewer is a git submodule at <server>/camstack, so the orchestrator is a
+ * The viewer is a git submodule at <server>/dominevo, so the orchestrator is a
  * sibling under <server>/packages. We stage into the addon's `assets/viewer`
  * (NOT `dist/`) because the addon's own vite build wipes `dist/`; `assets` is in
- * the addon's package `files`, so it ships on `camstack deploy`.
+ * the addon's package `files`, so it ships on `dominevo deploy`.
  */
 const fs = require("fs");
 const path = require("path");
@@ -38,7 +38,7 @@ if (!fs.existsSync(path.join(distSrc, "index.html"))) {
 }
 if (!fs.existsSync(orchestratorRoot)) {
   console.error("pipeline-orchestrator addon not found at:", path.resolve(orchestratorRoot));
-  console.error("Ensure the viewer submodule sits at <camstack-server>/camstack.");
+  console.error("Ensure the viewer submodule sits at <dominevo-server>/dominevo.");
   process.exit(1);
 }
 
@@ -100,5 +100,5 @@ console.log(
   `Copied viewer v${viewerPkg.version} dist/ → ${path.relative(
     path.join(projectRoot, ".."),
     distDest
-  )} (served at /viewer/camstack).`
+  )} (served at /viewer/dominevo).`
 );

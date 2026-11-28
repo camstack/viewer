@@ -30,7 +30,7 @@ import {
   hubHostOf,
   isHubUnreachable,
   isMixedContentHub,
-  isNotCamstackHub,
+  isNotDominevoHub,
 } from '../auth/web-reachability.js'
 import { loginEnterAction, loginReturnKey, type LoginField } from './login-enter.js'
 import { useServer } from '../app/ServerProvider.js'
@@ -129,7 +129,7 @@ export interface LoginScreenProps {
 }
 
 /** Admin-ui-style login: a centered card on the theme background with the
- *  CamStack logo, a server URL field (the mobile-only addition over admin-ui),
+ *  Dominevo logo, a server URL field (the mobile-only addition over admin-ui),
  *  username + password, and a second TOTP phase when the server requires it. */
 export function LoginScreen({
   initialServerUrl,
@@ -260,7 +260,7 @@ export function LoginScreen({
     // Something answered, so "can't reach" would be false — and the raw
     // parser error the client raises for it ("Unexpected token '<'…") tells
     // the operator nothing. Checked first: it is a different fact.
-    if (isNotCamstackHub(err)) return t('v2.login.notCamstackHub', { host })
+    if (isNotDominevoHub(err)) return t('v2.login.notDominevoHub', { host })
     if (Platform.OS === 'web') {
       return isHubUnreachable(err) ? t('v2.login.unreachableFromBrowser', { host }) : null
     }

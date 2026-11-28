@@ -13,7 +13,7 @@ import { scopedStorageKey } from './server-scope.js'
 import { DEFAULTS, useSettingsStore } from './settings-store.js'
 
 /** Per hub: the seeding has been decided (done, or deliberately skipped). */
-export const DETECTION_HOLD_SEEDED_KEY = '@camstack/v2/detection-hold-seeded'
+export const DETECTION_HOLD_SEEDED_KEY = '@dominevo/v2/detection-hold-seeded'
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null && !Array.isArray(v)

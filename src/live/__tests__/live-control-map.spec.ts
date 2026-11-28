@@ -4,7 +4,7 @@ import { playbackCommandToMessage, playbackCommandToScript } from '../live-contr
 describe('playbackCommandToScript', () => {
   it('emits playRecorded with deviceId, epoch, quoted profile', () => {
     expect(playbackCommandToScript({ kind: 'playRecorded', deviceId: 99, epochMs: 6000, profile: 'mid' }))
-      .toContain('window.__camstackEmbed.playRecorded(99,6000,"mid")')
+      .toContain('window.__dominevoEmbed.playRecorded(99,6000,"mid")')
   })
   it('emits playClip with the clip id and offset, on BOTH serialisations', () => {
     // D575: a clip is another position of the recorded pointer, so it rides
@@ -14,7 +14,7 @@ describe('playbackCommandToScript', () => {
     // that works on exactly one platform.
     expect(
       playbackCommandToScript({ kind: 'playClip', deviceId: 107, clipId: 'c:1', provider: 'provider-reolink', offsetMs: 0 }),
-    ).toContain('window.__camstackEmbed.playClip(107,"c:1","provider-reolink",0)')
+    ).toContain('window.__dominevoEmbed.playClip(107,"c:1","provider-reolink",0)')
     expect(
       playbackCommandToMessage({ kind: 'playClip', deviceId: 107, clipId: 'c:1', provider: 'provider-reolink', offsetMs: 0 }),
     ).toEqual({ kind: 'playClip', deviceId: 107, clipId: 'c:1', provider: 'provider-reolink', offsetMs: 0 })
@@ -32,7 +32,7 @@ describe('playbackCommandToScript', () => {
         offsetMs: 250,
         profile: 'high',
       }),
-    ).toContain('window.__camstackEmbed.playClip(107,"c:1","provider-reolink",250,"high")')
+    ).toContain('window.__dominevoEmbed.playClip(107,"c:1","provider-reolink",250,"high")')
     expect(
       playbackCommandToMessage({ kind: 'playClip', deviceId: 107, clipId: 'c:1', provider: 'provider-reolink', offsetMs: 250 }),
     ).not.toHaveProperty('profile')
@@ -52,23 +52,23 @@ describe('playbackCommandToScript', () => {
   })
 
   it('emits seek and scrubCommit', () => {
-    expect(playbackCommandToScript({ kind: 'seek', epochMs: 6000 })).toContain('window.__camstackEmbed.seek(6000)')
-    expect(playbackCommandToScript({ kind: 'scrubCommit', epochMs: 6000 })).toContain('window.__camstackEmbed.scrubCommit(6000)')
+    expect(playbackCommandToScript({ kind: 'seek', epochMs: 6000 })).toContain('window.__dominevoEmbed.seek(6000)')
+    expect(playbackCommandToScript({ kind: 'scrubCommit', epochMs: 6000 })).toContain('window.__dominevoEmbed.scrubCommit(6000)')
   })
   it('emits drag commands', () => {
-    expect(playbackCommandToScript({ kind: 'scrubStart' })).toContain('window.__camstackEmbed.scrubStart()')
-    expect(playbackCommandToScript({ kind: 'scrubTo', epochMs: 6000 })).toContain('window.__camstackEmbed.scrubTo(6000)')
-    expect(playbackCommandToScript({ kind: 'scrubEnd', epochMs: 6000 })).toContain('window.__camstackEmbed.scrubEnd(6000)')
+    expect(playbackCommandToScript({ kind: 'scrubStart' })).toContain('window.__dominevoEmbed.scrubStart()')
+    expect(playbackCommandToScript({ kind: 'scrubTo', epochMs: 6000 })).toContain('window.__dominevoEmbed.scrubTo(6000)')
+    expect(playbackCommandToScript({ kind: 'scrubEnd', epochMs: 6000 })).toContain('window.__dominevoEmbed.scrubEnd(6000)')
   })
   it('emits setRate and goLive', () => {
-    expect(playbackCommandToScript({ kind: 'setRate', rate: 0 })).toContain('window.__camstackEmbed.setRate(0)')
-    expect(playbackCommandToScript({ kind: 'goLive' })).toContain('window.__camstackEmbed.goLive()')
+    expect(playbackCommandToScript({ kind: 'setRate', rate: 0 })).toContain('window.__dominevoEmbed.setRate(0)')
+    expect(playbackCommandToScript({ kind: 'goLive' })).toContain('window.__dominevoEmbed.goLive()')
   })
   it('emits startLiveCapture and stopLiveCapture', () => {
     expect(playbackCommandToScript({ kind: 'startLiveCapture' }))
-      .toContain('window.__camstackEmbed.startLiveCapture()')
+      .toContain('window.__dominevoEmbed.startLiveCapture()')
     expect(playbackCommandToScript({ kind: 'stopLiveCapture' }))
-      .toContain('window.__camstackEmbed.stopLiveCapture()')
+      .toContain('window.__dominevoEmbed.stopLiveCapture()')
   })
   it('ends with the trailing true; injection contract', () => {
     expect(playbackCommandToScript({ kind: 'goLive' }).trim().endsWith('true;')).toBe(true)

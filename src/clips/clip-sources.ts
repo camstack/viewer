@@ -29,7 +29,7 @@
  * ## Why `provider` is always sent explicitly
  *
  * The cap documents an absent `provider` as "the device's BOUND provider, which
- * is CamStack on every camera today". Measured on the live hub 2026-09-20, with
+ * is Dominevo on every camera today". Measured on the live hub 2026-09-20, with
  * 592 bound to both `recorder` and `provider-reolink`, an absent `provider`
  * answered with the REOLINK rows. Absence is therefore not an expression of a
  * choice, and this module never relies on it.
@@ -40,8 +40,8 @@
 import { isRecord } from '../data/cap-query.js'
 import { CLIP_SOURCE_ANALYTICS, type ClipSourceId } from './clip-model.js'
 
-/** The source id CamStack's own recorder serves. Our footage, our timeline. */
-export const CLIP_PROVIDER_CAMSTACK_SOURCE: ClipSourceId = CLIP_SOURCE_ANALYTICS
+/** The source id Dominevo's own recorder serves. Our footage, our timeline. */
+export const CLIP_PROVIDER_DOMINEVO_SOURCE: ClipSourceId = CLIP_SOURCE_ANALYTICS
 
 /**
  * What a source is saying about itself.
@@ -151,7 +151,7 @@ function fromRow(row: ClipSourceRow, chosenMissing: boolean): ClipProviderChoice
   return {
     sourceId: row.sourceId,
     addonId: row.addonId,
-    derivation: row.sourceId === CLIP_PROVIDER_CAMSTACK_SOURCE ? 'derived' : 'cap',
+    derivation: row.sourceId === CLIP_PROVIDER_DOMINEVO_SOURCE ? 'derived' : 'cap',
     chosenMissing,
     state: row.state,
     ...(row.reason !== undefined ? { reason: row.reason } : {}),
@@ -161,9 +161,9 @@ function fromRow(row: ClipSourceRow, chosenMissing: boolean): ClipProviderChoice
 /**
  * Which source this camera's clip surface reads, and how.
  *
- * The default is CamStack, deliberately: absence must reproduce exactly what
- * the app drew before this setting existed, and *"di default va su camstack"*
- * is the operator's own word for it. A camera with no CamStack row falls to its
+ * The default is Dominevo, deliberately: absence must reproduce exactly what
+ * the app drew before this setting existed, and *"di default va su dominevo"*
+ * is the operator's own word for it. A camera with no Dominevo row falls to its
  * first source rather than to nothing — a camera full of onboard clips that
  * says "no clips" is the defect this whole line of work exists to end
  * (D554 4, D555).
@@ -180,7 +180,7 @@ export function resolveClipProvider(input: ResolveClipProviderInput): ClipProvid
     if (picked !== undefined) return fromRow(picked, false)
   }
   const fallback =
-    sources.find((s) => s.sourceId === CLIP_PROVIDER_CAMSTACK_SOURCE) ?? sources[0]
+    sources.find((s) => s.sourceId === CLIP_PROVIDER_DOMINEVO_SOURCE) ?? sources[0]
   const missing = chosen !== undefined && chosen.length > 0
   return fromRow(fallback, missing)
 }

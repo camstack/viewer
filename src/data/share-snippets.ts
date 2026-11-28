@@ -1,7 +1,7 @@
 /**
  * The Home Assistant card a share dialog offers next to its link: the same
- * frozen view, written as the `camstack-grid-card` / `camstack-events-card`
- * YAML of the CamStack Home Assistant integration.
+ * frozen view, written as the `dominevo-grid-card` / `dominevo-events-card`
+ * YAML of the Dominevo Home Assistant integration.
  *
  * The card carries NO token: the integration mints and injects its own (that
  * is how its relay reaches the hub), so a card needs only the cameras and the
@@ -72,9 +72,9 @@ function cameraNamesBlock(names: Readonly<Record<string, string>> | undefined): 
   return ['camera_names:', ...entries.map(([id, name]) => `  ${id}: ${yamlString(name)}`)]
 }
 
-/** `camstack-grid-card` for a grid link's view. */
+/** `dominevo-grid-card` for a grid link's view. */
 export function gridCardYaml(title: string, params: GridShareParams): string {
-  const lines: string[] = ['type: custom:camstack-grid-card', `title: ${yamlString(title)}`, ...deviceIdsBlock(params.devices)]
+  const lines: string[] = ['type: custom:dominevo-grid-card', `title: ${yamlString(title)}`, ...deviceIdsBlock(params.devices)]
   if (params.layout === 'auto') {
     lines.push('layout_mode: auto')
   } else {
@@ -89,12 +89,12 @@ export function gridCardYaml(title: string, params: GridShareParams): string {
 }
 
 /**
- * `camstack-events-card` for an events link's view. `fields` is always
+ * `dominevo-events-card` for an events link's view. `fields` is always
  * written, as the link always writes `fields=`: an empty list is "images
  * only", which an absent key is not. No order: the card is newest first.
  */
 export function eventsCardYaml(params: EventsShareParams): string {
-  const lines: string[] = ['type: custom:camstack-events-card']
+  const lines: string[] = ['type: custom:dominevo-events-card']
   if (params.deviceIds.length > 0) lines.push(...deviceIdsBlock(params.deviceIds))
   lines.push(...cameraNamesBlock(params.deviceNames))
   lines.push(`view: ${params.view}`, `thumb: ${params.thumb}`)

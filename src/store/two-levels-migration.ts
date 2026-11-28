@@ -46,9 +46,9 @@ export const RETIRED_STORAGE_KEYS = {
   /** The settings-template link (the template mechanism was deleted). */
   settingsTemplateLink: 'v2.settingsTemplateLink',
   /** The Rules tab's strip tab — ephemeral now. */
-  rulesStripTab: 'camstack.v2.nc-rules-strip',
+  rulesStripTab: 'dominevo.v2.nc-rules-strip',
   /** The device picker's "Group by" — the picker that offered it was replaced (issue 496). */
-  devicePickerGroupBy: 'camstack.v2.device-picker.group-by',
+  devicePickerGroupBy: 'dominevo.v2.device-picker.group-by',
 } as const
 
 /** Retired keys that also had a copy per hub: every copy goes. */
@@ -162,7 +162,7 @@ function trimPerHubDocs(docs: TwoLevelsDocs, serverIds: readonly string[], set: 
   for (const id of serverIds) {
     const eventsKey = scopedStorageKey(EVENTS_FILTER_STORAGE_KEY, id)
     // The account document keeps only its account fields: the device half has
-    // its own document (`camstack.v2.library-filter.events`), never synced.
+    // its own document (`dominevo.v2.library-filter.events`), never synced.
     const events = dropEphemeral(docs[eventsKey], EVENTS_FILTER_LEVELS, ['ephemeral', 'device'])
     if (events !== null) set[eventsKey] = JSON.stringify(events)
 

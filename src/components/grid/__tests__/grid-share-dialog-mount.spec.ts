@@ -90,7 +90,7 @@ describe('GridShareDialog', () => {
     act(() => {
       fireEvent.click(screen.getByText('Home Assistant'))
     })
-    expect(snippet()).toContain('type: custom:camstack-grid-card')
+    expect(snippet()).toContain('type: custom:dominevo-grid-card')
     expect(snippet()).not.toContain('{TOKEN}')
     expect(screen.queryByTestId('share-token-panel')).toBeNull()
   })

@@ -6,7 +6,7 @@
  * Pure: the wire answer is parsed record by record, so one malformed row costs
  * that row. The device is read from the raw User-Agent the hub recorded at
  * sign-in with the same simple rules admin-ui's My access uses
- * (`components/auth/session-client.ts` in camstack-server) — not a UA database;
+ * (`components/auth/session-client.ts` in dominevo-server) — not a UA database;
  * anything unrecognised is shown raw.
  */
 import { isRecord } from './cap-query.js'
@@ -61,7 +61,7 @@ interface Rule {
 
 /** Order matters: Edge and Opera also say "Chrome", Chrome also says "Safari". */
 const BROWSERS: readonly Rule[] = [
-  { test: /Electron\//, name: 'CamStack desktop' },
+  { test: /Electron\//, name: 'Dominevo desktop' },
   { test: /Edg(e|A|iOS)?\//, name: 'Edge' },
   { test: /OPR\/|Opera/, name: 'Opera' },
   { test: /Firefox\/|FxiOS\//, name: 'Firefox' },

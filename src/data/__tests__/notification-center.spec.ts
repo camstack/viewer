@@ -309,7 +309,7 @@ describe('parse boundary — the schemas are a viewer-LOCAL mirror', () => {
         systemEvent: {
           kinds: ['camera-offline', 'addon-update-available'],
           deviceIds: [104],
-          packageNames: ['@camstack/addon-pipeline'],
+          packageNames: ['@dominevo/addon-pipeline'],
         },
       },
       targets: [{ targetId: 'target-1' }],
@@ -318,7 +318,7 @@ describe('parse boundary — the schemas are a viewer-LOCAL mirror', () => {
     expect(rule.conditions.systemEvent).toEqual({
       kinds: ['camera-offline', 'addon-update-available'],
       deviceIds: [104],
-      packageNames: ['@camstack/addon-pipeline'],
+      packageNames: ['@dominevo/addon-pipeline'],
     })
 
     const result = NcConditionCatalogResultSchema.parse({

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { isLoadOfCandidate } from '../snapshot-load-match.js'
 
-const HUB_URL = 'https://camstack.example.top/addon/snapshot/media/103.jpg?w=302&v=1791295307140'
+const HUB_URL = 'https://dominevo.example.top/addon/snapshot/media/103.jpg?w=302&v=1791295307140'
 
 describe('isLoadOfCandidate', () => {
   it('accepts a load whose URL is the candidate URL (native, same-origin web)', () => {
@@ -19,7 +19,7 @@ describe('isLoadOfCandidate', () => {
   })
 
   it('still refuses a late load of a DIFFERENT generation', () => {
-    const older = 'https://camstack.example.top/addon/snapshot/media/103.jpg?w=302&v=1791295263726'
+    const older = 'https://dominevo.example.top/addon/snapshot/media/103.jpg?w=302&v=1791295263726'
     expect(isLoadOfCandidate(older, { uri: HUB_URL })).toBe(false)
     expect(isLoadOfCandidate(older, { uri: HUB_URL, headers: { Authorization: 'Bearer t' } })).toBe(false)
   })

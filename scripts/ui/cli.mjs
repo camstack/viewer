@@ -98,7 +98,7 @@ function show(name) {
 
 function tokens() {
   out('Viewer colours — src/theme/tokens.ts, read with useTheme().colors.<key>')
-  out('The web twin of each key is its kebab-case name in the server repo\'s camstack-theme.css (foregroundMuted ↔ foreground-muted).')
+  out('The web twin of each key is its kebab-case name in the server repo\'s dominevo-theme.css (foregroundMuted ↔ foreground-muted).')
   for (const t of loadCatalogue().colors) out(`  ${t.key.padEnd(20)} ${t.dark.padEnd(9)} ${t.light ?? '—'}`)
 }
 

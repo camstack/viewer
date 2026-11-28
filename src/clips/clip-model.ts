@@ -153,7 +153,7 @@ export interface Clip {
    *
    * A native provider holds no thumbnails; it mints one from the file on demand
    * behind this path. The route answers **204** when it will not produce one
-   * now, and says in `x-camstack-disposition` whether that is `deferred` (you
+   * now, and says in `x-dominevo-disposition` whether that is `deferred` (you
    * are in the queue — 43 of 60 parallel first-paint tiles on 592) or `final`
    * (it will never happen). Kept apart from {@link Clip.thumbnailUrl} for
    * exactly that reason: a queued still and a dead one must not be one value
@@ -221,13 +221,13 @@ export interface ClipStreams {
 
 /** The descriptors the viewer ships with. Unknown ids fall back (see below). */
 export const CLIP_SOURCES: readonly ClipSourceDescriptor[] = [
-  { id: CLIP_SOURCE_ANALYTICS, labelKey: 'v2.clips.sourceAnalytics', color: '#f59e42' },
-  { id: CLIP_SOURCE_HKSV, labelKey: 'v2.clips.sourceHksv', color: '#4ade80' },
+  { id: CLIP_SOURCE_ANALYTICS, labelKey: 'v2.clips.sourceAnalytics', color: '#f59e42' }, // ui-check-ok: clip-source identity colour, shared with the ribbon legend
+  { id: CLIP_SOURCE_HKSV, labelKey: 'v2.clips.sourceHksv', color: '#4ade80' }, // ui-check-ok: clip-source identity colour, shared with the ribbon legend
 ]
 
 /** Colour for a source the viewer does not ship a descriptor for. Derived from
  *  the id so two unknown sources are still told apart on the ribbon. */
-const UNKNOWN_SOURCE_COLORS: readonly string[] = ['#60a5fa', '#c084fc', '#f472b6', '#2dd4bf']
+const UNKNOWN_SOURCE_COLORS: readonly string[] = ['#60a5fa', '#c084fc', '#f472b6', '#2dd4bf'] // ui-check-ok: clip-source identity colour, shared with the ribbon legend
 
 function unknownSourceColor(id: ClipSourceId): string {
   let hash = 0
@@ -247,7 +247,7 @@ export function clipSourceDescriptor(id: ClipSourceId): ClipSourceDescriptor {
   const known = CLIP_SOURCES.find((s) => s.id === id)
   if (known !== undefined) return known
   if (id.startsWith(CLIP_SOURCE_NATIVE_PREFIX)) {
-    return { id, labelKey: 'v2.clips.sourceOnboard', color: '#60a5fa' }
+    return { id, labelKey: 'v2.clips.sourceOnboard', color: '#60a5fa' } // ui-check-ok: clip-source identity colour, shared with the ribbon legend
   }
   return { id, labelKey: 'v2.clips.sourceUnknown', color: unknownSourceColor(id) }
 }

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Image, Platform } from 'react-native'
-import localEmbedAsset from '../../assets/embed/camstack-embed.html'
+import localEmbedAsset from '../../assets/embed/dominevo-embed.html'
 import { buildLocalEmbedUri, buildRemoteEmbedUri, embedReadAccessUri } from './embed-source-uri.js'
 import { log } from '../lib/logger.js'
 

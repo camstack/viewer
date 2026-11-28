@@ -312,7 +312,7 @@ export function unseenFinishedCount(list: ActivityList): number {
 
 /** The storage key of one server's list. */
 export function activityStorageKey(serverId: string): string {
-  return `camstack.activity.v1.${serverId}`
+  return `dominevo.activity.v1.${serverId}`
 }
 
 /** The list as stored. The app update is not in it: it is not about this server's history. */

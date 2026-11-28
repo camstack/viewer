@@ -30,7 +30,7 @@ export interface ObjectEvent {
    * to `<Image src>`, and this route answers **204** when it will not produce a
    * still now. An `<Image>` cannot read a 204's headers — it fires `onerror`
    * with nothing to say — so a queued still became an anonymous broken tile.
-   * A mint is asked for with `fetch`, and the `x-camstack-disposition` header
+   * A mint is asked for with `fetch`, and the `x-dominevo-disposition` header
    * says whether the tile comes back (D563, D573).
    */
   readonly thumbnailMintUrl?: string

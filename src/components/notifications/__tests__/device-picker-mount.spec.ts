@@ -429,26 +429,26 @@ describe('NodePicker / PackagePicker (D637)', () => {
       React.createElement(PackagePicker, { value: [], onChange }),
       {
         hub: {
-          'addons.listPackages': [{ name: '@camstack/addon-x', version: '1.2.3', dir: '/data/x' }],
+          'addons.listPackages': [{ name: '@dominevo/addon-x', version: '1.2.3', dir: '/data/x' }],
         },
       },
     )
     await act(async () => {
       fireEvent.click(dom.getByTestId('device-picker-add'))
     })
-    const wrapper = await dom.findByTestId('device-picker-row-camstack-wrapper')
-    expect(dom.getByTestId('device-picker-row-@camstack/addon-x')).toBeTruthy()
+    const wrapper = await dom.findByTestId('device-picker-row-dominevo-wrapper')
+    expect(dom.getByTestId('device-picker-row-@dominevo/addon-x')).toBeTruthy()
     await act(async () => {
       fireEvent.click(wrapper)
     })
-    expect(onChange).toHaveBeenLastCalledWith(['camstack-wrapper'])
+    expect(onChange).toHaveBeenLastCalledWith(['dominevo-wrapper'])
   })
 
   it('a stored package the answered list lacks is "not installed"', async () => {
     mountScreen(
-      React.createElement(PackagePicker, { value: ['@camstack/gone'], onChange: () => undefined }),
+      React.createElement(PackagePicker, { value: ['@dominevo/gone'], onChange: () => undefined }),
       { hub: { 'addons.listPackages': [] } },
     )
-    expect(await dom.findByText('@camstack/gone — not installed')).toBeTruthy()
+    expect(await dom.findByText('@dominevo/gone — not installed')).toBeTruthy()
   })
 })

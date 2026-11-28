@@ -167,7 +167,7 @@ export function GridTilePlayer({
    * closing and reopening the grid.
    *
    * Recovery reuses the reconnect nonce the HOST already drives — the exact
-   * path `__camstackGrid.reconnect()` takes — so a rebuild here goes through
+   * path `__dominevoGrid.reconnect()` takes — so a rebuild here goes through
    * the same code as a manual one, including `CameraStreamPlayer`'s explicit
    * `video.play()` (Chrome will not start a MediaStream without it).
    */

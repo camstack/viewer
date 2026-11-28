@@ -27,7 +27,7 @@ const T = 1_700_000_000_000
  *  assert what the PAGE will actually receive on native. The host encodes with
  *  `JSON.stringify` so nested `target` keys stay valid JSON. */
 function payloadFromScript(script: string): unknown {
-  const match = /__camstackEmbedPage\.setDevice\((\{.*\})\)/.exec(script)
+  const match = /__dominevoEmbedPage\.setDevice\((\{.*\})\)/.exec(script)
   if (match === null) return null
   return JSON.parse(match[1] ?? 'null')
 }
@@ -51,7 +51,7 @@ describe('the swap the HOST sends is one the EMBED accepts', () => {
 
   it('native: the injected script carries a payload the schema accepts', () => {
     const script = playbackCommandToScript({ kind: 'setDevice', deviceId: 101, atMs: T })
-    expect(script).toContain('__camstackEmbedPage.setDevice')
+    expect(script).toContain('__dominevoEmbedPage.setDevice')
     expect(parseSetDeviceCommand(payloadFromScript(script))).toEqual({ deviceId: 101, atMs: T })
   })
 

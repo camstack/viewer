@@ -35,10 +35,10 @@ describe('createGridEmbedPlaybackSink', () => {
 
     for (const cmd of sent) {
       const script = gridCommandScript(cmd)
-      expect(script).toContain('window.__camstackGrid')
+      expect(script).toContain('window.__dominevoGrid')
       // The METHOD guard, not just the object one: an embed build without the
       // playback verbs must no-op rather than throw on every drag frame.
-      expect(script).toContain(`typeof window.__camstackGrid.${cmd.kind} === 'function'`)
+      expect(script).toContain(`typeof window.__dominevoGrid.${cmd.kind} === 'function'`)
       expect(script.trim().endsWith('true;')).toBe(true)
     }
   })

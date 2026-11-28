@@ -315,7 +315,7 @@ export function EmbedTrackPage() {
   // Same sources, same precedence as the events page — see EmbedEventsPage.
   const result = useEmbedConfig(
     'events',
-    () => (window as unknown as { __CAMSTACK_EVENTS__?: unknown }).__CAMSTACK_EVENTS__,
+    () => (window as unknown as { __DOMINEVO_EVENTS__?: unknown }).__DOMINEVO_EVENTS__,
     parseEventsConfig,
     readEventsUrlConfig,
     { urlFirst: true },

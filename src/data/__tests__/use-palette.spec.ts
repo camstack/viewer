@@ -5,7 +5,7 @@ import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { renderHook, waitFor } from '@testing-library/react'
-import { bundledCamstack } from '@dominevo/types/client'
+import { bundledDominevo } from '@dominevo/types/client'
 import { paintKind, resetPaletteView } from '../../../shared/palette.js'
 import { resetPaletteLog, shouldRefreshPalette, usePalette } from '../use-palette.js'
 
@@ -63,7 +63,7 @@ function wrapper(): (props: WrapperProps) => React.JSX.Element {
 }
 
 function ready(personHex: string): unknown {
-  const base = bundledCamstack()
+  const base = bundledDominevo()
   const person = base.swatches.person
   if (person === undefined || person.form !== 'solid') throw new Error('bundled person swatch missing')
   return { ...base, swatches: { ...base.swatches, person: { ...person, hex: personHex } } }
@@ -97,7 +97,7 @@ describe('usePalette', () => {
   it('falls back to the bundled preset when the hub is unknown', async () => {
     hub.payload = { status: 'unknown', reason: 'no-provider' }
     const bundled = paintKind(
-      { ready: bundledCamstack(), origin: 'pending', reason: null, serverUrl: null },
+      { ready: bundledDominevo(), origin: 'pending', reason: null, serverUrl: null },
       'person',
     )
     const { result } = renderHook(() => usePalette(), { wrapper: wrapper() })

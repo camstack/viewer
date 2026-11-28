@@ -14,7 +14,7 @@ import { parseGridConfig } from '../embed-grid-config'
 import { parseEventsConfig } from '../events-config'
 import { EVENTS_EMBED_PATH, parseEventsUrlConfig } from '../events-url-config'
 
-const RELAY = '/api/camstack/p/2f1c9a'
+const RELAY = '/api/dominevo/p/2f1c9a'
 const HUB = 'https://hub.local:4443'
 
 describe('isTransportAuthenticated', () => {

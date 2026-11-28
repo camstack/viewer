@@ -215,11 +215,11 @@ export function parseGridConfig(raw: unknown): GridConfigResult {
   return { ok: true, config: parsed.data }
 }
 
-/** Read + validate `window.__CAMSTACK_GRID__` (set by the host before load). */
+/** Read + validate `window.__DOMINEVO_GRID__` (set by the host before load). */
 export function readGridConfig(): GridConfigResult {
-  const raw = (window as unknown as { __CAMSTACK_GRID__?: unknown }).__CAMSTACK_GRID__
+  const raw = (window as unknown as { __DOMINEVO_GRID__?: unknown }).__DOMINEVO_GRID__
   if (raw === undefined || raw === null) {
-    return { ok: false, error: 'window.__CAMSTACK_GRID__ is not set' }
+    return { ok: false, error: 'window.__DOMINEVO_GRID__ is not set' }
   }
   return parseGridConfig(raw)
 }

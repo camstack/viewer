@@ -1492,7 +1492,7 @@ describe('formToInput — a family rule sends only its family’s filters (D637)
           excludeDeviceIds: [101],
           deviceTypes: ['camera'],
           nodeIds: ['hub'],
-          packageNames: ['@camstack/server'],
+          packageNames: ['@dominevo/server'],
         },
       },
     }

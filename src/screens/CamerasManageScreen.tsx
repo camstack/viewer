@@ -26,7 +26,7 @@
  * AsyncStorage); nothing here is sent to the hub. What that order does when the
  * hub's device set has moved under it is `data/device-order.ts`.
  *
- * Mirrors V1's settings/cameras screens, re-themed to camstack + lucide. Pushed
+ * Mirrors V1's settings/cameras screens, re-themed to dominevo + lucide. Pushed
  * over the tabs from the (app) group; reached via `/settings/cameras`. The
  * single-column `DraggableFlatList` (numColumns breaks drag on iOS) keeps the
  * drag grab on a dedicated handle so the inline TextInput stays editable.

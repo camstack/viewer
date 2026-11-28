@@ -27,7 +27,7 @@ import { onServerScopeChange, scopedStorageKey, whenServerScoped } from './serve
 import { CAMERA_PREFS_STORAGE_KEY } from './camera-prefs-store.js'
 
 /** Base key; one cached copy per hub (`scopedStorageKey`). */
-export const OVERLAY_CONFIG_STORAGE_KEY = 'camstack.v2.overlay-config'
+export const OVERLAY_CONFIG_STORAGE_KEY = 'dominevo.v2.overlay-config'
 
 interface OverlayConfigState {
   readonly overlay: OverlayConfig

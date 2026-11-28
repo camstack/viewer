@@ -1,7 +1,7 @@
 /**
  * `ui:check` rules for the viewer — the off-system shapes, each reported with
  * the kit component or token that replaces it. React Native files get the RN
- * rules; `embed/src/**` is browser code (Vite + Tailwind + the camstack theme)
+ * rules; `embed/src/**` is browser code (Vite + Tailwind + the dominevo theme)
  * and gets the web rules the server's `ui:check` applies.
  *
  * A developer tool, never a CI gate. Escape hatch: `ui-check-ok: <reason>` in

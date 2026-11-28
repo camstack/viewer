@@ -130,17 +130,17 @@ describe('readGridConfig', () => {
     paused: false,
   }
 
-  it('returns ok:true when window.__CAMSTACK_GRID__ is a valid config', () => {
-    ;(window as unknown as { __CAMSTACK_GRID__?: unknown }).__CAMSTACK_GRID__ = base
+  it('returns ok:true when window.__DOMINEVO_GRID__ is a valid config', () => {
+    ;(window as unknown as { __DOMINEVO_GRID__?: unknown }).__DOMINEVO_GRID__ = base
     const r = readGridConfig()
     expect(r.ok).toBe(true)
-    delete (window as unknown as { __CAMSTACK_GRID__?: unknown }).__CAMSTACK_GRID__
+    delete (window as unknown as { __DOMINEVO_GRID__?: unknown }).__DOMINEVO_GRID__
   })
 
-  it('returns ok:false with window.__CAMSTACK_GRID__ in the error when global is unset', () => {
-    delete (window as unknown as { __CAMSTACK_GRID__?: unknown }).__CAMSTACK_GRID__
+  it('returns ok:false with window.__DOMINEVO_GRID__ in the error when global is unset', () => {
+    delete (window as unknown as { __DOMINEVO_GRID__?: unknown }).__DOMINEVO_GRID__
     const r = readGridConfig()
     expect(r.ok).toBe(false)
-    if (!r.ok) expect(r.error).toContain('window.__CAMSTACK_GRID__')
+    if (!r.ok) expect(r.error).toContain('window.__DOMINEVO_GRID__')
   })
 })

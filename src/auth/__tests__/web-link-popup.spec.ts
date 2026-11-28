@@ -16,11 +16,11 @@ describe('withPopupFlag', () => {
 describe('profileQueryOf', () => {
   it('reads a link completion', () => {
     expect(
-      profileQueryOf({ type: 'camstack:sso-return', completion: { target: 'profile', query: 'linked=auth-oidc%2Fa' } }),
+      profileQueryOf({ type: 'dominevo:sso-return', completion: { target: 'profile', query: 'linked=auth-oidc%2Fa' } }),
     ).toBe('linked=auth-oidc%2Fa')
   })
   it('ignores a LOGIN completion — it carries a session this page must not take', () => {
-    expect(profileQueryOf({ type: 'camstack:sso-return', completion: { target: 'login', fragment: 'token=x' } })).toBeNull()
+    expect(profileQueryOf({ type: 'dominevo:sso-return', completion: { target: 'login', fragment: 'token=x' } })).toBeNull()
   })
   it('ignores anything else', () => {
     expect(profileQueryOf({ type: 'other' })).toBeNull()

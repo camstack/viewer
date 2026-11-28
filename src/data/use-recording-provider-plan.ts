@@ -33,7 +33,7 @@ import { useConnection } from '../connection/ConnectionProvider.js'
 import { cameraRecordingProvider, useCameraPrefsStore } from '../store/camera-prefs-store.js'
 import { capQuery } from './cap-query.js'
 import {
-  RECORDING_SOURCE_CAMSTACK_ADDON,
+  RECORDING_SOURCE_DOMINEVO_ADDON,
   parseRecordingSources,
   resolveRecordingProvider,
   type RecordingProviderChoice,
@@ -243,7 +243,7 @@ export async function fetchAvailabilityRows(
         'getAvailability',
         {
           deviceId: plan.ours[0],
-          provider: RECORDING_SOURCE_CAMSTACK_ADDON,
+          provider: RECORDING_SOURCE_DOMINEVO_ADDON,
           fromMs,
           toMs,
         },

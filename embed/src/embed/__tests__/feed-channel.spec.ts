@@ -9,7 +9,7 @@ describe('describeFeedChannel', () => {
   })
 
   it('names a public hostname a tunnel', () => {
-    expect(describeFeedChannel('https://camstack.example.top')).toBe('public:camstack.example.top')
+    expect(describeFeedChannel('https://dominevo.example.top')).toBe('public:dominevo.example.top')
   })
 
   it('names loopback loopback — hub-served web is not a LAN session', () => {

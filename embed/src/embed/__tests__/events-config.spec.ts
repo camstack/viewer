@@ -24,7 +24,7 @@ function parsed(raw: unknown): EventsConfig {
 }
 
 afterEach(() => {
-  delete (window as unknown as { __CAMSTACK_EVENTS__?: unknown }).__CAMSTACK_EVENTS__
+  delete (window as unknown as { __DOMINEVO_EVENTS__?: unknown }).__DOMINEVO_EVENTS__
 })
 
 describe('parseEventsConfig', () => {
@@ -149,11 +149,11 @@ describe('readEventsConfig', () => {
   it('errors clearly when the global is not set', () => {
     const result = readEventsConfig()
     expect(result.ok).toBe(false)
-    if (!result.ok) expect(result.error).toContain('__CAMSTACK_EVENTS__')
+    if (!result.ok) expect(result.error).toContain('__DOMINEVO_EVENTS__')
   })
 
   it('parses the host-injected global', () => {
-    ;(window as unknown as { __CAMSTACK_EVENTS__?: unknown }).__CAMSTACK_EVENTS__ = {
+    ;(window as unknown as { __DOMINEVO_EVENTS__?: unknown }).__DOMINEVO_EVENTS__ = {
       ...MINIMAL,
       view: 'gallery',
     }

@@ -4,11 +4,11 @@
  *
  * Three levels in one object (declared in {@link EVENTS_FILTER_LEVELS}):
  * whether the page shows parked rows is an ACCOUNT setting (operator decision
- * 2026-10-21), cached per hub under `camstack.v2.events-filter@<serverId>` and
+ * 2026-10-21), cached per hub under `dominevo.v2.events-filter@<serverId>` and
  * synced; what the filter bar narrows to (cameras, classes, attributes, the
  * marks) is a DEVICE setting (operator, 2026-10-23: "the Library filters
  * persist on the device"), stored per hub under
- * `camstack.v2.library-filter.events@<serverId>` and never synced; the label
+ * `dominevo.v2.library-filter.events@<serverId>` and never synced; the label
  * text lives in MEMORY only. A remembered camera the hub no longer has is
  * dropped ({@link EventsFilterState.pruneCameras}).
  *
@@ -143,10 +143,10 @@ export function resolveEventsExcludeSources(
 
 /** The base key; each hub's filter lives at `<key>@<serverId>`: its camera
  *  ids are that hub's (`server-scope.ts`). */
-export const EVENTS_FILTER_STORAGE_KEY = 'camstack.v2.events-filter'
+export const EVENTS_FILTER_STORAGE_KEY = 'dominevo.v2.events-filter'
 
 /** The base key of the DEVICE half (the filter bar's narrowing); per hub. */
-export const EVENTS_FILTER_DEVICE_STORAGE_KEY = 'camstack.v2.library-filter.events'
+export const EVENTS_FILTER_DEVICE_STORAGE_KEY = 'dominevo.v2.library-filter.events'
 
 export type EventsFilterLevel = 'account' | 'device' | 'ephemeral'
 

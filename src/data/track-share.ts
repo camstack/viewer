@@ -3,7 +3,7 @@
  *
  * A "private link" is an authenticated deep link into the viewer: it carries no
  * secret, it just names the event/track. Whoever opens it in an authenticated
- * CamStack app lands on the events tab with the detail open; an unauthenticated
+ * Dominevo app lands on the events tab with the detail open; an unauthenticated
  * app shows login first. The app scheme (`dominevo://` / `dominevo.dev://`) is
  * resolved at call-time by `expo-linking` `createURL(path, { queryParams })`, so
  * this module stays a PURE builder of the `(path, queryParams)` pair it is given.
@@ -39,7 +39,7 @@ export function trackShareTarget(track: TrackSummary): TrackShareTarget {
 }
 
 /** Where the hub mounts the web viewer, under its public address. */
-export const WEB_VIEWER_BASE_PATH = '/viewer/camstack'
+export const WEB_VIEWER_BASE_PATH = '/viewer/dominevo'
 
 /**
  * The browser-openable URL for `target`: the hub's public address, the web

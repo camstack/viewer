@@ -40,7 +40,7 @@ export interface AppGridLocal {
 }
 
 /** AsyncStorage key for the persisted document. */
-export const GRID_LOCAL_STORAGE_KEY = '@camstack/v2/grid-local'
+export const GRID_LOCAL_STORAGE_KEY = '@dominevo/v2/grid-local'
 
 /** The tier a wall uses when this device has never picked one. */
 export const GRID_QUALITY_DEFAULT: StreamQuality = 'auto'

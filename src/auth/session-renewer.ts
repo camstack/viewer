@@ -88,7 +88,7 @@ export function createSessionRenewer(deps: SessionRenewerDeps): SessionRenewer {
 
   const run = async (serverId: string, request: RenewRequest): Promise<RenewOutcome> => {
     if (!crossTab) return refresh(serverId, request)
-    return withLock(`camstack-session-renew:${serverId}`, async () => {
+    return withLock(`dominevo-session-renew:${serverId}`, async () => {
       const adopted = await adoptStored(serverId, request)
       return adopted ?? refresh(serverId, request)
     })

@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import "@dominevo/ui-library/tailwind/camstack-theme.css";
+@import "@dominevo/ui-library/tailwind/dominevo-theme.css";
 
 /* Shared ui-library composites emit Tailwind classes from their installed
    distribution, outside this source tree. Scan it explicitly so video sizing

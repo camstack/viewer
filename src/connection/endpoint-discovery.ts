@@ -38,7 +38,7 @@ export interface PortScheme {
    * Load-bearing whenever the hub does NOT declare its own port. A hub old
    * enough to only echo takes a port and stamps it onto every address it
    * advertises, including the LAN ones. So a client configured with
-   * `https://camstack.example.top` (no port) infers 443 from the scheme, asks
+   * `https://dominevo.example.top` (no port) infers 443 from the scheme, asks
    * with 443, and is handed `https://192.0.2.10:443` for a hub that listens on
    * 4443. That candidate is born dead, and it is the reason an operator sitting
    * on his own WiFi was on the public tunnel all along.

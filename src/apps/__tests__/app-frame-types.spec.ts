@@ -56,13 +56,13 @@ describe('originGuardedScript', () => {
 describe('the native page bridge scripts', () => {
   it('delivers a shell message to the page as a message event', async () => {
     const { deliverToPageScript } = await import('../app-frame-types.js')
-    const script = deliverToPageScript({ camstack: 'app-bridge', v: 1, type: 'hello' })
+    const script = deliverToPageScript({ dominevo: 'app-bridge', v: 1, type: 'hello' })
     expect(script).toContain("new MessageEvent('message'")
     expect(script).toContain('"type":"hello"')
   })
   it('forwards only the bridge envelope out of the page', async () => {
     const { BRIDGE_FORWARDER_SCRIPT } = await import('../app-frame-types.js')
-    expect(BRIDGE_FORWARDER_SCRIPT).toContain("d.camstack === 'app-bridge'")
+    expect(BRIDGE_FORWARDER_SCRIPT).toContain("d.dominevo === 'app-bridge'")
     expect(BRIDGE_FORWARDER_SCRIPT).toContain('ReactNativeWebView.postMessage')
   })
 })

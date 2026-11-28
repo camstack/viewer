@@ -48,7 +48,7 @@ export const DEVICE_SETTINGS_LEVELS: Readonly<Record<keyof DeviceSettings, 'devi
 }
 
 /** AsyncStorage key for the persisted document. */
-export const DEVICE_SETTINGS_STORAGE_KEY = '@camstack/v2/device-settings'
+export const DEVICE_SETTINGS_STORAGE_KEY = '@dominevo/v2/device-settings'
 
 /** Parse persisted JSON field by field. Never throws. */
 export function parseDeviceSettings(raw: string | null): DeviceSettings {

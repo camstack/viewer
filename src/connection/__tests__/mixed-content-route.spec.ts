@@ -9,7 +9,7 @@ const { switchServerUrl, createSystem } = vi.hoisted(() => {
   return {
     switchServerUrl,
     createSystem: vi.fn(() => ({
-      serverUrl: 'https://camstack.example.top',
+      serverUrl: 'https://dominevo.example.top',
       switchServerUrl,
       reconnect: vi.fn(),
       trpcClient: { auth: { me: { query: vi.fn(async () => ({ id: 1 })) } } },
@@ -21,7 +21,7 @@ const { switchServerUrl, createSystem } = vi.hoisted(() => {
 vi.mock('@dominevo/sdk', () => ({ createSystem }))
 
 const LAN_HTTP = 'http://192.0.2.10:4480'
-const TUNNEL = 'https://camstack.example.top'
+const TUNNEL = 'https://dominevo.example.top'
 
 /** A race that elects the FIRST url it is offered — the stored order puts LAN first. */
 function firstWins(offered: string[][]): (urls: readonly string[]) => Promise<CandidateRaceOutcome> {

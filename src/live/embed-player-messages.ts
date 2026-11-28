@@ -18,7 +18,7 @@ export type PlayerCommand =
   | { readonly kind: 'setMic'; readonly value: boolean }
   | { readonly kind: 'fit'; readonly w: number; readonly h: number }
   | { readonly kind: 'reconnect' }
-  /** Host pushed a renewed access token (D812). Page: `__camstackEmbedPage.setToken`. */
+  /** Host pushed a renewed access token (D812). Page: `__dominevoEmbedPage.setToken`. */
   | { readonly kind: 'setToken'; readonly value: string }
 
 // `setDevice` is deliberately NOT here. The in-place camera swap (D483) lives

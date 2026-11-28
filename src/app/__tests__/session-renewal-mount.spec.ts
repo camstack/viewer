@@ -108,7 +108,7 @@ describe('the hub server name on connect (D861)', () => {
   })
 
   it.each([
-    ['a default name', { name: 'CamStack', isDefault: true }],
+    ['a default name', { name: 'Dominevo', isDefault: true }],
     ['an old hub', null],
   ])('keeps the host label on %s', async (_label, answer) => {
     serverNameAnswer = answer

@@ -74,7 +74,7 @@ function formatSnapshotAge(ageMs: number | null): string {
 /** Rich camera card: a 16:9 snapshot thumbnail (live `useSnapshot`, expo-image
  *  for memory/disk caching) with sleeping / unavailable / loading states, plus
  *  a footer row carrying the name, online dot, a battery badge (battery cams
- *  only), and small PTZ / two-way-audio feature hints. camstack-themed. */
+ *  only), and small PTZ / two-way-audio feature hints. dominevo-themed. */
 export const CameraCard = React.memo(function CameraCard({
   camera,
   onPress,

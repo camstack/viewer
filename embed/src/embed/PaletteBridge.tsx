@@ -28,7 +28,7 @@ export function PaletteBridge({ system }: PaletteBridgeProps): React.JSX.Element
         background: THEME.dark.background,
       }}
     >
-      {`Palette unreadable (${view.reason}). Using the CamStack preset.`}
+      {`Palette unreadable (${view.reason}). Using the Dominevo preset.`}
     </p>
   )
 }

@@ -10,7 +10,7 @@ import {
 
 const HUB_ENDPOINTS: readonly ChannelEndpoint[] = [
   { baseUrl: 'https://192.168.0.10:4443', label: 'LAN — eth0', kind: 'lan-ipv4' },
-  { baseUrl: 'https://camstack.example.top', label: 'Public tunnel', kind: 'public' },
+  { baseUrl: 'https://dominevo.example.top', label: 'Public tunnel', kind: 'public' },
   { baseUrl: 'https://127.0.0.1:4443', label: 'Loopback', kind: 'loopback' },
 ]
 
@@ -36,7 +36,7 @@ describe('classifyHost', () => {
   })
 
   it('names a public DNS name public', () => {
-    expect(classifyHost('camstack.example.top')).toBe('public')
+    expect(classifyHost('dominevo.example.top')).toBe('public')
   })
 
   it('refuses to guess at a bare word', () => {
@@ -62,7 +62,7 @@ describe('describeRoute', () => {
   })
 
   it('matches through a trailing slash', () => {
-    expect(describeRoute('https://camstack.example.top/', HUB_ENDPOINTS, 'unchanged').channel).toBe(
+    expect(describeRoute('https://dominevo.example.top/', HUB_ENDPOINTS, 'unchanged').channel).toBe(
       'public',
     )
   })
@@ -81,10 +81,10 @@ describe('describeRoute', () => {
   })
 
   it('carries the reason so a decision is distinguishable from a leftover', () => {
-    const won = describeRoute('https://camstack.example.top', HUB_ENDPOINTS, 'race-won')
-    const gaveUp = describeRoute('https://camstack.example.top', HUB_ENDPOINTS, 'no-winner')
+    const won = describeRoute('https://dominevo.example.top', HUB_ENDPOINTS, 'race-won')
+    const gaveUp = describeRoute('https://dominevo.example.top', HUB_ENDPOINTS, 'no-winner')
     expect(won.url).toBe(gaveUp.url)
     expect(routeSummary(won)).not.toBe(routeSummary(gaveUp))
-    expect(routeSummary(gaveUp)).toBe('public:camstack.example.top (no-winner)')
+    expect(routeSummary(gaveUp)).toBe('public:dominevo.example.top (no-winner)')
   })
 })

@@ -45,7 +45,7 @@ describe('the OTA native-drift gate', () => {
   })
 
   it('refuses a changed or new file under modules/ or plugins/, tracked or not', () => {
-    expect(check({ ...SAME, changed: 'modules/camstack-device-key/ios/A.swift\n' }).problems).toEqual(['native source changed: modules/camstack-device-key/ios/A.swift'])
+    expect(check({ ...SAME, changed: 'modules/dominevo-device-key/ios/A.swift\n' }).problems).toEqual(['native source changed: modules/dominevo-device-key/ios/A.swift'])
     expect(check({ ...SAME, untracked: ['plugins/withX.js'] }).ok).toBe(false)
   })
 

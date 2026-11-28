@@ -18,7 +18,7 @@ describe('third-party product guard', () => {
     expect(hits('id: "frigate-plus"')).toEqual([])
     expect(hits('model scrypted-yolov9t-relu-onnx')).toEqual([])
     expect(hits('see https://docs.frigate.video/plus and api.frigate.video')).toEqual([])
-    expect(hits('mounted at /api/hassio_ingress/camstack')).toEqual([])
+    expect(hits('mounted at /api/hassio_ingress/dominevo')).toEqual([])
     expect(hits('curl bin/go2rtc from install-go2rtc.sh')).toEqual([])
   })
 

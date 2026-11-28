@@ -167,7 +167,7 @@ function shape(root: HTMLElement): 'fill' | 'wide' | 'stack' | null {
  * to it.
  */
 function wallBoots(): readonly string[] {
-  return bootedWebViewConfigs().filter((c) => c.includes('__CAMSTACK_GRID__'))
+  return bootedWebViewConfigs().filter((c) => c.includes('__DOMINEVO_GRID__'))
 }
 
 /** The wall, settled: booted with the cameras it is meant to draw, and having

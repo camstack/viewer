@@ -2,7 +2,7 @@
  * useAddonPackages — the installed addon packages, as the system family's
  * package picker lists them (D637): `addons.listPackages`, the same method the
  * admin UI's picker reads. The update-event packages it does not list
- * (`@camstack/server`, `@camstack/system`, `camstack-wrapper`) are added by
+ * (`@dominevo/server`, `@dominevo/system`, `dominevo-wrapper`) are added by
  * `packagePickerItems`, not here.
  *
  * Read only while `enabled`. An answer that does not parse THROWS — never an

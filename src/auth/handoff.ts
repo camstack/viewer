@@ -1,6 +1,6 @@
 /**
  * Native login handoff (Phase 2 of viewer auth forwarding — "Sign in
- * with CamStack").
+ * with Dominevo").
  *
  * The app opens the hub's admin-ui login page in an auth session
  * (`expo-web-browser` openAuthSessionAsync) with

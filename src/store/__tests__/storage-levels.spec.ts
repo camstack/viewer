@@ -28,7 +28,7 @@ function sourceFiles(dir: string): readonly string[] {
 }
 
 /** The storage-key namespaces this app uses. */
-const KEY_SHAPE = /^(@camstack\/|camstack\.|v2\.)/
+const KEY_SHAPE = /^(@dominevo\/|dominevo\.|v2\.)/
 
 /** A file that reads or writes a key-value store. */
 const TOUCHES_STORAGE = /AsyncStorage|KvStore|sessionStorage|localStorage|\bkv\.|secrets\./
@@ -81,7 +81,7 @@ describe('storage levels — every persisted key is declared', () => {
   it('the scan sees the keys it is meant to guard', () => {
     // A scan that matches nothing would pass forever; pin a few it must see.
     const seen = new Set(literals.map((l) => l.literal))
-    for (const key of ['@camstack/v2/settings', 'v2.language', 'v2.servers', 'camstack.activity.v1.', 'v2.cache.cameras.']) {
+    for (const key of ['@dominevo/v2/settings', 'v2.language', 'v2.servers', 'dominevo.activity.v1.', 'v2.cache.cameras.']) {
       expect(seen, key).toContain(key)
     }
   })
@@ -102,10 +102,10 @@ describe('storage levels — every persisted key is declared', () => {
 
   it('a hub copy of an account key is the account level; of a device key, the device level', () => {
     expect(storageLevelOf('v2.language@hub-a')?.level).toBe('account')
-    expect(storageLevelOf('@camstack/v2/camera-local@hub-a')?.level).toBe('device')
+    expect(storageLevelOf('@dominevo/v2/camera-local@hub-a')?.level).toBe('device')
     expect(storageLevelOf('v2.token.abc')?.level).toBe('device')
     expect(storageLevelOf('v2.token')?.level).toBe('retired')
-    expect(storageLevelOf('@camstack/v2/brand-new')).toBeUndefined()
+    expect(storageLevelOf('@dominevo/v2/brand-new')).toBeUndefined()
   })
 })
 

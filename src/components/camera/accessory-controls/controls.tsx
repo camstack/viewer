@@ -1,5 +1,5 @@
 /**
- * Per-cap COMPACT inline accessory controls (RN, lucide, camstack theme).
+ * Per-cap COMPACT inline accessory controls (RN, lucide, dominevo theme).
  *
  * Each control:
  *   - reads its cap status via the matching hook (refetch ~5s)

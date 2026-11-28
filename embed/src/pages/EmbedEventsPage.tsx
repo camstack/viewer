@@ -1,7 +1,7 @@
 /**
  * EmbedEventsPage — the chrome-less TRACK/EVENT surface of the embed bundle.
  *
- * Served with the Viewer at `/viewer/camstack/embed/index.html?mode=events`
+ * Served with the Viewer at `/viewer/dominevo/embed/index.html?mode=events`
  * (see `EmbedApp`), exactly like the grid and player: one bundle, one data-plane
  * prefix, one auth story. Everything about the distribution model is inherited —
  * this file only adds a mode.
@@ -12,10 +12,10 @@
  *
  * ## Contract
  *
- *   IN  (native, before load):  window.__CAMSTACK_EVENTS__ = { serverUrl, token, … }
+ *   IN  (native, before load):  window.__DOMINEVO_EVENTS__ = { serverUrl, token, … }
  *   IN  (web iframe):           `embed-ready` → `embed-config` handshake
  *   IN  (standalone / iframe):  `?mode=events&v=1&…` query params + `#t=<token>`
- *   IN  (runtime):              window.__camstackEvents = { setConfig, refresh,
+ *   IN  (runtime):              window.__dominevoEvents = { setConfig, refresh,
  *                                 reload, loadMore, scrollToTop }
  *                               …or `postMessage({type:'embed-command', command})`
  *   OUT (postMessage):          ready / error / state / trackClick / countChanged
@@ -100,8 +100,8 @@ import { PULL_THRESHOLD_PX, internalPullGestureEnabled, usePullToRefresh } from 
 
 declare global {
   interface Window {
-    __CAMSTACK_EVENTS__?: unknown
-    __camstackEvents?: {
+    __DOMINEVO_EVENTS__?: unknown
+    __dominevoEvents?: {
       setConfig: (patch: unknown) => void
       setWindow: (window: { sinceMs?: number | null; untilMs?: number | null }) => void
       refresh: () => void
@@ -576,7 +576,7 @@ export function Events({ client, initialConfig }: EventsProps) {
   }, [trackListReporter])
 
   useEffect(() => {
-    window.__camstackEvents = {
+    window.__dominevoEvents = {
       setConfig: (patch) => {
         const command = parseEventsCommand({ type: 'setConfig', patch })
         if (command !== null) runCommand(command)
@@ -670,11 +670,11 @@ export function Events({ client, initialConfig }: EventsProps) {
   // dropped by a content scan that never sees this file), and a keyframe has
   // nowhere else to live.
   useEffect(() => {
-    const id = 'camstack-events-keyframes'
+    const id = 'dominevo-events-keyframes'
     if (document.getElementById(id) !== null) return
     const style = document.createElement('style')
     style.id = id
-    style.textContent = '@keyframes camstack-spin{to{transform:rotate(360deg)}}'
+    style.textContent = '@keyframes dominevo-spin{to{transform:rotate(360deg)}}'
     document.head.appendChild(style)
   }, [])
 
@@ -1217,7 +1217,7 @@ export function Events({ client, initialConfig }: EventsProps) {
               borderRadius: 999,
               border: `2px solid ${palette.chip}`,
               borderTopColor: palette.textMuted,
-              animation: 'camstack-spin 700ms linear infinite',
+              animation: 'dominevo-spin 700ms linear infinite',
             }}
           />
         </div>
@@ -1333,7 +1333,7 @@ export function Events({ client, initialConfig }: EventsProps) {
               boxShadow: '0 1px 4px rgba(0,0,0,0.25)',
               // Rotates with the pull, then spins once the refresh is running.
               transform: `rotate(${pull.distance * 4}deg)`,
-              animation: feed.loadingMore ? 'camstack-spin 700ms linear infinite' : undefined,
+              animation: feed.loadingMore ? 'dominevo-spin 700ms linear infinite' : undefined,
             }}
           />
         </div>
@@ -1466,14 +1466,14 @@ export function Events({ client, initialConfig }: EventsProps) {
 
 export function EmbedEventsPage() {
   // Config sources, in precedence order:
-  //   1. native host global (`window.__CAMSTACK_EVENTS__`)
+  //   1. native host global (`window.__DOMINEVO_EVENTS__`)
   //   2. a URL that carries BOTH v1 params and a `#t=` token — works standalone
   //      AND inside an iframe (`urlFirst`), because `<iframe src=…#t=…>` is the
   //      entire integration for a host with a token and no message plumbing
   //   3. the iframe handshake, with the URL's layout params applied on top
   const configResult = useEmbedConfig(
     'events',
-    () => (window as unknown as { __CAMSTACK_EVENTS__?: unknown }).__CAMSTACK_EVENTS__,
+    () => (window as unknown as { __DOMINEVO_EVENTS__?: unknown }).__DOMINEVO_EVENTS__,
     parseEventsConfig,
     readEventsUrlConfig,
     { urlFirst: true },

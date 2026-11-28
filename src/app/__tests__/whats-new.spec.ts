@@ -61,7 +61,7 @@ describe("what's new is filled in for every version", () => {
 
   it('is newest first, every entry with both languages', () => {
     // Dominevo restarted the version line at 0.1.0 (a new store app); the
-    // CamStack-era history below it stays as it was. Newest-first holds
+    // Dominevo-era history below it stays as it was. Newest-first holds
     // everywhere except exactly one break, right after the 0.1.0 entry: the
     // Dominevo (0.x) block first, newest first, then the legacy line.
     const versions = WHATS_NEW.map((e) => e.version)

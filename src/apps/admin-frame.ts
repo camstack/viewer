@@ -4,7 +4,7 @@
  * The Admin UI is loaded from the base URL the viewer's own endpoint race won
  * (LAN at home, the tunnel away): each origin is its own browser origin, so each
  * gets its own one-time handoff. On the web the viewer is served by the hub at
- * `/viewer/camstack/`, so the Admin is a same-origin iframe and nothing is
+ * `/viewer/dominevo/`, so the Admin is a same-origin iframe and nothing is
  * handed over; a viewer that is NOT on the hub's origin cannot frame it (the hub
  * answers `frame-ancestors 'self'`) and opens a tab instead.
  */
@@ -115,4 +115,4 @@ export function shouldOfferLocalSwitch(loadedLocal: boolean, nowLocal: boolean, 
  * viewer is hosting it (the older signal; the `hello` bridge message is the one
  * an app goes chromeless on). Idempotent.
  */
-export const EMBEDDED_BY_VIEWER_SCRIPT = 'window.__CAMSTACK_VIEWER_EMBED__ = true; true;'
+export const EMBEDDED_BY_VIEWER_SCRIPT = 'window.__DOMINEVO_VIEWER_EMBED__ = true; true;'

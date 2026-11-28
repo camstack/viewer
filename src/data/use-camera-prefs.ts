@@ -41,11 +41,11 @@ export function useCameraPrefs(): UseCameraPrefs {
 
 /** One camera's clip-source pick, and the setter the picker drives. */
 export interface UseCameraClipProvider {
-  /** The stored SOURCE id, or undefined = the default (CamStack). */
+  /** The stored SOURCE id, or undefined = the default (Dominevo). */
   readonly chosen: string | undefined
   /** True once persisted prefs have loaded. Until then `chosen` is not an
    *  answer: an unhydrated store says "no pick" for every camera, and acting on
-   *  that would flip a camera back to CamStack for one frame on every launch. */
+   *  that would flip a camera back to Dominevo for one frame on every launch. */
   readonly hydrated: boolean
   readonly setChosen: (sourceId: string | undefined) => void
 }

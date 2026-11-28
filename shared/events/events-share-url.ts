@@ -2,7 +2,7 @@
  * events-share-url — the v1 URL contract of the EVENTS embed, encode side.
  *
  * A link is:
- *   <serverUrl>/viewer/camstack/embed/index.html?mode=events&v=1
+ *   <serverUrl>/viewer/dominevo/embed/index.html?mode=events&v=1
  *     &view=reel|gallery &rows=<1..6> &cols=auto|<1..12> &thumb=small|medium|large
  *     &devices=1,5,9 &classes=person,vehicle &attrs=face,plate &q=<text>
  *     &fields=label,sublabel,camera,time,badges,importance
@@ -319,7 +319,7 @@ export function buildEventsShareUrl(
 
 /**
  * The URL the IN-APP host loads. No `v=1` and no token: a native WebView gets
- * its whole config from the injected `window.__CAMSTACK_EVENTS__`, and a web
+ * its whole config from the injected `window.__DOMINEVO_EVENTS__`, and a web
  * iframe from the `embed-ready` handshake. Emitting `v=1` here would make the
  * page treat the URL as a config source and reject it for having no token.
  */

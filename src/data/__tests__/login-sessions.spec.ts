@@ -21,7 +21,7 @@ describe('parseLoginSessions', () => {
 
 describe('describeClient', () => {
   it('names the native apps from their HTTP stacks', () => {
-    expect(describeClient('CamStack/1 CFNetwork/1568.200.51 Darwin/24.1.0')).toEqual({ kind: 'app', os: 'iOS' })
+    expect(describeClient('Dominevo/1 CFNetwork/1568.200.51 Darwin/24.1.0')).toEqual({ kind: 'app', os: 'iOS' })
     expect(describeClient('okhttp/4.12.0')).toEqual({ kind: 'app', os: 'Android' })
   })
 

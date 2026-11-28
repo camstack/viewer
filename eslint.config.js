@@ -4,7 +4,7 @@ const expoConfig = require('eslint-config-expo/flat');
 
 /**
  * A VALUE from `@dominevo/types` comes from `@dominevo/types/client` (or the
- * tiny `/enums` entry) — never from the bare root (D721 in camstack-server).
+ * tiny `/enums` entry) — never from the bare root (D721 in dominevo-server).
  * The root is one pre-bundled module carrying every capability schema and
  * Metro does not tree-shake, so one value import from it drags ~1.2 MB into
  * the bundle. Types are erased, so `import type { … } from '@dominevo/types'`
@@ -26,7 +26,7 @@ const TYPES_ROOT_VALUE_IMPORT = {
             name: '@dominevo/types',
             allowTypeImports: true,
             message:
-              "Import values from '@dominevo/types/client' (or '/enums'). The bare entry is the whole 2.7 MB barrel and Metro does not tree-shake it. A value missing from /client is added to packages/types/src/client.ts in camstack-server.",
+              "Import values from '@dominevo/types/client' (or '/enums'). The bare entry is the whole 2.7 MB barrel and Metro does not tree-shake it. A value missing from /client is added to packages/types/src/client.ts in dominevo-server.",
           },
         ],
       },
