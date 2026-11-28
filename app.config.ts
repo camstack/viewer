@@ -31,7 +31,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   version: require("./package.json").version,
   // Deliberately NOT derived: `runtimeVersion` is the OTA compatibility pin and
   // must stay FIXED across OTA bumps (it moves only on a native release).
-  runtimeVersion: "0.1.0",
+  runtimeVersion: "0.1.1",
   orientation: "default",
   // The PNG stays the web/Android launcher source; iOS takes the Icon Composer
   // bundle through `ios.icon`.
@@ -44,7 +44,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     bundleIdentifier,
     icon: "./app.icon",
     appleTeamId: process.env.EXPO_APPLE_TEAM_ID ?? "C3F24V5NS5",
-    buildNumber: "1",
+    buildNumber: "2",
     associatedDomains: [`applinks:${LINK_HOST}`],
     infoPlist: {
       UIBackgroundModes: ["audio"],
